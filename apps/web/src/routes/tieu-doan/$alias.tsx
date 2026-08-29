@@ -79,7 +79,7 @@ function RouteComponent() {
 	}))
 
 	const facetedFilters = [
-		createFacetedFilter('class.name', 'Lớp', classOptions),
+		createFacetedFilter('class.name', 'Tiểu đội', classOptions),
 		createFacetedFilter('rank', 'Cấp bậc', militaryRankOptions),
 		createFacetedFilter('previousUnit', 'Đơn vị cũ', previousUnitOptions),
 		createFacetedFilter('ethnic', 'Dân tộc', EhtnicOptions),
@@ -96,10 +96,10 @@ function RouteComponent() {
 				<div className='flex items-center justify-between space-y-2'>
 					<div>
 						<h2 className='text-2xl font-bold tracking-tight'>
-							Danh sách học viên Tiểu đoàn
+							Danh sách quân nhân Tiểu đoàn
 						</h2>
 						<p className='text-muted-foreground'>
-							Đây là danh sách học viên của {unit?.name}
+							Đây là danh sách quân nhân của {unit?.name}
 						</p>
 					</div>
 				</div>
@@ -111,7 +111,7 @@ function RouteComponent() {
 						actionColumn
 					]}
 					facetedFilters={facetedFilters}
-					placeholder='Chưa có thông tin học viên.'
+					placeholder='Chưa có thông tin quân nhân.'
 					exportConfig={{
 						filename,
 						defaultExportValues: {

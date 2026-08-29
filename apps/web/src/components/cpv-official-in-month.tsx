@@ -86,7 +86,7 @@ export default function CpvOfficialInMonth() {
 				<div>
 					<div className='flex gap-2'>
 						<h2 className='text-2xl font-bold tracking-tight'>
-							Danh sách học viên chuẩn bị chuyển Đảng chính thức
+							Danh sách quân nhân chuẩn bị chuyển Đảng chính thức
 							trong
 						</h2>
 						<Select
@@ -112,7 +112,7 @@ export default function CpvOfficialInMonth() {
 						</Select>
 					</div>
 					<p className='text-muted-foreground'>
-						Đây là danh sách học viên chuẩn bị chuyển Đảng chính
+						Đây là danh sách quân nhân chuẩn bị chuyển Đảng chính
 						thức trong tháng {month} của đại đội
 					</p>
 				</div>

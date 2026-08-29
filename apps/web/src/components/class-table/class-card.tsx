@@ -114,7 +114,7 @@ export default function ClassCard({ data, onEdit, onDelete }: ClassCardProps) {
 				</CardHeader>
 				<CardFooter className='flex-col items-start gap-1.5 text-sm'>
 					<div className='line-clamp-1 flex gap-2 font-medium'>
-						Tổng số học viên: {data.studentCount}
+						Tổng số quân nhân: {data.studentCount}
 					</div>
 					<div className='text-muted-foreground'>
 						Tạo ngày: {toVNTz(data.createdAt)}

@@ -225,7 +225,9 @@ export function PoliticalQualityDashboard() {
 						<div className='text-2xl font-bold text-green-900'>
 							{totalChildrenClasses + totalUnitClasses}
 						</div>
-						<p className='text-xs text-muted-foreground'>Lớp</p>
+						<p className='text-xs text-muted-foreground'>
+							Tiểu đội
+						</p>
 					</CardContent>
 				</Card>
 			</div>

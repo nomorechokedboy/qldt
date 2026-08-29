@@ -48,7 +48,7 @@ export default function StudentInfoTabs({ student }: StudentInfoTabsProps) {
 
 	const handleConfirmStudent = async () => {
 		const confirmed = confirm(
-			'Bạn có chắc chắn muốn xác nhận thông tin học viên này không? Bạn sẽ không thể chỉnh sửa thông tin học viên sau khi xác nhận.'
+			'Bạn có chắc chắn muốn xác nhận thông tin quân nhân này không? Bạn sẽ không thể chỉnh sửa thông tin quân nhân sau khi xác nhận.'
 		)
 		if (!confirmed) return
 
@@ -62,14 +62,14 @@ export default function StudentInfoTabs({ student }: StudentInfoTabsProps) {
 					}
 				]
 			})
-			toast.success('Xác nhận học viên thành công!')
+			toast.success('Xác nhận quân nhân thành công!')
 			// Invalidate queries to refetch data
 			queryClient.invalidateQueries({ queryKey: ['students'] })
 			queryClient.invalidateQueries({
 				queryKey: ['student', student.id]
 			})
 		} catch (error) {
-			toast.error('Xác nhận học viên thất bại!')
+			toast.error('Xác nhận quân nhân thất bại!')
 			console.error(error)
 		}
 	}
@@ -138,7 +138,7 @@ export default function StudentInfoTabs({ student }: StudentInfoTabsProps) {
 									{student.fullName}
 								</CardTitle>
 								<p className='text-sm text-gray-500'>
-									Mã học viên:{' '}
+									Mã quân nhân:{' '}
 									<span className='font-semibold text-gray-700'>
 										{student.studentId || 'Chưa có'}
 									</span>
@@ -327,7 +327,7 @@ export default function StudentInfoTabs({ student }: StudentInfoTabsProps) {
 										value={student.fullName}
 									/>
 									<Field
-										label='Mã học viên'
+										label='Mã quân nhân'
 										value={student.studentId}
 									/>
 									<Field
@@ -421,7 +421,7 @@ export default function StudentInfoTabs({ student }: StudentInfoTabsProps) {
 										options={politicalOptions}
 									/>
 									<Field
-										label='Ngày vào Đoàn/Đảng'
+										label='Ngày vào Đoàn'
 										value={student.politicalOrgOfficialDate}
 									/>
 									<Field

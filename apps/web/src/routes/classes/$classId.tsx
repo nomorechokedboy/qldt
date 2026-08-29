@@ -88,10 +88,14 @@ function RouteComponent() {
 					<div className='flex items-center justify-between space-y-2'>
 						<div>
 							<h2 className='text-2xl font-bold tracking-tight'>
-								Danh sách học viên lớp {thisClass?.name} ( {thisClass?.status == 'graduated' ? "Đã tốt nghiệp" : "Đang diễn ra"} )
+								Danh sách quân nhân lớp {thisClass?.name} ({' '}
+								{thisClass?.status == 'graduated'
+									? 'Đã tốt nghiệp'
+									: 'Đang diễn ra'}{' '}
+								)
 							</h2>
 							<p className='text-muted-foreground'>
-								Đây là danh sách học viên của đại đội
+								Đây là danh sách quân nhân của đại đội
 							</p>
 						</div>
 					</div>
@@ -123,8 +127,10 @@ function RouteComponent() {
 							educationLevel: false
 						}}
 						columns={[
-							...columnsWithoutAction.filter((col => col.id !== 'action'),
-							actionColumn)
+							...columnsWithoutAction.filter(
+								(col) => col.id !== 'action',
+								actionColumn
+							)
 						]}
 						facetedFilters={facetedFilters}
 						exportConfig={{

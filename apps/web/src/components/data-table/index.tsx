@@ -246,7 +246,7 @@ export function DataTable<TData, TValue>({
 							className='text-xs h-7 mt-2'
 							disabled={isDeleting}
 						>
-							Xác nhận thông tin học viên
+							Xác nhận thông tin quân nhân
 						</Button>
 					)}
 				</div>

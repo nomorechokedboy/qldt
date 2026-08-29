@@ -58,7 +58,7 @@ export default function BirthdayByQuarter() {
 				<div>
 					<div className='flex gap-2'>
 						<h2 className='text-2xl font-bold tracking-tight'>
-							Danh sách học viên có sinh nhật trong
+							Danh sách quân nhân có sinh nhật trong
 						</h2>
 						<Select
 							value={quarter}
@@ -83,7 +83,7 @@ export default function BirthdayByQuarter() {
 						</Select>
 					</div>
 					<p className='text-muted-foreground'>
-						Đây là danh sách học viên có sinh nhật trong quý{' '}
+						Đây là danh sách quân nhân có sinh nhật trong quý{' '}
 						{quarter} của đại đội
 					</p>
 				</div>

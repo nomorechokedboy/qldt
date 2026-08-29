@@ -28,10 +28,10 @@ export default function BirthdayByWeek() {
 			<div className='flex items-center justify-between space-y-2'>
 				<div>
 					<h2 className='text-2xl font-bold tracking-tight'>
-						Danh sách học viên có sinh nhật trong tuần
+						Danh sách quân nhân có sinh nhật trong tuần
 					</h2>
 					<p className='text-muted-foreground'>
-						Đây là danh sách học viên có sinh nhật trong tuần của
+						Đây là danh sách quân nhân có sinh nhật trong tuần của
 						đại đội
 					</p>
 				</div>

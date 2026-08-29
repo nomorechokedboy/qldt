@@ -78,7 +78,7 @@ function RouteComponent() {
 					<div className='flex items-center justify-between space-y-2'>
 						<div>
 							<h2 className='text-2xl font-bold tracking-tight'>
-								Danh sách học viên có hoàn cảnh khó khăn
+								Danh sách quân nhân có hoàn cảnh khó khăn
 							</h2>
 							<p className='text-muted-foreground'>
 								Chọn tiểu đoàn, đại đội, lớp để xem bảng học

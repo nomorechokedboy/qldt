@@ -27,11 +27,11 @@ export default function CpvOfficialThisWeek() {
 			<div className='flex items-center justify-between space-y-2'>
 				<div>
 					<h2 className='text-2xl font-bold tracking-tight'>
-						Danh sách học viên chuẩn bị chuyển Đảng chính thức trong
-						tuần
+						Danh sách quân nhân chuẩn bị chuyển Đảng chính thức
+						trong tuần
 					</h2>
 					<p className='text-muted-foreground'>
-						Đây là danh sách học viên chuẩn bị chuyển Đảng chính
+						Đây là danh sách quân nhân chuẩn bị chuyển Đảng chính
 						thức trong tuần của đại đội
 					</p>
 				</div>

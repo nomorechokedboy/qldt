@@ -35,7 +35,7 @@ export function LoginForm() {
 						TRƯỜNG CAO ĐẲNG HẬU CẦN 2
 					</h1>
 					<p className='text-gray-600 font-medium'>
-						PHẦN MỀM QUẢN LÝ HỌC VIÊN
+						PHẦN MỀM QUẢN LÝ DOANH TRẠI
 					</p>
 				</div>
 

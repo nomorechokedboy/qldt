@@ -111,7 +111,7 @@ function RouteComponent() {
 					<div className='flex items-center justify-between space-y-2'>
 						<div>
 							<h2 className='text-2xl font-bold tracking-tight'>
-								Danh sách học viên dân tộc thiểu số
+								Danh sách quân nhân dân tộc thiểu số
 							</h2>
 							<p className='text-muted-foreground'>
 								Chọn tiểu đoàn, đại đội, lớp để xem bảng học
@@ -142,7 +142,7 @@ function RouteComponent() {
 						/>
 						<span className='mx-2'>/</span>
 						<Select
-							label='Lớp'
+							label='Tiểu đội'
 							options={classes}
 							value={selectedClassId}
 							onChange={setSelectedClassId}
