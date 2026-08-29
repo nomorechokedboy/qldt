@@ -10,14 +10,14 @@ import { toDdMmYyyy } from '@/common'
 
 function isoToDdMmYyyy(isoDate: string): string {
 	const [year, month, day] = isoDate.split('-')
-	return `${day}/${month}/${year}`.replace("undefined/undefined/", "");
+	return `${day}/${month}/${year}`.replace('undefined/undefined/', '')
 }
 
 export const baseStudentsColumns: ColumnDef<Student>[] = [
 	{
 		id: 'class.name',
 		accessorFn: (row) => row.class?.name,
-		header: 'Lớp',
+		header: 'Tiểu đội',
 		cell: ({ row }) => (
 			<div className='w-20'>
 				<Badge
@@ -32,7 +32,7 @@ export const baseStudentsColumns: ColumnDef<Student>[] = [
 			return value.includes(row.getValue(id))
 		},
 		meta: {
-			label: 'Lớp'
+			label: 'Tiểu đội'
 		}
 	},
 	{
@@ -185,8 +185,8 @@ export const columns: ColumnDef<Student>[] = [
 				val === '' || val === undefined
 					? 'N/A'
 					: val === 'cpv'
-						? 'Đảng'
-						: 'Đoàn'
+						? 'Đảng viên'
+						: 'Đoàn viên'
 
 			return (
 				<Badge className='bg-purple-500 text-white font-bold'>
@@ -202,7 +202,7 @@ export const columns: ColumnDef<Student>[] = [
 	{
 		accessorKey: 'politicalOrgOfficialDate',
 		header: ({ column }) => (
-			<DataTableColumnHeader column={column} title='Ngày vào Đoàn/Đảng' />
+			<DataTableColumnHeader column={column} title='Ngày vào Đoàn' />
 		),
 		cell: ({ row }) => (
 			<div className='min-w-28'>
@@ -213,7 +213,7 @@ export const columns: ColumnDef<Student>[] = [
 		),
 		enableHiding: true,
 		meta: {
-			label: 'Ngày vào Đoàn/Đảng'
+			label: 'Ngày vào Đoàn'
 		}
 	},
 	{
@@ -230,15 +230,12 @@ export const columns: ColumnDef<Student>[] = [
 	{
 		accessorKey: 'cpvOfficialAt',
 		header: ({ column }) => (
-			<DataTableColumnHeader
-				column={column}
-				title='Ngày chính thức vào Đảng'
-			/>
+			<DataTableColumnHeader column={column} title='Ngày vào Đảng' />
 		),
 		cell: EditableCell,
 		enableHiding: true,
 		meta: {
-			label: 'Ngày chính thức vào Đảng'
+			label: 'Ngày vào Đảng'
 		}
 	},
 	{
@@ -486,7 +483,7 @@ export const battalionStudentColumns: ColumnDef<Student>[] = [
 	{
 		id: 'class.name',
 		accessorFn: (row) => `${row.class?.name} - ${row.class?.unit.alias}`,
-		header: 'Lớp',
+		header: 'Tiểu đội',
 		cell: ({ row }) => (
 			<div className='w-20'>
 				<Badge
@@ -501,7 +498,7 @@ export const battalionStudentColumns: ColumnDef<Student>[] = [
 			return value.includes(row.getValue(id))
 		},
 		meta: {
-			label: 'Lớp'
+			label: 'Tiểu đội'
 		}
 	},
 	{
@@ -623,8 +620,8 @@ export const battalionStudentColumns: ColumnDef<Student>[] = [
 				val === '' || val === undefined
 					? 'N/A'
 					: val === 'cpv'
-						? 'Đảng'
-						: 'Đoàn'
+						? 'Đảng viên'
+						: 'Đoàn viên'
 
 			return (
 				<Badge className='bg-purple-500 text-white font-bold'>
@@ -640,7 +637,7 @@ export const battalionStudentColumns: ColumnDef<Student>[] = [
 	{
 		accessorKey: 'politicalOrgOfficialDate',
 		header: ({ column }) => (
-			<DataTableColumnHeader column={column} title='Ngày vào Đoàn/Đảng' />
+			<DataTableColumnHeader column={column} title='Ngày vào Đoàn' />
 		),
 		cell: ({ row }) => (
 			<div className='min-w-28'>
@@ -651,7 +648,7 @@ export const battalionStudentColumns: ColumnDef<Student>[] = [
 		),
 		enableHiding: true,
 		meta: {
-			label: 'Ngày vào Đoàn/Đảng'
+			label: 'Ngày vào Đoàn'
 		}
 	},
 	{
@@ -668,15 +665,12 @@ export const battalionStudentColumns: ColumnDef<Student>[] = [
 	{
 		accessorKey: 'cpvOfficialAt',
 		header: ({ column }) => (
-			<DataTableColumnHeader
-				column={column}
-				title='Ngày chính thức vào Đảng'
-			/>
+			<DataTableColumnHeader column={column} title='Ngày vào Đảng' />
 		),
 		cell: EditableCell,
 		enableHiding: true,
 		meta: {
-			label: 'Ngày chính thức vào Đảng'
+			label: 'Ngày vào Đảng'
 		}
 	},
 	{
@@ -921,7 +915,7 @@ export const battalionStudentColumnsWithoutAction: ColumnDef<Student>[] = [
 	{
 		id: 'class.name',
 		accessorFn: (row) => `${row.class?.name} - ${row.class?.unit.alias}`,
-		header: 'Lớp',
+		header: 'Tiểu đội',
 		cell: ({ row }) => (
 			<div className='w-20'>
 				<Badge
@@ -936,7 +930,7 @@ export const battalionStudentColumnsWithoutAction: ColumnDef<Student>[] = [
 			return value.includes(row.getValue(id))
 		},
 		meta: {
-			label: 'Lớp'
+			label: 'Tiểu đội'
 		}
 	},
 	{
@@ -1058,8 +1052,8 @@ export const battalionStudentColumnsWithoutAction: ColumnDef<Student>[] = [
 				val === '' || val === undefined
 					? 'N/A'
 					: val === 'cpv'
-						? 'Đảng'
-						: 'Đoàn'
+						? 'Đảng viên'
+						: 'Đoàn viên'
 
 			return (
 				<Badge className='bg-purple-500 text-white font-bold'>
@@ -1075,7 +1069,7 @@ export const battalionStudentColumnsWithoutAction: ColumnDef<Student>[] = [
 	{
 		accessorKey: 'politicalOrgOfficialDate',
 		header: ({ column }) => (
-			<DataTableColumnHeader column={column} title='Ngày vào Đoàn/Đảng' />
+			<DataTableColumnHeader column={column} title='Ngày vào Đoàn' />
 		),
 		cell: ({ row }) => (
 			<div className='min-w-28'>
@@ -1086,7 +1080,7 @@ export const battalionStudentColumnsWithoutAction: ColumnDef<Student>[] = [
 		),
 		enableHiding: true,
 		meta: {
-			label: 'Ngày vào Đoàn/Đảng'
+			label: 'Ngày vào Đoàn'
 		}
 	},
 	{
@@ -1103,15 +1097,12 @@ export const battalionStudentColumnsWithoutAction: ColumnDef<Student>[] = [
 	{
 		accessorKey: 'cpvOfficialAt',
 		header: ({ column }) => (
-			<DataTableColumnHeader
-				column={column}
-				title='Ngày chính thức vào Đảng'
-			/>
+			<DataTableColumnHeader column={column} title='Ngày vào Đảng' />
 		),
 		cell: EditableCell,
 		enableHiding: true,
 		meta: {
-			label: 'Ngày chính thức vào Đảng'
+			label: 'Ngày vào Đảng'
 		}
 	},
 	{
@@ -1449,8 +1440,8 @@ export const columnsWithoutAction: ColumnDef<Student>[] = [
 				val === '' || val === undefined
 					? 'N/A'
 					: val === 'cpv'
-						? 'Đảng'
-						: 'Đoàn'
+						? 'Đảng viên'
+						: 'Đoàn viên'
 
 			return (
 				<Badge className='bg-purple-500 text-white font-bold'>
@@ -1466,7 +1457,7 @@ export const columnsWithoutAction: ColumnDef<Student>[] = [
 	{
 		accessorKey: 'politicalOrgOfficialDate',
 		header: ({ column }) => (
-			<DataTableColumnHeader column={column} title='Ngày vào Đoàn/Đảng' />
+			<DataTableColumnHeader column={column} title='Ngày vào Đoàn' />
 		),
 		cell: ({ row }) => (
 			<div className='min-w-28'>
@@ -1477,7 +1468,7 @@ export const columnsWithoutAction: ColumnDef<Student>[] = [
 		),
 		enableHiding: true,
 		meta: {
-			label: 'Ngày vào Đoàn/Đảng'
+			label: 'Ngày vào Đoàn'
 		}
 	},
 	{
@@ -1494,15 +1485,12 @@ export const columnsWithoutAction: ColumnDef<Student>[] = [
 	{
 		accessorKey: 'cpvOfficialAt',
 		header: ({ column }) => (
-			<DataTableColumnHeader
-				column={column}
-				title='Ngày chính thức vào Đảng'
-			/>
+			<DataTableColumnHeader column={column} title='Ngày vào Đảng' />
 		),
 		cell: EditableCell,
 		enableHiding: true,
 		meta: {
-			label: 'Ngày chính thức vào Đảng'
+			label: 'Ngày vào Đảng'
 		}
 	},
 	{
@@ -1874,8 +1862,8 @@ export const hcyuTableColumns: ColumnDef<Student>[] = [
 				val === '' || val === undefined
 					? 'N/A'
 					: val === 'cpv'
-						? 'Đảng'
-						: 'Đoàn'
+						? 'Đảng viên'
+						: 'Đoàn viên'
 
 			return (
 				<Badge className='bg-purple-500 text-white font-bold'>
@@ -1891,7 +1879,7 @@ export const hcyuTableColumns: ColumnDef<Student>[] = [
 	{
 		accessorKey: 'politicalOrgOfficialDate',
 		header: ({ column }) => (
-			<DataTableColumnHeader column={column} title='Ngày vào Đoàn/Đảng' />
+			<DataTableColumnHeader column={column} title='Ngày vào Đoàn' />
 		),
 		cell: ({ row }) => (
 			<div className='min-w-28'>
@@ -1902,7 +1890,7 @@ export const hcyuTableColumns: ColumnDef<Student>[] = [
 		),
 		enableHiding: true,
 		meta: {
-			label: 'Ngày vào Đoàn/Đảng'
+			label: 'Ngày vào Đoàn'
 		}
 	},
 	{
@@ -1919,15 +1907,12 @@ export const hcyuTableColumns: ColumnDef<Student>[] = [
 	{
 		accessorKey: 'cpvOfficialAt',
 		header: ({ column }) => (
-			<DataTableColumnHeader
-				column={column}
-				title='Ngày chính thức vào Đảng'
-			/>
+			<DataTableColumnHeader column={column} title='Ngày vào Đảng' />
 		),
 		cell: EditableCell,
 		enableHiding: true,
 		meta: {
-			label: 'Ngày chính thức vào Đảng'
+			label: 'Ngày vào Đảng'
 		}
 	},
 	{
@@ -2338,8 +2323,8 @@ export const adversityTableColumns: ColumnDef<Student>[] = [
 				val === '' || val === undefined
 					? 'N/A'
 					: val === 'cpv'
-						? 'Đảng'
-						: 'Đoàn'
+						? 'Đảng viên'
+						: 'Đoàn viên'
 
 			return (
 				<Badge className='bg-purple-500 text-white font-bold'>
@@ -2355,7 +2340,7 @@ export const adversityTableColumns: ColumnDef<Student>[] = [
 	{
 		accessorKey: 'politicalOrgOfficialDate',
 		header: ({ column }) => (
-			<DataTableColumnHeader column={column} title='Ngày vào Đoàn/Đảng' />
+			<DataTableColumnHeader column={column} title='Ngày vào Đoàn' />
 		),
 		cell: ({ row }) => (
 			<div className='min-w-28'>
@@ -2366,7 +2351,7 @@ export const adversityTableColumns: ColumnDef<Student>[] = [
 		),
 		enableHiding: true,
 		meta: {
-			label: 'Ngày vào Đoàn/Đảng'
+			label: 'Ngày vào Đoàn'
 		}
 	},
 	{
@@ -2383,15 +2368,12 @@ export const adversityTableColumns: ColumnDef<Student>[] = [
 	{
 		accessorKey: 'cpvOfficialAt',
 		header: ({ column }) => (
-			<DataTableColumnHeader
-				column={column}
-				title='Ngày chính thức vào Đảng'
-			/>
+			<DataTableColumnHeader column={column} title='Ngày vào Đảng' />
 		),
 		cell: EditableCell,
 		enableHiding: true,
 		meta: {
-			label: 'Ngày chính thức vào Đảng'
+			label: 'Ngày vào Đảng'
 		}
 	},
 	{

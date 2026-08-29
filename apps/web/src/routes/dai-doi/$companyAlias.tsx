@@ -5,33 +5,33 @@ import CompanyStudentTable from '@/components/company-student-table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
 export const Route = createFileRoute('/dai-doi/$companyAlias')({
-    component: RouteComponent
+	component: RouteComponent
 })
 
 function RouteComponent() {
-    const { companyAlias } = Route.useParams()
+	const { companyAlias } = Route.useParams()
 
-    return (
-        <ProtectedRoute>
-            <div className='hidden h-full flex-1 flex-col space-y-8 p-8 md:flex'>
-                <Tabs defaultValue='classes'>
-                    <TabsList>
-                        <TabsTrigger value='classes'>Lớp</TabsTrigger>
-                        <TabsTrigger value='students'>Học viên</TabsTrigger>
-                    </TabsList>
+	return (
+		<ProtectedRoute>
+			<div className='hidden h-full flex-1 flex-col space-y-8 p-8 md:flex'>
+				<Tabs defaultValue='classes'>
+					<TabsList>
+						<TabsTrigger value='classes'>Tiểu đội</TabsTrigger>
+						<TabsTrigger value='students'>Quân nhân</TabsTrigger>
+					</TabsList>
 
-                    <TabsContent value='classes'>
-                        <CompanyClassesTable companyAlias={companyAlias} />
-                    </TabsContent>
+					<TabsContent value='classes'>
+						<CompanyClassesTable companyAlias={companyAlias} />
+					</TabsContent>
 
-                    <TabsContent value='students'>
-                        <CompanyStudentTable
-                            alias={companyAlias}
-                            level='company'
-                        />
-                    </TabsContent>
-                </Tabs>
-            </div>
-        </ProtectedRoute>
-    )
+					<TabsContent value='students'>
+						<CompanyStudentTable
+							alias={companyAlias}
+							level='company'
+						/>
+					</TabsContent>
+				</Tabs>
+			</div>
+		</ProtectedRoute>
+	)
 }

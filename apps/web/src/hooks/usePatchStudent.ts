@@ -24,10 +24,10 @@ export default function usePatchStudent(
 					}
 				]
 			})
-			toast.success('Cập nhật thông tin học viên thành công')
+			toast.success('Cập nhật thông tin quân nhân thành công')
 		} catch (err) {
 			console.error(err)
-			toast.error('Cập nhật thông tin học viên thất bại!')
+			toast.error('Cập nhật thông tin quân nhân thất bại!')
 		}
 	}
 

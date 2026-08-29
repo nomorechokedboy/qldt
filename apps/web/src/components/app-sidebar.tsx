@@ -56,50 +56,17 @@ const data = {
 			title: 'Chung',
 			url: '#',
 			superAdminOnly: false,
-			items: [
-				{ title: 'Trang chủ', url: '/', icon: Home },
-				{
-					title: 'Chất lượng chính trị',
-					url: '/thong-ke-chinh-tri',
-					icon: Proportions
-				}
-			]
+			items: [{ title: 'Trang chủ', url: '/', icon: Home }]
 		},
 		{
-			title: 'Thống kê học viên',
+			title: 'Thống kê doanh trại',
 			url: '#',
 			superAdminOnly: false,
 			icon: PieChart,
-			items: [
-				{
-					title: 'Đảng viên',
-					url: '/cpv',
-					icon: UserCheck
-				},
-				{
-					title: 'Đoàn viên',
-					url: '/hcyu',
-					icon: UserPlus
-				},
-				{
-					title: 'Dân tộc thiểu số',
-					url: '/ethnic-minority',
-					icon: Star
-				},
-				{
-					title: 'Tôn giáo',
-					url: '/religion',
-					icon: Church
-				},
-				{
-					title: 'Hoàn cảnh khó khăn',
-					url: '/hoan-canh-kho-khan',
-					icon: HouseHeart
-				}
-			]
+			items: []
 		},
 		{
-			title: 'Sự kiện học viên',
+			title: 'Sự kiện đơn vị',
 			url: '#',
 			superAdminOnly: false,
 			icon: Calendar,
@@ -116,20 +83,20 @@ const data = {
 				}
 			]
 		},
-		// Chức năng khác -> import học viên
-		{
-			title: 'Chức năng khác',
-			url: '#',
-			superAdminOnly: false,
-			icon: Star,
-			items: [
-				{
-					title: 'Import học viên',
-					url: '/import-students',
-					icon: UserPlus
-				}
-			]
-		},
+		// Chức năng khác -> import quân nhân
+		// {
+		// 	title: 'Chức năng khác',
+		// 	url: '#',
+		// 	superAdminOnly: false,
+		// 	icon: Star,
+		// 	items: [
+		// 		{
+		// 			title: 'Import quân nhân',
+		// 			url: '/import-students',
+		// 			icon: UserPlus
+		// 		}
+		// 	]
+		// },
 		{
 			title: 'Quản lý người dùng',
 			url: '#',
@@ -313,12 +280,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 				title: unit.name,
 				url: '#',
 				items: [
-					{
-						title: `Học viên ${unit.name}`,
-						url: `/${unit.level === 'battalion' ? 'tieu-doan/' : 'dai-doi/'}${unit.alias}`,
-						search: { name: unit.name, level: unit.level },
-						icon: UsersRound
-					},
 					...unit.children.map((child) => ({
 						title: child.name,
 						url: `/dai-doi/${child.alias}`,
@@ -356,10 +317,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 					{!isCollapsed && (
 						<div className='flex flex-col'>
 							<span className='text-sm font-semibold'>
-								Hệ thống quản lý học viên
+								Quản lý doanh trại
 							</span>
 							<span className='text-xs text-muted-foreground'>
-								Trường Cao đẳng hậu cần 2
+								Tiểu đoàn 1, Lữ đoàn 75
 							</span>
 						</div>
 					)}

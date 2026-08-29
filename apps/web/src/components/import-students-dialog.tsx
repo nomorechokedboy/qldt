@@ -197,8 +197,6 @@ export function ImportStudentsDialog({
 				classOptions.length ? classOptions[0].value : '1'
 			]
 
-			
-
 			// ===== Sheet Mẫu Import =====
 			const sheet = workbook.addWorksheet('Mẫu Import')
 			const headerRowVN = sheet.addRow(vietnameseHeaders)
@@ -325,11 +323,11 @@ export function ImportStudentsDialog({
 			})
 			// ===== Sheet Hướng dẫn =====
 			const instructionData = [
-				['📘 HƯỚNG DẪN NHẬP THÔNG TIN HỌC VIÊN'],
+				['📘 HƯỚNG DẪN NHẬP THÔNG TIN QUÂN NHÂN'],
 				[''],
 				[
 					'1. Dòng thứ 3 (Nguyễn Văn A) chỉ là dữ liệu mẫu, KHÔNG được copy/sửa/xóa. ' +
-						'Khi nhập xong toàn bộ dữ liệu có thể xóa dòng này đi, hoặc giữ nguyên thì học viên đó sẽ được thêm vào hệ thống.'
+						'Khi nhập xong toàn bộ dữ liệu có thể xóa dòng này đi, hoặc giữ nguyên thì quân nhân đó sẽ được thêm vào hệ thống.'
 				],
 				[''],
 				[
@@ -428,7 +426,6 @@ export function ImportStudentsDialog({
 						defval: '',
 						header: 1
 					})
-					debugger
 					const dataRows = jsonData
 						.slice(2)
 						.filter((row) =>
@@ -501,8 +498,6 @@ export function ImportStudentsDialog({
 								if (typeof value === 'string') {
 									const parsed = parseInt(value, 10)
 									value = isNaN(parsed) ? 0 : parsed
-								} else if (typeof value === 'number') {
-									value = value
 								} else {
 									value = 0
 								}
@@ -596,7 +591,7 @@ export function ImportStudentsDialog({
 			setUploadStatus('success')
 			setImportResults(mockResults)
 			setUploadMessage(
-				`Import hoàn tất! Thành công: ${mockResults.successCount}/${mockResults.totalCount} học viên`
+				`Import hoàn tất! Thành công: ${mockResults.successCount}/${mockResults.totalCount} quân nhân`
 			)
 			onSuccess?.(mockResults)
 		} catch (error) {
@@ -641,7 +636,7 @@ export function ImportStudentsDialog({
 					<div className='flex items-center space-x-3'>
 						<Users className='h-6 w-6' />
 						<h2 className='text-xl font-semibold'>
-							Import danh sách học viên
+							Import danh sách quân nhân
 						</h2>
 					</div>
 					<button
@@ -674,7 +669,7 @@ export function ImportStudentsDialog({
 											2
 										</span>
 										<span>
-											Điền thông tin học viên theo định
+											Điền thông tin quân nhân theo định
 											dạng mẫu
 										</span>
 									</div>

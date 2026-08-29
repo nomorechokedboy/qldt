@@ -35,7 +35,7 @@ export function useStudentFacetedFilters(students: Student[]) {
 	}))
 
 	return [
-		createFacetedFilter('class.name', 'Lớp', classOptions),
+		createFacetedFilter('class.name', 'Tiểu đội', classOptions),
 		createFacetedFilter('rank', 'Cấp bậc', militaryRankOptions),
 		createFacetedFilter('previousUnit', 'Đơn vị cũ', previousUnitOptions),
 		createFacetedFilter('ethnic', 'Dân tộc', EhtnicOptions),

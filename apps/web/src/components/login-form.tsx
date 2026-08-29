@@ -31,11 +31,11 @@ export function LoginForm() {
 						alt='Logo'
 						className='h-28 mb-3 drop-shadow-md'
 					/>
-					<h1 className='text-2xl font-extrabold text-gray-800 text-center'>
-						TRƯỜNG CAO ĐẲNG HẬU CẦN 2
+					<h1 className='text-2xl uppercase font-extrabold text-gray-800 text-center'>
+						Lữ đoàn 75, Quân khu 7
 					</h1>
-					<p className='text-gray-600 font-medium'>
-						PHẦN MỀM QUẢN LÝ HỌC VIÊN
+					<p className='text-gray-600 font-medium uppercase'>
+						PHẦN MỀM QUẢN LÝ DOANH TRẠI
 					</p>
 				</div>
 

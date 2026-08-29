@@ -87,7 +87,7 @@ export default function BirthdayByMonth() {
 				<div>
 					<div className='flex gap-2'>
 						<h2 className='text-2xl font-bold tracking-tight'>
-							Danh sách học viên có sinh nhật trong
+							Danh sách quân nhân có sinh nhật trong
 						</h2>
 						<Select
 							value={month}
@@ -112,7 +112,7 @@ export default function BirthdayByMonth() {
 						</Select>
 					</div>
 					<p className='text-muted-foreground'>
-						Đây là danh sách học viên có sinh nhật trong tháng{' '}
+						Đây là danh sách quân nhân có sinh nhật trong tháng{' '}
 						{month} của đại đội
 					</p>
 				</div>

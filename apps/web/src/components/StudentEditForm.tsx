@@ -89,7 +89,7 @@ export default function StudentEditForm({
 				if (onClose) onClose()
 			} catch (err) {
 				console.error('UpdateStudentInfo err: ', err)
-				toast.error('Chỉnh sửa thông tin học viên không thành công!')
+				toast.error('Chỉnh sửa thông tin quân nhân không thành công!')
 			}
 		}
 	})
@@ -297,7 +297,7 @@ export default function StudentEditForm({
 										/>
 										<Field
 											name='studentId'
-											label='Mã học viên'
+											label='Mã quân nhân'
 										/>
 										<Field name='dob' label='Ngày sinh' />
 										<Field
@@ -344,7 +344,7 @@ export default function StudentEditForm({
 										/>
 										<Field
 											name='classId'
-											label='Lớp'
+											label='Tiểu đội'
 											options={classOptions}
 										/>
 										<Field
@@ -381,11 +381,11 @@ export default function StudentEditForm({
 										/>
 										<Field
 											name='politicalOrgOfficialDate'
-											label='Ngày vào Đoàn/Đảng'
+											label='Ngày vào Đoàn'
 										/>
 										<Field
 											name='cpvOfficialAt'
-											label='Ngày chính thức'
+											label='Ngày vào Đảng'
 										/>
 										<Field
 											name='cpvId'

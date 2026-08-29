@@ -171,13 +171,13 @@ export default function StudentForm({
 				}
 
 				await mutateAsync({ ...value, avatar: avatarUri })
-				toast.success('Thêm mới học viên thành công!', {})
+				toast.success('Thêm mới quân nhân thành công!', {})
 				formApi.reset()
 				handleResetStep()
 				setOpen(false)
 			} catch (err) {
 				console.error(err)
-				toast.error('Thêm mới học viên thất bại!')
+				toast.error('Thêm mới quân nhân thất bại!')
 			}
 		},
 		validators: { onSubmit: StudentFormSchema }
@@ -253,13 +253,13 @@ export default function StudentForm({
 			<DialogTrigger asChild>
 				<Button {...buttonProps}>
 					<Plus className='w-4 h-4 mr-2' />
-					Thêm học viên
+					Thêm quân nhân
 				</Button>
 			</DialogTrigger>
 			<DialogContent className='grid-rows-[auto_auto_1fr] lg:max-w-3xl lg:h-9/10'>
 				<DialogHeader>
 					<DialogTitle className='text-center'>
-						Biểu mẫu thêm học viên
+						Biểu mẫu thêm quân nhân
 					</DialogTitle>
 				</DialogHeader>
 				<StepIndicator
@@ -314,8 +314,8 @@ export default function StudentForm({
 										disabled={!canSubmit}
 									>
 										{isSubmitting
-											? 'Đang thêm học viên...'
-											: 'Thêm học viên'}
+											? 'Đang thêm quân nhân...'
+											: 'Thêm quân nhân'}
 									</Button>
 								)
 							}}

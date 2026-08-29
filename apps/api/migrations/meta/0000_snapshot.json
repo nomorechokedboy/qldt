@@ -1,7 +1,7 @@
 {
 	"version": "6",
 	"dialect": "sqlite",
-	"id": "e52845b0-21c1-4451-accf-2112275e6c23",
+	"id": "aae98862-8ea2-4801-9180-0500c2ba64fa",
 	"prevId": "00000000-0000-0000-0000-000000000000",
 	"tables": {
 		"actions": {
@@ -696,7 +696,7 @@
 					"primaryKey": false,
 					"notNull": false,
 					"autoincrement": false,
-					"default": "'Học viên'"
+					"default": "'Chiến sĩ'"
 				},
 				"ethnic": {
 					"name": "ethnic",
@@ -1243,6 +1243,27 @@
 					"notNull": false,
 					"autoincrement": false,
 					"default": "'pending'"
+				},
+				"rank": {
+					"name": "rank",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false,
+					"autoincrement": false
+				},
+				"position": {
+					"name": "position",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false,
+					"autoincrement": false
+				},
+				"alias": {
+					"name": "alias",
+					"type": "text",
+					"primaryKey": false,
+					"notNull": false,
+					"autoincrement": false
 				}
 			},
 			"indexes": {

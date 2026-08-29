@@ -25,7 +25,7 @@ export default function PersonalStep({ form }: { form: any }) {
 				<form.AppField name='avatar'>
 					{(field: any) => (
 						<field.UploadField
-							label='Ảnh học viên'
+							label='Ảnh quân nhân'
 							accept='image/*'
 							maxSize={10 * 1024 * 1024}
 							dragDropSize='small'
@@ -37,14 +37,16 @@ export default function PersonalStep({ form }: { form: any }) {
 
 			<div className='grid grid-cols-2 gap-6'>
 				<form.AppField name='studentId'>
-					{(field: any) => <field.TextField label='Mã số học viên' />}
+					{(field: any) => (
+						<field.TextField label='Mã số quân nhân' />
+					)}
 				</form.AppField>
 
 				<form.AppField name='classId'>
 					{(field: any) => (
 						<field.Select
 							values={classOptions}
-							label='Lớp'
+							label='Tiểu đội'
 							// defaultValue={
 							//         eduLevelOptions[0]
 							//                 .value

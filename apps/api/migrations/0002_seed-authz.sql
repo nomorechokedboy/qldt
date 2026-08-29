@@ -13,7 +13,7 @@ INSERT INTO resources (name, display_name, description) VALUES
 ('users', 'Người dùng', 'Quản lý người dùng'), 
 ('permissions', 'Quyền', 'Quản lý quyền của người dùng'),
 ('classes', 'Lớp', 'Quản lý lớp'),
-('students', 'Học viên', 'Quản lý học viên'),
+('students', 'Quân nhân', 'Quản lý quân nhân'),
 ('units', 'Đơn vị', 'Quản lý đơn vị'),
 ('roles', 'Nhóm quyền', 'Quản lý và phân quyền cho các người dùng');
  --> statement-breakpoint

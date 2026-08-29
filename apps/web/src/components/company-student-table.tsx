@@ -70,7 +70,7 @@ export default function CompanyStudentTable({
 	]
 
 	const facetedFilters = [
-		createFacetedFilter('class.name', 'Lớp', classOptions),
+		createFacetedFilter('class.name', 'Tiểu đội', classOptions),
 		createFacetedFilter('rank', 'Cấp bậc', militaryRankOptions),
 		createFacetedFilter('previousUnit', 'Đơn vị cũ', previousUnitOptions),
 		createFacetedFilter('ethnic', 'Dân tộc', EhtnicOptions),
@@ -88,10 +88,10 @@ export default function CompanyStudentTable({
 				<div className='flex items-center justify-between space-y-2'>
 					<div>
 						<h2 className='text-2xl font-bold tracking-tight'>
-							Danh sách học viên Đại đội
+							Danh sách quân nhân Đại đội
 						</h2>
 						<p className='text-muted-foreground'>
-							Đây là danh sách học viên của {unit?.name} a
+							Đây là danh sách quân nhân của {unit?.name} a
 						</p>
 					</div>
 				</div>
@@ -100,7 +100,7 @@ export default function CompanyStudentTable({
 					columnVisibility={defaultBirthdayColumnVisibility}
 					columns={[...columnsWithoutAction, actionColumn]}
 					facetedFilters={facetedFilters}
-					placeholder='Chưa có thông tin học viên.'
+					placeholder='Chưa có thông tin quân nhân.'
 					exportConfig={{
 						filename,
 						defaultExportValues: {

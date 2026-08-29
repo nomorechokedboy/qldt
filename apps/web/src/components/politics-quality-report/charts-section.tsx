@@ -152,7 +152,7 @@ export function ChartsSection({ data }: ChartsSectionProps) {
 			<Card>
 				<CardHeader>
 					<CardTitle>
-						Biểu đồ trình độ học viên theo đơn vị & lớp
+						Biểu đồ trình độ quân nhân theo đơn vị & lớp
 					</CardTitle>
 				</CardHeader>
 				<CardContent>

@@ -57,9 +57,7 @@ export default function MilitaryStep({ form }: { form: any }) {
 					)}
 				</form.AppField>
 				<form.AppField name='politicalOrgOfficialDate'>
-					{(field: any) => (
-						<field.TextField label='Ngày vào Đoàn/Đảng' />
-					)}
+					{(field: any) => <field.TextField label='Ngày vào Đoàn' />}
 				</form.AppField>
 			</div>
 
@@ -68,10 +66,8 @@ export default function MilitaryStep({ form }: { form: any }) {
 					{(field: any) => <field.TextField label='Số thẻ Đảng' />}
 				</form.AppField>
 
-				<form.AppField name='cpvOfficalAt'>
-					{(field: any) => (
-						<field.TextField label='Ngày vào Đảng chính thức' />
-					)}
+				<form.AppField name='cpvOfficialAt'>
+					{(field: any) => <field.TextField label='Ngày vào Đảng' />}
 				</form.AppField>
 			</div>
 
