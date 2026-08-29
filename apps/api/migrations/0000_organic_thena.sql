@@ -104,7 +104,7 @@ CREATE TABLE `students` (
 	`rank` text DEFAULT '',
 	`previousUnit` text DEFAULT '',
 	`previousPosition` text DEFAULT '',
-	`position` text DEFAULT 'Học viên',
+	`position` text DEFAULT 'Chiến sĩ',
 	`ethnic` text DEFAULT '',
 	`religion` text DEFAULT 'Không',
 	`enlistmentPeriod` text DEFAULT '',
@@ -181,6 +181,9 @@ CREATE TABLE `users` (
 	`isSuperUser` integer DEFAULT false NOT NULL,
 	`unitId` integer,
 	`status` text DEFAULT 'pending',
+	`rank` text,
+	`position` text,
+	`alias` text,
 	FOREIGN KEY (`unitId`) REFERENCES `units`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
