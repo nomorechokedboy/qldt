@@ -3,8 +3,7 @@ import ClassCard from '@/components/class-table/class-card'
 import { columns } from '@/components/class-table/columns'
 import { DataTable } from '@/components/data-table'
 import useDataTableToolbarConfig from '@/hooks/useDataTableToolbarConfig'
-import type { FacetedFilterConfig } from '@/types'
-import { Button } from './ui/button'
+import { Button } from '@/components/ui/button'
 import { RefreshCw } from 'lucide-react'
 import useUnitData from '@/hooks/useUnitData'
 import useClassData from '@/hooks/useClasses'
@@ -20,8 +19,11 @@ export default function CompanyClassesTable({
 	const { data: company, refetch: refetchUnits } = useUnitData({
 		alias: companyAlias
 	})
+	const platoons =
+		company?.children?.filter((u) => u.level === 'platoon') ?? []
+	const platoonIds = platoons.map((p) => p.id)
 	const { data: classes, refetch: refetchClasses } = useClassData({
-		unitIds: company?.id !== undefined ? [company?.id] : []
+		unitIds: platoonIds
 	})
 	const handleFormSuccess = () => {
 		refetchUnits()
@@ -70,7 +72,7 @@ export default function CompanyClassesTable({
 						<>
 							<ClassForm
 								onSuccess={handleFormSuccess}
-								unitId={company?.id}
+								platoonOptions={platoons}
 							/>
 							<Button onClick={() => refetchUnits()}>
 								<RefreshCw />
