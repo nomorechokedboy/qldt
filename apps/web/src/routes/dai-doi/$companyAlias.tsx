@@ -15,11 +15,11 @@ function RouteComponent() {
 	return (
 		<ProtectedRoute>
 			<div className='hidden h-full flex-1 flex-col space-y-8 p-8 md:flex'>
-				<Tabs defaultValue='platoons'>
+				<Tabs defaultValue='students'>
 					<TabsList>
+						<TabsTrigger value='students'>Quân nhân</TabsTrigger>
 						<TabsTrigger value='platoons'>Trung đội</TabsTrigger>
 						<TabsTrigger value='classes'>Tiểu đội</TabsTrigger>
-						<TabsTrigger value='students'>Quân nhân</TabsTrigger>
 					</TabsList>
 
 					<TabsContent value='platoons'>
