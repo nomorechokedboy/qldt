@@ -166,12 +166,10 @@ export const DeleteUsers = api(
 		console.log('users.DeleteStudents body', { body })
 		const users = body.ids
 		const validUnitIds = getAuthData()!.validUnitIds
-		const userId = Number(getAuthData()!.userID);
-		if(body.ids.includes(userId)){
+		const userId = Number(getAuthData()!.userID)
+		if (body.ids.includes(userId)) {
 			throw AppError.handleAppErr(
-				AppError.invalidArgument(
-					"Bạn không thể xóa chính mình!"
-				)
+				AppError.invalidArgument('Bạn không thể xóa chính mình!')
 			)
 		}
 		await userController.delete(users, validUnitIds)
@@ -197,6 +195,7 @@ interface InitAdminRequest {
 	username: string
 	password: string
 	displayName: string
+	rootUnitId: number
 }
 
 interface InitAdminResponse {
@@ -209,7 +208,8 @@ export const InitAdmin = api(
 		await userController.initAdmin({
 			username: req.username,
 			displayName: req.displayName,
-			password: req.password
+			password: req.password,
+			rootUnitId: req.rootUnitId
 		})
 
 		return { message: 'Success' }

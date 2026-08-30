@@ -13,6 +13,7 @@ import { appConfig } from '../configs'
 import { AppError } from '../errors'
 import userRepo from './repo'
 import userRolesRepo from '../user-roles/repo'
+import unitController from '../units/controller'
 
 class controller {
 	constructor(private readonly repo: Repository) {}
@@ -120,13 +121,25 @@ class controller {
 			)
 		}
 
+		const rootUnit = await unitController
+			.isInitRootUnit()
+			.catch(AppError.handleAppErr)
+		if (
+			rootUnit.initialized === false ||
+			rootUnit.rootUnitId !== req.rootUnitId
+		) {
+			AppError.handleAppErr(
+				AppError.invalidArgument('Invalid root unit id')
+			)
+		}
+
 		await userController
 			.create({
 				password: req.password,
 				displayName: req.displayName,
 				username: req.username,
 				isSuperUser: true,
-				unitId: null
+				unitId: req.rootUnitId
 			})
 			.catch(AppError.handleAppErr)
 

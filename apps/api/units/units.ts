@@ -1,14 +1,15 @@
 import { api, Query } from 'encore.dev/api'
-import { UnitParams } from '../schema'
+import { UnitDB as SchemaUnitDB, UnitLevelName, UnitParams } from '../schema'
 import unitController from './controller'
 import { ClassResponse } from '../classes/classes'
 import { getAuthData } from '~encore/auth'
 import { APICallMeta, currentRequest } from 'encore.dev'
+import log from 'encore.dev/log'
 
 type UnitBody = {
 	alias: string
 	name: string
-	level: 'battalion' | 'company'
+	level: UnitLevelName
 
 	parentId?: number | null
 }
@@ -28,7 +29,7 @@ interface CreateUnitResponse {
 }
 
 export const CreateUnit = api(
-	{ expose: false, method: 'POST', path: '/units' },
+	{ auth: true, expose: true, method: 'POST', path: '/units' },
 	async (body: CreateUnitRequest): Promise<CreateUnitResponse> => {
 		const unitParams: Array<UnitParams> = body.data.map((u) => ({
 			...u
@@ -42,6 +43,45 @@ export const CreateUnit = api(
 	}
 )
 
+interface IsInitRootUnitResponse {
+	data: boolean
+	rootUnitId?: number
+}
+
+export const IsInitRootUnit = api(
+	{
+		auth: false,
+		expose: true,
+		method: 'GET',
+		path: '/units/check-init-root'
+	},
+	async (): Promise<IsInitRootUnitResponse> => {
+		const { initialized, rootUnitId } =
+			await unitController.isInitRootUnit()
+
+		return { data: initialized, rootUnitId }
+	}
+)
+
+interface InitRootUnitRequest {
+	alias: string
+	name: string
+	level: UnitLevelName
+}
+
+interface InitRootUnitResponse {
+	data: UnitDB
+}
+
+export const InitRootUnit = api(
+	{ auth: false, expose: true, method: 'POST', path: '/units/init-root' },
+	async (body: InitRootUnitRequest): Promise<InitRootUnitResponse> => {
+		const created = await unitController.initRootUnit({ ...body })
+
+		return { data: created as UnitDB }
+	}
+)
+
 type unit = Omit<UnitDB, 'parentId'>
 
 export type Unit = unit & {
@@ -51,7 +91,7 @@ export type Unit = unit & {
 }
 
 export interface GetUnitsQuery {
-	level?: 'battalion' | 'company'
+	level?: UnitLevelName
 }
 
 interface GetUnitsResponse {
@@ -71,12 +111,60 @@ export const GetUnits = api(
 	}
 )
 
+interface DeleteUnitRequest {
+	ids: number[]
+}
+
+interface DeleteUnitResponse {
+	ids: number[]
+}
+
+export const DeleteUnits = api(
+	{ auth: true, expose: true, method: 'DELETE', path: '/units' },
+	async (body: DeleteUnitRequest): Promise<DeleteUnitResponse> => {
+		log.trace('units.DeleteUnits body', { body })
+		const callMeta = currentRequest() as APICallMeta
+		const validUnitIds = callMeta.middlewareData?.validUnitIds || []
+
+		const units: SchemaUnitDB[] = body.ids.map(
+			(id) => ({ id }) as SchemaUnitDB
+		)
+		await unitController.delete(units, validUnitIds)
+
+		return { ids: body.ids }
+	}
+)
+
+interface UpdateUnitPayload extends Partial<UnitBody> {
+	id: number
+}
+
+interface UpdateUnitBody {
+	data: UpdateUnitPayload[]
+}
+
+export const UpdateUnits = api(
+	{ auth: true, expose: true, method: 'PATCH', path: '/units' },
+	async (body: UpdateUnitBody) => {
+		log.trace('units.UpdateUnits body', { body })
+		const callMeta = currentRequest() as APICallMeta
+		const validUnitIds = callMeta.middlewareData?.validUnitIds || []
+
+		const units: SchemaUnitDB[] = body.data.map(
+			(u) => ({ ...u }) as SchemaUnitDB
+		)
+		await unitController.update(units, validUnitIds)
+
+		return {}
+	}
+)
+
 interface GetUnitRequest {
 	id?: Query<number>
 
 	alias: string
 	name?: Query<string>
-	level?: Query<'battalion' | 'company'>
+	level?: Query<UnitLevelName>
 
 	parentId?: Query<number> | null
 }
@@ -94,7 +182,7 @@ export const GetUnit = api(
 		const data = await unitController
 			.findOne({
 				...params,
-				level: level as 'battalion' | 'company' | undefined,
+				level: level as UnitLevelName | undefined,
 				validUnitIds
 			})
 			.then((resp) => (resp === undefined ? resp : ({ ...resp } as Unit)))
