@@ -66,7 +66,7 @@ export interface CreateUserRequest {
 	password: string
 	roleIds?: number[]
 	displayName: string
-	unitId: number
+	unitId: number | null
 	isSuperUser?: boolean
 	rank?: string
 	position?: string
@@ -105,6 +105,7 @@ export interface InitAdminRequest {
 	username: string
 	password: string
 	displayName: string
+	rootUnitId: number
 }
 
 export interface InitAdminResponse {}
