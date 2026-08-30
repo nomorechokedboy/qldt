@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/card'
 import { useAppForm } from '@/hooks/demo.form'
 import * as z from 'zod'
-import { useMutation } from '@tanstack/react-query'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { InitAdmin } from '@/api'
 import { toast } from 'sonner'
 import { useNavigate } from '@tanstack/react-router'
@@ -41,13 +41,20 @@ export default function InitializeAdminForm({
 	rootUnitId
 }: InitializeAdminFormProps) {
 	const navigate = useNavigate()
+	const queryClient = useQueryClient()
 	const { mutateAsync } = useMutation({
 		mutationFn: InitAdmin,
 		onSuccess: () => {
 			toast.success('Khởi tạo tài khoản quản trị thành công!', {
 				description: 'Bây giờ bạn đã có thể đăng nhập vào hệ thống.'
 			})
-			navigate({ to: '/', replace: true })
+			// The root layout redirects back to /khoi-tao-qtv while
+			// isInitAdmin is false, so update the cache synchronously
+			// before navigating away, or that stale check bounces the
+			// user right back here instead of reaching /login.
+			queryClient.setQueryData(['isInitAdmin'], true)
+			queryClient.invalidateQueries({ queryKey: ['isInitAdmin'] })
+			navigate({ to: '/login', replace: true })
 		},
 		onError: (err) => {
 			console.error('InitAdmin failed', err)

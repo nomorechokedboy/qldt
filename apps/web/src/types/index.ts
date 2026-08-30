@@ -21,6 +21,7 @@ export interface UserFormData extends Base {
 export interface ClassBody {
 	name: string
 	description?: string
+	unitId: number
 }
 
 export type PoliticalOrg = 'hcyu' | 'cpv'
@@ -31,6 +32,8 @@ export type StudentBody = {
 	address?: string
 	class?: Class
 	classId?: number
+	unit?: Unit
+	unitId?: number
 	cpvId?: string
 	dob?: string
 	educationLevel?: string

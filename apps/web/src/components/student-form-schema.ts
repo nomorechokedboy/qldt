@@ -26,6 +26,18 @@ const isoDateSchema = z
 	.refine((s) => dayjs(s, 'DD/MM/YYYY', true).isValid(), 'Ngày không hợp lệ')
 	.transform((s) => dayjs(s, 'DD/MM/YYYY').toISOString())
 
+const toOptionalNumber = (val: unknown) => {
+	if (val === undefined || val === null || val === '' || val === 0) {
+		return undefined
+	}
+
+	if (typeof val === 'string') {
+		return Number.parseInt(val)
+	}
+
+	return val
+}
+
 export const personalInfoSchema = z.object({
 	avatar: z
 		.file()
@@ -33,16 +45,8 @@ export const personalInfoSchema = z.object({
 		.max(2_000_000)
 		.nullable(),
 	fullName: z.string().nonempty('Họ và tên không được bỏ trống'),
-	classId: z.preprocess(
-		(val) => {
-			if (typeof val === 'string') {
-				return Number.parseInt(val)
-			}
-
-			return val
-		},
-		z.number().min(1, 'Tiểu đội không được bỏ trống')
-	),
+	classId: z.preprocess(toOptionalNumber, z.number().min(1).optional()),
+	unitId: z.preprocess(toOptionalNumber, z.number().min(1).optional()),
 	birthPlace: z.string().optional(),
 	address: z.string().optional(),
 	ethnic: z.string().nonempty('Dân tộc không được bỏ trống'),
@@ -109,9 +113,23 @@ export const familyInfoSchema = z.object({
 	isMarried: z.boolean().default(false)
 })
 
+const hasExactlyOneOwner = (data: { classId?: number; unitId?: number }) =>
+	(data.classId !== undefined) !== (data.unitId !== undefined)
+
+const ownerRefinement = {
+	message: 'Vui lòng chọn tiểu đội hoặc đơn vị',
+	path: ['classId']
+} as const
+
+export const personalInfoValidationSchema = personalInfoSchema.refine(
+	hasExactlyOneOwner,
+	ownerRefinement
+)
+
 export const StudentFormSchema = personalInfoSchema
 	.extend(militaryInfoSchema.shape)
 	.extend(parentInfoSchema.shape)
 	.extend(familyInfoSchema.shape)
+	.refine(hasExactlyOneOwner, ownerRefinement)
 
 export type StudentFormSchemaType = z.infer<typeof StudentFormSchema>

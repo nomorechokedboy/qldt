@@ -16,6 +16,8 @@ import {
 	rankOptions
 } from '@/data/ethnics'
 import useClassData from '@/hooks/useClasses'
+import useUnitsData from '@/hooks/useUnitsData'
+import { unitLevelLabels } from '@/data/unit-levels'
 import { getMediaUri } from '../lib/utils'
 import { useAppForm } from '@/hooks/demo.form'
 import { toast } from 'sonner'
@@ -45,6 +47,7 @@ export default function StudentEditForm({
 	const { mutateAsync: uploadFilesMutate } = useUploadFiles()
 
 	const { data: classes = [] } = useClassData()
+	const { data: units = [] } = useUnitsData()
 	// options cho select lớp
 	const classOptions = useMemo(
 		() =>
@@ -53,6 +56,21 @@ export default function StudentEditForm({
 				label: `${c.name} - ${c.unit.name}`
 			})),
 		[classes]
+	)
+	const unitOptions = useMemo(
+		() =>
+			units
+				.filter((u) => u.level !== 'squad')
+				.map((u) => ({
+					value: u.id.toString(),
+					label: `${u.name} (${unitLevelLabels[u.level]})`
+				})),
+		[units]
+	)
+	const [membershipType, setMembershipType] = useState<'class' | 'unit'>(
+		student.unitId !== undefined && student.unitId !== null
+			? 'unit'
+			: 'class'
 	)
 
 	const form = useAppForm({
@@ -64,7 +82,14 @@ export default function StudentEditForm({
 			avatar: student.avatar || (null as File | null),
 			relatedDocumentations: student.relatedDocumentations || '',
 			studentId: student.studentId || '',
-			classId: Number(student.classId),
+			classId:
+				student.classId !== undefined && student.classId !== null
+					? Number(student.classId)
+					: undefined,
+			unitId:
+				student.unitId !== undefined && student.unitId !== null
+					? Number(student.unitId)
+					: undefined,
 			contactPerson: student.contactPerson || {
 				name: '',
 				phoneNumber: '',
@@ -81,9 +106,14 @@ export default function StudentEditForm({
 					value.avatar = resp.uris[0]
 				}
 
-				if (typeof value.classId === 'string') {
-					value.classId = Number(value.classId)
-				}
+				value.classId =
+					value.classId !== undefined
+						? Number(value.classId)
+						: undefined
+				value.unitId =
+					value.unitId !== undefined
+						? Number(value.unitId)
+						: undefined
 				value.familySize = Number(value.familySize)
 				await handlePatchStudentInfo({ ...value })
 				if (onClose) onClose()
@@ -234,10 +264,15 @@ export default function StudentEditForm({
 						</p>
 						<p className='text-gray-600'>Cấp bậc: {student.rank}</p>
 						<p className='text-gray-600'>
-							Tiểu đội:{' '}
-							{classOptions.find(
-								(c) => c.value === student.class?.id.toString()
-							)?.label || 'Chưa có tiểu đội'}
+							{student.unit
+								? `Đơn vị: ${student.unit.name}`
+								: `Tiểu đội: ${
+										classOptions.find(
+											(c) =>
+												c.value ===
+												student.class?.id.toString()
+										)?.label || 'Chưa có tiểu đội'
+									}`}
 						</p>
 					</div>
 				</CardHeader>
@@ -342,11 +377,66 @@ export default function StudentEditForm({
 											name='position'
 											label='Chức vụ'
 										/>
-										<Field
-											name='classId'
-											label='Tiểu đội'
-											options={classOptions}
-										/>
+										<div className='flex flex-col gap-1'>
+											<Label>Thuộc về</Label>
+											<div className='flex gap-2'>
+												<Button
+													type='button'
+													size='sm'
+													variant={
+														membershipType ===
+														'class'
+															? 'default'
+															: 'outline'
+													}
+													onClick={() => {
+														setMembershipType(
+															'class'
+														)
+														form.setFieldValue(
+															'unitId',
+															undefined
+														)
+													}}
+												>
+													Tiểu đội
+												</Button>
+												<Button
+													type='button'
+													size='sm'
+													variant={
+														membershipType ===
+														'unit'
+															? 'default'
+															: 'outline'
+													}
+													onClick={() => {
+														setMembershipType(
+															'unit'
+														)
+														form.setFieldValue(
+															'classId',
+															undefined
+														)
+													}}
+												>
+													Đơn vị
+												</Button>
+											</div>
+										</div>
+										{membershipType === 'class' ? (
+											<Field
+												name='classId'
+												label='Tiểu đội'
+												options={classOptions}
+											/>
+										) : (
+											<Field
+												name='unitId'
+												label='Đơn vị'
+												options={unitOptions}
+											/>
+										)}
 										<Field
 											name='enlistmentPeriod'
 											label='Ngày nhập ngũ'

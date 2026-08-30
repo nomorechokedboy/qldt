@@ -1,9 +1,17 @@
 import { EhtnicOptions, religionOptions, eduLevelOptions } from '@/data/ethnics'
 import useClassData from '@/hooks/useClasses'
-import { useMemo } from 'react'
+import useUnitsData from '@/hooks/useUnitsData'
+import { unitLevelLabels } from '@/data/unit-levels'
+import { Button } from '@/components/ui/button'
+import { Label } from '@/components/ui/label'
+import { useMemo, useState } from 'react'
 
 export default function PersonalStep({ form }: { form: any }) {
-	const { data: classes = [], refetch } = useClassData()
+	const { data: classes = [] } = useClassData()
+	const { data: units = [] } = useUnitsData()
+	const [membershipType, setMembershipType] = useState<'class' | 'unit'>(
+		form.state.values.unitId ? 'unit' : 'class'
+	)
 
 	const classOptions = useMemo(
 		() =>
@@ -12,6 +20,17 @@ export default function PersonalStep({ form }: { form: any }) {
 				label: `${c.name} - ${c.unit.name}`
 			})),
 		[classes]
+	)
+
+	const unitOptions = useMemo(
+		() =>
+			units
+				.filter((u) => u.level !== 'squad')
+				.map((u) => ({
+					value: u.id.toString(),
+					label: `${u.name} (${unitLevelLabels[u.level]})`
+				})),
+		[units]
 	)
 
 	return (
@@ -42,18 +61,65 @@ export default function PersonalStep({ form }: { form: any }) {
 					)}
 				</form.AppField>
 
-				<form.AppField name='classId'>
-					{(field: any) => (
-						<field.Select
-							values={classOptions}
-							label='Tiểu đội'
-							// defaultValue={
-							//         eduLevelOptions[0]
-							//                 .value
-							// }
-						/>
-					)}
-				</form.AppField>
+				<div className='space-y-2'>
+					<Label>Thuộc về</Label>
+					<div className='flex gap-2'>
+						<Button
+							type='button'
+							size='sm'
+							variant={
+								membershipType === 'class'
+									? 'default'
+									: 'outline'
+							}
+							onClick={() => {
+								setMembershipType('class')
+								form.setFieldValue('unitId', undefined)
+							}}
+						>
+							Tiểu đội
+						</Button>
+						<Button
+							type='button'
+							size='sm'
+							variant={
+								membershipType === 'unit'
+									? 'default'
+									: 'outline'
+							}
+							onClick={() => {
+								setMembershipType('unit')
+								form.setFieldValue('classId', undefined)
+							}}
+						>
+							Đơn vị (Trung đội trở lên)
+						</Button>
+					</div>
+				</div>
+			</div>
+
+			<div className='grid grid-cols-2 gap-6'>
+				{membershipType === 'class' ? (
+					<form.AppField name='classId'>
+						{(field: any) => (
+							<field.Select
+								values={classOptions}
+								label='Tiểu đội'
+								placeholder='Chọn tiểu đội'
+							/>
+						)}
+					</form.AppField>
+				) : (
+					<form.AppField name='unitId'>
+						{(field: any) => (
+							<field.Select
+								values={unitOptions}
+								label='Đơn vị'
+								placeholder='Chọn đơn vị'
+							/>
+						)}
+					</form.AppField>
+				)}
 			</div>
 
 			{/* Birth Place and Address - Two Columns  1*/}

@@ -58,7 +58,9 @@ export default function StudentInfoTabs({ student }: StudentInfoTabsProps) {
 					{
 						id: student.id,
 						status: 'confirmed',
-						classId: student.class?.id
+						...(student.class
+							? { classId: student.class.id }
+							: { unitId: student.unit?.id })
 					}
 				]
 			})
@@ -175,14 +177,16 @@ export default function StudentInfoTabs({ student }: StudentInfoTabsProps) {
 								<Users className='h-4 w-4 text-purple-600 shrink-0' />
 								<div>
 									<p className='text-xs text-gray-500'>
-										Tiểu đội
+										{student.unit ? 'Đơn vị' : 'Tiểu đội'}
 									</p>
 									<p className='font-semibold text-gray-900'>
-										{classOptions.find(
-											(c) =>
-												c.value ===
-												student?.class?.id.toString()
-										)?.label || 'Chưa có tiểu đội'}
+										{student.unit
+											? student.unit.name
+											: classOptions.find(
+													(c) =>
+														c.value ===
+														student?.class?.id?.toString()
+												)?.label || 'Chưa có tiểu đội'}
 									</p>
 								</div>
 							</div>
@@ -383,11 +387,13 @@ export default function StudentInfoTabs({ student }: StudentInfoTabsProps) {
 									<Field
 										label='Đơn vị (Tiểu đội)'
 										value={
-											classOptions.find(
-												(c) =>
-													c.value ===
-													student?.class?.id.toString()
-											)?.label
+											student.unit
+												? student.unit.name
+												: classOptions.find(
+														(c) =>
+															c.value ===
+															student?.class?.id?.toString()
+													)?.label
 										}
 									/>
 									<Field
