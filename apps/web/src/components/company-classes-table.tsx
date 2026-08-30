@@ -29,7 +29,7 @@ export default function CompanyClassesTable({
 	}
 
 	const searchConfig = [
-		createSearchConfig('name', 'Tìm kiếm theo tên lớp...')
+		createSearchConfig('name', 'Tìm kiếm theo tên tiểu đội...')
 	]
 	const { createFacetedFilter } = useDataTableToolbarConfig()
 
@@ -47,12 +47,12 @@ export default function CompanyClassesTable({
 			<div className='flex items-center justify-between space-y-2'>
 				<div>
 					<h2 className='text-2xl font-bold tracking-tight'>
-						Danh sách lớp của {company?.name}
+						Danh sách tiểu đội của {company?.name}
 					</h2>
 				</div>
 			</div>
 			<DataTable
-				placeholder='Đại đội chưa có lớp nào'
+				placeholder='Đại đội chưa có tiểu đội nào'
 				columns={columns}
 				cardComponent={({ data }) => (
 					<ClassCard

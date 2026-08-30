@@ -234,10 +234,10 @@ export default function StudentEditForm({
 						</p>
 						<p className='text-gray-600'>Cấp bậc: {student.rank}</p>
 						<p className='text-gray-600'>
-							Lớp:{' '}
+							Tiểu đội:{' '}
 							{classOptions.find(
 								(c) => c.value === student.class?.id.toString()
-							)?.label || 'Chưa có lớp'}
+							)?.label || 'Chưa có tiểu đội'}
 						</p>
 					</div>
 				</CardHeader>

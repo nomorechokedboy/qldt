@@ -36,7 +36,6 @@ export function ImportStudentsDialog({
 	onSuccess
 }: ImportStudentsDialogProps) {
 	const { data: classes = [] } = useClassData()
-	// options cho select lớp
 	const classOptions = useMemo(
 		() =>
 			classes.map((c) => ({

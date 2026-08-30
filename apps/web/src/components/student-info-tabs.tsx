@@ -174,13 +174,15 @@ export default function StudentInfoTabs({ student }: StudentInfoTabsProps) {
 							<div className='flex items-center gap-2 text-sm'>
 								<Users className='h-4 w-4 text-purple-600 shrink-0' />
 								<div>
-									<p className='text-xs text-gray-500'>Lớp</p>
+									<p className='text-xs text-gray-500'>
+										Tiểu đội
+									</p>
 									<p className='font-semibold text-gray-900'>
 										{classOptions.find(
 											(c) =>
 												c.value ===
 												student?.class?.id.toString()
-										)?.label || 'Chưa có lớp'}
+										)?.label || 'Chưa có tiểu đội'}
 									</p>
 								</div>
 							</div>
@@ -379,7 +381,7 @@ export default function StudentInfoTabs({ student }: StudentInfoTabsProps) {
 										value={student.position}
 									/>
 									<Field
-										label='Đơn vị (Lớp)'
+										label='Đơn vị (Tiểu đội)'
 										value={
 											classOptions.find(
 												(c) =>

@@ -91,7 +91,7 @@ export default function CompanyStudentTable({
 							Danh sách quân nhân Đại đội
 						</h2>
 						<p className='text-muted-foreground'>
-							Đây là danh sách quân nhân của {unit?.name} a
+							Đây là danh sách quân nhân của {unit?.name}
 						</p>
 					</div>
 				</div>

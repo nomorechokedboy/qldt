@@ -1728,10 +1728,6 @@ export const columnsWithoutAction: ColumnDef<Student>[] = [
 		meta: {
 			label: 'Trạng thái'
 		}
-	},
-	{
-		id: 'actions',
-		cell: ({ row }) => <DataTableRowActions row={row} />
 	}
 ]
 

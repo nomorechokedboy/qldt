@@ -33,10 +33,10 @@ export default function ClassCard({ data, onEdit, onDelete }: ClassCardProps) {
 	const handleDelete = async () => {
 		try {
 			await deleteClassMutation.mutateAsync([data.id])
-			toast.success(`Đã xoá lớp "${data.name}" thành công!`)
+			toast.success(`Đã xoá tiểu đội "${data.name}" thành công!`)
 			onDelete?.(data)
 		} catch (error) {
-			toast.error('Có lỗi xảy ra khi xoá lớp học')
+			toast.error('Có lỗi xảy ra khi xoá tiểu đội')
 		} finally {
 			setOpenDelete(false)
 		}
@@ -125,7 +125,7 @@ export default function ClassCard({ data, onEdit, onDelete }: ClassCardProps) {
 			<Dialog open={openEdit} onOpenChange={setOpenEdit}>
 				<DialogContent className='backdrop-blur-sm flex items-center justify-center'>
 					<DialogTitle className='sr-only'>
-						Chỉnh sửa lớp học
+						Chỉnh sửa tiểu đội
 					</DialogTitle>
 					<ClassEditForm
 						classData={data}
@@ -141,14 +141,14 @@ export default function ClassCard({ data, onEdit, onDelete }: ClassCardProps) {
 			<Dialog open={openDelete} onOpenChange={setOpenDelete}>
 				<DialogContent className='max-w-md max-h-1/3'>
 					<DialogTitle className='sr-only'>
-						Xác nhận xoá lớp học
+						Xác nhận xoá tiểu đội
 					</DialogTitle>
 					<div className='flex flex-col gap-4'>
 						<div className='font-semibold text-lg text-center'>
-							Xác nhận xoá lớp học?
+							Xác nhận xoá tiểu đội?
 						</div>
 						<div className='text-center text-muted-foreground'>
-							Bạn có chắc muốn xoá lớp{' '}
+							Bạn có chắc muốn xoá tiểu đội{' '}
 							<b className='text-red-600'>{data.name}</b> không?
 							<p>
 								Hành động này <b>không thể hoàn tác.</b>

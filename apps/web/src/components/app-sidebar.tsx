@@ -1,23 +1,14 @@
 import { SidebarFooter, useSidebar } from '@/components/ui/sidebar'
 import * as React from 'react'
 import {
-	UserPlus,
 	Calendar,
 	ChevronDown,
 	PieChart,
-	Star,
-	HeartHandshake,
-	Church,
-	UserCheck,
 	Building2,
-	UsersRound,
 	Building,
 	Home,
-	Proportions,
 	List,
-	HouseHeart,
-	UserRoundCog,
-	ShieldUser
+	UserRoundCog
 } from 'lucide-react'
 import {
 	Sidebar,
@@ -42,7 +33,7 @@ import {
 	CollapsibleTrigger
 } from '@/components/ui/collapsible'
 import useUnitsData from '@/hooks/useUnitsData'
-import Cdhc2Logo from '@/assets/cdhc2.png'
+import Cdhc2Logo from '@/assets/lu75.jpg'
 import { AppSidebarSkeleton } from './app-sidebar-skeleton'
 import { ThemeToggle } from './theme-toggle'
 import useAuth from '@/hooks/useAuth'
@@ -293,7 +284,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 	const [firstNavItem, ...navMain] = data.navMain
 	const allNavItems = [
 		firstNavItem,
-		{ title: 'Đơn vị', url: '#', items: unitsNavbar },
+		{
+			title: 'Đơn vị',
+			url: '#',
+			items: [
+				{
+					title: 'Quản lý đơn vị',
+					url: '/quan-ly-don-vi',
+					icon: Building2
+				},
+				...(unitsNavbar ?? [])
+			]
+		},
 		...navMain
 	]
 	const newData = {
