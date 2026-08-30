@@ -1,4 +1,4 @@
-import { inArray, eq, sql, and, ne, between, count } from 'drizzle-orm'
+import { inArray, eq, sql, and, or, ne, between, count } from 'drizzle-orm'
 import log from 'encore.dev/log'
 import orm, { DrizzleDatabase } from '../database'
 import { AppError } from '../errors/index'
@@ -131,8 +131,18 @@ class StudentSqliteRepo implements Repository {
 		const whereConds = []
 
 		const isClassIdExist = q.classIds !== undefined
-		if (isClassIdExist) {
+		const isUnitIdExist = q.unitIds !== undefined
+		if (isClassIdExist && isUnitIdExist) {
+			whereConds.push(
+				or(
+					inArray(students.classId, q.classIds!),
+					inArray(students.unitId, q.unitIds!)
+				)!
+			)
+		} else if (isClassIdExist) {
 			whereConds.push(inArray(students.classId, q.classIds!))
+		} else if (isUnitIdExist) {
+			whereConds.push(inArray(students.unitId, q.unitIds!))
 		}
 
 		const isPolicicalOrgExist = q.politicalOrg !== undefined
@@ -243,7 +253,8 @@ class StudentSqliteRepo implements Repository {
 				with: {
 					class: {
 						with: { unit: true }
-					}
+					},
+					unit: true
 				}
 			})
 			.catch(handleDatabaseErr) as unknown as Array<Student>

@@ -1,5 +1,6 @@
 import InitializeAdminForm from '@/components/initialize-admin-form'
 import useIsInitAdmin from '@/hooks/useIsInitAdmin'
+import useIsInitRootUnit from '@/hooks/useIsInitRootUnit'
 import { createFileRoute, Navigate } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/khoi-tao-qtv')({
@@ -7,7 +8,19 @@ export const Route = createFileRoute('/khoi-tao-qtv')({
 })
 
 function RouteComponent() {
-	const { data: isInitAdmin } = useIsInitAdmin()
+	const { data: isInitAdmin, isLoading: isInitAdminLoading } =
+		useIsInitAdmin()
+	const { data: rootUnitStatus, isLoading: isRootUnitLoading } =
+		useIsInitRootUnit()
+
+	if (isInitAdminLoading || isRootUnitLoading) {
+		return null
+	}
+
+	if (rootUnitStatus?.initialized !== true) {
+		return <Navigate to='/khoi-tao-don-vi' replace={true} />
+	}
+
 	if (isInitAdmin !== false) {
 		return <Navigate to='/' replace={true} />
 	}
@@ -20,7 +33,7 @@ function RouteComponent() {
 						Khởi tạo lần đầu
 					</p>
 				</div>
-				<InitializeAdminForm />
+				<InitializeAdminForm rootUnitId={rootUnitStatus.rootUnitId!} />
 				<p className='text-center text-xs text-muted-foreground'>
 					Tài khoản quản trị viên này sẽ có toàn bộ quyền truy cập hệ
 					thống và dữ liệu.

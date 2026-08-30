@@ -4,6 +4,7 @@ import { customType } from 'drizzle-orm/sqlite-core'
 import { AppError } from '../errors/index'
 import { baseSchema } from './base'
 import { Class, classes } from './classes'
+import { Unit, units } from './units'
 
 const PoliticalOrgEnum = customType<{ data: string; driverData: string }>({
 	dataType() {
@@ -66,10 +67,11 @@ export const students = sqlite.sqliteTable('students', {
 	achievement: sqlite.text().default('Không'),
 	disciplinaryHistory: sqlite.text().default('Không'),
 	phone: sqlite.text().default(''),
-	classId: sqlite
-		.integer()
-		.notNull()
-		.references(() => classes.id),
+	// A student is either a squad member (classId) or attached directly to
+	// a platoon-or-larger unit, e.g. a company commander (unitId).
+	// Exactly one of the two is set; enforced in the controller, not here.
+	classId: sqlite.integer().references(() => classes.id),
+	unitId: sqlite.integer().references(() => units.id),
 	cpvOfficialAt: sqlite.text(),
 	avatar: sqlite.text(),
 	siblings: sqlite.text({ mode: 'json' }).default(sql`'[]'`),
@@ -87,13 +89,18 @@ export const studentsRelations = relations(students, ({ one }) => ({
 	class: one(classes, {
 		fields: [students.classId],
 		references: [classes.id]
+	}),
+	unit: one(units, {
+		fields: [students.unitId],
+		references: [units.id]
 	})
 }))
 
 export type StudentDB = InferSelectModel<typeof students>
 
-export type Student = Omit<StudentDB, 'classId'> & {
-	class: Omit<Class, 'studentCount'>
+export type Student = Omit<StudentDB, 'classId' | 'unitId'> & {
+	class: Omit<Class, 'studentCount'> | null
+	unit: Unit | null
 }
 
 export type StudentParam = InferInsertModel<typeof students>
@@ -119,6 +126,7 @@ export type StudentQuery = {
 	birthdayInQuarter?: Quarter
 	birthdayInWeek?: boolean
 	classIds?: Array<number>
+	unitIds?: Array<number>
 	hasReligion?: boolean
 	ids?: Array<number>
 	isEthnicMinority?: boolean

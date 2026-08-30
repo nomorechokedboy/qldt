@@ -138,7 +138,8 @@ CREATE TABLE `students` (
 	`achievement` text DEFAULT 'Không',
 	`disciplinaryHistory` text DEFAULT 'Không',
 	`phone` text DEFAULT '',
-	`classId` integer NOT NULL,
+	`classId` integer,
+	`unitId` integer,
 	`cpvOfficialAt` text,
 	`avatar` text,
 	`siblings` text DEFAULT '[]',
@@ -146,7 +147,8 @@ CREATE TABLE `students` (
 	`studentId` text,
 	`relatedDocumentations` text,
 	`status` text DEFAULT 'pending' NOT NULL,
-	FOREIGN KEY (`classId`) REFERENCES `classes`(`id`) ON UPDATE no action ON DELETE no action
+	FOREIGN KEY (`classId`) REFERENCES `classes`(`id`) ON UPDATE no action ON DELETE no action,
+	FOREIGN KEY (`unitId`) REFERENCES `units`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
 CREATE TABLE `units` (

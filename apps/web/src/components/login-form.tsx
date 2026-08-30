@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import cdhc2Logo from '@/assets/cdhc2.png'
+import cdhc2Logo from '@/assets/lu75.jpg'
 import { useAppForm } from '@/hooks/demo.form'
 import useAuth from '@/hooks/useAuth'
 

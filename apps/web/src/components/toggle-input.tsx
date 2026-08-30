@@ -152,7 +152,6 @@ export default function ToggleInput<T extends InputType>(
 		setTempValue(value)
 		setIsEditing(false)
 		setIsPopoverOpen(false)
-		onSave?.(value)
 		onCancel?.()
 	}
 

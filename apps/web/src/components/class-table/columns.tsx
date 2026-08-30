@@ -33,10 +33,15 @@ export const columns: ColumnDef<Class>[] = [
 	},
 	{
 		accessorKey: 'name',
-		header: 'Tên lớp',
+		header: 'Tiểu đội',
 		cell: ({ row }) => {
 			const status = row.getValue('status') as 'ongoing' | 'graduated'
-			const statusLabel = status === 'ongoing' ? 'Đang diễn ra' : status === 'graduated' ? 'Đã tốt nghiệp' : ''
+			const statusLabel =
+				status === 'ongoing'
+					? 'Đang diễn ra'
+					: status === 'graduated'
+						? 'Đã tốt nghiệp'
+						: ''
 			const statusVariant = status === 'ongoing' ? 'default' : 'secondary'
 			return (
 				<div className='flex items-center gap-2'>

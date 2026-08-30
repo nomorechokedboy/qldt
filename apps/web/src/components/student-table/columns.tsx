@@ -16,7 +16,7 @@ function isoToDdMmYyyy(isoDate: string): string {
 export const baseStudentsColumns: ColumnDef<Student>[] = [
 	{
 		id: 'class.name',
-		accessorFn: (row) => row.class?.name,
+		accessorFn: (row) => row.class?.name ?? row.unit?.name,
 		header: 'Tiểu đội',
 		cell: ({ row }) => (
 			<div className='w-20'>
@@ -482,7 +482,10 @@ export const battalionStudentColumns: ColumnDef<Student>[] = [
 	},
 	{
 		id: 'class.name',
-		accessorFn: (row) => `${row.class?.name} - ${row.class?.unit.alias}`,
+		accessorFn: (row) =>
+			row.class
+				? `${row.class.name} - ${row.class.unit.alias}`
+				: (row.unit?.name ?? ''),
 		header: 'Tiểu đội',
 		cell: ({ row }) => (
 			<div className='w-20'>
@@ -914,7 +917,10 @@ export const battalionStudentColumnsWithoutAction: ColumnDef<Student>[] = [
 	},
 	{
 		id: 'class.name',
-		accessorFn: (row) => `${row.class?.name} - ${row.class?.unit.alias}`,
+		accessorFn: (row) =>
+			row.class
+				? `${row.class.name} - ${row.class.unit.alias}`
+				: (row.unit?.name ?? ''),
 		header: 'Tiểu đội',
 		cell: ({ row }) => (
 			<div className='w-20'>
@@ -1494,17 +1500,6 @@ export const columnsWithoutAction: ColumnDef<Student>[] = [
 		}
 	},
 	{
-		accessorKey: 'previousPosition',
-		header: ({ column }) => (
-			<DataTableColumnHeader column={column} title='Chức vụ cũ' />
-		),
-		cell: EditableCell,
-		enableHiding: true,
-		meta: {
-			label: 'Chức vụ cũ'
-		}
-	},
-	{
 		accessorKey: 'religion',
 		header: ({ column }) => (
 			<DataTableColumnHeader column={column} title='Tôn giáo' />
@@ -1728,10 +1723,6 @@ export const columnsWithoutAction: ColumnDef<Student>[] = [
 		meta: {
 			label: 'Trạng thái'
 		}
-	},
-	{
-		id: 'actions',
-		cell: ({ row }) => <DataTableRowActions row={row} />
 	}
 ]
 

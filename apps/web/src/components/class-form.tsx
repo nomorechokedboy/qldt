@@ -18,8 +18,9 @@ import type { Class, ClassBody } from '@/types'
 import { toast } from 'sonner'
 
 const schema = z.object({
-	name: z.string().min(1, 'Tên lớp không được bỏ trống'),
-	description: z.string()
+	name: z.string().min(1, 'Tên tiểu đội không được bỏ trống'),
+	description: z.string(),
+	unitId: z.string().min(1, 'Vui lòng chọn trung đội')
 })
 
 export interface ClassFormProps {
@@ -28,10 +29,13 @@ export interface ClassFormProps {
 		variables: ClassBody,
 		context: unknown
 	) => unknown
-	unitId: number | undefined
+	platoonOptions: { id: number; name: string }[]
 }
 
-export default function ClassForm({ onSuccess, unitId }: ClassFormProps) {
+export default function ClassForm({
+	onSuccess,
+	platoonOptions
+}: ClassFormProps) {
 	const { mutateAsync } = useMutation({
 		mutationFn: CreateClass,
 		onError: (error) => {
@@ -43,25 +47,20 @@ export default function ClassForm({ onSuccess, unitId }: ClassFormProps) {
 		defaultValues: {
 			name: '',
 			description: '',
-			unitId
+			unitId: ''
 		},
 		onSubmit: async ({ value, formApi }: { value: any; formApi: any }) => {
-			if (unitId === undefined) {
-				toast.error(
-					'Có lỗi xảy ra, không thể lấy được thông tin đại đội để tạo lớp!'
-				)
-				return
-			}
+			const payload = { ...value, unitId: Number(value.unitId) }
 
 			try {
-				const result = await mutateAsync(value)
-				onSuccess(result, value, undefined)
+				const result = await mutateAsync(payload)
+				onSuccess(result, payload, undefined)
 
-				toast.success('Thêm mới lớp thành công')
+				toast.success('Thêm mới tiểu đội thành công')
 				formApi.reset()
 			} catch (err) {
 				console.error(err)
-				toast.error('Thêm mới lớp thất bại')
+				toast.error('Thêm mới tiểu đội thất bại')
 			} finally {
 				setOpen(false)
 			}
@@ -76,12 +75,12 @@ export default function ClassForm({ onSuccess, unitId }: ClassFormProps) {
 			<DialogTrigger asChild>
 				<Button>
 					<Plus className='w-4 h-4 mr-2' />
-					Thêm lớp
+					Thêm tiểu đội
 				</Button>
 			</DialogTrigger>
 			<DialogContent className='sm:max-w-md'>
 				<DialogHeader>
-					<DialogTitle>Biểu mẫu thêm lớp</DialogTitle>
+					<DialogTitle>Biểu mẫu thêm tiểu đội</DialogTitle>
 				</DialogHeader>
 				<div className='space-y-4'>
 					<form
@@ -95,7 +94,7 @@ export default function ClassForm({ onSuccess, unitId }: ClassFormProps) {
 						<div className='space-y-2'>
 							<form.AppField name='name'>
 								{(field: any) => (
-									<field.TextField label='Tên lớp' />
+									<field.TextField label='Tên tiểu đội' />
 								)}
 							</form.AppField>
 						</div>
@@ -103,7 +102,22 @@ export default function ClassForm({ onSuccess, unitId }: ClassFormProps) {
 						<div className='space-y-2'>
 							<form.AppField name='description'>
 								{(field: any) => (
-									<field.TextArea label='Mô tả về lớp' />
+									<field.TextArea label='Mô tả về tiểu đội' />
+								)}
+							</form.AppField>
+						</div>
+
+						<div className='space-y-2'>
+							<form.AppField name='unitId'>
+								{(field: any) => (
+									<field.Select
+										label='Trung đội'
+										placeholder='Chọn trung đội'
+										values={platoonOptions.map((p) => ({
+											label: p.name,
+											value: String(p.id)
+										}))}
+									/>
 								)}
 							</form.AppField>
 						</div>

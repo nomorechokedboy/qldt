@@ -2,7 +2,7 @@ import {
 	familyInfoSchema,
 	militaryInfoSchema,
 	parentInfoSchema,
-	personalInfoSchema
+	personalInfoValidationSchema
 } from '@/components/student-form-schema'
 
 export const STEPS = [
@@ -12,6 +12,7 @@ export const STEPS = [
 		fields: [
 			'fullName',
 			'classId',
+			'unitId',
 			'birthPlace',
 			'address',
 			'ethnic',
@@ -24,7 +25,7 @@ export const STEPS = [
 			'avatar',
 			'studentId'
 		],
-		validationSchema: personalInfoSchema
+		validationSchema: personalInfoValidationSchema
 	},
 	{
 		id: 'other',

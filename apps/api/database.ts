@@ -18,7 +18,7 @@ const dbPwd = appConfig.DATABASE_URI.startsWith('file:')
 	: `file:${path.resolve(appConfig.DATABASE_URI)}`
 
 const client = createClient({
-	url: `file:${dbPwd}`
+	url: dbPwd
 })
 
 const orm = drizzle({ schema, client, logger: new AppDBLogger() })

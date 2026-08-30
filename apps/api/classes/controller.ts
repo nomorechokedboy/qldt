@@ -42,13 +42,13 @@ class Controller {
 			)
 		}
 
-		const isBattalionUnitExist = units.some(
-			(unit) => unit.level === 'battalion'
+		const isNonPlatoonUnitExist = units.some(
+			(unit) => unit.level !== 'platoon'
 		)
-		if (isBattalionUnitExist) {
+		if (isNonPlatoonUnitExist) {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(
-					'There are invalid unit. Class unit must be company'
+					'There are invalid unit. Class unit must be platoon'
 				)
 			)
 		}

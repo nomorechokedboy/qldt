@@ -10,11 +10,15 @@ import {
 	type ExportPoliticsQualityReport,
 	type GetUnitQuery,
 	type InitAdminRequest,
+	type InitRootUnitBody,
+	type IsInitRootUnitResponse,
 	type MarkAsReadNotificationParams,
 	type Student,
 	type StudentBody,
 	type Unit,
+	type UnitBody,
 	type UnitLevel,
+	type UpdateUnitBody,
 	type UpdateRoleBody,
 	type UpdateStudentsBody,
 	type UpdateUserBody,
@@ -115,6 +119,33 @@ export function GetStudentByLevel(level: UnitLevel): Promise<Unit[]> {
 
 export function GetUnits(params?: GetUnitQuery) {
 	return requestClient.units.GetUnits(params ?? {}).then((resp) => resp.data)
+}
+
+export function CreateUnit(body: UnitBody) {
+	return requestClient.units
+		.CreateUnit({ data: [body] })
+		.then((resp) => resp.data)
+}
+
+export function IsInitRootUnit(): Promise<IsInitRootUnitResponse> {
+	return requestClient.units
+		.IsInitRootUnit()
+		.then((resp) => ({
+			initialized: resp.data,
+			rootUnitId: resp.rootUnitId
+		}))
+}
+
+export function InitRootUnit(body: InitRootUnitBody) {
+	return requestClient.units.InitRootUnit(body).then((resp) => resp.data)
+}
+
+export function DeleteUnits(ids: number[]) {
+	return requestClient.units.DeleteUnits({ ids }).then((resp) => resp)
+}
+
+export function UpdateUnits(body: UpdateUnitBody) {
+	return requestClient.units.UpdateUnits(body).then((resp) => resp)
 }
 
 export function GetUnit({

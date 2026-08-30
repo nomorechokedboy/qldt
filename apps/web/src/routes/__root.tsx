@@ -4,7 +4,7 @@ import {
 	useNavigate
 } from '@tanstack/react-router'
 import useAuth from '@/hooks/useAuth'
-import React, { useRef } from 'react'
+import React, { useEffect, useRef } from 'react'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import Header from '../components/Header'
 import TanStackQueryLayout from '../integrations/tanstack-query/layout'
@@ -17,8 +17,11 @@ import { useEffectOnce } from 'react-use'
 import { requestClient } from '@/api'
 import useInfiniteNotification from '@/hooks/useInfiniteNotification'
 import useUnreadNotificationCount from '@/hooks/useUnreadNotificationCount'
-import Cdhc2Logo from '@/assets/cdhc2.png'
+import Cdhc2Logo from '@/assets/lu75.jpg'
 import useIsInitAdmin from '@/hooks/useIsInitAdmin'
+import useIsInitRootUnit from '@/hooks/useIsInitRootUnit'
+import useUnitsData from '@/hooks/useUnitsData'
+import { useLocation } from '@tanstack/react-router'
 
 interface MyRouterContext {
 	queryClient: QueryClient
@@ -33,10 +36,44 @@ function RootLayout() {
 	const { refetch: refetchUnreadNoti } = useUnreadNotificationCount()
 	const streamRef = useRef<StreamIn<notifications.Message>>(null)
 	const { data: isInitAdmin } = useIsInitAdmin()
+	const { data: rootUnitStatus } = useIsInitRootUnit()
+	const location = useLocation()
 
-	if (isInitAdmin === false) {
-		navigate({ to: '/khoi-tao-qtv', replace: true })
-	}
+	const { data: units, isLoading: isUnitsLoading } = useUnitsData(undefined, {
+		enabled: isAuthenticated && isInitAdmin === true
+	})
+
+	useEffect(() => {
+		if (
+			rootUnitStatus?.initialized === false &&
+			location.pathname !== '/khoi-tao-don-vi'
+		) {
+			navigate({ to: '/khoi-tao-don-vi', replace: true })
+		} else if (
+			rootUnitStatus?.initialized === true &&
+			isInitAdmin === false &&
+			location.pathname !== '/khoi-tao-qtv'
+		) {
+			navigate({ to: '/khoi-tao-qtv', replace: true })
+		} else if (
+			isAuthenticated &&
+			isInitAdmin === true &&
+			!isUnitsLoading &&
+			units !== undefined &&
+			units.length === 0 &&
+			location.pathname !== '/khoi-tao-don-vi'
+		) {
+			navigate({ to: '/khoi-tao-don-vi', replace: true })
+		}
+	}, [
+		rootUnitStatus,
+		isInitAdmin,
+		isAuthenticated,
+		isUnitsLoading,
+		units,
+		location.pathname,
+		navigate
+	])
 
 	function handleRefreshNoti() {
 		refetchUnreadNoti()

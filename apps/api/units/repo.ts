@@ -1,9 +1,17 @@
 import log from 'encore.dev/log'
 import { Repository } from '.'
 import orm, { DrizzleDatabase } from '../database'
-import { UnitParams, UnitDB, Unit, units, UnitQuery } from '../schema/units'
+import {
+	UnitParams,
+	UnitDB,
+	Unit,
+	units,
+	UnitQuery,
+	UnitLevelName,
+	UpdateUnitMap
+} from '../schema/units'
 import { handleDatabaseErr } from '../utils'
-import { and, eq, inArray, SQL } from 'drizzle-orm'
+import { and, eq, inArray, isNull, SQL } from 'drizzle-orm'
 
 class repo implements Repository {
 	constructor(private readonly db: DrizzleDatabase) {}
@@ -14,6 +22,30 @@ class repo implements Repository {
 			.insert(units)
 			.values(params)
 			.returning()
+			.catch(handleDatabaseErr)
+	}
+
+	update(params: UpdateUnitMap): Promise<UnitDB[]> {
+		log.info('UnitRepo.update params: ', { params })
+
+		return this.db
+			.transaction(async (tx) => {
+				const updatedRecords: UnitDB[] = []
+
+				for (const { id, updatePayload } of params) {
+					const updated = await tx
+						.update(units)
+						.set(updatePayload)
+						.where(eq(units.id, id))
+						.returning()
+
+					if (updated.length > 0) {
+						updatedRecords.push(updated[0])
+					}
+				}
+
+				return updatedRecords
+			})
 			.catch(handleDatabaseErr)
 	}
 
@@ -67,11 +99,14 @@ class repo implements Repository {
 
 	async findOne(params: {
 		alias: string
-		level: 'battalion' | 'company'
+		level: UnitLevelName
 	}): Promise<Unit | undefined> {
 		const baseQuery = this.db.query.units
 
 		switch (params.level) {
+			// Classes (squads) attach to platoons, so reaching them from
+			// battalion/company requires going two/one level(s) down
+			// through children first.
 			case 'battalion':
 				return baseQuery
 					.findFirst({
@@ -80,7 +115,11 @@ class repo implements Repository {
 							eq(units.level, params.level)
 						),
 						with: {
-							children: { with: { classes: true } }
+							children: {
+								with: {
+									children: { with: { classes: true } }
+								}
+							}
 						}
 					})
 					.catch(handleDatabaseErr) as unknown as Unit
@@ -93,7 +132,7 @@ class repo implements Repository {
 							eq(units.level, params.level)
 						),
 						with: {
-							classes: true
+							children: { with: { classes: true } }
 						}
 					})
 					.catch(handleDatabaseErr) as unknown as Unit
@@ -134,6 +173,12 @@ class repo implements Repository {
 				where: eq(units.id, id),
 				with: withClause
 			})
+			.catch(handleDatabaseErr)
+	}
+
+	findRoot(): Promise<UnitDB | undefined> {
+		return this.db.query.units
+			.findFirst({ where: isNull(units.parentId) })
 			.catch(handleDatabaseErr)
 	}
 

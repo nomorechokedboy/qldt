@@ -21,6 +21,7 @@ export interface UserFormData extends Base {
 export interface ClassBody {
 	name: string
 	description?: string
+	unitId: number
 }
 
 export type PoliticalOrg = 'hcyu' | 'cpv'
@@ -31,6 +32,8 @@ export type StudentBody = {
 	address?: string
 	class?: Class
 	classId?: number
+	unit?: Unit
+	unitId?: number
 	cpvId?: string
 	dob?: string
 	educationLevel?: string
@@ -111,7 +114,7 @@ export interface UserUpdate {
 	position?: string
 }
 
-export interface Student extends Base, StudentBody { }
+export interface Student extends Base, StudentBody {}
 export interface User extends Base, UserBody {
 	unitName?: string
 }
@@ -198,7 +201,16 @@ export type UpdateStudentsBody = {
 	data: UpdateStudentBody[]
 }
 
-export type UnitLevel = 'battalion' | 'company'
+export type UnitLevel =
+	| 'corps'
+	| 'division'
+	| 'brigade'
+	| 'regiment'
+	| 'department'
+	| 'battalion'
+	| 'company'
+	| 'platoon'
+	| 'squad'
 
 export const defaultStudentColumnVisibility = {
 	dob: false,
@@ -275,6 +287,28 @@ export interface Unit extends Base {
 
 export interface GetUnitResponse {
 	data: Unit[]
+}
+
+export interface UnitBody {
+	alias: string
+	name: string
+	level: UnitLevel
+	parentId?: number | null
+}
+
+export type UpdateUnitBody = {
+	data: (Partial<UnitBody> & { id: number })[]
+}
+
+export interface InitRootUnitBody {
+	alias: string
+	name: string
+	level: UnitLevel
+}
+
+export interface IsInitRootUnitResponse {
+	initialized: boolean
+	rootUnitId?: number
 }
 
 export interface GetUnreadNotificationCountResponse {
@@ -387,8 +421,8 @@ export type InitAdminRequest = {
 	username: string
 	password: string
 	displayName: string
+	rootUnitId: number
 }
-
 
 export interface AssignRoleRequest {
 	userId: number

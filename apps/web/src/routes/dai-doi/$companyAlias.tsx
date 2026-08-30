@@ -1,6 +1,7 @@
 import { createFileRoute } from '@tanstack/react-router'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import CompanyClassesTable from '@/components/company-classes-table'
+import CompanyPlatoonTable from '@/components/company-platoon-table'
 import CompanyStudentTable from '@/components/company-student-table'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
@@ -14,11 +15,16 @@ function RouteComponent() {
 	return (
 		<ProtectedRoute>
 			<div className='hidden h-full flex-1 flex-col space-y-8 p-8 md:flex'>
-				<Tabs defaultValue='classes'>
+				<Tabs defaultValue='students'>
 					<TabsList>
-						<TabsTrigger value='classes'>Tiểu đội</TabsTrigger>
 						<TabsTrigger value='students'>Quân nhân</TabsTrigger>
+						<TabsTrigger value='platoons'>Trung đội</TabsTrigger>
+						<TabsTrigger value='classes'>Tiểu đội</TabsTrigger>
 					</TabsList>
+
+					<TabsContent value='platoons'>
+						<CompanyPlatoonTable companyAlias={companyAlias} />
+					</TabsContent>
 
 					<TabsContent value='classes'>
 						<CompanyClassesTable companyAlias={companyAlias} />

@@ -142,8 +142,9 @@ export const userRankOptions = [
 
 // User position options
 export const userPositionOptions = [
+	{ label: 'Trung đội trưởng', value: 'Trung đội trưởng' },
 	{ label: 'Đại đội trưởng', value: 'Đại đội trưởng' },
-	{ label: 'Phó Đại đội trưởng', value: 'Phó Đại đội trưởng' },
+	{ label: 'Phó đại đội trưởng', value: 'Phó đại đội trưởng' },
 	{ label: 'Chính trị viên Đại đội', value: 'Chính trị viên Đại đội' },
 	{ label: 'Tiểu đoàn trưởng', value: 'Tiểu đoàn trưởng' },
 	{ label: 'Phó tiểu đoàn trưởng', value: 'Phó tiểu đoàn trưởng' },
@@ -152,6 +153,32 @@ export const userPositionOptions = [
 		label: 'Chính trị viên phó tiểu đoàn',
 		value: 'Chính trị viên phó tiểu đoàn'
 	},
-	{ label: 'Hiệu trưởng', value: 'Hiệu trưởng' },
-	{ label: 'Phó hiệu trưởng', value: 'Phó hiệu trưởng' }
+	{ label: 'Phó chính ủy lữ đoàn', value: 'Phó chính ủy lữ đoàn' },
+	{ label: 'Chính ủy lữ đoàn', value: 'Chính ủy lữ đoàn' },
+	{ label: 'Phó lữ đoàn trưởng', value: 'Phó lữ đoàn trưởng' },
+	{ label: 'Lữ đoàn trưởng', value: 'Lữ đoàn trưởng' },
+	{ label: 'Phó chính ủy trung đoàn', value: 'Phó chính ủy trung đoàn' },
+	{ label: 'Chính ủy trung đoàn', value: 'Chính ủy trung đoàn' },
+	{ label: 'Phó trung đoàn trưởng', value: 'Phó trung đoàn trưởng' },
+	{ label: 'Trung đoàn trưởng', value: 'Trung đoàn trưởng' },
+	{ label: 'Phó chính ủy sư đoàn', value: 'Phó chính ủy sư đoàn' },
+	{ label: 'Chính ủy sư đoàn', value: 'Chính ủy sư đoàn' },
+	{ label: 'Phó sư đoàn trưởng', value: 'Phó sư đoàn trưởng' },
+	{ label: 'Sư đoàn trưởng', value: 'Sư đoàn trưởng' }
+]
+
+export const soldierPositionOptions = [
+	{ label: 'Y tá', value: 'Y tá' },
+	{ label: 'Vệ binh', value: 'Vệ binh' },
+	{ label: 'Tiểu đội trưởng vệ binh', value: 'Tiểu đội trưởng vệ binh' },
+	{ label: 'Tiểu đội trưởng', value: 'Tiểu đội trưởng' },
+	{ label: 'Tiểu đội trưởng VTĐ', value: 'Tiểu đội trưởng VTĐ' },
+	{ label: 'Tiểu đội trưởng HTĐ', value: 'Tiểu đội trưởng HTĐ' },
+	{ label: 'Tiểu đội trưởng TS', value: 'Tiểu đội trưởng TS' },
+	{ label: 'Khẩu đội trưởng', value: 'Khẩu đội trưởng' },
+	{
+		label: 'Trung đội trưởng (thực tập)',
+		value: 'Trung đội trưởng (thực tập)'
+	},
+	...userPositionOptions
 ]

@@ -50,24 +50,67 @@ export class Controller {
 		private readonly imageStorage: ImageProvider
 	) {}
 
-	create(params: StudentParam[], classIds: number[]): Promise<StudentDB[]> {
-		const checkCLassIds = params.every((c) => classIds.includes(c.classId))
-		if (checkCLassIds === false) {
+	async create(
+		params: StudentParam[],
+		classIds: number[],
+		unitIds: number[]
+	): Promise<StudentDB[]> {
+		const hasExactlyOneOwner = params.every((p) => {
+			const hasClass = p.classId !== undefined && p.classId !== null
+			const hasUnit = p.unitId !== undefined && p.unitId !== null
+			return hasClass !== hasUnit
+		})
+		if (hasExactlyOneOwner === false) {
 			throw AppError.handleAppErr(
-				AppError.unauthorized(
-					'You are not authorized create with this classid'
+				AppError.invalidArgument(
+					'A student must belong to exactly one of classId (squad) or unitId (platoon and above)'
 				)
 			)
 		}
+
+		const checkClassIds = params
+			.filter((p) => p.classId !== undefined && p.classId !== null)
+			.every((p) => classIds.includes(p.classId!))
+		const checkUnitIds = params
+			.filter((p) => p.unitId !== undefined && p.unitId !== null)
+			.every((p) => unitIds.includes(p.unitId!))
+		if (checkClassIds === false || checkUnitIds === false) {
+			throw AppError.handleAppErr(
+				AppError.unauthorized(
+					'You are not authorized create with this classId or unitId'
+				)
+			)
+		}
+
+		const unitIdsInPayload = params
+			.map((p) => p.unitId)
+			.filter((id): id is number => id !== undefined && id !== null)
+		if (unitIdsInPayload.length > 0) {
+			const targetUnits = await this.unitRepo.findByIds(unitIdsInPayload)
+			const hasSquadUnit = targetUnits.some((u) => u.level === 'squad')
+			if (hasSquadUnit) {
+				throw AppError.handleAppErr(
+					AppError.invalidArgument(
+						'unitId must reference a platoon-level unit or larger'
+					)
+				)
+			}
+		}
+
 		return this.repo.create(params).catch(AppError.handleAppErr)
 	}
 
-	async delete(studentsTodelete: StudentDB[], validClassIds: number[]) {
+	async delete(
+		studentsTodelete: StudentDB[],
+		validClassIds: number[],
+		validUnitIds: number[]
+	) {
 		const ids = studentsTodelete.map((student) => student.id)
 		const students = await this.repo.find({ ids })
-		const studentsClassIds = students.map((student) => student.class.id)
-		const hasPermission = studentsClassIds.every((id) =>
-			validClassIds.includes(id)
+		const hasPermission = students.every((student) =>
+			student.class !== null
+				? validClassIds.includes(student.class.id)
+				: validUnitIds.includes(student.unit!.id)
 		)
 		if (!hasPermission) {
 			throw AppError.handleAppErr(
@@ -82,7 +125,8 @@ export class Controller {
 
 	async find(
 		{ unitAlias, unitLevel, classId, classIds, ...q }: GetStudentsQuery,
-		validClassIds: number[]
+		validClassIds: number[],
+		validUnitIds: number[]
 	): Promise<Student[]> {
 		const isUnitAliasExist = unitAlias !== undefined
 		const isUnitLevelExist = unitLevel !== undefined
@@ -108,19 +152,27 @@ export class Controller {
 			}
 
 			if (u.level === 'battalion') {
-				const classIds = u.children
-					.map((c) => c.classes.map((cl) => cl.id))
-					.flat()
-				log.trace('studentRepo.find battalion case classIds', {
+				const companies = u.children
+				const platoons = companies.flatMap((c) => c.children ?? [])
+				const classIds = platoons.flatMap((p) =>
+					p.classes.map((cl) => cl.id)
+				)
+				const unitIds = [
+					u.id,
+					...companies.map((c) => c.id),
+					...platoons.map((p) => p.id)
+				]
+				log.trace('studentRepo.find battalion case ids', {
 					classIds,
+					unitIds,
 					query: q
 				})
 
-				const classIdCheck = classIds?.every((id) =>
-					validClassIds.includes(id)
-				)
+				const isAuthorized =
+					classIds.every((id) => validClassIds.includes(id)) &&
+					unitIds.every((id) => validUnitIds.includes(id))
 
-				if (classIdCheck === false) {
+				if (isAuthorized === false) {
 					AppError.handleAppErr(
 						AppError.unauthorized(
 							"You don't have permission to read one of those studentId"
@@ -129,22 +181,27 @@ export class Controller {
 				}
 
 				return this.repo
-					.find({ ...q, classIds })
+					.find({ ...q, classIds, unitIds })
 					.catch(AppError.handleAppErr)
 			}
 
 			if (u.level === 'company') {
-				const classIds = u.classes.map((c) => c.id)
-				log.trace('studentRepo.find company case classIds', {
+				const platoons = u.children
+				const classIds = platoons.flatMap((p) =>
+					p.classes.map((cl) => cl.id)
+				)
+				const unitIds = [u.id, ...platoons.map((p) => p.id)]
+				log.trace('studentRepo.find company case ids', {
 					classIds,
+					unitIds,
 					query: q
 				})
 
-				const classIdCheck = classIds?.every((id) =>
-					validClassIds.includes(id)
-				)
+				const isAuthorized =
+					classIds.every((id) => validClassIds.includes(id)) &&
+					unitIds.every((id) => validUnitIds.includes(id))
 
-				if (classIdCheck === false) {
+				if (isAuthorized === false) {
 					AppError.handleAppErr(
 						AppError.unauthorized(
 							"You don't have permission to read one of those studentId"
@@ -153,7 +210,7 @@ export class Controller {
 				}
 
 				return this.repo
-					.find({ ...q, classIds })
+					.find({ ...q, classIds, unitIds })
 					.catch(AppError.handleAppErr)
 			}
 		}
@@ -171,13 +228,18 @@ export class Controller {
 		}
 
 		return this.repo
-			.find({ ...q, classIds: cIds.length !== 0 ? cIds : undefined })
+			.find({
+				...q,
+				classIds: cIds.length !== 0 ? cIds : undefined,
+				unitIds: validUnitIds.length !== 0 ? validUnitIds : undefined
+			})
 			.catch(AppError.handleAppErr)
 	}
 
 	async update(
 		params: StudentDB[],
-		validClassIds: number[]
+		validClassIds: number[],
+		validUnitIds: number[]
 	): Promise<StudentDB[]> {
 		const ids = params.map((s) => s.id)
 		const isIdsEmpty = ids.length === 0
@@ -187,10 +249,29 @@ export class Controller {
 				AppError.invalidArgument('No record IDs provided')
 			)
 		}
-		const checkCLassIds = params.every((c) =>
-			validClassIds.includes(c.classId)
+		// classId/unitId are only present in the payload when the caller is
+		// (re)assigning the student's unit; an update that leaves them
+		// untouched is authorized by the existing record instead.
+		const existingById = new Map(
+			(await this.repo.find({ ids })).map((s) => [s.id, s])
 		)
-		if (checkCLassIds === false) {
+		const checkOwnership = params.every((p) => {
+			if (p.classId !== undefined && p.classId !== null) {
+				return validClassIds.includes(p.classId)
+			}
+			if (p.unitId !== undefined && p.unitId !== null) {
+				return validUnitIds.includes(p.unitId)
+			}
+
+			const existing = existingById.get(p.id)
+			if (existing === undefined) {
+				return false
+			}
+			return existing.class !== null
+				? validClassIds.includes(existing.class.id)
+				: validUnitIds.includes(existing.unit!.id)
+		})
+		if (checkOwnership === false) {
 			throw AppError.handleAppErr(
 				AppError.unauthorized(
 					"You don't have permission update this student"
@@ -225,12 +306,14 @@ export class Controller {
 	async updateStatus(
 		ids: number[],
 		status: 'pending' | 'confirmed',
-		validClassIds: number[]
+		validClassIds: number[],
+		validUnitIds: number[]
 	): Promise<StudentDB[]> {
 		log.info('StudentController.updateStatus params: ', {
 			ids,
 			status,
-			validClassIds
+			validClassIds,
+			validUnitIds
 		})
 
 		if (!ids || ids.length === 0) {
@@ -252,7 +335,9 @@ export class Controller {
 
 		// auth check
 		const checkClassIds = students.every((student) =>
-			validClassIds.includes(student.class.id)
+			student.class !== null
+				? validClassIds.includes(student.class.id)
+				: validUnitIds.includes(student.unit!.id)
 		)
 
 		if (!checkClassIds) {

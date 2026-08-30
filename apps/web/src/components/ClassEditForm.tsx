@@ -17,7 +17,11 @@ import { X } from 'lucide-react'
 
 interface ClassEditFormProps {
 	classData: Class
-	onUpdate: (updated: { name: string; description: string; status: 'ongoing' | 'graduated' }) => void
+	onUpdate: (updated: {
+		name: string
+		description: string
+		status: 'ongoing' | 'graduated'
+	}) => void
 	onClose: () => void
 }
 
@@ -29,7 +33,7 @@ export default function ClassEditForm({
 	const [name, setName] = useState(classData.name)
 	const [description, setDescription] = useState(classData.description)
 	const [status, setStatus] = useState<'ongoing' | 'graduated'>(
-		(classData.status as 'ongoing' | 'graduated')
+		classData.status as 'ongoing' | 'graduated'
 	)
 	const updateClassMutation = useUpdateClasses()
 
@@ -37,14 +41,20 @@ export default function ClassEditForm({
 		e.preventDefault()
 		try {
 			await updateClassMutation.mutateAsync([
-				{ ...classData, name, description, status, graduatedAt: classData.graduatedAt ?? "" }
+				{
+					...classData,
+					name,
+					description,
+					status,
+					graduatedAt: classData.graduatedAt ?? ''
+				}
 			])
-			toast.success('Cập nhật thông tin lớp học thành công')
+			toast.success('Cập nhật thông tin tiểu đội học thành công')
 			onUpdate({ name, description, status })
 			onClose()
 		} catch (err) {
 			console.error('Error updating class:', err)
-			toast.error('Cập nhật thông tin lớp học thất bại!')
+			toast.error('Cập nhật thông tin tiểu đội học thất bại!')
 		}
 	}
 
@@ -62,7 +72,7 @@ export default function ClassEditForm({
 
 			<form onSubmit={handleSubmit} className='space-y-4'>
 				<div className='space-y-2'>
-					<Label htmlFor='name'>Tên lớp học</Label>
+					<Label htmlFor='name'>Tiểu đội</Label>
 					<Input
 						id='name'
 						type='text'
@@ -84,23 +94,28 @@ export default function ClassEditForm({
 
 				<div className='space-y-2'>
 					<Label htmlFor='status'>Trạng thái</Label>
-					<Select value={status} onValueChange={(value) => setStatus(value as 'ongoing' | 'graduated')}>
+					<Select
+						value={status}
+						onValueChange={(value) =>
+							setStatus(value as 'ongoing' | 'graduated')
+						}
+					>
 						<SelectTrigger id='status'>
 							<SelectValue placeholder='Chọn trạng thái' />
 						</SelectTrigger>
 						<SelectContent>
-							<SelectItem value='ongoing'>Đang diễn ra</SelectItem>
-							<SelectItem value='graduated'>Đã tốt nghiệp</SelectItem>
+							<SelectItem value='ongoing'>
+								Đang diễn ra
+							</SelectItem>
+							<SelectItem value='graduated'>
+								Đã tốt nghiệp
+							</SelectItem>
 						</SelectContent>
 					</Select>
 				</div>
 
 				<div className='flex justify-end gap-2 pt-2'>
-					<Button
-						type='button'
-						onClick={onClose}
-						variant='outline'
-					>
+					<Button type='button' onClick={onClose} variant='outline'>
 						Huỷ
 					</Button>
 					<Button
