@@ -59,8 +59,8 @@ importers:
                 specifier: link:dayjs/plugin/duration
                 version: link:dayjs/plugin/duration
             encore.dev:
-                specifier: ^1.50.4
-                version: 1.50.4
+                specifier: ^1.58.4
+                version: 1.58.4
             jsonwebtoken:
                 specifier: ^9.0.2
                 version: 9.0.2
@@ -5322,10 +5322,10 @@ packages:
                 integrity: sha512-EC+0oUMY1Rqm4O6LLrgjtYDvcVYTy7chDnM4Q7030tP4Kwj3u/pR6gP9ygnp2CJMK5Gq+9Q2oqmrFJAz01DXjw==
             }
 
-    encore.dev@1.50.4:
+    encore.dev@1.58.4:
         resolution:
             {
-                integrity: sha512-BAF3sckeurWNrBa51bCJOrCUhvXvRenfytNOQQ4IaHr1KiPorM/6XF59qKqiCkXL3Mtt9Vt3liyxd0mW024ebg==
+                integrity: sha512-udW09GYHnJYeSA/MY3zfvOMC6ynvaobhkm6t1RMvz5H6eJiXodgq337iAs+ECpsYxh2ZJbg5ACIOIRUfJUjR8g==
             }
         engines: { node: '>=18.0.0' }
 
@@ -11706,7 +11706,7 @@ snapshots:
 
     emoji-regex@10.4.0: {}
 
-    encore.dev@1.50.4: {}
+    encore.dev@1.58.4: {}
 
     end-of-stream@1.4.5:
         dependencies:

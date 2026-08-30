@@ -41,7 +41,7 @@ export const personalInfoSchema = z.object({
 
 			return val
 		},
-		z.number().min(1, 'Lớp không được bỏ trống')
+		z.number().min(1, 'Tiểu đội không được bỏ trống')
 	),
 	birthPlace: z.string().optional(),
 	address: z.string().optional(),

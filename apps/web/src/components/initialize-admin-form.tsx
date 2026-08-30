@@ -33,7 +33,13 @@ const InitAdminSchema = z
 		path: ['confirmPassword'] // highlight the correct field
 	})
 
-export default function InitializeAdminForm() {
+export interface InitializeAdminFormProps {
+	rootUnitId: number
+}
+
+export default function InitializeAdminForm({
+	rootUnitId
+}: InitializeAdminFormProps) {
 	const navigate = useNavigate()
 	const { mutateAsync } = useMutation({
 		mutationFn: InitAdmin,
@@ -58,7 +64,7 @@ export default function InitializeAdminForm() {
 			displayName: ''
 		},
 		onSubmit: async ({ value }) => {
-			await mutateAsync(value)
+			await mutateAsync({ ...value, rootUnitId })
 		},
 		validators: { onChange: InitAdminSchema }
 	})
