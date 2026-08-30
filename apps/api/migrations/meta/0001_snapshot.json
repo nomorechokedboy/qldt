@@ -1,8 +1,8 @@
 {
+	"id": "0c74fc1d-f67e-460e-a230-a82c8d075dbb",
+	"prevId": "bb0a7d11-5485-409e-bd60-bd9135eeb58c",
 	"version": "6",
 	"dialect": "sqlite",
-	"id": "bb0a7d11-5485-409e-bd60-bd9135eeb58c",
-	"prevId": "00000000-0000-0000-0000-000000000000",
 	"tables": {
 		"actions": {
 			"name": "actions",
@@ -139,11 +139,11 @@
 				"classes_unitId_units_id_fk": {
 					"name": "classes_unitId_units_id_fk",
 					"tableFrom": "classes",
-					"tableTo": "units",
 					"columnsFrom": ["unitId"],
+					"tableTo": "units",
 					"columnsTo": ["id"],
-					"onDelete": "no action",
-					"onUpdate": "no action"
+					"onUpdate": "no action",
+					"onDelete": "no action"
 				}
 			},
 			"compositePrimaryKeys": {},
@@ -214,11 +214,11 @@
 				"notification_items_notificationId_notifications_id_fk": {
 					"name": "notification_items_notificationId_notifications_id_fk",
 					"tableFrom": "notification_items",
-					"tableTo": "notifications",
 					"columnsFrom": ["notificationId"],
+					"tableTo": "notifications",
 					"columnsTo": ["id"],
-					"onDelete": "no action",
-					"onUpdate": "no action"
+					"onUpdate": "no action",
+					"onDelete": "no action"
 				}
 			},
 			"compositePrimaryKeys": {},
@@ -326,20 +326,20 @@
 				"notifications_recipientId_users_id_fk": {
 					"name": "notifications_recipientId_users_id_fk",
 					"tableFrom": "notifications",
-					"tableTo": "users",
 					"columnsFrom": ["recipientId"],
+					"tableTo": "users",
 					"columnsTo": ["id"],
-					"onDelete": "no action",
-					"onUpdate": "no action"
+					"onUpdate": "no action",
+					"onDelete": "no action"
 				},
 				"notifications_actorId_users_id_fk": {
 					"name": "notifications_actorId_users_id_fk",
 					"tableFrom": "notifications",
-					"tableTo": "users",
 					"columnsFrom": ["actorId"],
+					"tableTo": "users",
 					"columnsTo": ["id"],
-					"onDelete": "no action",
-					"onUpdate": "no action"
+					"onUpdate": "no action",
+					"onDelete": "no action"
 				}
 			},
 			"compositePrimaryKeys": {},
@@ -419,20 +419,20 @@
 				"permissions_resource_id_resources_id_fk": {
 					"name": "permissions_resource_id_resources_id_fk",
 					"tableFrom": "permissions",
-					"tableTo": "resources",
 					"columnsFrom": ["resource_id"],
+					"tableTo": "resources",
 					"columnsTo": ["id"],
-					"onDelete": "cascade",
-					"onUpdate": "no action"
+					"onUpdate": "no action",
+					"onDelete": "cascade"
 				},
 				"permissions_action_id_actions_id_fk": {
 					"name": "permissions_action_id_actions_id_fk",
 					"tableFrom": "permissions",
-					"tableTo": "actions",
 					"columnsFrom": ["action_id"],
+					"tableTo": "actions",
 					"columnsTo": ["id"],
-					"onDelete": "cascade",
-					"onUpdate": "no action"
+					"onUpdate": "no action",
+					"onDelete": "cascade"
 				}
 			},
 			"compositePrimaryKeys": {},
@@ -530,20 +530,20 @@
 				"role_permissions_role_id_roles_id_fk": {
 					"name": "role_permissions_role_id_roles_id_fk",
 					"tableFrom": "role_permissions",
-					"tableTo": "roles",
 					"columnsFrom": ["role_id"],
+					"tableTo": "roles",
 					"columnsTo": ["id"],
-					"onDelete": "cascade",
-					"onUpdate": "no action"
+					"onUpdate": "no action",
+					"onDelete": "cascade"
 				},
 				"role_permissions_permission_id_permissions_id_fk": {
 					"name": "role_permissions_permission_id_permissions_id_fk",
 					"tableFrom": "role_permissions",
-					"tableTo": "permissions",
 					"columnsFrom": ["permission_id"],
+					"tableTo": "permissions",
 					"columnsTo": ["id"],
-					"onDelete": "cascade",
-					"onUpdate": "no action"
+					"onUpdate": "no action",
+					"onDelete": "cascade"
 				}
 			},
 			"compositePrimaryKeys": {
@@ -1031,20 +1031,20 @@
 				"students_classId_classes_id_fk": {
 					"name": "students_classId_classes_id_fk",
 					"tableFrom": "students",
-					"tableTo": "classes",
 					"columnsFrom": ["classId"],
+					"tableTo": "classes",
 					"columnsTo": ["id"],
-					"onDelete": "no action",
-					"onUpdate": "no action"
+					"onUpdate": "no action",
+					"onDelete": "no action"
 				},
 				"students_unitId_units_id_fk": {
 					"name": "students_unitId_units_id_fk",
 					"tableFrom": "students",
-					"tableTo": "units",
 					"columnsFrom": ["unitId"],
+					"tableTo": "units",
 					"columnsTo": ["id"],
-					"onDelete": "no action",
-					"onUpdate": "no action"
+					"onUpdate": "no action",
+					"onDelete": "no action"
 				}
 			},
 			"compositePrimaryKeys": {},
@@ -1122,11 +1122,11 @@
 				"parent_id_fk": {
 					"name": "parent_id_fk",
 					"tableFrom": "units",
-					"tableTo": "units",
 					"columnsFrom": ["parentId"],
+					"tableTo": "units",
 					"columnsTo": ["id"],
-					"onDelete": "no action",
-					"onUpdate": "no action"
+					"onUpdate": "no action",
+					"onDelete": "no action"
 				}
 			},
 			"compositePrimaryKeys": {},
@@ -1164,20 +1164,20 @@
 				"user_roles_user_id_users_id_fk": {
 					"name": "user_roles_user_id_users_id_fk",
 					"tableFrom": "user_roles",
-					"tableTo": "users",
 					"columnsFrom": ["user_id"],
+					"tableTo": "users",
 					"columnsTo": ["id"],
-					"onDelete": "cascade",
-					"onUpdate": "no action"
+					"onUpdate": "no action",
+					"onDelete": "cascade"
 				},
 				"user_roles_role_id_roles_id_fk": {
 					"name": "user_roles_role_id_roles_id_fk",
 					"tableFrom": "user_roles",
-					"tableTo": "roles",
 					"columnsFrom": ["role_id"],
+					"tableTo": "roles",
 					"columnsTo": ["id"],
-					"onDelete": "cascade",
-					"onUpdate": "no action"
+					"onUpdate": "no action",
+					"onDelete": "cascade"
 				}
 			},
 			"compositePrimaryKeys": {
@@ -1293,11 +1293,11 @@
 				"users_unitId_units_id_fk": {
 					"name": "users_unitId_units_id_fk",
 					"tableFrom": "users",
-					"tableTo": "units",
 					"columnsFrom": ["unitId"],
+					"tableTo": "units",
 					"columnsTo": ["id"],
-					"onDelete": "no action",
-					"onUpdate": "no action"
+					"onUpdate": "no action",
+					"onDelete": "no action"
 				}
 			},
 			"compositePrimaryKeys": {},
@@ -1308,9 +1308,9 @@
 	"views": {},
 	"enums": {},
 	"_meta": {
+		"columns": {},
 		"schemas": {},
-		"tables": {},
-		"columns": {}
+		"tables": {}
 	},
 	"internal": {
 		"indexes": {}
