@@ -9,7 +9,8 @@ import {
 	Home,
 	List,
 	UserRoundCog,
-	Package
+	Package,
+	History
 } from 'lucide-react'
 import {
 	Sidebar,
@@ -124,6 +125,11 @@ const data = {
 					title: 'Danh sách vai trò',
 					url: '/vai-tro',
 					icon: UserRoundCog
+				},
+				{
+					title: 'Nhật ký hoạt động',
+					url: '/nhat-ky-hoat-dong',
+					icon: History
 				}
 			]
 		}

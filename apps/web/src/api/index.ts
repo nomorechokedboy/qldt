@@ -28,6 +28,7 @@ import {
 } from '@/types'
 import { appFetcher } from '@/lib/axios'
 import Client, {
+	audit_logs,
 	auth,
 	classes,
 	facilities,
@@ -331,6 +332,10 @@ export function DeleteBuildings(ids: number[]) {
 }
 
 // Rooms
+
+export function GetAuditLogs(params?: audit_logs.GetAuditLogsQuery) {
+	return requestClient.audit_logs.GetAuditLogs(params ?? {})
+}
 
 export function GetRooms(params?: facilities.GetRoomsQuery) {
 	return requestClient.facilities
