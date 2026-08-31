@@ -1,18 +1,16 @@
 import { createFileRoute } from '@tanstack/react-router'
 import ProtectedRoute from '@/components/ProtectedRoute'
-import CompanyClassesTable from '@/components/company-classes-table'
-import CompanyPlatoonTable from '@/components/company-platoon-table'
 import CompanyStudentTable from '@/components/company-student-table'
 import CompanyFacilitiesTab from '@/components/company-facilities-tab'
 import CompanyWeaponsTab from '@/components/company-weapons-tab'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 
-export const Route = createFileRoute('/dai-doi/$companyAlias')({
+export const Route = createFileRoute('/trung-doi/$platoonAlias')({
 	component: RouteComponent
 })
 
 function RouteComponent() {
-	const { companyAlias } = Route.useParams()
+	const { platoonAlias } = Route.useParams()
 
 	return (
 		<ProtectedRoute>
@@ -20,8 +18,6 @@ function RouteComponent() {
 				<Tabs defaultValue='students'>
 					<TabsList>
 						<TabsTrigger value='students'>Quân nhân</TabsTrigger>
-						<TabsTrigger value='platoons'>Trung đội</TabsTrigger>
-						<TabsTrigger value='classes'>Tiểu đội</TabsTrigger>
 						<TabsTrigger value='facilities'>
 							Cơ sở vật chất
 						</TabsTrigger>
@@ -30,27 +26,19 @@ function RouteComponent() {
 						</TabsTrigger>
 					</TabsList>
 
-					<TabsContent value='platoons'>
-						<CompanyPlatoonTable companyAlias={companyAlias} />
-					</TabsContent>
-
-					<TabsContent value='classes'>
-						<CompanyClassesTable companyAlias={companyAlias} />
-					</TabsContent>
-
 					<TabsContent value='students'>
 						<CompanyStudentTable
-							alias={companyAlias}
-							level='company'
+							alias={platoonAlias}
+							level='platoon'
 						/>
 					</TabsContent>
 
 					<TabsContent value='facilities'>
-						<CompanyFacilitiesTab unitAlias={companyAlias} />
+						<CompanyFacilitiesTab unitAlias={platoonAlias} />
 					</TabsContent>
 
 					<TabsContent value='weapons'>
-						<CompanyWeaponsTab unitAlias={companyAlias} />
+						<CompanyWeaponsTab unitAlias={platoonAlias} />
 					</TabsContent>
 				</Tabs>
 			</div>

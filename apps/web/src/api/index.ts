@@ -27,7 +27,14 @@ import {
 	type GetUserRolesResponse
 } from '@/types'
 import { appFetcher } from '@/lib/axios'
-import Client, { auth, classes, students, units } from './client'
+import Client, {
+	auth,
+	classes,
+	facilities,
+	materials,
+	students,
+	units
+} from './client'
 import { ApiUrl } from '@/lib/const'
 
 export const requestClient = new Client(ApiUrl, {
@@ -128,12 +135,10 @@ export function CreateUnit(body: UnitBody) {
 }
 
 export function IsInitRootUnit(): Promise<IsInitRootUnitResponse> {
-	return requestClient.units
-		.IsInitRootUnit()
-		.then((resp) => ({
-			initialized: resp.data,
-			rootUnitId: resp.rootUnitId
-		}))
+	return requestClient.units.IsInitRootUnit().then((resp) => ({
+		initialized: resp.data,
+		rootUnitId: resp.rootUnitId
+	}))
 }
 
 export function InitRootUnit(body: InitRootUnitBody) {
@@ -153,6 +158,28 @@ export function GetUnit({
 	...params
 }: units.GetUnitRequest & { alias: string }) {
 	return requestClient.units.GetUnit(alias, params).then((resp) => resp.data)
+}
+
+export function GetUnitStats(alias: string) {
+	return requestClient.units.GetUnitStats(alias).then((resp) => resp.data)
+}
+
+export function GetUnitStatsStudents(alias: string) {
+	return requestClient.units
+		.GetUnitStatsStudents(alias)
+		.then((resp) => resp.data)
+}
+
+export function GetUnitStatsMaterialStocks(alias: string) {
+	return requestClient.units
+		.GetUnitStatsMaterialStocks(alias)
+		.then((resp) => resp.data)
+}
+
+export function GetUnitStatsMaterialAssets(alias: string) {
+	return requestClient.units
+		.GetUnitStatsMaterialAssets(alias)
+		.then((resp) => resp.data)
 }
 
 export function GetUnreadNotificationsCount(): Promise<number> {
@@ -281,4 +308,120 @@ export function AssignRolesToUser(body: AssignRoleRequest) {
 
 export function GetUserRoles(userId: number) {
 	return requestClient.user_roles.GetUserRoles(userId)
+}
+
+// Buildings
+
+export function GetBuildings() {
+	return requestClient.facilities.GetBuildings().then((resp) => resp.data)
+}
+
+export function CreateBuilding(body: facilities.BuildingBody) {
+	return requestClient.facilities
+		.CreateBuilding({ data: [body] })
+		.then((resp) => resp.data)
+}
+
+export function UpdateBuildings(body: facilities.UpdateBuildingBody) {
+	return requestClient.facilities.UpdateBuildings(body)
+}
+
+export function DeleteBuildings(ids: number[]) {
+	return requestClient.facilities.DeleteBuildings({ ids })
+}
+
+// Rooms
+
+export function GetRooms(params?: facilities.GetRoomsQuery) {
+	return requestClient.facilities
+		.GetRooms(params ?? {})
+		.then((resp) => resp.data)
+}
+
+export function CreateRoom(body: facilities.RoomBody) {
+	return requestClient.facilities
+		.CreateRoom({ data: [body] })
+		.then((resp) => resp.data)
+}
+
+export function UpdateRooms(body: facilities.UpdateRoomBody) {
+	return requestClient.facilities.UpdateRooms(body)
+}
+
+export function DeleteRooms(ids: number[]) {
+	return requestClient.facilities.DeleteRooms({ ids })
+}
+
+// Material types
+
+export function GetMaterialTypes() {
+	return requestClient.materials.GetMaterialTypes().then((resp) => resp.data)
+}
+
+export function CreateMaterialType(body: materials.MaterialTypeBody) {
+	return requestClient.materials
+		.CreateMaterialType({ data: [body] })
+		.then((resp) => resp.data)
+}
+
+export function UpdateMaterialTypes(body: materials.UpdateMaterialTypeBody) {
+	return requestClient.materials.UpdateMaterialTypes(body)
+}
+
+export function DeleteMaterialTypes(ids: number[]) {
+	return requestClient.materials.DeleteMaterialTypes({ ids })
+}
+
+// Material stocks
+
+export function GetMaterialStocks(params?: materials.GetMaterialStocksQuery) {
+	return requestClient.materials
+		.GetMaterialStocks(params ?? {})
+		.then((resp) => resp.data)
+}
+
+export function AddMaterialStock(body: materials.MaterialStockBody) {
+	return requestClient.materials
+		.AddMaterialStock({ data: [body] })
+		.then((resp) => resp.data)
+}
+
+export function UpdateMaterialStocks(
+	data: materials.UpdateMaterialStockBody['data']
+) {
+	return requestClient.materials.UpdateMaterialStocks({ data })
+}
+
+export function DeleteMaterialStocks(ids: number[]) {
+	return requestClient.materials.DeleteMaterialStocks({ ids })
+}
+
+// Material assets
+
+export function GetMaterialAssets(params?: materials.GetMaterialAssetsQuery) {
+	return requestClient.materials
+		.GetMaterialAssets(params ?? {})
+		.then((resp) => resp.data)
+}
+
+export function CreateMaterialAsset(body: materials.MaterialAssetBody) {
+	return requestClient.materials
+		.CreateMaterialAsset({ data: [body] })
+		.then((resp) => resp.data)
+}
+
+export function UpdateMaterialAssets(
+	data: materials.UpdateMaterialAssetBody['data']
+) {
+	return requestClient.materials.UpdateMaterialAssets({ data })
+}
+
+export function DeleteMaterialAssets(ids: number[]) {
+	return requestClient.materials.DeleteMaterialAssets({ ids })
+}
+
+export function GetMaterialAssetEvents(assetId: number) {
+	return requestClient.materials
+		.GetMaterialAssetEvents({ assetId })
+		.then((resp) => resp.data)
 }

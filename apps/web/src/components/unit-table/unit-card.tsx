@@ -1,6 +1,7 @@
 import { useState } from 'react'
-import { Pencil, Trash } from 'lucide-react'
+import { Pencil, Trash, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
+import { Link } from '@tanstack/react-router'
 import {
 	Card,
 	CardHeader,
@@ -15,6 +16,27 @@ import UnitEditForm from '@/components/UnitEditForm'
 import { useDeleteUnits } from '@/hooks/useDeleteUnits'
 import { unitLevelLabels } from '@/data/unit-levels'
 import type { Unit } from '@/types'
+
+function unitDetailLink(data: Unit) {
+	switch (data.level) {
+		case 'company':
+			return {
+				to: '/dai-doi/$companyAlias',
+				params: { companyAlias: data.alias }
+			} as const
+		case 'platoon':
+			return {
+				to: '/trung-doi/$platoonAlias',
+				params: { platoonAlias: data.alias }
+			} as const
+		default:
+			return {
+				to: '/tieu-doan/$alias',
+				params: { alias: data.alias },
+				search: { level: data.level, name: '' }
+			} as const
+	}
+}
 
 interface UnitCardProps {
 	data: Unit
@@ -64,6 +86,19 @@ export default function UnitCard({ data, onEdit, onDelete }: UnitCardProps) {
 						</CardDescription>
 					</div>
 					<div className='hidden gap-2 transition-all group-hover:flex self-start'>
+						<Button
+							asChild
+							type='button'
+							aria-label='Manage'
+							title='Quản lý đơn vị'
+							variant='ghost'
+							className='text-emerald-600'
+							size='icon'
+						>
+							<Link {...unitDetailLink(data)}>
+								<ExternalLink size={18} />
+							</Link>
+						</Button>
 						<Button
 							type='button'
 							aria-label='Edit'

@@ -8,7 +8,8 @@ import {
 	Building,
 	Home,
 	List,
-	UserRoundCog
+	UserRoundCog,
+	Package
 } from 'lucide-react'
 import {
 	Sidebar,
@@ -54,7 +55,13 @@ const data = {
 			url: '#',
 			superAdminOnly: false,
 			icon: PieChart,
-			items: []
+			items: [
+				{
+					title: 'Tổng hợp đơn vị',
+					url: '/thong-ke-doanh-trai',
+					icon: PieChart
+				}
+			]
 		},
 		{
 			title: 'Sự kiện đơn vị',
@@ -88,6 +95,19 @@ const data = {
 		// 		}
 		// 	]
 		// },
+		{
+			title: 'Vật tư',
+			url: '#',
+			superAdminOnly: false,
+			icon: Package,
+			items: [
+				{
+					title: 'Danh mục vật tư',
+					url: '/quan-ly-vat-tu/danh-muc',
+					icon: Package
+				}
+			]
+		},
 		{
 			title: 'Quản lý người dùng',
 			url: '#',
@@ -157,13 +177,16 @@ function NavMenuItem({ item, level }: { item: NavItem; level: number }) {
 	const hasChildren = item.items && item.items.length > 0
 	const Icon = item.icon
 
+	const [isOpen, setIsOpen] = React.useState(false)
+
 	if (level === 0) {
 		// Top level menu item
 		if (hasChildren) {
 			return (
 				<SidebarMenuItem>
 					<Collapsible
-						className='group/collapsible'
+						open={isOpen}
+						onOpenChange={setIsOpen}
 						defaultOpen={false}
 					>
 						<CollapsibleTrigger asChild>
@@ -171,7 +194,9 @@ function NavMenuItem({ item, level }: { item: NavItem; level: number }) {
 								{Icon && <Icon className='w-5 h-5' />}
 								{!isCollapsed && <span>{item.title}</span>}
 								{!isCollapsed && (
-									<ChevronDown className='ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180' />
+									<ChevronDown
+										className={`ml-auto transition-transform ${isOpen ? 'rotate-180' : ''}`}
+									/>
 								)}
 							</SidebarMenuButton>
 						</CollapsibleTrigger>
@@ -196,6 +221,7 @@ function NavMenuItem({ item, level }: { item: NavItem; level: number }) {
 					>
 						<Link
 							to={item.url}
+							search={item.search}
 							className='flex items-center gap-3 w-full'
 						>
 							{Icon && <Icon className='w-5 h-5' />}
@@ -210,13 +236,15 @@ function NavMenuItem({ item, level }: { item: NavItem; level: number }) {
 	return (
 		<SidebarMenuSubItem>
 			{hasChildren ? (
-				<Collapsible className='group/collapsible'>
+				<Collapsible open={isOpen} onOpenChange={setIsOpen}>
 					<CollapsibleTrigger asChild>
 						<SidebarMenuSubButton className='flex items-center gap-3 rounded-xl px-4 py-2 font-medium text-gray-700 transition-colors hover:bg-gray-200 focus:bg-blue-100 cursor-pointer'>
 							{Icon && <Icon className='w-5 h-5  ' />}
 							{!isCollapsed && <span>{item.title}</span>}
 							{!isCollapsed && (
-								<ChevronDown className='ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180' />
+								<ChevronDown
+									className={`ml-auto transition-transform ${isOpen ? 'rotate-180' : ''}`}
+								/>
 							)}
 						</SidebarMenuSubButton>
 					</CollapsibleTrigger>
@@ -237,6 +265,7 @@ function NavMenuItem({ item, level }: { item: NavItem; level: number }) {
 				>
 					<Link
 						to={item.url}
+						search={item.search}
 						className='flex items-center gap-3 w-full'
 					>
 						{Icon && <Icon className='w-5 h-5  ' />}
@@ -271,6 +300,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 				title: unit.name,
 				url: '#',
 				items: [
+					{
+						title: 'Tổng quan',
+						url: `/tieu-doan/${unit.alias}`,
+						search: { level: unit.level, name: '' },
+						icon: Home
+					},
 					...unit.children.map((child) => ({
 						title: child.name,
 						url: `/dai-doi/${child.alias}`,
