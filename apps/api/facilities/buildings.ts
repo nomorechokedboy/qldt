@@ -1,6 +1,8 @@
 import { APICallMeta, currentRequest } from 'encore.dev'
 import { api } from 'encore.dev/api'
 import buildingController from './buildings-controller'
+import buildingRepo from './buildings-repo'
+import { setAuditContext } from '../middleware/audit'
 
 export type BuildingBody = {
 	unitId: number
@@ -26,6 +28,11 @@ export const CreateBuilding = api(
 	{ auth: true, expose: true, method: 'POST', path: '/buildings' },
 	async (body: CreateBuildingRequest): Promise<CreateBuildingResponse> => {
 		const created = await buildingController.create(body.data)
+
+		setAuditContext({
+			resourceIds: created.map((b) => b.id),
+			newValue: created
+		})
 
 		return { data: created.map((b) => ({ ...b }) as BuildingDB) }
 	}
@@ -70,7 +77,15 @@ export const UpdateBuildings = api(
 			)
 		}))
 
+		const ids = updateMap.map((u) => u.id)
+		const previous = await buildingRepo.findByIds(ids)
 		const updated = await buildingController.update(updateMap, validUnitIds)
+
+		setAuditContext({
+			resourceIds: ids,
+			previousValue: previous,
+			newValue: updated
+		})
 
 		return { data: updated.map((b) => ({ ...b }) as BuildingDB) }
 	}
@@ -90,7 +105,9 @@ export const DeleteBuildings = api(
 		const callMeta = currentRequest() as APICallMeta
 		const validUnitIds = callMeta.middlewareData?.validUnitIds || []
 
-		await buildingController.delete(body.ids, validUnitIds)
+		const deleted = await buildingController.delete(body.ids, validUnitIds)
+
+		setAuditContext({ resourceIds: body.ids, previousValue: deleted })
 
 		return { ids: body.ids }
 	}

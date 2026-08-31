@@ -32,7 +32,16 @@ const PAGE_SIZE = 20
 const RESOURCE_LABELS: Record<string, string> = {
 	students: 'Học viên',
 	material_assets: 'Vũ khí/trang bị',
-	material_types: 'Danh mục vật tư'
+	material_types: 'Danh mục vật tư',
+	material_stocks: 'Tồn kho vật tư',
+	buildings: 'Tòa nhà',
+	rooms: 'Phòng',
+	classes: 'Lớp học',
+	units: 'Đơn vị',
+	roles: 'Vai trò',
+	permissions: 'Quyền',
+	users: 'Người dùng',
+	user_roles: 'Phân quyền người dùng'
 }
 
 const ACTION_LABELS: Record<string, string> = {

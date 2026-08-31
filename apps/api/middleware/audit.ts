@@ -27,7 +27,42 @@ const AUDIT_MAP: Record<string, AuditRouteConfig> = {
 
 	'POST:/material-types': { resource: 'material_types', action: 'create' },
 	'PATCH:/material-types': { resource: 'material_types', action: 'update' },
-	'DELETE:/material-types': { resource: 'material_types', action: 'delete' }
+	'DELETE:/material-types': { resource: 'material_types', action: 'delete' },
+
+	'POST:/material-stocks': { resource: 'material_stocks', action: 'create' },
+	'PATCH:/material-stocks': { resource: 'material_stocks', action: 'update' },
+	'DELETE:/material-stocks': {
+		resource: 'material_stocks',
+		action: 'delete'
+	},
+
+	'POST:/buildings': { resource: 'buildings', action: 'create' },
+	'PATCH:/buildings': { resource: 'buildings', action: 'update' },
+	'DELETE:/buildings': { resource: 'buildings', action: 'delete' },
+
+	'POST:/rooms': { resource: 'rooms', action: 'create' },
+	'PATCH:/rooms': { resource: 'rooms', action: 'update' },
+	'DELETE:/rooms': { resource: 'rooms', action: 'delete' },
+
+	'POST:/classes': { resource: 'classes', action: 'create' },
+	'PATCH:/classes': { resource: 'classes', action: 'update' },
+	'DELETE:/classes': { resource: 'classes', action: 'delete' },
+
+	'POST:/units': { resource: 'units', action: 'create' },
+	'PATCH:/units': { resource: 'units', action: 'update' },
+	'DELETE:/units': { resource: 'units', action: 'delete' },
+
+	'POST:/roles': { resource: 'roles', action: 'create' },
+	'PUT:/roles/:id': { resource: 'roles', action: 'update' },
+	'DELETE:/roles': { resource: 'roles', action: 'delete' },
+
+	'POST:/permissions': { resource: 'permissions', action: 'create' },
+
+	'POST:/users': { resource: 'users', action: 'create' },
+	'PUT:/users': { resource: 'users', action: 'update' },
+	'DELETE:/users': { resource: 'users', action: 'delete' },
+
+	'POST:/user-roles/assign': { resource: 'user_roles', action: 'update' }
 }
 
 function matchAuditRoute(

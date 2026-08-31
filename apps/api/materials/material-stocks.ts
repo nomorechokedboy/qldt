@@ -2,6 +2,8 @@ import { APICallMeta, currentRequest } from 'encore.dev'
 import { api, Query } from 'encore.dev/api'
 import { MaterialConditionName } from '../schema/material-stocks'
 import materialStockController from './material-stocks-controller'
+import materialStockRepo from './material-stocks-repo'
+import { setAuditContext } from '../middleware/audit'
 
 export type MaterialStockBody = {
 	materialTypeId: number
@@ -31,6 +33,11 @@ export const AddMaterialStock = api(
 		body: AddMaterialStockRequest
 	): Promise<AddMaterialStockResponse> => {
 		const created = await materialStockController.create(body.data)
+
+		setAuditContext({
+			resourceIds: created.map((s) => s.id),
+			newValue: created
+		})
 
 		return { data: created.map((s) => ({ ...s }) as MaterialStockDB) }
 	}
@@ -80,10 +87,18 @@ export const UpdateMaterialStocks = api(
 			)
 		}))
 
+		const ids = updateMap.map((u) => u.id)
+		const previous = await materialStockRepo.findByIds(ids)
 		const updated = await materialStockController.update(
 			updateMap,
 			validUnitIds
 		)
+
+		setAuditContext({
+			resourceIds: ids,
+			previousValue: previous,
+			newValue: updated
+		})
 
 		return { data: updated.map((s) => ({ ...s }) as MaterialStockDB) }
 	}
@@ -105,7 +120,12 @@ export const DeleteMaterialStocks = api(
 		const callMeta = currentRequest() as APICallMeta
 		const validUnitIds = callMeta.middlewareData?.validUnitIds || []
 
-		await materialStockController.delete(body.ids, validUnitIds)
+		const deleted = await materialStockController.delete(
+			body.ids,
+			validUnitIds
+		)
+
+		setAuditContext({ resourceIds: body.ids, previousValue: deleted })
 
 		return { ids: body.ids }
 	}

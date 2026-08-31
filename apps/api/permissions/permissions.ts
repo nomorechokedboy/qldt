@@ -1,6 +1,7 @@
 import { api } from 'encore.dev/api'
 import permissionController from './controller'
 import { Permission } from '../schema'
+import { setAuditContext } from '../middleware/audit'
 
 interface CreatePermissionRequest {
 	actionId: number
@@ -16,10 +17,12 @@ export const CreatePermission = api(
 	async (req: CreatePermissionRequest) => {
 		const { resourceId, actionId } = req
 
-		const _reps = await permissionController.create({
+		const created = await permissionController.create({
 			resourceId,
 			actionId
 		})
+
+		setAuditContext({ resourceIds: [created.id], newValue: created })
 
 		return {}
 	}

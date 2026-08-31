@@ -38,14 +38,14 @@ class Controller {
 			.catch(AppError.handleAppErr) as Promise<Role>
 	}
 
-	async delete(ids: number[]): Promise<void> {
+	async delete(ids: number[]) {
 		log.trace('RoleController.delete params', { ids })
 
 		if (!ids || ids.length === 0) {
 			throw AppError.invalidArgument('No role IDs provided')
 		}
 
-		await this.repo.delete(ids).catch(AppError.handleAppErr)
+		return this.repo.delete(ids).catch(AppError.handleAppErr)
 	}
 }
 

@@ -1,6 +1,7 @@
 import { api } from 'encore.dev/api'
 import { CreateRoleRequest, UpdateRoleRequest, Role } from '../schema'
 import roleController from './controller'
+import { setAuditContext } from '../middleware/audit'
 
 interface CreateRoleResponse {
 	data: Role
@@ -31,6 +32,9 @@ export const CreateRole = api(
 	},
 	async (req: CreateRoleRequest): Promise<CreateRoleResponse> => {
 		const data = await roleController.create(req)
+
+		setAuditContext({ resourceIds: [data.id], newValue: data })
+
 		return { data: data as Role }
 	}
 )
@@ -69,7 +73,15 @@ export const UpdateRole = api(
 		path: '/roles/:id'
 	},
 	async (req: UpdateRoleRequest): Promise<UpdateRoleResponse> => {
+		const previous = await roleController.findOne(req.id)
 		const data = await roleController.update(req)
+
+		setAuditContext({
+			resourceIds: [req.id],
+			previousValue: previous,
+			newValue: data
+		})
+
 		return { data: data as Role }
 	}
 )
@@ -82,7 +94,10 @@ export const DeleteRoles = api(
 		path: '/roles'
 	},
 	async ({ ids }: { ids: number[] }): Promise<DeleteRoleResponse> => {
-		await roleController.delete(ids)
+		const deleted = await roleController.delete(ids)
+
+		setAuditContext({ resourceIds: ids, previousValue: deleted })
+
 		return { ids }
 	}
 )
