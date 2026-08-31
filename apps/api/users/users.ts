@@ -1,7 +1,9 @@
 import { api } from 'encore.dev/api'
 import userController from './controller'
+import userRepo from './repo'
 import { getAuthData } from '~encore/auth'
 import { AppError } from '../errors'
+import { setAuditContext } from '../middleware/audit'
 
 interface CreateUserRequest {
 	username: string
@@ -121,6 +123,8 @@ export const CreateUser = api(
 			})
 			.then(({ password: _, ...user }) => ({ ...(user as UserDB) }))
 
+		setAuditContext({ resourceIds: [data.id], newValue: data })
+
 		return { data }
 	}
 )
@@ -137,6 +141,7 @@ export const UpdateUser = api(
 			rank,
 			position
 		} = req
+		const [previous] = await userRepo.findByIds([id])
 		const data = await userController
 			.update({
 				id,
@@ -148,6 +153,12 @@ export const UpdateUser = api(
 				position
 			})
 			.then(({ password: _, ...user }) => ({ ...(user as UserDB) }))
+
+		setAuditContext({
+			resourceIds: [id],
+			previousValue: previous && { ...previous, password: undefined },
+			newValue: data
+		})
 
 		return { data }
 	}
@@ -172,7 +183,12 @@ export const DeleteUsers = api(
 				AppError.invalidArgument('Bạn không thể xóa chính mình!')
 			)
 		}
-		await userController.delete(users, validUnitIds)
+		const deleted = await userController.delete(users, validUnitIds)
+
+		setAuditContext({
+			resourceIds: body.ids,
+			previousValue: deleted.map(({ password: _, ...user }) => user)
+		})
 
 		return { ids: body.ids }
 	}

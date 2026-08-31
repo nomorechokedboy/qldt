@@ -3,8 +3,8 @@ import log from 'encore.dev/log'
 import { ClassDB, ClassParam } from '../schema/classes.js'
 import classController from './controller.js'
 import { UnitDB } from '../units/units.js'
-import { getAuthData } from '~encore/auth'
 import { APICallMeta, currentRequest } from 'encore.dev'
+import { setAuditContext } from '../middleware/audit'
 
 interface ClassBody {
 	name: string
@@ -55,6 +55,11 @@ export const CreateClass = api(
 				}) as ClassResponse
 		)
 
+		setAuditContext({
+			resourceIds: createdClass.map((c) => c.id),
+			newValue: createdClass
+		})
+
 		return { data: resp }
 	}
 )
@@ -103,7 +108,9 @@ export const DeleteClasss = api(
 		const validClassIds = callMeta.middlewareData?.validClassIds || []
 
 		const classes: ClassDB[] = body.ids.map((id) => ({ id }) as ClassDB)
-		await classController.delete(classes, validClassIds)
+		const deleted = await classController.delete(classes, validClassIds)
+
+		setAuditContext({ resourceIds: body.ids, previousValue: deleted })
 
 		return { ids: body.ids }
 	}
@@ -126,7 +133,18 @@ export const UpdateClasss = api(
 
 		const classes: ClassDB[] = body.data.map((s) => ({ ...s }) as ClassDB)
 
-		await classController.update(classes, { validClassIds, validUnitIds })
+		const ids = classes.map((c) => c.id)
+		const previous = await classController.findByIds(ids)
+		const updated = await classController.update(classes, {
+			validClassIds,
+			validUnitIds
+		})
+
+		setAuditContext({
+			resourceIds: ids,
+			previousValue: previous,
+			newValue: updated
+		})
 
 		return {}
 	}

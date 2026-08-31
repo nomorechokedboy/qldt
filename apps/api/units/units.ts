@@ -1,10 +1,12 @@
 import { api, Query } from 'encore.dev/api'
 import { UnitDB as SchemaUnitDB, UnitLevelName, UnitParams } from '../schema'
 import unitController from './controller'
+import unitRepo from './repo'
 import { ClassResponse } from '../classes/classes'
 import { getAuthData } from '~encore/auth'
 import { APICallMeta, currentRequest } from 'encore.dev'
 import log from 'encore.dev/log'
+import { setAuditContext } from '../middleware/audit'
 
 type UnitBody = {
 	alias: string
@@ -38,6 +40,11 @@ export const CreateUnit = api(
 		const createdUnits = await unitController.create(unitParams)
 
 		const resp = createdUnits.map((u) => ({ ...u }) as UnitDB)
+
+		setAuditContext({
+			resourceIds: createdUnits.map((u) => u.id!),
+			newValue: createdUnits
+		})
 
 		return { data: resp }
 	}
@@ -129,7 +136,9 @@ export const DeleteUnits = api(
 		const units: SchemaUnitDB[] = body.ids.map(
 			(id) => ({ id }) as SchemaUnitDB
 		)
-		await unitController.delete(units, validUnitIds)
+		const deleted = await unitController.delete(units, validUnitIds)
+
+		setAuditContext({ resourceIds: body.ids, previousValue: deleted })
 
 		return { ids: body.ids }
 	}
@@ -153,7 +162,15 @@ export const UpdateUnits = api(
 		const units: SchemaUnitDB[] = body.data.map(
 			(u) => ({ ...u }) as SchemaUnitDB
 		)
-		await unitController.update(units, validUnitIds)
+		const ids = units.map((u) => u.id)
+		const previous = await unitRepo.findByIds(ids)
+		const updated = await unitController.update(units, validUnitIds)
+
+		setAuditContext({
+			resourceIds: ids,
+			previousValue: previous,
+			newValue: updated
+		})
 
 		return {}
 	}

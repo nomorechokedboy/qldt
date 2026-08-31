@@ -1,6 +1,8 @@
 import { APICallMeta, currentRequest } from 'encore.dev'
 import { api, Query } from 'encore.dev/api'
 import roomController from './rooms-controller'
+import roomRepo from './rooms-repo'
+import { setAuditContext } from '../middleware/audit'
 
 export type RoomBody = {
 	unitId: number
@@ -28,6 +30,11 @@ export const CreateRoom = api(
 	{ auth: true, expose: true, method: 'POST', path: '/rooms' },
 	async (body: CreateRoomRequest): Promise<CreateRoomResponse> => {
 		const created = await roomController.create(body.data)
+
+		setAuditContext({
+			resourceIds: created.map((r) => r.id),
+			newValue: created
+		})
 
 		return { data: created.map((r) => ({ ...r }) as RoomDB) }
 	}
@@ -78,7 +85,15 @@ export const UpdateRooms = api(
 			)
 		}))
 
+		const ids = updateMap.map((u) => u.id)
+		const previous = await roomRepo.findByIds(ids)
 		const updated = await roomController.update(updateMap, validUnitIds)
+
+		setAuditContext({
+			resourceIds: ids,
+			previousValue: previous,
+			newValue: updated
+		})
 
 		return { data: updated.map((r) => ({ ...r }) as RoomDB) }
 	}
@@ -98,7 +113,9 @@ export const DeleteRooms = api(
 		const callMeta = currentRequest() as APICallMeta
 		const validUnitIds = callMeta.middlewareData?.validUnitIds || []
 
-		await roomController.delete(body.ids, validUnitIds)
+		const deleted = await roomController.delete(body.ids, validUnitIds)
+
+		setAuditContext({ resourceIds: body.ids, previousValue: deleted })
 
 		return { ids: body.ids }
 	}
