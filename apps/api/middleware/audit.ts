@@ -1,0 +1,135 @@
+import { APICallMeta, currentRequest } from 'encore.dev'
+import { middleware } from 'encore.dev/api'
+import log from 'encore.dev/log'
+import { getAuthData } from '~encore/auth'
+import { publishAuditEvent } from '../audit-logs/publish'
+import { AuditAction } from '../schema/audit-logs'
+
+interface AuditRouteConfig {
+	resource: string
+	action: AuditAction
+}
+
+// Which mutating routes get an audit_logs row, and how to label them.
+// Add an entry here (and call setAuditContext from the matching handler)
+// whenever a new resource needs to be audited.
+const AUDIT_MAP: Record<string, AuditRouteConfig> = {
+	'POST:/students': { resource: 'students', action: 'create' },
+	'PATCH:/students': { resource: 'students', action: 'update' },
+	'DELETE:/students': { resource: 'students', action: 'delete' },
+
+	'POST:/material-assets': { resource: 'material_assets', action: 'create' },
+	'PATCH:/material-assets': { resource: 'material_assets', action: 'update' },
+	'DELETE:/material-assets': {
+		resource: 'material_assets',
+		action: 'delete'
+	},
+
+	'POST:/material-types': { resource: 'material_types', action: 'create' },
+	'PATCH:/material-types': { resource: 'material_types', action: 'update' },
+	'DELETE:/material-types': { resource: 'material_types', action: 'delete' }
+}
+
+function matchAuditRoute(
+	method: string,
+	path: string
+): AuditRouteConfig | undefined {
+	const key = `${method}:${path}`
+	if (AUDIT_MAP[key]) {
+		return AUDIT_MAP[key]
+	}
+
+	for (const [pattern, config] of Object.entries(AUDIT_MAP)) {
+		const [patternMethod, patternPath] = pattern.split(':')
+		if (method !== patternMethod) continue
+
+		const regexPattern = patternPath
+			.replace(/:\w+/g, '[^/]+')
+			.replace(/\*/g, '.*')
+		const regex = new RegExp(`^${regexPattern}$`)
+		if (regex.test(path)) {
+			return config
+		}
+	}
+
+	return undefined
+}
+
+interface AuditContext {
+	resourceIds: Array<number | string>
+	previousValue?: unknown
+	newValue?: unknown
+}
+
+// Extend the middleware data type
+declare module 'encore.dev/api' {
+	interface MiddlewareData {
+		audit?: AuditContext
+	}
+}
+
+/**
+ * Handlers for audited routes call this before returning, so the audit
+ * middleware (which cannot see the parsed request body of typed endpoints)
+ * has something to log besides the generic envelope. `req.data` set here is
+ * the same object exposed to the handler as `currentRequest().middlewareData`,
+ * so the write is visible back in the middleware after `next()` resolves.
+ */
+export function setAuditContext(context: AuditContext) {
+	const callMeta = currentRequest() as APICallMeta
+	if (callMeta.middlewareData) {
+		callMeta.middlewareData.audit = context
+	}
+}
+
+export const auditMiddleware = middleware(
+	{ target: { auth: true } },
+	async (req, next) => {
+		const meta = req.requestMeta as APICallMeta | undefined
+		const config = meta && matchAuditRoute(meta.method, meta.path)
+
+		const resp = await next(req)
+
+		if (!config || !meta) {
+			return resp
+		}
+
+		const audit = req.data.audit as AuditContext | undefined
+
+		// Handler never called setAuditContext (e.g. bulk op touched nothing) —
+		// nothing to write, so skip publishing entirely.
+		if (!audit) {
+			return resp
+		}
+
+		const authData = getAuthData()
+		const actorUserId = authData?.userID
+			? Number(authData.userID)
+			: undefined
+
+		// HandlerResponse.status is write-only (for overriding the status code),
+		// so there's nothing to read here. We only reach this point when next()
+		// resolved without throwing, i.e. a successful request.
+		//
+		// The actual DB write happens out-of-band in the audit-logs service's
+		// subscription (audit-logs/subscription.ts), which processes this topic
+		// on its own goroutine/process rather than inline in the request path.
+		publishAuditEvent({
+			actorUserId,
+			resource: config.resource,
+			action: config.action,
+			resourceIds: audit.resourceIds ?? [],
+			method: meta.method,
+			path: meta.path,
+			statusCode: 200,
+			previousValue: audit.previousValue,
+			newValue: audit.newValue
+		}).catch((err) => {
+			log.error('auditMiddleware: failed to publish audit log event', {
+				err
+			})
+		})
+
+		return resp
+	}
+)
