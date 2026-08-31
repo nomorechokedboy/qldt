@@ -1419,7 +1419,7 @@ export namespace students {
 		isMarried?: boolean
 		politicalOrg?: 'hcyu' | 'cpv'
 		unitAlias?: string
-		unitLevel?: 'battalion' | 'company'
+		unitLevel?: schema.UnitLevelName
 		isCpvOfficialThisWeek?: boolean
 		cpvOfficialInMonth?: Month
 		cpvOfficialInQuarter?: Quarter

@@ -16,6 +16,7 @@ import dayjs from 'dayjs'
 import { readFile } from 'fs/promises'
 import path from 'path'
 import { AppError } from '../errors/index.js'
+import { UnitLevelName } from '../schema/units.js'
 import { Unit } from '../units/units.js'
 import { notiTopic } from '../topics/index.js'
 import * as v from 'valibot'
@@ -179,7 +180,7 @@ export interface GetStudentsQuery {
 	isMarried?: boolean
 	politicalOrg?: 'hcyu' | 'cpv'
 	unitAlias?: string
-	unitLevel?: 'battalion' | 'company'
+	unitLevel?: UnitLevelName
 	isCpvOfficialThisWeek?: boolean
 	cpvOfficialInMonth?: Month
 	cpvOfficialInQuarter?: Quarter

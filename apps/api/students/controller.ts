@@ -22,6 +22,7 @@ import { Repository as UnitRepository } from '../units'
 import studentRepo from './repo'
 import { ExportStudentDataRequest, GetStudentsQuery } from './students'
 import unitRepo from '../units/repo'
+import unitStatsRepo from '../units/stats-repo'
 import log from 'encore.dev/log'
 import dayjs from 'dayjs'
 import quarterOfYear from 'dayjs/plugin/quarterOfYear.js'
@@ -151,68 +152,29 @@ export class Controller {
 				)
 			}
 
-			if (u.level === 'battalion') {
-				const companies = u.children
-				const platoons = companies.flatMap((c) => c.children ?? [])
-				const classIds = platoons.flatMap((p) =>
-					p.classes.map((cl) => cl.id)
-				)
-				const unitIds = [
-					u.id,
-					...companies.map((c) => c.id),
-					...platoons.map((p) => p.id)
-				]
-				log.trace('studentRepo.find battalion case ids', {
-					classIds,
-					unitIds,
-					query: q
-				})
+			const unitIds = await unitStatsRepo.findDescendantUnitIds(u.id)
+			const classIds = await unitStatsRepo.classIdsForUnits(unitIds)
+			log.trace('studentRepo.find unit case ids', {
+				classIds,
+				unitIds,
+				query: q
+			})
 
-				const isAuthorized =
-					classIds.every((id) => validClassIds.includes(id)) &&
-					unitIds.every((id) => validUnitIds.includes(id))
+			const isAuthorized =
+				classIds.every((id) => validClassIds.includes(id)) &&
+				unitIds.every((id) => validUnitIds.includes(id))
 
-				if (isAuthorized === false) {
-					AppError.handleAppErr(
-						AppError.unauthorized(
-							"You don't have permission to read one of those studentId"
-						)
+			if (isAuthorized === false) {
+				AppError.handleAppErr(
+					AppError.unauthorized(
+						"You don't have permission to read one of those studentId"
 					)
-				}
-
-				return this.repo
-					.find({ ...q, classIds, unitIds })
-					.catch(AppError.handleAppErr)
+				)
 			}
 
-			if (u.level === 'company') {
-				const platoons = u.children
-				const classIds = platoons.flatMap((p) =>
-					p.classes.map((cl) => cl.id)
-				)
-				const unitIds = [u.id, ...platoons.map((p) => p.id)]
-				log.trace('studentRepo.find company case ids', {
-					classIds,
-					unitIds,
-					query: q
-				})
-
-				const isAuthorized =
-					classIds.every((id) => validClassIds.includes(id)) &&
-					unitIds.every((id) => validUnitIds.includes(id))
-
-				if (isAuthorized === false) {
-					AppError.handleAppErr(
-						AppError.unauthorized(
-							"You don't have permission to read one of those studentId"
-						)
-					)
-				}
-
-				return this.repo
-					.find({ ...q, classIds, unitIds })
-					.catch(AppError.handleAppErr)
-			}
+			return this.repo
+				.find({ ...q, classIds, unitIds })
+				.catch(AppError.handleAppErr)
 		}
 
 		const cIds: number[] = []

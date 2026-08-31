@@ -1,6 +1,7 @@
 import { middleware } from 'encore.dev/api'
 import { getAuthData } from '~encore/auth'
 import unitRepo from '../units/repo'
+import unitStatsRepo from '../units/stats-repo'
 import log from 'encore.dev/log'
 import userRepo from '../users/repo'
 import { AppError } from '../errors'
@@ -20,15 +21,8 @@ async function getValidIdsFromUnit(unitId: number) {
 		return { classIds: [], unitIds: [] }
 	}
 
-	let classIds: number[] = []
-	const unitIds: number[] = [unitId]
-
-	if (unit.level === 'battalion') {
-		classIds = unit.children.flatMap((c) => c.classes.map((cl) => cl.id))
-		unitIds.push(...unit.children.map((c) => c.id))
-	} else if (unit.level === 'company') {
-		classIds = unit.classes.map((cl) => cl.id)
-	}
+	const unitIds = await unitStatsRepo.findDescendantUnitIds(unitId)
+	const classIds = await unitStatsRepo.classIdsForUnits(unitIds)
 
 	return { classIds, unitIds }
 }
