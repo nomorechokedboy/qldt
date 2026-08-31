@@ -1,6 +1,8 @@
 import { api, Query } from 'encore.dev/api'
 import { MaterialCategoryName } from '../schema/material-types'
 import materialTypeController from './material-types-controller'
+import materialTypeRepo from './material-types-repo'
+import { setAuditContext } from '../middleware/audit'
 
 export type MaterialTypeBody = {
 	name: string
@@ -29,8 +31,14 @@ export const CreateMaterialType = api(
 		body: CreateMaterialTypeRequest
 	): Promise<CreateMaterialTypeResponse> => {
 		const created = await materialTypeController.create(body.data)
+		const resp = created.map((m) => ({ ...m }) as MaterialTypeDB)
 
-		return { data: created.map((m) => ({ ...m }) as MaterialTypeDB) }
+		setAuditContext({
+			resourceIds: resp.map((m) => m.id),
+			newValue: resp
+		})
+
+		return { data: resp }
 	}
 )
 
@@ -72,9 +80,18 @@ export const UpdateMaterialTypes = api(
 			)
 		}))
 
+		const ids = updateMap.map((u) => u.id)
+		const previous = await materialTypeRepo.findByIds(ids)
 		const updated = await materialTypeController.update(updateMap)
+		const resp = updated.map((m) => ({ ...m }) as MaterialTypeDB)
 
-		return { data: updated.map((m) => ({ ...m }) as MaterialTypeDB) }
+		setAuditContext({
+			resourceIds: ids,
+			previousValue: previous,
+			newValue: resp
+		})
+
+		return { data: resp }
 	}
 )
 
@@ -91,7 +108,12 @@ export const DeleteMaterialTypes = api(
 	async (
 		body: DeleteMaterialTypeRequest
 	): Promise<DeleteMaterialTypeResponse> => {
-		await materialTypeController.delete(body.ids)
+		const deleted = await materialTypeController.delete(body.ids)
+
+		setAuditContext({
+			resourceIds: body.ids,
+			previousValue: deleted
+		})
 
 		return { ids: body.ids }
 	}
