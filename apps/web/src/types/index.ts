@@ -117,6 +117,7 @@ export interface UserUpdate {
 export interface Student extends Base, StudentBody {}
 export interface User extends Base, UserBody {
 	unitName?: string
+	unitAlias?: string
 }
 
 export type ClassResponse = { data: Class[] }
@@ -431,4 +432,74 @@ export interface AssignRoleRequest {
 
 export interface GetUserRolesResponse {
 	roleIds: number[]
+}
+
+export type MaterialCategory = 'furniture' | 'equipment' | 'weapon' | 'vehicle'
+
+export interface MaterialType extends Base {
+	name: string
+	category: MaterialCategory
+	unitOfMeasure?: string
+	isSerialized: boolean
+}
+
+export interface Building extends Base {
+	unitId: number
+	name: string
+	description?: string
+	unit?: Unit | null
+	rooms?: Array<{ id: number; name: string; type: string | null }>
+}
+
+export interface Room extends Base {
+	unitId: number
+	buildingId?: number | null
+	name: string
+	type?: string
+	description?: string
+	materialStocks?: MaterialStock[]
+	materialAssets?: MaterialAsset[]
+}
+
+export interface MaterialStock extends Base {
+	materialTypeId: number
+	unitId: number
+	roomId?: number | null
+	quantity: number
+	condition?: string
+	materialType?: MaterialType
+	unit?: Unit
+	room?: Room
+}
+
+export type MaterialAssetStatus = 'in_service' | 'damaged' | 'lost' | 'retired'
+
+export interface MaterialAsset extends Base {
+	materialTypeId: number
+	unitId: number
+	roomId?: number | null
+	serialNumber: string
+	condition?: string
+	status?: MaterialAssetStatus
+	assignedTrooperId?: number | null
+	materialType?: MaterialType
+	unit?: Unit
+	room?: Room
+	assignedTrooper?: Student
+}
+
+export type MaterialAssetEventType =
+	| 'assigned'
+	| 'unassigned'
+	| 'condition_changed'
+	| 'status_changed'
+	| 'transferred'
+
+export interface MaterialAssetEvent extends Base {
+	assetId: number
+	eventType: MaterialAssetEventType
+	previousValue?: Record<string, unknown> | null
+	newValue?: Record<string, unknown> | null
+	note?: string | null
+	actor?: { id: number; displayName?: string } | null
 }

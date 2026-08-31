@@ -4,17 +4,22 @@ import { battalionStudentColumnsWithoutAction } from '@/components/student-table
 import { defaultBirthdayColumnVisibility } from '@/components/student-table/default-columns-visibility'
 import StudentTable from '@/components/student-table/new-student-table'
 import TableSkeleton from '@/components/table-skeleton'
+import CompanyFacilitiesTab from '@/components/company-facilities-tab'
+import CompanyWeaponsTab from '@/components/company-weapons-tab'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { EhtnicOptions } from '@/data/ethnics'
+import { unitLevelOrder } from '@/data/unit-levels'
 import useActionColumn from '@/hooks/useActionColumn'
 import useDataTableToolbarConfig from '@/hooks/useDataTableToolbarConfig'
 import useOnDeleteStudents from '@/hooks/useOnDeleteStudents'
 import useStudentData from '@/hooks/useStudents'
 import useUnitData from '@/hooks/useUnitData'
 import { createFileRoute } from '@tanstack/react-router'
+import type { UnitLevel } from '@/types'
 import z from 'zod'
 
 const aliasSearchSchema = z.object({
-	level: z.enum(['battalion', 'company']).default('battalion'),
+	level: z.enum(unitLevelOrder as [string, ...string[]]).default('battalion'),
 	name: z.string().default('')
 })
 
@@ -25,7 +30,8 @@ export const Route = createFileRoute('/tieu-doan/$alias')({
 
 function RouteComponent() {
 	const { alias } = Route.useParams()
-	const { level } = Route.useSearch()
+	const { level: rawLevel } = Route.useSearch()
+	const level = rawLevel as UnitLevel
 
 	const { createFacetedFilter } = useDataTableToolbarConfig()
 	const {
@@ -96,34 +102,58 @@ function RouteComponent() {
 				<div className='flex items-center justify-between space-y-2'>
 					<div>
 						<h2 className='text-2xl font-bold tracking-tight'>
-							Danh sách quân nhân Tiểu đoàn
+							{unit?.name}
 						</h2>
 						<p className='text-muted-foreground'>
-							Đây là danh sách quân nhân của {unit?.name}
+							Quản lý quân nhân, cơ sở vật chất và vũ khí/trang bị
 						</p>
 					</div>
 				</div>
-				<StudentTable
-					params={{ unitAlias: alias, unitLevel: level }}
-					columnVisibility={defaultBirthdayColumnVisibility}
-					columns={[
-						...battalionStudentColumnsWithoutAction,
-						actionColumn
-					]}
-					facetedFilters={facetedFilters}
-					placeholder='Chưa có thông tin quân nhân.'
-					exportConfig={{
-						filename,
-						defaultExportValues: {
-							unitName: 'Trường Cao đẳng hậu cần 2'.toUpperCase(),
-							underUnitName: unit?.name.toUpperCase()
-						}
-					}}
-					onDeleteRows={handleDeleteStudents}
-					onCreateSuccess={handleFormSuccess}
-					enableCreation
-					showRefreshButton
-				/>
+
+				<Tabs defaultValue='students'>
+					<TabsList>
+						<TabsTrigger value='students'>Quân nhân</TabsTrigger>
+						<TabsTrigger value='facilities'>
+							Cơ sở vật chất
+						</TabsTrigger>
+						<TabsTrigger value='weapons'>
+							Vũ khí/trang bị
+						</TabsTrigger>
+					</TabsList>
+
+					<TabsContent value='students'>
+						<StudentTable
+							params={{ unitAlias: alias, unitLevel: level }}
+							columnVisibility={defaultBirthdayColumnVisibility}
+							columns={[
+								...battalionStudentColumnsWithoutAction,
+								actionColumn
+							]}
+							facetedFilters={facetedFilters}
+							placeholder='Chưa có thông tin quân nhân.'
+							exportConfig={{
+								filename,
+								defaultExportValues: {
+									unitName:
+										'Trường Cao đẳng hậu cần 2'.toUpperCase(),
+									underUnitName: unit?.name.toUpperCase()
+								}
+							}}
+							onDeleteRows={handleDeleteStudents}
+							onCreateSuccess={handleFormSuccess}
+							enableCreation
+							showRefreshButton
+						/>
+					</TabsContent>
+
+					<TabsContent value='facilities'>
+						<CompanyFacilitiesTab unitAlias={alias} />
+					</TabsContent>
+
+					<TabsContent value='weapons'>
+						<CompanyWeaponsTab unitAlias={alias} />
+					</TabsContent>
+				</Tabs>
 			</div>
 		</ProtectedRoute>
 	)
