@@ -29,8 +29,8 @@ import { Route as CacQuyenRouteImport } from './routes/cac-quyen'
 import { Route as BirthdayRouteImport } from './routes/birthday'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as TrungDoiPlatoonAliasRouteImport } from './routes/trung-doi/$platoonAlias'
-import { Route as TieuDoanAliasRouteImport } from './routes/tieu-doan/$alias'
 import { Route as QuanLyVatTuDanhMucRouteImport } from './routes/quan-ly-vat-tu.danh-muc'
+import { Route as DonViAliasRouteImport } from './routes/don-vi/$alias'
 import { Route as DaiDoiCompanyAliasRouteImport } from './routes/dai-doi/$companyAlias'
 import { Route as ClassesClassIdRouteImport } from './routes/classes/$classId'
 
@@ -134,14 +134,14 @@ const TrungDoiPlatoonAliasRoute = TrungDoiPlatoonAliasRouteImport.update({
   path: '/trung-doi/$platoonAlias',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TieuDoanAliasRoute = TieuDoanAliasRouteImport.update({
-  id: '/tieu-doan/$alias',
-  path: '/tieu-doan/$alias',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const QuanLyVatTuDanhMucRoute = QuanLyVatTuDanhMucRouteImport.update({
   id: '/quan-ly-vat-tu/danh-muc',
   path: '/quan-ly-vat-tu/danh-muc',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DonViAliasRoute = DonViAliasRouteImport.update({
+  id: '/don-vi/$alias',
+  path: '/don-vi/$alias',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DaiDoiCompanyAliasRoute = DaiDoiCompanyAliasRouteImport.update({
@@ -177,8 +177,8 @@ export interface FileRoutesByFullPath {
   '/vai-tro': typeof VaiTroRoute
   '/classes/$classId': typeof ClassesClassIdRoute
   '/dai-doi/$companyAlias': typeof DaiDoiCompanyAliasRoute
+  '/don-vi/$alias': typeof DonViAliasRoute
   '/quan-ly-vat-tu/danh-muc': typeof QuanLyVatTuDanhMucRoute
-  '/tieu-doan/$alias': typeof TieuDoanAliasRoute
   '/trung-doi/$platoonAlias': typeof TrungDoiPlatoonAliasRoute
 }
 export interface FileRoutesByTo {
@@ -203,8 +203,8 @@ export interface FileRoutesByTo {
   '/vai-tro': typeof VaiTroRoute
   '/classes/$classId': typeof ClassesClassIdRoute
   '/dai-doi/$companyAlias': typeof DaiDoiCompanyAliasRoute
+  '/don-vi/$alias': typeof DonViAliasRoute
   '/quan-ly-vat-tu/danh-muc': typeof QuanLyVatTuDanhMucRoute
-  '/tieu-doan/$alias': typeof TieuDoanAliasRoute
   '/trung-doi/$platoonAlias': typeof TrungDoiPlatoonAliasRoute
 }
 export interface FileRoutesById {
@@ -230,8 +230,8 @@ export interface FileRoutesById {
   '/vai-tro': typeof VaiTroRoute
   '/classes/$classId': typeof ClassesClassIdRoute
   '/dai-doi/$companyAlias': typeof DaiDoiCompanyAliasRoute
+  '/don-vi/$alias': typeof DonViAliasRoute
   '/quan-ly-vat-tu/danh-muc': typeof QuanLyVatTuDanhMucRoute
-  '/tieu-doan/$alias': typeof TieuDoanAliasRoute
   '/trung-doi/$platoonAlias': typeof TrungDoiPlatoonAliasRoute
 }
 export interface FileRouteTypes {
@@ -258,8 +258,8 @@ export interface FileRouteTypes {
     | '/vai-tro'
     | '/classes/$classId'
     | '/dai-doi/$companyAlias'
+    | '/don-vi/$alias'
     | '/quan-ly-vat-tu/danh-muc'
-    | '/tieu-doan/$alias'
     | '/trung-doi/$platoonAlias'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -284,8 +284,8 @@ export interface FileRouteTypes {
     | '/vai-tro'
     | '/classes/$classId'
     | '/dai-doi/$companyAlias'
+    | '/don-vi/$alias'
     | '/quan-ly-vat-tu/danh-muc'
-    | '/tieu-doan/$alias'
     | '/trung-doi/$platoonAlias'
   id:
     | '__root__'
@@ -310,8 +310,8 @@ export interface FileRouteTypes {
     | '/vai-tro'
     | '/classes/$classId'
     | '/dai-doi/$companyAlias'
+    | '/don-vi/$alias'
     | '/quan-ly-vat-tu/danh-muc'
-    | '/tieu-doan/$alias'
     | '/trung-doi/$platoonAlias'
   fileRoutesById: FileRoutesById
 }
@@ -337,8 +337,8 @@ export interface RootRouteChildren {
   VaiTroRoute: typeof VaiTroRoute
   ClassesClassIdRoute: typeof ClassesClassIdRoute
   DaiDoiCompanyAliasRoute: typeof DaiDoiCompanyAliasRoute
+  DonViAliasRoute: typeof DonViAliasRoute
   QuanLyVatTuDanhMucRoute: typeof QuanLyVatTuDanhMucRoute
-  TieuDoanAliasRoute: typeof TieuDoanAliasRoute
   TrungDoiPlatoonAliasRoute: typeof TrungDoiPlatoonAliasRoute
 }
 
@@ -484,18 +484,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TrungDoiPlatoonAliasRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/tieu-doan/$alias': {
-      id: '/tieu-doan/$alias'
-      path: '/tieu-doan/$alias'
-      fullPath: '/tieu-doan/$alias'
-      preLoaderRoute: typeof TieuDoanAliasRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/quan-ly-vat-tu/danh-muc': {
       id: '/quan-ly-vat-tu/danh-muc'
       path: '/quan-ly-vat-tu/danh-muc'
       fullPath: '/quan-ly-vat-tu/danh-muc'
       preLoaderRoute: typeof QuanLyVatTuDanhMucRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/don-vi/$alias': {
+      id: '/don-vi/$alias'
+      path: '/don-vi/$alias'
+      fullPath: '/don-vi/$alias'
+      preLoaderRoute: typeof DonViAliasRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dai-doi/$companyAlias': {
@@ -537,8 +537,8 @@ const rootRouteChildren: RootRouteChildren = {
   VaiTroRoute: VaiTroRoute,
   ClassesClassIdRoute: ClassesClassIdRoute,
   DaiDoiCompanyAliasRoute: DaiDoiCompanyAliasRoute,
+  DonViAliasRoute: DonViAliasRoute,
   QuanLyVatTuDanhMucRoute: QuanLyVatTuDanhMucRoute,
-  TieuDoanAliasRoute: TieuDoanAliasRoute,
   TrungDoiPlatoonAliasRoute: TrungDoiPlatoonAliasRoute,
 }
 export const routeTree = rootRouteImport

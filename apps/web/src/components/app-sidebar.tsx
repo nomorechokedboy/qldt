@@ -34,6 +34,7 @@ import {
 	CollapsibleTrigger
 } from '@/components/ui/collapsible'
 import useUnitsData from '@/hooks/useUnitsData'
+import { getUnitDetailUrl } from '@/data/unit-levels'
 import Cdhc2Logo from '@/assets/lu75.jpg'
 import { AppSidebarSkeleton } from './app-sidebar-skeleton'
 import { ThemeToggle } from './theme-toggle'
@@ -294,7 +295,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 		return <AppSidebarSkeleton />
 	}
 
-	const unitsNavbar = units?.map(
+	// Non-admin users get their whole accessible scope back flat (e.g. a
+	// company and its platoons), so only keep units whose parent isn't also
+	// in the list — otherwise a platoon renders both nested under its
+	// company and again as its own top-level entry.
+	const fetchedUnitIds = new Set(units?.map((u) => u.id))
+	const topLevelUnits = units?.filter(
+		(unit) => !unit.parent || !fetchedUnitIds.has(unit.parent.id)
+	)
+
+	const unitsNavbar = topLevelUnits?.map(
 		(unit) =>
 			({
 				title: unit.name,
@@ -302,13 +312,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 				items: [
 					{
 						title: 'Tổng quan',
-						url: `/tieu-doan/${unit.alias}`,
+						url: `/don-vi/${unit.alias}`,
 						search: { level: unit.level, name: '' },
 						icon: Home
 					},
 					...unit.children.map((child) => ({
 						title: child.name,
-						url: `/dai-doi/${child.alias}`,
+						url: getUnitDetailUrl(child.level, child.alias),
 						icon: Building2
 					}))
 				],
