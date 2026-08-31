@@ -35,7 +35,9 @@ export default class Client {
 	public readonly actions: actions.ServiceClient
 	public readonly auth: auth.ServiceClient
 	public readonly classes: classes.ServiceClient
+	public readonly facilities: facilities.ServiceClient
 	public readonly healthcheck: healthcheck.ServiceClient
+	public readonly materials: materials.ServiceClient
 	public readonly media: media.ServiceClient
 	public readonly notifications: notifications.ServiceClient
 	public readonly permissions: permissions.ServiceClient
@@ -61,7 +63,9 @@ export default class Client {
 		this.actions = new actions.ServiceClient(base)
 		this.auth = new auth.ServiceClient(base)
 		this.classes = new classes.ServiceClient(base)
+		this.facilities = new facilities.ServiceClient(base)
 		this.healthcheck = new healthcheck.ServiceClient(base)
+		this.materials = new materials.ServiceClient(base)
 		this.media = new media.ServiceClient(base)
 		this.notifications = new notifications.ServiceClient(base)
 		this.permissions = new permissions.ServiceClient(base)
@@ -362,6 +366,231 @@ export namespace classes {
 	}
 }
 
+export namespace facilities {
+	export interface BuildingBody {
+		unitId: number
+		name: string
+		description?: string
+	}
+
+	export interface BuildingDB {
+		unitId: number
+		name: string
+		description?: string
+		id: number
+		createdAt: string
+		updatedAt: string
+	}
+
+	export interface CreateBuildingRequest {
+		data: BuildingBody[]
+	}
+
+	export interface CreateBuildingResponse {
+		data: BuildingDB[]
+	}
+
+	export interface CreateRoomRequest {
+		data: RoomBody[]
+	}
+
+	export interface CreateRoomResponse {
+		data: RoomDB[]
+	}
+
+	export interface DeleteBuildingRequest {
+		ids: number[]
+	}
+
+	export interface DeleteBuildingResponse {
+		ids: number[]
+	}
+
+	export interface DeleteRoomRequest {
+		ids: number[]
+	}
+
+	export interface DeleteRoomResponse {
+		ids: number[]
+	}
+
+	export interface GetBuildingsResponse {
+		data: BuildingDB[]
+	}
+
+	export interface GetRoomsQuery {
+		buildingId?: number
+	}
+
+	export interface GetRoomsResponse {
+		data: RoomDB[]
+	}
+
+	export interface RoomBody {
+		unitId: number
+		buildingId?: number | null
+		name: string
+		type?: string
+		description?: string
+	}
+
+	export interface RoomDB {
+		unitId: number
+		buildingId?: number | null
+		name: string
+		type?: string
+		description?: string
+		id: number
+		createdAt: string
+		updatedAt: string
+	}
+
+	export interface UpdateBuildingBody {
+		data: UpdateBuildingPayload[]
+	}
+
+	export interface UpdateBuildingPayload {
+		id: number
+		unitId?: number
+		name?: string
+		description?: string
+	}
+
+	export interface UpdateRoomBody {
+		data: UpdateRoomPayload[]
+	}
+
+	export interface UpdateRoomPayload {
+		id: number
+		unitId?: number
+		buildingId?: number | null
+		name?: string
+		type?: string
+		description?: string
+	}
+
+	export class ServiceClient {
+		private baseClient: BaseClient
+
+		constructor(baseClient: BaseClient) {
+			this.baseClient = baseClient
+			this.CreateBuilding = this.CreateBuilding.bind(this)
+			this.CreateRoom = this.CreateRoom.bind(this)
+			this.DeleteBuildings = this.DeleteBuildings.bind(this)
+			this.DeleteRooms = this.DeleteRooms.bind(this)
+			this.GetBuildings = this.GetBuildings.bind(this)
+			this.GetRooms = this.GetRooms.bind(this)
+			this.UpdateBuildings = this.UpdateBuildings.bind(this)
+			this.UpdateRooms = this.UpdateRooms.bind(this)
+		}
+
+		public async CreateBuilding(
+			params: CreateBuildingRequest
+		): Promise<CreateBuildingResponse> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'POST',
+				`/buildings`,
+				JSON.stringify(params)
+			)
+			return (await resp.json()) as CreateBuildingResponse
+		}
+
+		public async CreateRoom(
+			params: CreateRoomRequest
+		): Promise<CreateRoomResponse> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'POST',
+				`/rooms`,
+				JSON.stringify(params)
+			)
+			return (await resp.json()) as CreateRoomResponse
+		}
+
+		public async DeleteBuildings(
+			params: DeleteBuildingRequest
+		): Promise<DeleteBuildingResponse> {
+			// Convert our params into the objects we need for the request
+			const query = makeRecord<string, string | string[]>({
+				ids: params.ids.map((v) => String(v))
+			})
+
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'DELETE',
+				`/buildings`,
+				undefined,
+				{ query }
+			)
+			return (await resp.json()) as DeleteBuildingResponse
+		}
+
+		public async DeleteRooms(
+			params: DeleteRoomRequest
+		): Promise<DeleteRoomResponse> {
+			// Convert our params into the objects we need for the request
+			const query = makeRecord<string, string | string[]>({
+				ids: params.ids.map((v) => String(v))
+			})
+
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'DELETE',
+				`/rooms`,
+				undefined,
+				{ query }
+			)
+			return (await resp.json()) as DeleteRoomResponse
+		}
+
+		public async GetBuildings(): Promise<GetBuildingsResponse> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI('GET', `/buildings`)
+			return (await resp.json()) as GetBuildingsResponse
+		}
+
+		public async GetRooms(
+			params: GetRoomsQuery
+		): Promise<GetRoomsResponse> {
+			// Convert our params into the objects we need for the request
+			const query = makeRecord<string, string | string[]>({
+				buildingId:
+					params.buildingId === undefined
+						? undefined
+						: String(params.buildingId)
+			})
+
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'GET',
+				`/rooms`,
+				undefined,
+				{ query }
+			)
+			return (await resp.json()) as GetRoomsResponse
+		}
+
+		public async UpdateBuildings(
+			params: UpdateBuildingBody
+		): Promise<void> {
+			await this.baseClient.callTypedAPI(
+				'PATCH',
+				`/buildings`,
+				JSON.stringify(params)
+			)
+		}
+
+		public async UpdateRooms(params: UpdateRoomBody): Promise<void> {
+			await this.baseClient.callTypedAPI(
+				'PATCH',
+				`/rooms`,
+				JSON.stringify(params)
+			)
+		}
+	}
+}
+
 export namespace healthcheck {
 	export interface HeathCheckResponse {
 		uptime: string
@@ -380,6 +609,438 @@ export namespace healthcheck {
 			// Now make the actual call to the API
 			const resp = await this.baseClient.callTypedAPI('POST', `/healthz`)
 			return (await resp.json()) as HeathCheckResponse
+		}
+	}
+}
+
+export namespace materials {
+	export interface AddMaterialStockRequest {
+		data: MaterialStockBody[]
+	}
+
+	export interface AddMaterialStockResponse {
+		data: MaterialStockDB[]
+	}
+
+	export interface CreateMaterialAssetRequest {
+		data: MaterialAssetBody[]
+	}
+
+	export interface CreateMaterialAssetResponse {
+		data: MaterialAssetDB[]
+	}
+
+	export interface CreateMaterialTypeRequest {
+		data: MaterialTypeBody[]
+	}
+
+	export interface CreateMaterialTypeResponse {
+		data: MaterialTypeDB[]
+	}
+
+	export interface DeleteMaterialAssetRequest {
+		ids: number[]
+	}
+
+	export interface DeleteMaterialAssetResponse {
+		ids: number[]
+	}
+
+	export interface DeleteMaterialStockRequest {
+		ids: number[]
+	}
+
+	export interface DeleteMaterialStockResponse {
+		ids: number[]
+	}
+
+	export interface DeleteMaterialTypeRequest {
+		ids: number[]
+	}
+
+	export interface DeleteMaterialTypeResponse {
+		ids: number[]
+	}
+
+	export interface GetMaterialAssetEventsResponse {
+		data: MaterialAssetEventDB[]
+	}
+
+	export interface GetMaterialAssetsQuery {
+		roomId?: number
+		materialTypeId?: number
+		status?: schema.MaterialAssetStatus
+		assignedTrooperId?: number
+	}
+
+	export interface GetMaterialAssetsResponse {
+		data: MaterialAssetDB[]
+	}
+
+	export interface GetMaterialStocksQuery {
+		roomId?: number
+		materialTypeId?: number
+	}
+
+	export interface GetMaterialStocksResponse {
+		data: MaterialStockDB[]
+	}
+
+	export interface GetMaterialTypesQuery {
+		category?: schema.MaterialCategoryName
+		isSerialized?: boolean
+	}
+
+	export interface GetMaterialTypesResponse {
+		data: MaterialTypeDB[]
+	}
+
+	export interface MaterialAssetBody {
+		materialTypeId: number
+		unitId: number
+		roomId?: number | null
+		serialNumber: string
+		condition?: schema.MaterialConditionName
+		status?: schema.MaterialAssetStatus
+		assignedTrooperId?: number | null
+	}
+
+	export interface MaterialAssetDB {
+		materialTypeId: number
+		unitId: number
+		roomId?: number | null
+		serialNumber: string
+		condition?: schema.MaterialConditionName
+		status?: schema.MaterialAssetStatus
+		assignedTrooperId?: number | null
+		id: number
+		createdAt: string
+		updatedAt: string
+	}
+
+	export interface MaterialAssetEventDB {
+		id: number
+		createdAt: string
+		updatedAt: string
+		assetId: number
+		eventType: schema.MaterialAssetEventType
+		previousValue?: { [key: string]: any } | null
+		newValue?: { [key: string]: any } | null
+		note?: string | null
+		actor?: {
+			id: number
+			displayName?: string
+		} | null
+	}
+
+	export interface MaterialStockBody {
+		materialTypeId: number
+		unitId: number
+		roomId?: number | null
+		quantity: number
+		condition?: schema.MaterialConditionName
+	}
+
+	export interface MaterialStockDB {
+		materialTypeId: number
+		unitId: number
+		roomId?: number | null
+		quantity: number
+		condition?: schema.MaterialConditionName
+		id: number
+		createdAt: string
+		updatedAt: string
+	}
+
+	export interface MaterialTypeBody {
+		name: string
+		category: schema.MaterialCategoryName
+		unitOfMeasure?: string
+		isSerialized: boolean
+	}
+
+	export interface MaterialTypeDB {
+		name: string
+		category: schema.MaterialCategoryName
+		unitOfMeasure?: string
+		isSerialized: boolean
+		id: number
+		createdAt: string
+		updatedAt: string
+	}
+
+	export interface UpdateMaterialAssetBody {
+		data: UpdateMaterialAssetPayload[]
+	}
+
+	export interface UpdateMaterialAssetPayload {
+		id: number
+		materialTypeId?: number
+		unitId?: number
+		roomId?: number | null
+		serialNumber?: string
+		condition?: schema.MaterialConditionName
+		status?: schema.MaterialAssetStatus
+		assignedTrooperId?: number | null
+	}
+
+	export interface UpdateMaterialStockBody {
+		data: UpdateMaterialStockPayload[]
+	}
+
+	export interface UpdateMaterialStockPayload {
+		id: number
+		materialTypeId?: number
+		unitId?: number
+		roomId?: number | null
+		quantity?: number
+		condition?: schema.MaterialConditionName
+	}
+
+	export interface UpdateMaterialTypeBody {
+		data: UpdateMaterialTypePayload[]
+	}
+
+	export interface UpdateMaterialTypePayload {
+		id: number
+		name?: string
+		category?: schema.MaterialCategoryName
+		unitOfMeasure?: string
+		isSerialized?: boolean
+	}
+
+	export class ServiceClient {
+		private baseClient: BaseClient
+
+		constructor(baseClient: BaseClient) {
+			this.baseClient = baseClient
+			this.AddMaterialStock = this.AddMaterialStock.bind(this)
+			this.CreateMaterialAsset = this.CreateMaterialAsset.bind(this)
+			this.CreateMaterialType = this.CreateMaterialType.bind(this)
+			this.DeleteMaterialAssets = this.DeleteMaterialAssets.bind(this)
+			this.DeleteMaterialStocks = this.DeleteMaterialStocks.bind(this)
+			this.DeleteMaterialTypes = this.DeleteMaterialTypes.bind(this)
+			this.GetMaterialAssetEvents = this.GetMaterialAssetEvents.bind(this)
+			this.GetMaterialAssets = this.GetMaterialAssets.bind(this)
+			this.GetMaterialStocks = this.GetMaterialStocks.bind(this)
+			this.GetMaterialTypes = this.GetMaterialTypes.bind(this)
+			this.UpdateMaterialAssets = this.UpdateMaterialAssets.bind(this)
+			this.UpdateMaterialStocks = this.UpdateMaterialStocks.bind(this)
+			this.UpdateMaterialTypes = this.UpdateMaterialTypes.bind(this)
+		}
+
+		public async AddMaterialStock(
+			params: AddMaterialStockRequest
+		): Promise<AddMaterialStockResponse> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'POST',
+				`/material-stocks`,
+				JSON.stringify(params)
+			)
+			return (await resp.json()) as AddMaterialStockResponse
+		}
+
+		public async CreateMaterialAsset(
+			params: CreateMaterialAssetRequest
+		): Promise<CreateMaterialAssetResponse> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'POST',
+				`/material-assets`,
+				JSON.stringify(params)
+			)
+			return (await resp.json()) as CreateMaterialAssetResponse
+		}
+
+		public async CreateMaterialType(
+			params: CreateMaterialTypeRequest
+		): Promise<CreateMaterialTypeResponse> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'POST',
+				`/material-types`,
+				JSON.stringify(params)
+			)
+			return (await resp.json()) as CreateMaterialTypeResponse
+		}
+
+		public async DeleteMaterialAssets(
+			params: DeleteMaterialAssetRequest
+		): Promise<DeleteMaterialAssetResponse> {
+			// Convert our params into the objects we need for the request
+			const query = makeRecord<string, string | string[]>({
+				ids: params.ids.map((v) => String(v))
+			})
+
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'DELETE',
+				`/material-assets`,
+				undefined,
+				{ query }
+			)
+			return (await resp.json()) as DeleteMaterialAssetResponse
+		}
+
+		public async DeleteMaterialStocks(
+			params: DeleteMaterialStockRequest
+		): Promise<DeleteMaterialStockResponse> {
+			// Convert our params into the objects we need for the request
+			const query = makeRecord<string, string | string[]>({
+				ids: params.ids.map((v) => String(v))
+			})
+
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'DELETE',
+				`/material-stocks`,
+				undefined,
+				{ query }
+			)
+			return (await resp.json()) as DeleteMaterialStockResponse
+		}
+
+		public async DeleteMaterialTypes(
+			params: DeleteMaterialTypeRequest
+		): Promise<DeleteMaterialTypeResponse> {
+			// Convert our params into the objects we need for the request
+			const query = makeRecord<string, string | string[]>({
+				ids: params.ids.map((v) => String(v))
+			})
+
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'DELETE',
+				`/material-types`,
+				undefined,
+				{ query }
+			)
+			return (await resp.json()) as DeleteMaterialTypeResponse
+		}
+
+		public async GetMaterialAssetEvents(
+			assetId: number
+		): Promise<GetMaterialAssetEventsResponse> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'GET',
+				`/material-assets/${encodeURIComponent(assetId)}/events`
+			)
+			return (await resp.json()) as GetMaterialAssetEventsResponse
+		}
+
+		public async GetMaterialAssets(
+			params: GetMaterialAssetsQuery
+		): Promise<GetMaterialAssetsResponse> {
+			// Convert our params into the objects we need for the request
+			const query = makeRecord<string, string | string[]>({
+				assignedTrooperId:
+					params.assignedTrooperId === undefined
+						? undefined
+						: String(params.assignedTrooperId),
+				materialTypeId:
+					params.materialTypeId === undefined
+						? undefined
+						: String(params.materialTypeId),
+				roomId:
+					params.roomId === undefined
+						? undefined
+						: String(params.roomId),
+				status:
+					params.status === undefined
+						? undefined
+						: String(params.status)
+			})
+
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'GET',
+				`/material-assets`,
+				undefined,
+				{ query }
+			)
+			return (await resp.json()) as GetMaterialAssetsResponse
+		}
+
+		public async GetMaterialStocks(
+			params: GetMaterialStocksQuery
+		): Promise<GetMaterialStocksResponse> {
+			// Convert our params into the objects we need for the request
+			const query = makeRecord<string, string | string[]>({
+				materialTypeId:
+					params.materialTypeId === undefined
+						? undefined
+						: String(params.materialTypeId),
+				roomId:
+					params.roomId === undefined
+						? undefined
+						: String(params.roomId)
+			})
+
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'GET',
+				`/material-stocks`,
+				undefined,
+				{ query }
+			)
+			return (await resp.json()) as GetMaterialStocksResponse
+		}
+
+		public async GetMaterialTypes(
+			params: GetMaterialTypesQuery
+		): Promise<GetMaterialTypesResponse> {
+			// Convert our params into the objects we need for the request
+			const query = makeRecord<string, string | string[]>({
+				category:
+					params.category === undefined
+						? undefined
+						: String(params.category),
+				isSerialized:
+					params.isSerialized === undefined
+						? undefined
+						: String(params.isSerialized)
+			})
+
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'GET',
+				`/material-types`,
+				undefined,
+				{ query }
+			)
+			return (await resp.json()) as GetMaterialTypesResponse
+		}
+
+		public async UpdateMaterialAssets(
+			params: UpdateMaterialAssetBody
+		): Promise<void> {
+			await this.baseClient.callTypedAPI(
+				'PATCH',
+				`/material-assets`,
+				JSON.stringify(params)
+			)
+		}
+
+		public async UpdateMaterialStocks(
+			params: UpdateMaterialStockBody
+		): Promise<void> {
+			await this.baseClient.callTypedAPI(
+				'PATCH',
+				`/material-stocks`,
+				JSON.stringify(params)
+			)
+		}
+
+		public async UpdateMaterialTypes(
+			params: UpdateMaterialTypeBody
+		): Promise<void> {
+			await this.baseClient.callTypedAPI(
+				'PATCH',
+				`/material-types`,
+				JSON.stringify(params)
+			)
 		}
 	}
 }
@@ -794,6 +1455,7 @@ export namespace students {
 		rank: string
 		previousUnit: string
 		previousPosition: string
+		position: string
 		ethnic: string
 		religion: string
 		enlistmentPeriod: string
@@ -835,7 +1497,8 @@ export namespace students {
 		disciplinaryHistory: string
 		childrenInfos: ChildrenInfo[]
 		phone: string
-		classId: number
+		classId?: number
+		unitId?: number
 		avatar?: string
 		siblings?: ChildrenInfo[]
 		contactPerson?: {
@@ -856,6 +1519,7 @@ export namespace students {
 		rank: string
 		previousUnit: string
 		previousPosition: string
+		position: string
 		ethnic: string
 		religion: string
 		enlistmentPeriod: string
@@ -897,7 +1561,8 @@ export namespace students {
 		disciplinaryHistory: string
 		childrenInfos: ChildrenInfo[]
 		phone: string
-		classId: number
+		classId?: number
+		unitId?: number
 		avatar?: string
 		siblings?: ChildrenInfo[]
 		contactPerson?: {
@@ -925,6 +1590,7 @@ export namespace students {
 		rank: string
 		previousUnit: string
 		previousPosition: string
+		position: string
 		ethnic: string
 		religion: string
 		enlistmentPeriod: string
@@ -966,7 +1632,8 @@ export namespace students {
 		disciplinaryHistory: string
 		childrenInfos: ChildrenInfo[]
 		phone: string
-		classId: number
+		classId?: number
+		unitId?: number
 		avatar?: string
 		siblings?: ChildrenInfo[]
 		contactPerson?: {
@@ -992,7 +1659,8 @@ export namespace students {
 			id: number
 			description: string
 			name: string
-		}
+		} | null
+		unit: units.Unit | null
 		id: number
 		createdAt: string
 		updatedAt: string
@@ -1003,6 +1671,7 @@ export namespace students {
 		rank: string
 		previousUnit: string
 		previousPosition: string
+		position: string
 		ethnic: string
 		religion: string
 		enlistmentPeriod: string
@@ -1044,7 +1713,8 @@ export namespace students {
 		disciplinaryHistory: string
 		childrenInfos: ChildrenInfo[]
 		phone: string
-		classId: number
+		classId?: number
+		unitId?: number
 		avatar?: string
 		siblings?: ChildrenInfo[]
 		contactPerson?: {
@@ -1066,6 +1736,7 @@ export namespace students {
 		rank?: string
 		previousUnit?: string
 		previousPosition?: string
+		position?: string
 		ethnic?: string
 		religion?: string
 		enlistmentPeriod?: string
@@ -1100,6 +1771,7 @@ export namespace students {
 		childrenInfos?: ChildrenInfo[]
 		phone?: string
 		classId?: number
+		unitId?: number
 		avatar?: string
 		siblings?: ChildrenInfo[]
 		contactPerson?: {
@@ -1368,6 +2040,45 @@ export namespace units {
 		data?: Unit
 	}
 
+	export interface GetUnitStatsMaterialAssetsResponse {
+		data: { [key: string]: any }[]
+	}
+
+	export interface GetUnitStatsMaterialStocksResponse {
+		data: { [key: string]: any }[]
+	}
+
+	export interface GetUnitStatsResponse {
+		unit: Unit
+		totalStudents: number
+		buildingsCount: number
+		roomsCount: number
+		unitCounts: {
+			corps?: number
+			division?: number
+			brigade?: number
+			regiment?: number
+			battalion?: number
+			company?: number
+			platoon?: number
+			squad?: number
+			department?: number
+		}
+		materialStockSummary: {
+			materialTypeId: number
+			materialTypeName: string
+			totalQuantity: number
+		}[]
+		materialAssetSummary: {
+			status: schema.MaterialAssetStatus
+			count: number
+		}[]
+	}
+
+	export interface GetUnitStatsStudentsResponse {
+		data: { [key: string]: any }[]
+	}
+
 	export interface GetUnitsQuery {
 		level?: schema.UnitLevelName
 	}
@@ -1449,6 +2160,12 @@ export namespace units {
 			this.CreateUnit = this.CreateUnit.bind(this)
 			this.DeleteUnits = this.DeleteUnits.bind(this)
 			this.GetUnit = this.GetUnit.bind(this)
+			this.GetUnitStats = this.GetUnitStats.bind(this)
+			this.GetUnitStatsMaterialAssets =
+				this.GetUnitStatsMaterialAssets.bind(this)
+			this.GetUnitStatsMaterialStocks =
+				this.GetUnitStatsMaterialStocks.bind(this)
+			this.GetUnitStatsStudents = this.GetUnitStatsStudents.bind(this)
 			this.GetUnits = this.GetUnits.bind(this)
 			this.InitRootUnit = this.InitRootUnit.bind(this)
 			this.IsInitRootUnit = this.IsInitRootUnit.bind(this)
@@ -1511,6 +2228,50 @@ export namespace units {
 				{ query }
 			)
 			return (await resp.json()) as GetUnitResponse
+		}
+
+		public async GetUnitStats(
+			alias: string
+		): Promise<GetUnitStatsResponse> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'GET',
+				`/units/${encodeURIComponent(alias)}/stats`
+			)
+			return (await resp.json()) as GetUnitStatsResponse
+		}
+
+		public async GetUnitStatsMaterialAssets(
+			alias: string
+		): Promise<GetUnitStatsMaterialAssetsResponse> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'GET',
+				`/units/${encodeURIComponent(alias)}/stats/material-assets`
+			)
+			return (await resp.json()) as GetUnitStatsMaterialAssetsResponse
+		}
+
+		public async GetUnitStatsMaterialStocks(
+			alias: string
+		): Promise<GetUnitStatsMaterialStocksResponse> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'GET',
+				`/units/${encodeURIComponent(alias)}/stats/material-stocks`
+			)
+			return (await resp.json()) as GetUnitStatsMaterialStocksResponse
+		}
+
+		public async GetUnitStatsStudents(
+			alias: string
+		): Promise<GetUnitStatsStudentsResponse> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'GET',
+				`/units/${encodeURIComponent(alias)}/stats/students`
+			)
+			return (await resp.json()) as GetUnitStatsStudentsResponse
 		}
 
 		public async GetUnits(
@@ -1815,6 +2576,31 @@ export namespace schema {
 		permissionIds?: number[]
 	}
 
+	export type MaterialAssetEventType =
+		| 'assigned'
+		| 'unassigned'
+		| 'condition_changed'
+		| 'status_changed'
+		| 'transferred'
+
+	export type MaterialAssetStatus =
+		| 'in_service'
+		| 'damaged'
+		| 'lost'
+		| 'retired'
+
+	export type MaterialCategoryName =
+		| 'furniture'
+		| 'equipment'
+		| 'weapon'
+		| 'vehicle'
+
+	export type MaterialConditionName =
+		| 'good'
+		| 'fair'
+		| 'needs_maintenance'
+		| 'damaged'
+
 	export interface Permission {
 		resource?: Resource
 		action: Action
@@ -1856,6 +2642,7 @@ export namespace schema {
 		| 'company'
 		| 'platoon'
 		| 'squad'
+		| 'department'
 
 	export interface UpdateRoleRequest {
 		name?: string
