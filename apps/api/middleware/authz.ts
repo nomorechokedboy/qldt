@@ -147,7 +147,38 @@ const PERMISSION_MAP: Record<string, string[]> = {
 	'GET:/roles': ['roles:read'],
 	'GET:/roles/:id': ['roles:read'],
 	'PUT:/roles/:id': ['roles:update'],
-	'DELETE:/roles': ['roles:delete']
+	'DELETE:/roles': ['roles:delete'],
+
+	'POST:/buildings': ['buildings:create'],
+	'GET:/buildings': ['buildings:read'],
+	'PATCH:/buildings': ['buildings:update'],
+	'DELETE:/buildings': ['buildings:delete'],
+
+	'POST:/rooms': ['rooms:create'],
+	'GET:/rooms': ['rooms:read'],
+	'PATCH:/rooms': ['rooms:update'],
+	'DELETE:/rooms': ['rooms:delete'],
+
+	'POST:/material-types': ['material_types:create'],
+	'GET:/material-types': ['material_types:read'],
+	'PATCH:/material-types': ['material_types:update'],
+	'DELETE:/material-types': ['material_types:delete'],
+
+	'POST:/material-stocks': ['material_stocks:create'],
+	'GET:/material-stocks': ['material_stocks:read'],
+	'PATCH:/material-stocks': ['material_stocks:update'],
+	'DELETE:/material-stocks': ['material_stocks:delete'],
+
+	'POST:/material-assets': ['material_assets:create'],
+	'GET:/material-assets': ['material_assets:read'],
+	'PATCH:/material-assets': ['material_assets:update'],
+	'DELETE:/material-assets': ['material_assets:delete'],
+	'GET:/material-assets/:assetId/events': ['material_assets:read'],
+
+	'GET:/units/:alias/stats': ['units:read'],
+	'GET:/units/:alias/stats/students': ['students:read'],
+	'GET:/units/:alias/stats/material-stocks': ['material_stocks:read'],
+	'GET:/units/:alias/stats/material-assets': ['material_assets:read']
 }
 
 function getPermissionsForRequest(method: string, path: string): string[] {
