@@ -15,6 +15,13 @@
 			"when": 1788096787061,
 			"tag": "0001_seed-authz",
 			"breakpoints": true
+		},
+		{
+			"idx": 2,
+			"version": "6",
+			"when": 1788164483927,
+			"tag": "0002_spotty_angel",
+			"breakpoints": true
 		}
 	]
 }
