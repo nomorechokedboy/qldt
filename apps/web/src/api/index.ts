@@ -161,7 +161,7 @@ export function GetUnit({
 }
 
 export function GetUnitStats(alias: string) {
-	return requestClient.units.GetUnitStats(alias).then((resp) => resp.data)
+	return requestClient.units.GetUnitStats(alias)
 }
 
 export function GetUnitStatsStudents(alias: string) {
@@ -355,7 +355,9 @@ export function DeleteRooms(ids: number[]) {
 // Material types
 
 export function GetMaterialTypes() {
-	return requestClient.materials.GetMaterialTypes().then((resp) => resp.data)
+	return requestClient.materials
+		.GetMaterialTypes({})
+		.then((resp) => resp.data)
 }
 
 export function CreateMaterialType(body: materials.MaterialTypeBody) {
@@ -422,6 +424,6 @@ export function DeleteMaterialAssets(ids: number[]) {
 
 export function GetMaterialAssetEvents(assetId: number) {
 	return requestClient.materials
-		.GetMaterialAssetEvents({ assetId })
+		.GetMaterialAssetEvents(assetId)
 		.then((resp) => resp.data)
 }
