@@ -33,6 +33,7 @@ const BROWSER = typeof globalThis === 'object' && 'window' in globalThis
  */
 export default class Client {
 	public readonly actions: actions.ServiceClient
+	public readonly audit_logs: audit_logs.ServiceClient
 	public readonly auth: auth.ServiceClient
 	public readonly classes: classes.ServiceClient
 	public readonly facilities: facilities.ServiceClient
@@ -61,6 +62,7 @@ export default class Client {
 		this.options = options ?? {}
 		const base = new BaseClient(this.target, this.options)
 		this.actions = new actions.ServiceClient(base)
+		this.audit_logs = new audit_logs.ServiceClient(base)
 		this.auth = new auth.ServiceClient(base)
 		this.classes = new classes.ServiceClient(base)
 		this.facilities = new facilities.ServiceClient(base)
@@ -131,6 +133,51 @@ export namespace actions {
 			// Now make the actual call to the API
 			const resp = await this.baseClient.callTypedAPI('GET', `/actions`)
 			return (await resp.json()) as GetActionsResponse
+		}
+	}
+}
+
+export namespace audit_logs {
+	export class ServiceClient {
+		private baseClient: BaseClient
+
+		constructor(baseClient: BaseClient) {
+			this.baseClient = baseClient
+			this.GetAuditLogs = this.GetAuditLogs.bind(this)
+		}
+
+		public async GetAuditLogs(
+			params: audit_logs.GetAuditLogsQuery
+		): Promise<audit_logs.GetAuditLogsResponse> {
+			// Convert our params into the objects we need for the request
+			const query = makeRecord<string, string | string[]>({
+				action:
+					params.action === undefined
+						? undefined
+						: String(params.action),
+				actorUserId:
+					params.actorUserId === undefined
+						? undefined
+						: String(params.actorUserId),
+				from: params.from,
+				page:
+					params.page === undefined ? undefined : String(params.page),
+				pageSize:
+					params.pageSize === undefined
+						? undefined
+						: String(params.pageSize),
+				resource: params.resource,
+				to: params.to
+			})
+
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'GET',
+				`/audit-logs`,
+				undefined,
+				{ query }
+			)
+			return (await resp.json()) as audit_logs.GetAuditLogsResponse
 		}
 	}
 }
@@ -2555,6 +2602,41 @@ export namespace users {
 	}
 }
 
+export namespace audit_logs {
+	export interface AuditLogResponse {
+		id: number
+		createdAt: string
+		updatedAt: string
+		resource: string
+		action: schema.AuditAction
+		resourceIds: (number | string)[]
+		method: string
+		path: string
+		statusCode: number | null
+		previousValue: any
+		newValue: any
+		actor?: {
+			id: number
+			displayName?: string
+		} | null
+	}
+
+	export interface GetAuditLogsQuery {
+		resource?: string
+		action?: schema.AuditAction
+		actorUserId?: number
+		from?: string
+		to?: string
+		page?: number
+		pageSize?: number
+	}
+
+	export interface GetAuditLogsResponse {
+		data: AuditLogResponse[]
+		total: number
+	}
+}
+
 export namespace schema {
 	export interface Action {
 		name: string
@@ -2569,6 +2651,8 @@ export namespace schema {
 		userId: number
 		roleIds: number[]
 	}
+
+	export type AuditAction = 'create' | 'update' | 'delete'
 
 	export interface CreateRoleRequest {
 		name: string
