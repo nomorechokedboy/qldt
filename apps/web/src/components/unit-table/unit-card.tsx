@@ -14,28 +14,24 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import UnitEditForm from '@/components/UnitEditForm'
 import { useDeleteUnits } from '@/hooks/useDeleteUnits'
-import { unitLevelLabels } from '@/data/unit-levels'
+import {
+	getUnitDetailUrl,
+	unitDetailRoutePrefix,
+	unitLevelLabels
+} from '@/data/unit-levels'
 import type { Unit } from '@/types'
 
 function unitDetailLink(data: Unit) {
-	switch (data.level) {
-		case 'company':
-			return {
-				to: '/dai-doi/$companyAlias',
-				params: { companyAlias: data.alias }
-			} as const
-		case 'platoon':
-			return {
-				to: '/trung-doi/$platoonAlias',
-				params: { platoonAlias: data.alias }
-			} as const
-		default:
-			return {
-				to: '/tieu-doan/$alias',
-				params: { alias: data.alias },
-				search: { level: data.level, name: '' }
-			} as const
+	const to = getUnitDetailUrl(data.level, data.alias)
+
+	// Levels without a dedicated route (see unitDetailRoutePrefix) fall back
+	// to the generic '/don-vi' route, which needs the level/name search
+	// params the dedicated routes don't.
+	if (unitDetailRoutePrefix[data.level] === undefined) {
+		return { to, search: { level: data.level, name: '' } } as const
 	}
+
+	return { to } as const
 }
 
 interface UnitCardProps {

@@ -40,3 +40,16 @@ export const rootUnitLevelOptions = unitLevelOptions.filter(
 export function isLargerUnitLevel(a: UnitLevel, b: UnitLevel): boolean {
 	return unitLevelOrder.indexOf(a) > unitLevelOrder.indexOf(b)
 }
+
+// Route prefix for a unit's detail page, keyed by level. Levels not listed
+// here fall back to the generic '/don-vi' route. Add an entry here when a
+// new level gets its own dedicated route instead of branching call sites.
+export const unitDetailRoutePrefix: Partial<Record<UnitLevel, string>> = {
+	company: '/dai-doi',
+	platoon: '/trung-doi'
+}
+
+export function getUnitDetailUrl(level: UnitLevel, alias: string): string {
+	const prefix = unitDetailRoutePrefix[level] ?? '/don-vi'
+	return `${prefix}/${alias}`
+}

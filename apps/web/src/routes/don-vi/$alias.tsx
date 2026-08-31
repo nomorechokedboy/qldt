@@ -23,7 +23,7 @@ const aliasSearchSchema = z.object({
 	name: z.string().default('')
 })
 
-export const Route = createFileRoute('/tieu-doan/$alias')({
+export const Route = createFileRoute('/don-vi/$alias')({
 	component: RouteComponent,
 	validateSearch: aliasSearchSchema
 })

@@ -7,6 +7,7 @@ import { Users, UserPlus, BarChart3 } from 'lucide-react'
 import StudentForm from '@/components/student-form'
 import { useState } from 'react'
 import { Dialog, DialogContent } from '@/components/ui/dialog'
+import { getUnitDetailUrl } from '@/data/unit-levels'
 
 export const Route = createFileRoute('/')({
 	component: RouteComponent
@@ -54,9 +55,10 @@ function RouteComponent() {
 								size='lg'
 								variant='outline'
 								className='cursor-pointer not-first-of-type:flex items-center gap-2 shadow-sm hover:shadow-md transition-all'
-								// onclick redrect to /dai-doi/c5
 								onClick={() => {
-									setUrlSite('/dai-doi/c5')
+									setUrlSite(
+										getUnitDetailUrl('company', 'c5')
+									)
 									navigate({ to: urlSite })
 								}}
 							>
