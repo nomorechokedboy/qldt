@@ -822,7 +822,40 @@ All schema definitions are located in `apps/api/schema/`:
 | `actions.ts`            | `actions` table and types                      |
 | `notifications.ts`      | `notifications` table and types                |
 | `notification-items.ts` | `notification_items` table and types           |
+| `audit-logs.ts`          | `audit_logs` table and types                  |
 | `index.ts`              | Exports all schemas                            |
+
+Note: this ERD predates the `facilities` (buildings, rooms), `materials` (material_types, material_stocks, material_assets, material_asset_events) and `audit_logs` tables — their schema files live in `apps/api/schema/` following the same base-schema pattern but aren't diagrammed above yet.
+
+---
+
+## Audit Log Feature
+
+**Purpose:** Records who mutated what (create/update/delete) on tracked resources, with before/after values, for accountability and traceability.
+
+**Table:** `audit_logs` — generic, single table for all resources (not per-resource event tables). Columns: `actorUserId` (FK→users, nullable), `resource` (text), `action` ('create'\|'update'\|'delete'), `resourceIds` (JSON array), `method`/`path` (text), `statusCode`, `previousValue`/`newValue` (JSON).
+
+**Capture mechanism — middleware-based, not explicit per-controller calls:**
+
+- `apps/api/middleware/audit.ts` defines `auditMiddleware` (wired into a service's `middlewares` array, same pattern as `authzMiddleware`/`permissionMiddleware`) and an `AUDIT_MAP` of `METHOD:/path` → `{ resource, action }`, matched via the same exact-then-regex logic as `PERMISSION_MAP` in `middleware/authz.ts`.
+- Encore middleware **cannot read a typed endpoint's parsed request/response body** (`MiddlewareRequest.data` is only a middleware↔handler side-channel, not the body) — verified by reading the compiled Encore runtime (`encore.gen`/`~encore` internals), not assumed.
+- So handlers call `setAuditContext({ resourceIds, previousValue?, newValue? })` (exported from `middleware/audit.ts`) right before returning. This writes into `req.data.audit`, which is the same object exposed to the middleware afterward as `currentRequest().middlewareData` (shared by reference, confirmed via runtime source) — so the middleware reads it back after `next()` resolves.
+- If a handler never calls `setAuditContext` (nothing meaningful changed), the middleware skips writing an audit row entirely rather than writing a mostly-empty one.
+
+**Async write — decoupled from the request path via PubSub, not inline:**
+
+- The middleware does not call the DB directly. It publishes an `AuditLogEvent` to `auditLogTopic` (`apps/api/topics/index.ts`) through a small wrapper, `publishAuditEvent()` in `apps/api/audit-logs/publish.ts`.
+- A `Subscription` in `apps/api/audit-logs/subscription.ts` consumes the topic and performs the actual `auditLogController.create()` write, off the request's call stack — mirrors the existing `notiTopic`/`Subscription` pattern in `apps/api/notifications/notifications.ts`.
+- **Gotcha:** the topic's payload type must be a plain hand-written interface (`AuditLogEvent`), not a Drizzle-inferred type like `InferInsertModel<...>` — Encore's own static analyzer resolves PubSub payload types and cannot evaluate Drizzle's conditional/mapped types (fails with `unsupported member on type never`).
+- **Gotcha:** a topic `.publish()` call must live inside a file owned by exactly one service (nearest `encore.service.ts`). `auditMiddleware` is shared across many services' `middlewares` arrays and lives under `middleware/`, so it cannot publish directly — it calls into `audit-logs/publish.ts` instead, which is physically under the `audit_logs` service directory.
+
+**Access control:** super-admins bypass all permission checks (existing `permissionMiddleware` behavior); a dedicated `perm:audit_logs:read` tag (`middleware/permission-tags.ts`) additionally gates `GET /audit-logs`, seeded to specific roles (e.g. admin, battalion_commander) via a custom migration.
+
+**Resources currently audited** (see `AUDIT_MAP` in `middleware/audit.ts` for the authoritative list): `students`, `material_assets`, `material_types`, `material_stocks`, `buildings`, `rooms`, `classes`, `units`, `roles`, `permissions` (create-only), `users`, `user_roles` (the `assign` endpoint, treated as an update over the role-set). When adding a new mutating endpoint that should be audited: add an `AUDIT_MAP` entry, add `auditMiddleware` to that service's `middlewares` array if not already present, and call `setAuditContext(...)` in the handler(s).
+
+**Read API:** `GET /audit-logs` (`apps/api/audit-logs/audit-logs.ts`), paginated, filterable by resource/action/actorUserId/date range.
+
+**Frontend:** `apps/web/src/components/audit-log/index.tsx` (route `/nhat-ky-hoat-dong`) — first server-paginated table in the app (existing `DataTable` usages are all client-side); uses a `Sheet` to show a `previousValue`/`newValue` JSON diff per row.
 
 ---
 
@@ -844,13 +877,21 @@ Runs pending migrations against the database.
 
 ## Workflow
 
-When creating new fields or modifying schema:
+### Schema-driven migrations (new/changed columns or tables)
 
-1. **Generate migrations**: Run `encore exec -- pnpm generate` to create migration files from schema changes
-2. **Apply migrations**: Run `encore exec -- pnpm migrate` to apply the migrations to the database
+1. **Mutate the schema**: Edit the relevant file(s) in `apps/api/schema/`.
+2. **Generate migrations**: Run `encore exec -- pnpm generate` to create migration files from the schema diff.
+3. **Apply migrations**: Run `encore exec -- pnpm migrate` to apply the migrations to the database.
 
-**Important**: Always use generate + migrate workflow. Do not use `pnpm push` for schema changes.
+### Custom / seed migrations (data-only, e.g. permission/resource seeding — no schema change)
+
+1. **Generate an empty custom migration file**: Run `encore exec -- pnpm generate --custom --name=<file-name>` (e.g. `--name=seed-audit-logs-authz`). This creates a blank `.sql` file under `apps/api/migrations/` following the project's numbering, with no schema diff.
+2. **Hand-write the SQL** in that generated file (inserts/updates — follow the pattern of existing seed migrations like `0003_seed-materials-authz.sql`).
+3. **Apply migrations**: Run `encore exec -- pnpm migrate` to apply it.
+
+**Important**: Always use generate + migrate workflow (schema-driven or `--custom`). Do not use `pnpm push` for schema changes — `push` is only wired up as `prestart` for local dev bootstrapping and is a known source of local.db drift/index-conflict errors, not part of the real migration flow.
 **Important**: Always discuss before implement code.
+**Important**: Never run `tsc` in this repo, in any form (bare, `npx`, or `encore exec -- pnpm exec tsc --noEmit`) — it can hang/crash the machine and doesn't resolve Encore's generated types anyway. To sanity-check compilation, briefly run `encore exec -- pnpm run start` (apps/api) — a successful "Building Encore application graph done" line means the TS/service graph is valid, regardless of what the subsequent `drizzle-kit push` step against local.db does — or start the Vite dev server (apps/web) and check for compile errors.
 
 ## Notes
 
