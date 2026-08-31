@@ -7,6 +7,7 @@ import {
 } from '../schema/student.js'
 import log from 'encore.dev/log'
 import studentController from './controller.js'
+import studentRepo from './repo.js'
 import notificationController from '../notifications/controller.js'
 import {
 	CreateBatchNotificationData,
@@ -23,6 +24,7 @@ import * as v from 'valibot'
 import XlsxTemplate from 'xlsx-template'
 import { getAuthData } from '~encore/auth'
 import { APICallMeta, currentRequest } from 'encore.dev'
+import { setAuditContext } from '../middleware/audit.js'
 
 interface ChildrenInfo {
 	fullName: string
@@ -122,6 +124,11 @@ export const CreateStudent = api(
 		)
 
 		const resp = createdStudent.map((s) => ({ ...s }) as StudentDBResponse)
+
+		setAuditContext({
+			resourceIds: resp.map((s) => s.id),
+			newValue: resp
+		})
 
 		return { data: resp }
 	}
@@ -227,7 +234,16 @@ export const DeleteStudents = api(
 		const students: StudentDB[] = body.ids.map(
 			(id) => ({ id }) as StudentDB
 		)
-		await studentController.delete(students, validClassIds, validUnitIds)
+		const deleted = await studentController.delete(
+			students,
+			validClassIds,
+			validUnitIds
+		)
+
+		setAuditContext({
+			resourceIds: body.ids,
+			previousValue: deleted
+		})
 
 		return { ids: body.ids }
 	}
@@ -250,7 +266,19 @@ export const UpdateStudents = api(
 		const students: StudentDB[] = body.data.map(
 			(s) => ({ ...s }) as StudentDB
 		)
-		await studentController.update(students, validClassIds, validUnitIds)
+		const ids = students.map((s) => s.id)
+		const previous = await studentRepo.find({ ids })
+		const updated = await studentController.update(
+			students,
+			validClassIds,
+			validUnitIds
+		)
+
+		setAuditContext({
+			resourceIds: ids,
+			previousValue: previous,
+			newValue: updated
+		})
 
 		return {}
 	}

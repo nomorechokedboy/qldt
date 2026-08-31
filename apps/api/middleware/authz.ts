@@ -169,6 +169,8 @@ const PERMISSION_MAP: Record<string, string[]> = {
 	'DELETE:/material-assets': ['material_assets:delete'],
 	'GET:/material-assets/:assetId/events': ['material_assets:read'],
 
+	'GET:/audit-logs': ['audit_logs:read'],
+
 	'GET:/units/:alias/stats': ['units:read'],
 	'GET:/units/:alias/stats/students': ['students:read'],
 	'GET:/units/:alias/stats/material-stocks': ['material_stocks:read'],

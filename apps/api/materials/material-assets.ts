@@ -4,6 +4,8 @@ import { getAuthData } from '~encore/auth'
 import { MaterialAssetStatus } from '../schema/material-assets'
 import { MaterialConditionName } from '../schema/material-stocks'
 import materialAssetController from './material-assets-controller'
+import materialAssetRepo from './material-assets-repo'
+import { setAuditContext } from '../middleware/audit'
 
 export type MaterialAssetBody = {
 	materialTypeId: number
@@ -43,8 +45,14 @@ export const CreateMaterialAsset = api(
 			body.data,
 			actorUserId
 		)
+		const resp = created.map((a) => ({ ...a }) as MaterialAssetDB)
 
-		return { data: created.map((a) => ({ ...a }) as MaterialAssetDB) }
+		setAuditContext({
+			resourceIds: resp.map((a) => a.id),
+			newValue: resp
+		})
+
+		return { data: resp }
 	}
 )
 
@@ -98,13 +106,22 @@ export const UpdateMaterialAssets = api(
 			)
 		}))
 
+		const ids = updateMap.map((u) => u.id)
+		const previous = await materialAssetRepo.findByIds(ids)
 		const updated = await materialAssetController.update(
 			updateMap,
 			validUnitIds,
 			actorUserId
 		)
+		const resp = updated.map((a) => ({ ...a }) as MaterialAssetDB)
 
-		return { data: updated.map((a) => ({ ...a }) as MaterialAssetDB) }
+		setAuditContext({
+			resourceIds: ids,
+			previousValue: previous,
+			newValue: resp
+		})
+
+		return { data: resp }
 	}
 )
 
@@ -124,7 +141,15 @@ export const DeleteMaterialAssets = api(
 		const callMeta = currentRequest() as APICallMeta
 		const validUnitIds = callMeta.middlewareData?.validUnitIds || []
 
-		await materialAssetController.delete(body.ids, validUnitIds)
+		const deleted = await materialAssetController.delete(
+			body.ids,
+			validUnitIds
+		)
+
+		setAuditContext({
+			resourceIds: body.ids,
+			previousValue: deleted
+		})
 
 		return { ids: body.ids }
 	}

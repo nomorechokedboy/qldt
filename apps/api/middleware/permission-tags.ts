@@ -57,7 +57,10 @@ export const PermissionTag = {
 	ACTIONS_READ: 'perm:actions:read',
 	ACTIONS_UPDATE: 'perm:actions:update',
 	ACTIONS_DELETE: 'perm:actions:delete',
-	ACTIONS_MANAGE: 'perm:actions:manage'
+	ACTIONS_MANAGE: 'perm:actions:manage',
+
+	// Audit logs permissions
+	AUDIT_LOGS_READ: 'perm:audit_logs:read'
 } as const
 
 /**
