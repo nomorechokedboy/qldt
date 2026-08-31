@@ -97,49 +97,23 @@ class repo implements Repository {
 			.catch(handleDatabaseErr)
 	}
 
-	async findOne(params: {
+	findOne(params: {
 		alias: string
 		level: UnitLevelName
 	}): Promise<Unit | undefined> {
-		const baseQuery = this.db.query.units
-
-		switch (params.level) {
-			// Classes (squads) attach to platoons, so reaching them from
-			// battalion/company requires going two/one level(s) down
-			// through children first.
-			case 'battalion':
-				return baseQuery
-					.findFirst({
-						where: and(
-							eq(units.alias, params.alias),
-							eq(units.level, params.level)
-						),
-						with: {
-							children: {
-								with: {
-									children: { with: { classes: true } }
-								}
-							}
-						}
-					})
-					.catch(handleDatabaseErr) as unknown as Unit
-
-			case 'company':
-				return baseQuery
-					.findFirst({
-						where: and(
-							eq(units.alias, params.alias),
-							eq(units.level, params.level)
-						),
-						with: {
-							children: { with: { classes: true } }
-						}
-					})
-					.catch(handleDatabaseErr) as unknown as Unit
-
-			default:
-				return undefined
-		}
+		return this.db.query.units
+			.findFirst({
+				where: and(
+					eq(units.alias, params.alias),
+					eq(units.level, params.level)
+				),
+				with: {
+					children: { with: { classes: true } },
+					classes: true,
+					parent: true
+				}
+			})
+			.catch(handleDatabaseErr) as unknown as Promise<Unit | undefined>
 	}
 
 	findByIds(ids: number[]): Promise<UnitDB[]> {
