@@ -29,6 +29,20 @@
 			"when": 1788165000000,
 			"tag": "0003_seed-materials-authz",
 			"breakpoints": true
+		},
+		{
+			"idx": 4,
+			"version": "6",
+			"when": 1788180559344,
+			"tag": "0004_add_audit_logs",
+			"breakpoints": true
+		},
+		{
+			"idx": 5,
+			"version": "6",
+			"when": 1788180600000,
+			"tag": "0005_seed-audit-logs-authz",
+			"breakpoints": true
 		}
 	]
 }
