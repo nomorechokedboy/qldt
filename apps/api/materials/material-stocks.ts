@@ -1,5 +1,9 @@
 import { APICallMeta, currentRequest } from 'encore.dev'
-import { api, Query } from 'encore.dev/api'
+import { api, APIError, Query } from 'encore.dev/api'
+import log from 'encore.dev/log'
+import dayjs from 'dayjs'
+import * as v from 'valibot'
+import { getTypedRequestBody } from '../utils'
 import { MaterialConditionName } from '../schema/material-stocks'
 import materialStockController from './material-stocks-controller'
 import materialStockRepo from './material-stocks-repo'
@@ -128,5 +132,60 @@ export const DeleteMaterialStocks = api(
 		setAuditContext({ resourceIds: body.ids, previousValue: deleted })
 
 		return { ids: body.ids }
+	}
+)
+
+const ExportMaterialStocksRequestSchema = v.object({
+	city: v.string(),
+	commanderName: v.string(),
+	commanderPosition: v.string(),
+	commanderRank: v.string(),
+	data: v.pipe(v.array(v.record(v.string(), v.any())), v.minLength(1)),
+	date: v.optional(
+		v.pipe(v.string(), v.isoDate()),
+		dayjs().format('YYYY-MM-DD')
+	),
+	reportTitle: v.string(),
+	underUnitName: v.string(),
+	unitName: v.string(),
+	templateId: v.optional(v.number())
+})
+
+export type ExportMaterialStocksRequest = v.InferInput<
+	typeof ExportMaterialStocksRequestSchema
+>
+
+export const ExportMaterialStocks = api.raw(
+	{
+		auth: true,
+		expose: true,
+		method: 'POST',
+		path: '/material-stocks/export'
+	},
+	async (req, resp) => {
+		try {
+			const body = await getTypedRequestBody(
+				req,
+				ExportMaterialStocksRequestSchema
+			)
+
+			const buffer =
+				await materialStockController.handleExportMaterialStocks(body)
+
+			resp.setHeader(
+				'Content-Type',
+				'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+			)
+			resp.writeHead(200, { Connection: 'close' })
+			return resp.end(buffer)
+		} catch (err) {
+			log.error('Material stock export error', { err })
+
+			if (err instanceof APIError) {
+				throw err
+			}
+
+			throw APIError.internal('Internal error for exporting file')
+		}
 	}
 )

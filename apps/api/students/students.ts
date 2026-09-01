@@ -414,6 +414,62 @@ export const ExportStudentData = api.raw(
 	}
 )
 
+const ExportStudentDataDynamicRequestSchema = v.object({
+	city: v.string(),
+	commanderName: v.string(),
+	commanderPosition: v.string(),
+	commanderRank: v.string(),
+	data: v.pipe(v.array(v.record(v.string(), v.any())), v.minLength(1)),
+	rawData: v.optional(v.array(v.record(v.string(), v.any()))),
+	date: v.optional(
+		v.pipe(v.string(), v.isoDate()),
+		dayjs().format('YYYY-MM-DD')
+	),
+	reportTitle: v.string(),
+	underUnitName: v.string(),
+	unitName: v.string(),
+	templateId: v.optional(v.number())
+})
+
+export type ExportStudentDataDynamicRequest = v.InferInput<
+	typeof ExportStudentDataDynamicRequestSchema
+>
+
+export const ExportStudentDataDynamic = api.raw(
+	{
+		auth: true,
+		expose: true,
+		method: 'POST',
+		path: '/students/export-dynamic'
+	},
+	async (req, resp) => {
+		try {
+			const body = await getTypedRequestBody(
+				req,
+				ExportStudentDataDynamicRequestSchema
+			)
+
+			const buffer =
+				await studentController.handleExportStudentDataDynamic(body)
+
+			resp.setHeader(
+				'Content-Type',
+				'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+			)
+			resp.writeHead(200, { Connection: 'close' })
+			return resp.end(buffer)
+		} catch (err) {
+			log.error('Student dynamic export error', { err })
+
+			if (err instanceof APIError) {
+				throw err
+			}
+
+			throw APIError.internal('Internal error for exporting file')
+		}
+	}
+)
+
 type StudentParamsCronEvent =
 	| 'birthdayThisWeek'
 	| 'birthdayThisMonth'

@@ -122,6 +122,7 @@ const PERMISSION_MAP: Record<string, string[]> = {
 	'GET:/students/:id': ['students:read'],
 	'PATCH:/students': ['students:update'],
 	'DELETE:/students': ['students:delete'],
+	'POST:/students/export-dynamic': ['students:read'],
 
 	'POST:/units': ['units:create'],
 	'GET:/units': ['units:read'],
@@ -162,12 +163,19 @@ const PERMISSION_MAP: Record<string, string[]> = {
 	'GET:/material-stocks': ['material_stocks:read'],
 	'PATCH:/material-stocks': ['material_stocks:update'],
 	'DELETE:/material-stocks': ['material_stocks:delete'],
+	'POST:/material-stocks/export': ['material_stocks:read'],
 
 	'POST:/material-assets': ['material_assets:create'],
 	'GET:/material-assets': ['material_assets:read'],
 	'PATCH:/material-assets': ['material_assets:update'],
 	'DELETE:/material-assets': ['material_assets:delete'],
 	'GET:/material-assets/:assetId/events': ['material_assets:read'],
+	'POST:/material-assets/export': ['material_assets:read'],
+
+	'POST:/export-templates': ['export_templates:create'],
+	'GET:/export-templates': ['export_templates:read'],
+	'GET:/export-templates/example': ['export_templates:read'],
+	'DELETE:/export-templates/:id': ['export_templates:delete'],
 
 	'GET:/audit-logs': ['audit_logs:read'],
 

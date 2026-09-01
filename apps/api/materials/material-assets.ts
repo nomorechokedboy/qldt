@@ -1,6 +1,10 @@
 import { APICallMeta, currentRequest } from 'encore.dev'
-import { api, Query } from 'encore.dev/api'
+import { api, APIError, Query } from 'encore.dev/api'
+import log from 'encore.dev/log'
+import dayjs from 'dayjs'
+import * as v from 'valibot'
 import { getAuthData } from '~encore/auth'
+import { getTypedRequestBody } from '../utils'
 import { MaterialAssetStatus } from '../schema/material-assets'
 import { MaterialConditionName } from '../schema/material-stocks'
 import materialAssetController from './material-assets-controller'
@@ -152,5 +156,60 @@ export const DeleteMaterialAssets = api(
 		})
 
 		return { ids: body.ids }
+	}
+)
+
+const ExportMaterialAssetsRequestSchema = v.object({
+	city: v.string(),
+	commanderName: v.string(),
+	commanderPosition: v.string(),
+	commanderRank: v.string(),
+	data: v.pipe(v.array(v.record(v.string(), v.any())), v.minLength(1)),
+	date: v.optional(
+		v.pipe(v.string(), v.isoDate()),
+		dayjs().format('YYYY-MM-DD')
+	),
+	reportTitle: v.string(),
+	underUnitName: v.string(),
+	unitName: v.string(),
+	templateId: v.optional(v.number())
+})
+
+export type ExportMaterialAssetsRequest = v.InferInput<
+	typeof ExportMaterialAssetsRequestSchema
+>
+
+export const ExportMaterialAssets = api.raw(
+	{
+		auth: true,
+		expose: true,
+		method: 'POST',
+		path: '/material-assets/export'
+	},
+	async (req, resp) => {
+		try {
+			const body = await getTypedRequestBody(
+				req,
+				ExportMaterialAssetsRequestSchema
+			)
+
+			const buffer =
+				await materialAssetController.handleExportMaterialAssets(body)
+
+			resp.setHeader(
+				'Content-Type',
+				'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+			)
+			resp.writeHead(200, { Connection: 'close' })
+			return resp.end(buffer)
+		} catch (err) {
+			log.error('Material asset export error', { err })
+
+			if (err instanceof APIError) {
+				throw err
+			}
+
+			throw APIError.internal('Internal error for exporting file')
+		}
 	}
 )

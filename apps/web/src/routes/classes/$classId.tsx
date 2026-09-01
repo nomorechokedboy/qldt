@@ -32,7 +32,7 @@ function RouteComponent() {
 		enabled: !!classId
 	})
 	const { createFacetedFilter } = useDataTableToolbarConfig()
-	const filename = `danh-sach-hoc-vien-lop-${thisClass?.name}`
+	const filename = `danh-sach-quan-nhan-${thisClass?.name}`
 	const actionColumn = useActionColumn(handleRefreshStudents)
 	const handleDeleteRows = useOnDeleteStudents(refetchStudents)
 	const handleConfirmRows = useOnConfirmStudents(refetchStudents)

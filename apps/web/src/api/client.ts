@@ -36,6 +36,7 @@ export default class Client {
 	public readonly audit_logs: audit_logs.ServiceClient
 	public readonly auth: auth.ServiceClient
 	public readonly classes: classes.ServiceClient
+	public readonly export_templates: export_templates.ServiceClient
 	public readonly facilities: facilities.ServiceClient
 	public readonly healthcheck: healthcheck.ServiceClient
 	public readonly materials: materials.ServiceClient
@@ -65,6 +66,7 @@ export default class Client {
 		this.audit_logs = new audit_logs.ServiceClient(base)
 		this.auth = new auth.ServiceClient(base)
 		this.classes = new classes.ServiceClient(base)
+		this.export_templates = new export_templates.ServiceClient(base)
 		this.facilities = new facilities.ServiceClient(base)
 		this.healthcheck = new healthcheck.ServiceClient(base)
 		this.materials = new materials.ServiceClient(base)
@@ -194,6 +196,8 @@ export namespace auth {
 
 	export interface GetUserInfoResponse {
 		data: users.User
+		permissions: string[]
+		isSuperAdmin: boolean
 	}
 
 	export interface LoginRequest {
@@ -408,6 +412,104 @@ export namespace classes {
 				'PATCH',
 				`/classes`,
 				JSON.stringify(params)
+			)
+		}
+	}
+}
+
+export namespace export_templates {
+	export interface ExportTemplateResponse {
+		id: number
+		name: string
+		resourceType: schema.ExportResourceType
+		originalFilename: string
+		createdAt: string
+	}
+
+	export interface GetExportTemplatesQuery {
+		resourceType?: schema.ExportResourceType
+	}
+
+	export interface GetExportTemplatesResponse {
+		data: ExportTemplateResponse[]
+	}
+
+	export class ServiceClient {
+		private baseClient: BaseClient
+
+		constructor(baseClient: BaseClient) {
+			this.baseClient = baseClient
+			this.DeleteExportTemplate = this.DeleteExportTemplate.bind(this)
+			this.DownloadExampleExportTemplate =
+				this.DownloadExampleExportTemplate.bind(this)
+			this.GetExportTemplates = this.GetExportTemplates.bind(this)
+			this.UploadExportTemplate = this.UploadExportTemplate.bind(this)
+		}
+
+		public async DownloadExampleExportTemplate(
+			resourceType?: schema.ExportResourceType
+		): Promise<globalThis.Response> {
+			const query = makeRecord<string, string | string[]>({
+				resourceType:
+					resourceType === undefined
+						? undefined
+						: String(resourceType)
+			})
+
+			return this.baseClient.callAPI(
+				'GET',
+				`/export-templates/example`,
+				undefined,
+				{
+					query
+				}
+			)
+		}
+
+		public async DeleteExportTemplate(id: number): Promise<{
+			id: number
+		}> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'DELETE',
+				`/export-templates/${encodeURIComponent(id)}`
+			)
+			return (await resp.json()) as {
+				id: number
+			}
+		}
+
+		public async GetExportTemplates(
+			params: GetExportTemplatesQuery
+		): Promise<GetExportTemplatesResponse> {
+			// Convert our params into the objects we need for the request
+			const query = makeRecord<string, string | string[]>({
+				resourceType:
+					params.resourceType === undefined
+						? undefined
+						: String(params.resourceType)
+			})
+
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'GET',
+				`/export-templates`,
+				undefined,
+				{ query }
+			)
+			return (await resp.json()) as GetExportTemplatesResponse
+		}
+
+		public async UploadExportTemplate(
+			method: 'POST',
+			body?: RequestInit['body'],
+			options?: CallParameters
+		): Promise<globalThis.Response> {
+			return this.baseClient.callAPI(
+				method,
+				`/export-templates`,
+				body,
+				options
 			)
 		}
 	}
@@ -867,6 +969,8 @@ export namespace materials {
 			this.DeleteMaterialAssets = this.DeleteMaterialAssets.bind(this)
 			this.DeleteMaterialStocks = this.DeleteMaterialStocks.bind(this)
 			this.DeleteMaterialTypes = this.DeleteMaterialTypes.bind(this)
+			this.ExportMaterialAssets = this.ExportMaterialAssets.bind(this)
+			this.ExportMaterialStocks = this.ExportMaterialStocks.bind(this)
 			this.GetMaterialAssetEvents = this.GetMaterialAssetEvents.bind(this)
 			this.GetMaterialAssets = this.GetMaterialAssets.bind(this)
 			this.GetMaterialStocks = this.GetMaterialStocks.bind(this)
@@ -964,6 +1068,32 @@ export namespace materials {
 				{ query }
 			)
 			return (await resp.json()) as DeleteMaterialTypeResponse
+		}
+
+		public async ExportMaterialAssets(
+			method: 'POST',
+			body?: RequestInit['body'],
+			options?: CallParameters
+		): Promise<globalThis.Response> {
+			return this.baseClient.callAPI(
+				method,
+				`/material-assets/export`,
+				body,
+				options
+			)
+		}
+
+		public async ExportMaterialStocks(
+			method: 'POST',
+			body?: RequestInit['body'],
+			options?: CallParameters
+		): Promise<globalThis.Response> {
+			return this.baseClient.callAPI(
+				method,
+				`/material-stocks/export`,
+				body,
+				options
+			)
 		}
 
 		public async GetMaterialAssetEvents(
@@ -1254,7 +1384,9 @@ export namespace notifications {
 
 			return await this.baseClient.createStreamIn(
 				`/notifications/stream`,
-				{ query }
+				{
+					query
+				}
 			)
 		}
 	}
@@ -1855,6 +1987,8 @@ export namespace students {
 			this.ExportPoliticsQualityReport =
 				this.ExportPoliticsQualityReport.bind(this)
 			this.ExportStudentData = this.ExportStudentData.bind(this)
+			this.ExportStudentDataDynamic =
+				this.ExportStudentDataDynamic.bind(this)
 			this.GetPoliticsQualityReport =
 				this.GetPoliticsQualityReport.bind(this)
 			this.GetStudents = this.GetStudents.bind(this)
@@ -1926,6 +2060,19 @@ export namespace students {
 			return this.baseClient.callAPI(
 				method,
 				`/students/export`,
+				body,
+				options
+			)
+		}
+
+		public async ExportStudentDataDynamic(
+			method: 'POST',
+			body?: RequestInit['body'],
+			options?: CallParameters
+		): Promise<globalThis.Response> {
+			return this.baseClient.callAPI(
+				method,
+				`/students/export-dynamic`,
 				body,
 				options
 			)
@@ -2033,7 +2180,9 @@ export namespace students {
 				'GET',
 				`/students/cron`,
 				undefined,
-				{ query }
+				{
+					query
+				}
 			)
 		}
 
@@ -2660,6 +2809,8 @@ export namespace schema {
 		permissionIds?: number[]
 	}
 
+	export type ExportResourceType = 'material_assets'
+
 	export type MaterialAssetEventType =
 		| 'assigned'
 		| 'unassigned'
@@ -2793,7 +2944,7 @@ class WebSocketConnection {
 	private hasUpdateHandlers: (() => void)[] = []
 
 	constructor(url: string, headers?: Record<string, string>) {
-		let protocols = ['encore-ws']
+		const protocols = ['encore-ws']
 		if (headers) {
 			protocols.push(encodeWebSocketHeaders(headers))
 		}

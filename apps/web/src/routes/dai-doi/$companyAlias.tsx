@@ -1,11 +1,12 @@
-import { createFileRoute } from '@tanstack/react-router'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import CompanyClassesTable from '@/components/company-classes-table'
+import CompanyFacilitiesTab from '@/components/company-facilities-tab'
 import CompanyPlatoonTable from '@/components/company-platoon-table'
 import CompanyStudentTable from '@/components/company-student-table'
-import CompanyFacilitiesTab from '@/components/company-facilities-tab'
 import CompanyWeaponsTab from '@/components/company-weapons-tab'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { PermissionTag } from '@/lib/permission-tags'
+import { createFileRoute } from '@tanstack/react-router'
 
 export const Route = createFileRoute('/dai-doi/$companyAlias')({
 	component: RouteComponent
@@ -39,10 +40,14 @@ function RouteComponent() {
 					</TabsContent>
 
 					<TabsContent value='students'>
-						<CompanyStudentTable
-							alias={companyAlias}
-							level='company'
-						/>
+						<ProtectedRoute
+							requiredPermission={PermissionTag.STUDENTS_READ}
+						>
+							<CompanyStudentTable
+								alias={companyAlias}
+								level='company'
+							/>
+						</ProtectedRoute>
 					</TabsContent>
 
 					<TabsContent value='facilities'>

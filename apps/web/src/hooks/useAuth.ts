@@ -52,12 +52,27 @@ export default function useAuth() {
 		refetchUser()
 	}
 
+	const hasPermission = (required?: string | string[]) => {
+		if (!required || (Array.isArray(required) && required.length === 0)) {
+			return true
+		}
+		if (user?.isSuperAdmin) {
+			return true
+		}
+		const requiredTags = Array.isArray(required) ? required : [required]
+		const userPermissions = user?.permissions ?? []
+		return requiredTags.every((tag) => userPermissions.includes(tag))
+	}
+
 	return {
 		// Auth state
 		user,
 		isAuthenticated: !!user && !isAuthError,
 		isAuthLoading,
 		authError,
+
+		// Permissions
+		hasPermission,
 
 		// Actions
 		login: loginMutation.mutate,

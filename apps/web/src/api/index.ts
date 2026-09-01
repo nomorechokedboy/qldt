@@ -1,42 +1,47 @@
+import { appFetcher } from '@/lib/axios'
+import { ApiUrl } from '@/lib/const'
 import {
-	Permission,
-	Role,
 	type AppNotification,
 	type AppNotificationQuery,
+	type AssignRoleRequest,
 	type Class,
 	type ClassBody,
 	type DeleteStudentsBody,
 	type ExportData,
+	type ExportMaterialAssetsData,
+	type ExportMaterialStocksData,
 	type ExportPoliticsQualityReport,
+	type ExportResourceType,
+	type ExportStudentDataDynamicData,
 	type GetUnitQuery,
+	type GetUserRolesResponse,
 	type InitAdminRequest,
 	type InitRootUnitBody,
 	type IsInitRootUnitResponse,
 	type MarkAsReadNotificationParams,
+	Permission,
+	Role,
 	type Student,
 	type StudentBody,
 	type Unit,
 	type UnitBody,
 	type UnitLevel,
-	type UpdateUnitBody,
 	type UpdateRoleBody,
 	type UpdateStudentsBody,
+	type UpdateUnitBody,
 	type UpdateUserBody,
-	type UserBody,
-	type AssignRoleRequest,
-	type GetUserRolesResponse
+	type UserBody
 } from '@/types'
-import { appFetcher } from '@/lib/axios'
 import Client, {
-	audit_logs,
-	auth,
-	classes,
-	facilities,
-	materials,
-	students,
-	units
+	type audit_logs,
+	type auth,
+	type classes,
+	type export_templates,
+	type facilities,
+	type materials,
+	type students,
+	type units
 } from './client'
-import { ApiUrl } from '@/lib/const'
 
 export const requestClient = new Client(ApiUrl, {
 	fetcher: appFetcher
@@ -228,7 +233,11 @@ export function DeleteUsers(ids: number[]) {
 }
 
 export function GetUserInfo() {
-	return requestClient.auth.GetUserInfo().then((resp) => resp.data)
+	return requestClient.auth.GetUserInfo().then((resp) => ({
+		...resp.data,
+		permissions: resp.permissions,
+		isSuperAdmin: resp.isSuperAdmin
+	}))
 }
 
 export function ChangePassword(params: {
@@ -251,6 +260,57 @@ export function UploadFiles(body: BodyInit) {
 
 export function IsInitAdmin() {
 	return requestClient.users.IsInitAdmin().then((resp) => resp.data)
+}
+
+export function ExportMaterialAssets(data: ExportMaterialAssetsData) {
+	return requestClient.materials.ExportMaterialAssets(
+		'POST',
+		JSON.stringify(data)
+	)
+}
+
+export function ExportMaterialStocks(data: ExportMaterialStocksData) {
+	return requestClient.materials.ExportMaterialStocks(
+		'POST',
+		JSON.stringify(data)
+	)
+}
+
+export function ExportStudentDataDynamic(data: ExportStudentDataDynamicData) {
+	return requestClient.students.ExportStudentDataDynamic(
+		'POST',
+		JSON.stringify(data)
+	)
+}
+
+export function ListExportTemplates(resourceType: ExportResourceType) {
+	return requestClient.export_templates
+		.GetExportTemplates({ resourceType })
+		.then((resp) => resp.data)
+}
+
+export function UploadExportTemplate(body: BodyInit) {
+	return requestClient.export_templates
+		.UploadExportTemplate('POST', body)
+		.then(
+			(resp) =>
+				resp.json() as Promise<{
+					data: export_templates.ExportTemplateResponse
+				}>
+		)
+		.then((resp) => resp.data)
+}
+
+export function DeleteExportTemplate(id: number) {
+	return requestClient.export_templates.DeleteExportTemplate(id)
+}
+
+export function DownloadExampleExportTemplate(
+	resourceType?: ExportResourceType
+) {
+	return requestClient.export_templates.DownloadExampleExportTemplate(
+		resourceType
+	)
 }
 
 export function InitAdmin(req: InitAdminRequest) {
