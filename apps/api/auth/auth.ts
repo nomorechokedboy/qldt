@@ -85,12 +85,15 @@ export const RefreshToken = api(
 
 interface GetUserInfoResponse {
 	data: User
+	permissions: string[]
+	isSuperAdmin: boolean
 }
 
 export const GetUserInfo = api(
 	{ auth: true, expose: true, method: 'GET', path: '/authn/me' },
 	async (): Promise<GetUserInfoResponse> => {
-		const userId = Number(getAuthData()!.userID)
+		const authData = getAuthData()!
+		const userId = Number(authData.userID)
 		const userData = await userController.findOne({ id: userId } as UserDB)
 
 		const data = {
@@ -98,7 +101,11 @@ export const GetUserInfo = api(
 			unitName: userData.unit?.name || null
 		} as User
 
-		return { data }
+		return {
+			data,
+			permissions: authData.permissions,
+			isSuperAdmin: authData.isSuperAdmin
+		}
 	}
 )
 
