@@ -43,6 +43,20 @@
 			"when": 1788180600000,
 			"tag": "0005_seed-audit-logs-authz",
 			"breakpoints": true
+		},
+		{
+			"idx": 6,
+			"version": "6",
+			"when": 1788186186505,
+			"tag": "0006_happy_nova",
+			"breakpoints": true
+		},
+		{
+			"idx": 7,
+			"version": "6",
+			"when": 1788186200000,
+			"tag": "0007_seed-export-templates-authz",
+			"breakpoints": true
 		}
 	]
 }
