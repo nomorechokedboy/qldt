@@ -40,7 +40,7 @@ function RouteComponent() {
 		refetch: refetchStudents
 	} = useStudentData({ unitAlias: alias, unitLevel: level })
 	const { data: unit } = useUnitData({ alias, level })
-	const filename = `danh-sach-hoc-vien-${alias}`
+	const filename = `danh-sach-quan-nhan-${alias}`
 	const handleDeleteStudents = useOnDeleteStudents(refetchStudents)
 
 	const handleFormSuccess = () => {

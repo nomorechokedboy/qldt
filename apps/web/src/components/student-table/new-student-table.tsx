@@ -1,23 +1,24 @@
+import useActionColumn from '@/hooks/useActionColumn'
 import useStudentData from '@/hooks/useStudents'
 import {
-	defaultStudentColumnVisibility,
 	type FacetedFilterConfig,
 	type Student,
 	type StudentQueryParams,
-	type TemplType
+	type TemplType,
+	defaultStudentColumnVisibility
 } from '@/types'
+import type { QueryObserverResult } from '@tanstack/react-query'
+import type { ColumnDef, VisibilityState } from '@tanstack/react-table'
+import { ArrowDownToLine, RefreshCw, Settings } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { DataTable } from '../data-table'
+import { ExportStudentDataDynamicDialog } from '../export-student-data-dynamic-dialog'
+import { ExportTemplateManager } from '../export-template-manager'
+import StudentForm from '../student-form'
 import TableSkeleton from '../table-skeleton'
 import { Button } from '../ui/button'
-import { ArrowDownToLine, RefreshCw } from 'lucide-react'
-import { ExportStudentDataDialog } from '../export-student-data-dialog'
-import StudentForm from '../student-form'
-import { type ReactNode } from 'react'
-import type { VisibilityState, ColumnDef } from '@tanstack/react-table'
-import { type QueryObserverResult } from '@tanstack/react-query'
 import { DropdownMenu, DropdownMenuTrigger } from '../ui/dropdown-menu'
 import { columnsWithoutAction } from './columns'
-import useActionColumn from '@/hooks/useActionColumn'
 
 interface StudentTableProps {
 	// Core data params
@@ -76,8 +77,7 @@ export default function StudentTable({
 	onRefresh,
 	onCreateSuccess,
 	onDeleteRows,
-	onConfirmRows,
-	templType = 'StudentInfoTempl'
+	onConfirmRows
 }: StudentTableProps) {
 	const {
 		data: students = [],
@@ -141,19 +141,31 @@ export default function StudentTable({
 						? undefined
 						: ({ exportHook }) =>
 								exportConfig ? (
-									<ExportStudentDataDialog
-										data={exportHook.exportableData.data}
-										defaultFilename={exportConfig.filename}
-										defaultValues={
-											exportConfig.defaultExportValues
-										}
-										templType={templType}
-									>
-										<Button>
-											<ArrowDownToLine />
-											Xuất file
-										</Button>
-									</ExportStudentDataDialog>
+									<>
+										<ExportTemplateManager resourceType='students'>
+											<Button variant='outline'>
+												<Settings />
+												Quản lý mẫu
+											</Button>
+										</ExportTemplateManager>
+										<ExportStudentDataDynamicDialog
+											data={
+												exportHook.exportableData
+													.data as unknown as Student[]
+											}
+											defaultFilename={
+												exportConfig.filename
+											}
+											defaultValues={
+												exportConfig.defaultExportValues
+											}
+										>
+											<Button>
+												<ArrowDownToLine />
+												Xuất file
+											</Button>
+										</ExportStudentDataDynamicDialog>
+									</>
 								) : null
 				}
 			/>

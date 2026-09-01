@@ -1,12 +1,17 @@
+import { DataTable } from '@/components/data-table'
+import { ExportMaterialAssetsDialog } from '@/components/export-material-assets-dialog'
+import { ExportTemplateManager } from '@/components/export-template-manager'
 import MaterialAssetForm from '@/components/material-asset-form'
 import { buildMaterialAssetColumns } from '@/components/material-asset-table/columns'
-import { DataTable } from '@/components/data-table'
-import useUnitData from '@/hooks/useUnitData'
+import { Button } from '@/components/ui/button'
+import { materialAssetStatusOptions } from '@/data/material-categories'
+import useDataTableToolbarConfig from '@/hooks/useDataTableToolbarConfig'
 import useMaterialAssetsData from '@/hooks/useMaterialAssetsData'
 import useMaterialTypesData from '@/hooks/useMaterialTypesData'
 import useStudentData from '@/hooks/useStudents'
-import useDataTableToolbarConfig from '@/hooks/useDataTableToolbarConfig'
-import { materialAssetStatusOptions } from '@/data/material-categories'
+import useUnitData from '@/hooks/useUnitData'
+import type { MaterialAsset } from '@/types'
+import { ArrowDownToLine, Settings } from 'lucide-react'
 
 type CompanyWeaponsTabProps = {
 	unitAlias: string
@@ -76,6 +81,33 @@ export default function CompanyWeaponsTab({
 					searchConfig,
 					facetedFilters
 				}}
+				withDynamicColsData={false}
+				renderToolbarActions={({ exportHook }) => (
+					<>
+						<ExportTemplateManager resourceType='material_assets'>
+							<Button variant='outline'>
+								<Settings />
+								Quản lý mẫu
+							</Button>
+						</ExportTemplateManager>
+						<ExportMaterialAssetsDialog
+							data={
+								exportHook.exportableData
+									.data as unknown as MaterialAsset[]
+							}
+							defaultFilename={`vu-khi-trang-bi-${company?.name ?? ''}`}
+							defaultValues={{
+								unitName: company?.name,
+								underUnitName: company?.parent?.name
+							}}
+						>
+							<Button>
+								<ArrowDownToLine />
+								Xuất file
+							</Button>
+						</ExportMaterialAssetsDialog>
+					</>
+				)}
 			/>
 		</div>
 	)

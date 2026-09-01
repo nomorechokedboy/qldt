@@ -1,15 +1,20 @@
-import BuildingCard from '@/components/facility-table/building-card'
 import BuildingForm from '@/components/building-form'
+import { DataTable } from '@/components/data-table'
+import { ExportMaterialStocksDialog } from '@/components/export-material-stocks-dialog'
+import { ExportTemplateManager } from '@/components/export-template-manager'
+import BuildingCard from '@/components/facility-table/building-card'
 import MaterialStockForm from '@/components/material-stock-form'
 import { buildMaterialStockColumns } from '@/components/material-stock-table/columns'
-import { DataTable } from '@/components/data-table'
-import useUnitData from '@/hooks/useUnitData'
+import { Button } from '@/components/ui/button'
+import { materialConditionOptions } from '@/data/material-categories'
 import useBuildingsData from '@/hooks/useBuildingsData'
-import useRoomsData from '@/hooks/useRoomsData'
+import useDataTableToolbarConfig from '@/hooks/useDataTableToolbarConfig'
 import useMaterialStocksData from '@/hooks/useMaterialStocksData'
 import useMaterialTypesData from '@/hooks/useMaterialTypesData'
-import useDataTableToolbarConfig from '@/hooks/useDataTableToolbarConfig'
-import { materialConditionOptions } from '@/data/material-categories'
+import useRoomsData from '@/hooks/useRoomsData'
+import useUnitData from '@/hooks/useUnitData'
+import type { MaterialStock } from '@/types'
+import { ArrowDownToLine, Settings } from 'lucide-react'
 
 type CompanyFacilitiesTabProps = {
 	unitAlias: string
@@ -129,6 +134,33 @@ export default function CompanyFacilitiesTab({
 				)}
 				data={companyStocks}
 				toolbarProps={{ searchConfig, facetedFilters }}
+				withDynamicColsData={false}
+				renderToolbarActions={({ exportHook }) => (
+					<>
+						<ExportTemplateManager resourceType='material_stocks'>
+							<Button variant='outline'>
+								<Settings />
+								Quản lý mẫu
+							</Button>
+						</ExportTemplateManager>
+						<ExportMaterialStocksDialog
+							data={
+								exportHook.exportableData
+									.data as unknown as MaterialStock[]
+							}
+							defaultFilename={`vat-tu-sinh-hoat-${company?.name ?? ''}`}
+							defaultValues={{
+								unitName: company?.name,
+								underUnitName: company?.parent?.name
+							}}
+						>
+							<Button>
+								<ArrowDownToLine />
+								Xuất file
+							</Button>
+						</ExportMaterialStocksDialog>
+					</>
+				)}
 			/>
 		</div>
 	)

@@ -316,6 +316,36 @@ export interface GetUnreadNotificationCountResponse {
 	data: { count: number }
 }
 
+export type ExportResourceType =
+	| 'material_assets'
+	| 'students'
+	| 'material_stocks'
+
+export type ExportTemplate = {
+	id: number
+	name: string
+	resourceType: ExportResourceType
+	originalFilename: string
+	createdAt: string
+}
+
+export type ExportMaterialAssetsData = {
+	city: string
+	commanderName: string
+	commanderPosition: string
+	commanderRank: string
+	data: Record<string, string>[]
+	date?: string
+	reportTitle: string
+	underUnitName: string
+	unitName: string
+	templateId?: number
+}
+
+export type ExportStudentDataDynamicData = ExportMaterialAssetsData
+
+export type ExportMaterialStocksData = ExportMaterialAssetsData
+
 export type ExportData = {
 	city: string
 	commanderName: string
