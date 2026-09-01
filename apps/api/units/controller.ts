@@ -11,7 +11,15 @@ import {
 	UpdateUnitMap
 } from '../schema'
 import unitRepo from './repo'
+import userRepo from '../users/repo'
 import { GetUnitsQuery, UnitDB } from './units'
+
+const COMMANDER_FIELDS = [
+	'commanderId',
+	'deputyCommanderId',
+	'politicalCommanderId',
+	'deputyPoliticalCommanderId'
+] as const
 
 type findOneRequest = {
 	id?: number
@@ -75,6 +83,34 @@ class controller {
 		}
 	}
 
+	private async validateCommanders(
+		params: Array<
+			Partial<Record<(typeof COMMANDER_FIELDS)[number], number | null>>
+		>
+	): Promise<void> {
+		const ids = Array.from(
+			new Set(
+				params
+					.flatMap((p) => COMMANDER_FIELDS.map((f) => p[f]))
+					.filter(
+						(id): id is number => id !== undefined && id !== null
+					)
+			)
+		)
+		if (ids.length === 0) return
+
+		const found = await userRepo.findByIds(ids)
+		const foundIds = new Set(found.map((u) => u.id))
+		const missing = ids.filter((id) => !foundIds.has(id))
+		if (missing.length > 0) {
+			throw AppError.handleAppErr(
+				AppError.invalidArgument(
+					`Commander/deputy user(s) not found: ${missing.join(', ')}`
+				)
+			)
+		}
+	}
+
 	async create(params: UnitParams[]): Promise<UnitParams[]> {
 		log.trace('UnitController.create params', { params })
 
@@ -87,6 +123,7 @@ class controller {
 		for (const param of params) {
 			await this.validateHierarchy(param.level, param.parentId)
 		}
+		await this.validateCommanders(params)
 
 		return this.repo.create(params).catch(AppError.handleAppErr)
 	}
@@ -196,6 +233,7 @@ class controller {
 				param.id
 			)
 		}
+		await this.validateCommanders(params)
 
 		const updateMap: UpdateUnitMap = params.map(
 			({ id, ...updatePayload }) => {

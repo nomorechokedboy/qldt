@@ -156,6 +156,27 @@ class repo implements Repository {
 			.catch(handleDatabaseErr)
 	}
 
+	// Returns the unit itself plus every ancestor up to the root, nearest
+	// first, by walking parentId pointers in memory — mirrors the
+	// allUnitEdges pattern in units/stats-repo.ts (unit table is small, no
+	// bounded-depth recursive query in sqlite here).
+	async findAncestorChain(unitId: number): Promise<UnitDB[]> {
+		const all = await this.db.select().from(units)
+		const byId = new Map(all.map((u) => [u.id, u]))
+
+		const chain: UnitDB[] = []
+		let current = byId.get(unitId)
+		while (current !== undefined) {
+			chain.push(current)
+			current =
+				current.parentId !== null && current.parentId !== undefined
+					? byId.get(current.parentId)
+					: undefined
+		}
+
+		return chain
+	}
+
 	getOne(params: Partial<Unit>): Promise<Unit | undefined> {
 		// Check if params is empty or has no valid fields
 		if (!params || Object.keys(params).length === 0) {

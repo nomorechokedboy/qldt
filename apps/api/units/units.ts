@@ -14,6 +14,11 @@ type UnitBody = {
 	level: UnitLevelName
 
 	parentId?: number | null
+
+	commanderId?: number | null
+	deputyCommanderId?: number | null
+	politicalCommanderId?: number | null
+	deputyPoliticalCommanderId?: number | null
 }
 
 export type UnitDB = UnitBody & {

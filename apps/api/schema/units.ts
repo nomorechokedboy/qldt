@@ -112,7 +112,25 @@ export const units = sqlite.sqliteTable(
 		name: sqlite.text().unique().notNull(),
 		level: UnitLevelEnum('level').$type<UnitLevelName>().notNull(),
 
-		parentId: sqlite.int()
+		parentId: sqlite.int(),
+
+		// units.ts and users.ts reference each other (users.unitId -> units.id,
+		// these columns -> users.id). An explicit AnySQLiteColumn return type
+		// on the reference callback breaks TS's circular type inference
+		// between the two modules (drizzle's documented pattern for
+		// cross-table circular refs).
+		commanderId: sqlite
+			.int()
+			.references((): sqlite.AnySQLiteColumn => users.id),
+		deputyCommanderId: sqlite
+			.int()
+			.references((): sqlite.AnySQLiteColumn => users.id),
+		politicalCommanderId: sqlite
+			.int()
+			.references((): sqlite.AnySQLiteColumn => users.id),
+		deputyPoliticalCommanderId: sqlite
+			.int()
+			.references((): sqlite.AnySQLiteColumn => users.id)
 	},
 	(t) => [
 		sqlite.foreignKey({
@@ -133,7 +151,27 @@ export const unitsRelations = relations(units, ({ one, many }) => ({
 		relationName: 'parentChild'
 	}),
 	classes: many(classes),
-	commanders: many(users)
+	commanders: many(users),
+	commander: one(users, {
+		fields: [units.commanderId],
+		references: [users.id],
+		relationName: 'unitCommander'
+	}),
+	deputyCommander: one(users, {
+		fields: [units.deputyCommanderId],
+		references: [users.id],
+		relationName: 'unitDeputyCommander'
+	}),
+	politicalCommander: one(users, {
+		fields: [units.politicalCommanderId],
+		references: [users.id],
+		relationName: 'unitPoliticalCommander'
+	}),
+	deputyPoliticalCommander: one(users, {
+		fields: [units.deputyPoliticalCommanderId],
+		references: [users.id],
+		relationName: 'unitDeputyPoliticalCommander'
+	})
 }))
 
 export type UnitDB = InferSelectModel<typeof units>
@@ -156,5 +194,9 @@ export type UpdateUnitMap = {
 		name: string
 		level: UnitLevelName
 		parentId: number | null
+		commanderId: number | null
+		deputyCommanderId: number | null
+		politicalCommanderId: number | null
+		deputyPoliticalCommanderId: number | null
 	}>
 }[]
