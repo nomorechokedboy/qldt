@@ -25,3 +25,32 @@ export function normalizeRowForDocx(
 export function deriveColumns(rows: Record<string, any>[]): string[] {
 	return rows.length > 0 ? Object.keys(rows[0]) : []
 }
+
+/**
+ * Recursively cleans raw record(s) for docx-templates without flattening
+ * arrays/nested objects, so custom templates can nest {FOR} loops over
+ * fields like childrenInfos/siblings instead of only seeing a joined string.
+ */
+export function normalizeRawForDocx(value: any): any {
+	if (value === null || value === undefined) {
+		return ''
+	}
+
+	if (typeof value === 'boolean') {
+		return value ? 'Có' : 'Không'
+	}
+
+	if (Array.isArray(value)) {
+		return value.map(normalizeRawForDocx)
+	}
+
+	if (typeof value === 'object') {
+		const normalized: Record<string, any> = {}
+		for (const [key, v] of Object.entries(value)) {
+			normalized[key] = normalizeRawForDocx(v)
+		}
+		return normalized
+	}
+
+	return value
+}

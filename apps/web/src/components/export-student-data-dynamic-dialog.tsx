@@ -90,6 +90,7 @@ export function ExportStudentDataDynamicDialog({
 					data: data.map((student) =>
 						buildStudentExportRow(student, selectedColumns)
 					),
+					rawData: data as unknown as Record<string, unknown>[],
 					reportTitle: value.reportTitle,
 					underUnitName: value.underUnitName,
 					unitName: value.unitName,

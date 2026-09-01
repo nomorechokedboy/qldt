@@ -233,7 +233,11 @@ export function DeleteUsers(ids: number[]) {
 }
 
 export function GetUserInfo() {
-	return requestClient.auth.GetUserInfo().then((resp) => resp.data)
+	return requestClient.auth.GetUserInfo().then((resp) => ({
+		...resp.data,
+		permissions: resp.permissions,
+		isSuperAdmin: resp.isSuperAdmin
+	}))
 }
 
 export function ChangePassword(params: {
@@ -301,8 +305,12 @@ export function DeleteExportTemplate(id: number) {
 	return requestClient.export_templates.DeleteExportTemplate(id)
 }
 
-export function DownloadExampleExportTemplate() {
-	return requestClient.export_templates.DownloadExampleExportTemplate()
+export function DownloadExampleExportTemplate(
+	resourceType?: ExportResourceType
+) {
+	return requestClient.export_templates.DownloadExampleExportTemplate(
+		resourceType
+	)
 }
 
 export function InitAdmin(req: InitAdminRequest) {

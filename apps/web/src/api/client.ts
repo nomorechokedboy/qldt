@@ -196,6 +196,8 @@ export namespace auth {
 
 	export interface GetUserInfoResponse {
 		data: users.User
+		permissions: string[]
+		isSuperAdmin: boolean
 	}
 
 	export interface LoginRequest {
@@ -444,8 +446,24 @@ export namespace export_templates {
 			this.UploadExportTemplate = this.UploadExportTemplate.bind(this)
 		}
 
-		public async DownloadExampleExportTemplate(): Promise<globalThis.Response> {
-			return this.baseClient.callAPI('GET', `/export-templates/example`)
+		public async DownloadExampleExportTemplate(
+			resourceType?: schema.ExportResourceType
+		): Promise<globalThis.Response> {
+			const query = makeRecord<string, string | string[]>({
+				resourceType:
+					resourceType === undefined
+						? undefined
+						: String(resourceType)
+			})
+
+			return this.baseClient.callAPI(
+				'GET',
+				`/export-templates/example`,
+				undefined,
+				{
+					query
+				}
+			)
 		}
 
 		public async DeleteExportTemplate(id: number): Promise<{

@@ -88,11 +88,19 @@ export const DownloadExampleExportTemplate = api.raw(
 		method: 'GET',
 		path: '/export-templates/example'
 	},
-	async (_req, res) => {
+	async (req, res) => {
 		try {
-			const buffer = await readFile(
-				path.join('./templates', 'dynamic-docx-template.docx')
-			)
+			const resourceType = new URL(
+				req.url ?? '',
+				'http://localhost'
+			).searchParams.get('resourceType')
+
+			const filename =
+				resourceType === 'students'
+					? 'dynamic-docx-template-students-example.docx'
+					: 'dynamic-docx-template.docx'
+
+			const buffer = await readFile(path.join('./templates', filename))
 
 			res.writeHead(200, {
 				'Content-Type':

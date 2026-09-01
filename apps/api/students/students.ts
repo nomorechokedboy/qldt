@@ -420,6 +420,7 @@ const ExportStudentDataDynamicRequestSchema = v.object({
 	commanderPosition: v.string(),
 	commanderRank: v.string(),
 	data: v.pipe(v.array(v.record(v.string(), v.any())), v.minLength(1)),
+	rawData: v.optional(v.array(v.record(v.string(), v.any()))),
 	date: v.optional(
 		v.pipe(v.string(), v.isoDate()),
 		dayjs().format('YYYY-MM-DD')

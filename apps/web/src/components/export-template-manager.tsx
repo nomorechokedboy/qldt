@@ -178,7 +178,7 @@ export function ExportTemplateManager({
 						/>
 					</TabsContent>
 					<TabsContent value='guideline'>
-						<ExportTemplateGuideline />
+						<ExportTemplateGuideline resourceType={resourceType} />
 					</TabsContent>
 				</Tabs>
 			</DialogContent>

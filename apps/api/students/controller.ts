@@ -25,7 +25,11 @@ import {
 	ExportStudentDataRequest,
 	GetStudentsQuery
 } from './students'
-import { deriveColumns, normalizeRowForDocx } from '../export/docx-utils'
+import {
+	deriveColumns,
+	normalizeRawForDocx,
+	normalizeRowForDocx
+} from '../export/docx-utils'
 import exportTemplateController from '../export-templates/controller'
 import unitRepo from '../units/repo'
 import unitStatsRepo from '../units/stats-repo'
@@ -577,6 +581,7 @@ export class Controller {
 				commanderPosition,
 				commanderRank,
 				data,
+				rawData,
 				date,
 				reportTitle,
 				underUnitName,
@@ -586,6 +591,11 @@ export class Controller {
 
 			const rows = data.map(normalizeRowForDocx)
 			const columns = deriveColumns(rows)
+			// Raw, unflattened records for custom templates that need nested
+			// {FOR} loops (e.g. childrenInfos/siblings) instead of the
+			// flattened rows/columns table, which only supports one string
+			// value per cell.
+			const troopers = (rawData ?? []).map(normalizeRawForDocx)
 
 			const dateObj = dayjs(date)
 			const day = dateObj.format('DD')
@@ -614,6 +624,7 @@ export class Controller {
 					month,
 					reportTitle,
 					rows,
+					troopers,
 					underUnitName,
 					unitName,
 					year

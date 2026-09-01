@@ -118,6 +118,8 @@ export interface Student extends Base, StudentBody {}
 export interface User extends Base, UserBody {
 	unitName?: string
 	unitAlias?: string
+	permissions?: string[]
+	isSuperAdmin?: boolean
 }
 
 export type ClassResponse = { data: Class[] }
@@ -342,7 +344,9 @@ export type ExportMaterialAssetsData = {
 	templateId?: number
 }
 
-export type ExportStudentDataDynamicData = ExportMaterialAssetsData
+export type ExportStudentDataDynamicData = ExportMaterialAssetsData & {
+	rawData?: Record<string, unknown>[]
+}
 
 export type ExportMaterialStocksData = ExportMaterialAssetsData
 
