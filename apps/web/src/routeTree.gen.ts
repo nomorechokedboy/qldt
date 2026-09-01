@@ -15,7 +15,6 @@ import { Route as ThongKeChinhTriRouteImport } from './routes/thong-ke-chinh-tri
 import { Route as ReligionRouteImport } from './routes/religion'
 import { Route as QuanLyDonViRouteImport } from './routes/quan-ly-don-vi'
 import { Route as ProfileRouteImport } from './routes/profile'
-import { Route as PreviewExportFileRouteImport } from './routes/preview-export-file'
 import { Route as NhatKyHoatDongRouteImport } from './routes/nhat-ky-hoat-dong'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ListUserRouteImport } from './routes/list-user'
@@ -64,11 +63,6 @@ const QuanLyDonViRoute = QuanLyDonViRouteImport.update({
 const ProfileRoute = ProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PreviewExportFileRoute = PreviewExportFileRouteImport.update({
-  id: '/preview-export-file',
-  path: '/preview-export-file',
   getParentRoute: () => rootRouteImport,
 } as any)
 const NhatKyHoatDongRoute = NhatKyHoatDongRouteImport.update({
@@ -182,7 +176,6 @@ export interface FileRoutesByFullPath {
   '/list-user': typeof ListUserRoute
   '/login': typeof LoginRoute
   '/nhat-ky-hoat-dong': typeof NhatKyHoatDongRoute
-  '/preview-export-file': typeof PreviewExportFileRoute
   '/profile': typeof ProfileRoute
   '/quan-ly-don-vi': typeof QuanLyDonViRoute
   '/religion': typeof ReligionRoute
@@ -210,7 +203,6 @@ export interface FileRoutesByTo {
   '/list-user': typeof ListUserRoute
   '/login': typeof LoginRoute
   '/nhat-ky-hoat-dong': typeof NhatKyHoatDongRoute
-  '/preview-export-file': typeof PreviewExportFileRoute
   '/profile': typeof ProfileRoute
   '/quan-ly-don-vi': typeof QuanLyDonViRoute
   '/religion': typeof ReligionRoute
@@ -239,7 +231,6 @@ export interface FileRoutesById {
   '/list-user': typeof ListUserRoute
   '/login': typeof LoginRoute
   '/nhat-ky-hoat-dong': typeof NhatKyHoatDongRoute
-  '/preview-export-file': typeof PreviewExportFileRoute
   '/profile': typeof ProfileRoute
   '/quan-ly-don-vi': typeof QuanLyDonViRoute
   '/religion': typeof ReligionRoute
@@ -269,7 +260,6 @@ export interface FileRouteTypes {
     | '/list-user'
     | '/login'
     | '/nhat-ky-hoat-dong'
-    | '/preview-export-file'
     | '/profile'
     | '/quan-ly-don-vi'
     | '/religion'
@@ -297,7 +287,6 @@ export interface FileRouteTypes {
     | '/list-user'
     | '/login'
     | '/nhat-ky-hoat-dong'
-    | '/preview-export-file'
     | '/profile'
     | '/quan-ly-don-vi'
     | '/religion'
@@ -325,7 +314,6 @@ export interface FileRouteTypes {
     | '/list-user'
     | '/login'
     | '/nhat-ky-hoat-dong'
-    | '/preview-export-file'
     | '/profile'
     | '/quan-ly-don-vi'
     | '/religion'
@@ -354,7 +342,6 @@ export interface RootRouteChildren {
   ListUserRoute: typeof ListUserRoute
   LoginRoute: typeof LoginRoute
   NhatKyHoatDongRoute: typeof NhatKyHoatDongRoute
-  PreviewExportFileRoute: typeof PreviewExportFileRoute
   ProfileRoute: typeof ProfileRoute
   QuanLyDonViRoute: typeof QuanLyDonViRoute
   ReligionRoute: typeof ReligionRoute
@@ -410,13 +397,6 @@ declare module '@tanstack/react-router' {
       path: '/profile'
       fullPath: '/profile'
       preLoaderRoute: typeof ProfileRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/preview-export-file': {
-      id: '/preview-export-file'
-      path: '/preview-export-file'
-      fullPath: '/preview-export-file'
-      preLoaderRoute: typeof PreviewExportFileRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/nhat-ky-hoat-dong': {
@@ -570,7 +550,6 @@ const rootRouteChildren: RootRouteChildren = {
   ListUserRoute: ListUserRoute,
   LoginRoute: LoginRoute,
   NhatKyHoatDongRoute: NhatKyHoatDongRoute,
-  PreviewExportFileRoute: PreviewExportFileRoute,
   ProfileRoute: ProfileRoute,
   QuanLyDonViRoute: QuanLyDonViRoute,
   ReligionRoute: ReligionRoute,
