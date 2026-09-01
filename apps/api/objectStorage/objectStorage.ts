@@ -22,7 +22,13 @@ export interface GetObjectResponse {
 	ContentLength?: number
 }
 
+export interface DeleteObjectRequest {
+	Bucket?: string
+	Key: string
+}
+
 export interface ObjectStorage {
 	PutObject(req: PutObjectRequest): Promise<PutObjectResponse>
 	GetObject(req: GetObjectRequest): Promise<GetObjectResponse>
+	DeleteObject(req: DeleteObjectRequest): Promise<void>
 }

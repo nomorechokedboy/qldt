@@ -1,6 +1,12 @@
+import dayjs from 'dayjs'
+import { createReport } from 'docx-templates'
+import { readFile } from 'fs/promises'
+import path from 'path'
 import log from 'encore.dev/log'
 import { MaterialAssetEventRepository, MaterialAssetRepository } from '.'
 import { AppError } from '../errors'
+import { deriveColumns, normalizeRowForDocx } from '../export/docx-utils'
+import exportTemplateController from '../export-templates/controller'
 import {
 	MaterialAsset,
 	MaterialAssetDB,
@@ -11,6 +17,7 @@ import {
 import { MaterialAssetEventParams } from '../schema/material-asset-events'
 import materialAssetRepo from './material-assets-repo'
 import materialAssetEventRepo from './material-asset-events-repo'
+import type { ExportMaterialAssetsRequest } from './material-assets'
 
 class controller {
 	constructor(
@@ -215,6 +222,72 @@ class controller {
 		return this.repo
 			.find({ unitIds, ...filters })
 			.catch(AppError.handleAppErr)
+	}
+
+	async handleExportMaterialAssets(
+		req: ExportMaterialAssetsRequest
+	): Promise<Uint8Array> {
+		try {
+			log.info('ExportMaterialAssets starting')
+			const {
+				city,
+				commanderName,
+				commanderPosition,
+				commanderRank,
+				data,
+				date,
+				reportTitle,
+				underUnitName,
+				unitName,
+				templateId
+			} = req
+
+			const rows = data.map(normalizeRowForDocx)
+			const columns = deriveColumns(rows)
+
+			const dateObj = dayjs(date)
+			const day = dateObj.format('DD')
+			const month = dateObj.format('MM')
+			const year = dateObj.year()
+
+			const template =
+				templateId !== undefined
+					? await exportTemplateController.getTemplateFile(templateId)
+					: await readFile(
+							path.join(
+								'./templates',
+								'dynamic-docx-template.docx'
+							)
+						)
+
+			return await createReport({
+				template,
+				data: {
+					city,
+					commanderName,
+					commanderPosition,
+					commanderRank,
+					columns,
+					day,
+					month,
+					reportTitle,
+					rows,
+					underUnitName,
+					unitName,
+					year
+				},
+				cmdDelimiter: ['{', '}']
+			})
+		} catch (err) {
+			console.error('handleExportMaterialAssets error', err)
+			log.error('handleExportMaterialAssets error', { err })
+
+			throw AppError.handleAppErr(
+				err instanceof AppError
+					? err
+					: AppError.internal('Internal error for exporting file')
+			)
+		}
 	}
 }
 

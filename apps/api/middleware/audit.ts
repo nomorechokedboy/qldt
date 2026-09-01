@@ -62,7 +62,16 @@ const AUDIT_MAP: Record<string, AuditRouteConfig> = {
 	'PUT:/users': { resource: 'users', action: 'update' },
 	'DELETE:/users': { resource: 'users', action: 'delete' },
 
-	'POST:/user-roles/assign': { resource: 'user_roles', action: 'update' }
+	'POST:/user-roles/assign': { resource: 'user_roles', action: 'update' },
+
+	'POST:/export-templates': {
+		resource: 'export_templates',
+		action: 'create'
+	},
+	'DELETE:/export-templates/:id': {
+		resource: 'export_templates',
+		action: 'delete'
+	}
 }
 
 function matchAuditRoute(

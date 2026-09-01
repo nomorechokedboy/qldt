@@ -1,9 +1,11 @@
 import {
+	DeleteObjectCommand,
 	GetObjectCommand,
 	PutObjectCommand,
 	S3Client
 } from '@aws-sdk/client-s3'
 import {
+	DeleteObjectRequest,
 	GetObjectRequest,
 	GetObjectResponse,
 	ObjectStorage,
@@ -68,6 +70,23 @@ class minioObjectStorage implements ObjectStorage {
 			}
 
 			log.error('GetObject error', { err: err, request: req })
+			throw AppError.internal('Internal error')
+		}
+	}
+
+	async DeleteObject(req: DeleteObjectRequest): Promise<void> {
+		try {
+			await this.client.send(
+				new DeleteObjectCommand({
+					Bucket: req.Bucket ?? appConfig.S3_DEFAULT_BUCKET,
+					Key: req.Key
+				})
+			)
+
+			log.info(`Successfully deleted ${req.Bucket}/${req.Key}`)
+		} catch (err) {
+			console.log('Error DeleteObject', err)
+			log.error('DeleteObject error', { err: err, request: req })
 			throw AppError.internal('Internal error')
 		}
 	}

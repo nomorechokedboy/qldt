@@ -2,6 +2,7 @@ import { LibsqlError } from '@libsql/client'
 import { DrizzleQueryError } from 'drizzle-orm/errors'
 import { APIError } from 'encore.dev/api'
 import log from 'encore.dev/log'
+import * as v from 'valibot'
 import { AppError } from '../errors/index'
 
 export type SQLiteErrorCode =
@@ -103,4 +104,45 @@ export function handleDatabaseErr(err: unknown): never {
 
 	const appErr = handleLibsqlError(libsqlErr.code as SQLiteErrorCode)
 	throw appErr
+}
+
+export async function getTypedRequestBody<T>(
+	req: any,
+	schema: v.BaseSchema<unknown, T, v.BaseIssue<unknown>>
+): Promise<T> {
+	const chunks: Buffer[] = []
+
+	req.on('data', (chunk: Buffer) => {
+		chunks.push(chunk)
+	})
+
+	await new Promise<void>((resolve, reject) => {
+		req.on('end', () => resolve())
+		req.on('error', reject)
+	})
+
+	const body = Buffer.concat(chunks).toString('utf-8')
+
+	try {
+		const rawBody = JSON.parse(body)
+
+		const result = v.safeParse(schema, rawBody)
+
+		if (!result.success) {
+			log.error('Request body validation failed', {
+				issues: result.issues
+			})
+			throw AppError.invalidArgument(
+				`Invalid request body: ${result.issues.map((issue) => issue.message).join(', ')}`
+			)
+		}
+
+		return result.output
+	} catch (error) {
+		if (error instanceof SyntaxError) {
+			log.error('Invalid JSON in request body', { error, body })
+			throw AppError.invalidArgument('Invalid JSON body')
+		}
+		throw error
+	}
 }

@@ -20,7 +20,13 @@ import {
 import { Repository } from './index'
 import { Repository as UnitRepository } from '../units'
 import studentRepo from './repo'
-import { ExportStudentDataRequest, GetStudentsQuery } from './students'
+import {
+	ExportStudentDataDynamicRequest,
+	ExportStudentDataRequest,
+	GetStudentsQuery
+} from './students'
+import { deriveColumns, normalizeRowForDocx } from '../export/docx-utils'
+import exportTemplateController from '../export-templates/controller'
 import unitRepo from '../units/repo'
 import unitStatsRepo from '../units/stats-repo'
 import log from 'encore.dev/log'
@@ -555,6 +561,68 @@ export class Controller {
 		} catch (err) {
 			console.error('handleExportStudentData error', err)
 			log.error('handleExportStudentData error', { err })
+
+			throw APIError.internal('Internal error for exporting file')
+		}
+	}
+
+	async handleExportStudentDataDynamic(
+		req: ExportStudentDataDynamicRequest
+	): Promise<Uint8Array> {
+		try {
+			log.info('ExportStudentDataDynamic starting')
+			const {
+				city,
+				commanderName,
+				commanderPosition,
+				commanderRank,
+				data,
+				date,
+				reportTitle,
+				underUnitName,
+				unitName,
+				templateId
+			} = req
+
+			const rows = data.map(normalizeRowForDocx)
+			const columns = deriveColumns(rows)
+
+			const dateObj = dayjs(date)
+			const day = dateObj.format('DD')
+			const month = dateObj.format('MM')
+			const year = dateObj.year()
+
+			const template =
+				templateId !== undefined
+					? await exportTemplateController.getTemplateFile(templateId)
+					: await readFile(
+							path.join(
+								'./templates',
+								'dynamic-docx-template.docx'
+							)
+						)
+
+			return await createReport({
+				template,
+				data: {
+					city,
+					commanderName,
+					commanderPosition,
+					commanderRank,
+					columns,
+					day,
+					month,
+					reportTitle,
+					rows,
+					underUnitName,
+					unitName,
+					year
+				},
+				cmdDelimiter: ['{', '}']
+			})
+		} catch (err) {
+			console.error('handleExportStudentDataDynamic error', err)
+			log.error('handleExportStudentDataDynamic error', { err })
 
 			throw APIError.internal('Internal error for exporting file')
 		}
