@@ -381,15 +381,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 			</SidebarHeader>
 
 			<SidebarContent>
-				{!isCollapsed && (
-					<div className='p-4 w-full'>
-						<StudentForm
-							buttonProps={{ className: 'w-full' }}
-							onSuccess={() => {}}
-						/>
-					</div>
-				)}
-
 				{newData.navMain.map((item) => (
 					<Collapsible
 						key={item.title}
