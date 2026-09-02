@@ -71,6 +71,23 @@ const AUDIT_MAP: Record<string, AuditRouteConfig> = {
 	'DELETE:/export-templates/:id': {
 		resource: 'export_templates',
 		action: 'delete'
+	},
+
+	'POST:/transfer-requests': {
+		resource: 'transfer_requests',
+		action: 'create'
+	},
+	'POST:/transfer-requests/:id/approve': {
+		resource: 'transfer_requests',
+		action: 'approve'
+	},
+	'POST:/transfer-requests/:id/reject': {
+		resource: 'transfer_requests',
+		action: 'reject'
+	},
+	'POST:/transfer-requests/:id/cancel': {
+		resource: 'transfer_requests',
+		action: 'update'
 	}
 }
 
