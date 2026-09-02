@@ -450,6 +450,31 @@ class controller {
 					}
 				}
 			])
+
+			// Any material still assigned to this trooper stays behind at
+			// the source unit (it isn't itself part of this transfer), so
+			// the assignment no longer makes sense - sever it rather than
+			// leaving a stale reference to a trooper who's now elsewhere.
+			const assignedAssets = await materialAssetRepo.find({
+				assignedTrooperId: student.id
+			})
+			for (const asset of assignedAssets) {
+				await materialAssetRepo.update([
+					{ id: asset.id, updatePayload: { assignedTrooperId: null } }
+				])
+				await materialAssetEventRepo.create([
+					{
+						assetId: asset.id,
+						eventType: 'unassigned',
+						previousValue: {
+							assignedTrooperName: student.fullName
+						},
+						newValue: {},
+						actorUserId
+					}
+				])
+			}
+
 			await this.repo.setTrooperItemStatus(item.id, 'approved')
 		}
 
@@ -469,12 +494,17 @@ class controller {
 				continue
 			}
 
+			// The trooper it was assigned to (if any) isn't part of this
+			// transfer and stays at the source unit, so the assignment no
+			// longer makes sense once the asset moves - sever it here too.
+			const wasAssignedTo = asset.assignedTrooperId
 			await materialAssetRepo.update([
 				{
 					id: asset.id,
 					updatePayload: {
 						unitId: destinationUnitId,
-						roomId: destinationRoomId
+						roomId: destinationRoomId,
+						assignedTrooperId: null
 					}
 				}
 			])
@@ -487,6 +517,22 @@ class controller {
 					actorUserId
 				}
 			])
+			if (wasAssignedTo !== null && wasAssignedTo !== undefined) {
+				const assignedTrooper = (
+					await studentRepo.find({ ids: [wasAssignedTo] })
+				)[0]
+				await materialAssetEventRepo.create([
+					{
+						assetId: asset.id,
+						eventType: 'unassigned',
+						previousValue: {
+							assignedTrooperName: assignedTrooper?.fullName
+						},
+						newValue: {},
+						actorUserId
+					}
+				])
+			}
 			await this.repo.setMaterialAssetItemStatus(item.id, 'approved')
 		}
 

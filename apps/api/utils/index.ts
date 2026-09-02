@@ -20,16 +20,38 @@ export type SQLiteErrorCode =
 	| 'SQLITE_TOOBIG'
 	| 'SQLITE_ERROR'
 
-function handleLibsqlError(code: SQLiteErrorCode): AppError {
+// Human-readable (Vietnamese - the app's users don't read English) label for
+// each column that has a UNIQUE constraint, keyed by the "table.column"
+// SQLite reports in its "UNIQUE constraint failed" message - used to turn
+// that into a specific "X đã được sử dụng" message instead of a generic one,
+// so the end user knows exactly what to change.
+const UNIQUE_FIELD_LABELS: Record<string, string> = {
+	'material_assets.serialNumber': 'Số hiệu (serial) này',
+	'material_types.name': 'Tên loại vật tư này',
+	'units.alias': 'Mã đơn vị này',
+	'units.name': 'Tên đơn vị này',
+	'users.username': 'Tên đăng nhập này',
+	'roles.name': 'Tên vai trò này',
+	'permissions.name': 'Tên quyền này',
+	'actions.name': 'Tên hành động này',
+	'resources.name': 'Tên tài nguyên này'
+}
+
+function handleLibsqlError(code: SQLiteErrorCode, message?: string): AppError {
 	switch (code) {
-		case 'SQLITE_CONSTRAINT_UNIQUE':
-			return AppError.alreadyExists(`Duplicate name`)
+		case 'SQLITE_CONSTRAINT_UNIQUE': {
+			const field = message?.match(/UNIQUE constraint failed: (\S+)/)?.[1]
+			const label = field ? UNIQUE_FIELD_LABELS[field] : undefined
+			return AppError.alreadyExists(
+				`${label ?? 'Giá trị này'} đã được sử dụng, vui lòng chọn giá trị khác`
+			)
+		}
 
 		case 'SQLITE_ERROR':
 			return AppError.internal('Internal err')
 
 		case 'SQLITE_CONSTRAINT_NOTNULL':
-			return AppError.invalidArgument('A required field was null')
+			return AppError.invalidArgument('Thiếu thông tin bắt buộc')
 
 		case 'SQLITE_BUSY':
 			return AppError.unavailable('Database is busy, try again')
@@ -102,7 +124,10 @@ export function handleDatabaseErr(err: unknown): never {
 		throw AppError.internal('Internal error')
 	}
 
-	const appErr = handleLibsqlError(libsqlErr.code as SQLiteErrorCode)
+	const appErr = handleLibsqlError(
+		libsqlErr.code as SQLiteErrorCode,
+		libsqlErr.message
+	)
 	throw appErr
 }
 
