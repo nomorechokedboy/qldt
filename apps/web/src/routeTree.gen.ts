@@ -25,6 +25,7 @@ import { Route as HoanCanhKhoKhanRouteImport } from './routes/hoan-canh-kho-khan
 import { Route as HcyuRouteImport } from './routes/hcyu'
 import { Route as EthnicMinorityRouteImport } from './routes/ethnic-minority'
 import { Route as CpvRouteImport } from './routes/cpv'
+import { Route as ChuyenGiaoTaiSanRouteImport } from './routes/chuyen-giao-tai-san'
 import { Route as ChuyenDangChinhThucRouteImport } from './routes/chuyen-dang-chinh-thuc'
 import { Route as CacQuyenRouteImport } from './routes/cac-quyen'
 import { Route as BirthdayRouteImport } from './routes/birthday'
@@ -115,6 +116,11 @@ const CpvRoute = CpvRouteImport.update({
   path: '/cpv',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ChuyenGiaoTaiSanRoute = ChuyenGiaoTaiSanRouteImport.update({
+  id: '/chuyen-giao-tai-san',
+  path: '/chuyen-giao-tai-san',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ChuyenDangChinhThucRoute = ChuyenDangChinhThucRouteImport.update({
   id: '/chuyen-dang-chinh-thuc',
   path: '/chuyen-dang-chinh-thuc',
@@ -166,6 +172,7 @@ export interface FileRoutesByFullPath {
   '/birthday': typeof BirthdayRoute
   '/cac-quyen': typeof CacQuyenRoute
   '/chuyen-dang-chinh-thuc': typeof ChuyenDangChinhThucRoute
+  '/chuyen-giao-tai-san': typeof ChuyenGiaoTaiSanRoute
   '/cpv': typeof CpvRoute
   '/ethnic-minority': typeof EthnicMinorityRoute
   '/hcyu': typeof HcyuRoute
@@ -193,6 +200,7 @@ export interface FileRoutesByTo {
   '/birthday': typeof BirthdayRoute
   '/cac-quyen': typeof CacQuyenRoute
   '/chuyen-dang-chinh-thuc': typeof ChuyenDangChinhThucRoute
+  '/chuyen-giao-tai-san': typeof ChuyenGiaoTaiSanRoute
   '/cpv': typeof CpvRoute
   '/ethnic-minority': typeof EthnicMinorityRoute
   '/hcyu': typeof HcyuRoute
@@ -221,6 +229,7 @@ export interface FileRoutesById {
   '/birthday': typeof BirthdayRoute
   '/cac-quyen': typeof CacQuyenRoute
   '/chuyen-dang-chinh-thuc': typeof ChuyenDangChinhThucRoute
+  '/chuyen-giao-tai-san': typeof ChuyenGiaoTaiSanRoute
   '/cpv': typeof CpvRoute
   '/ethnic-minority': typeof EthnicMinorityRoute
   '/hcyu': typeof HcyuRoute
@@ -250,6 +259,7 @@ export interface FileRouteTypes {
     | '/birthday'
     | '/cac-quyen'
     | '/chuyen-dang-chinh-thuc'
+    | '/chuyen-giao-tai-san'
     | '/cpv'
     | '/ethnic-minority'
     | '/hcyu'
@@ -277,6 +287,7 @@ export interface FileRouteTypes {
     | '/birthday'
     | '/cac-quyen'
     | '/chuyen-dang-chinh-thuc'
+    | '/chuyen-giao-tai-san'
     | '/cpv'
     | '/ethnic-minority'
     | '/hcyu'
@@ -304,6 +315,7 @@ export interface FileRouteTypes {
     | '/birthday'
     | '/cac-quyen'
     | '/chuyen-dang-chinh-thuc'
+    | '/chuyen-giao-tai-san'
     | '/cpv'
     | '/ethnic-minority'
     | '/hcyu'
@@ -332,6 +344,7 @@ export interface RootRouteChildren {
   BirthdayRoute: typeof BirthdayRoute
   CacQuyenRoute: typeof CacQuyenRoute
   ChuyenDangChinhThucRoute: typeof ChuyenDangChinhThucRoute
+  ChuyenGiaoTaiSanRoute: typeof ChuyenGiaoTaiSanRoute
   CpvRoute: typeof CpvRoute
   EthnicMinorityRoute: typeof EthnicMinorityRoute
   HcyuRoute: typeof HcyuRoute
@@ -469,6 +482,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CpvRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/chuyen-giao-tai-san': {
+      id: '/chuyen-giao-tai-san'
+      path: '/chuyen-giao-tai-san'
+      fullPath: '/chuyen-giao-tai-san'
+      preLoaderRoute: typeof ChuyenGiaoTaiSanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/chuyen-dang-chinh-thuc': {
       id: '/chuyen-dang-chinh-thuc'
       path: '/chuyen-dang-chinh-thuc'
@@ -540,6 +560,7 @@ const rootRouteChildren: RootRouteChildren = {
   BirthdayRoute: BirthdayRoute,
   CacQuyenRoute: CacQuyenRoute,
   ChuyenDangChinhThucRoute: ChuyenDangChinhThucRoute,
+  ChuyenGiaoTaiSanRoute: ChuyenGiaoTaiSanRoute,
   CpvRoute: CpvRoute,
   EthnicMinorityRoute: EthnicMinorityRoute,
   HcyuRoute: HcyuRoute,

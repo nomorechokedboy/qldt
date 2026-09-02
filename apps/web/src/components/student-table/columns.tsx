@@ -17,7 +17,7 @@ export const baseStudentsColumns: ColumnDef<Student>[] = [
 	{
 		id: 'class.name',
 		accessorFn: (row) => row.class?.name ?? row.unit?.name,
-		header: 'Tiểu đội',
+		header: 'Đơn vị',
 		cell: ({ row }) => (
 			<div className='w-20'>
 				<Badge
@@ -32,7 +32,7 @@ export const baseStudentsColumns: ColumnDef<Student>[] = [
 			return value.includes(row.getValue(id))
 		},
 		meta: {
-			label: 'Tiểu đội'
+			label: 'Đơn vị'
 		}
 	},
 	{
@@ -486,7 +486,7 @@ export const battalionStudentColumns: ColumnDef<Student>[] = [
 			row.class
 				? `${row.class.name} - ${row.class.unit.alias}`
 				: (row.unit?.name ?? ''),
-		header: 'Tiểu đội',
+		header: 'Đơn vị',
 		cell: ({ row }) => (
 			<div className='w-20'>
 				<Badge
@@ -501,7 +501,7 @@ export const battalionStudentColumns: ColumnDef<Student>[] = [
 			return value.includes(row.getValue(id))
 		},
 		meta: {
-			label: 'Tiểu đội'
+			label: 'Đơn vị'
 		}
 	},
 	{
@@ -921,7 +921,7 @@ export const battalionStudentColumnsWithoutAction: ColumnDef<Student>[] = [
 			row.class
 				? `${row.class.name} - ${row.class.unit.alias}`
 				: (row.unit?.name ?? ''),
-		header: 'Tiểu đội',
+		header: 'Đơn vị',
 		cell: ({ row }) => (
 			<div className='w-20'>
 				<Badge
@@ -936,7 +936,7 @@ export const battalionStudentColumnsWithoutAction: ColumnDef<Student>[] = [
 			return value.includes(row.getValue(id))
 		},
 		meta: {
-			label: 'Tiểu đội'
+			label: 'Đơn vị'
 		}
 	},
 	{

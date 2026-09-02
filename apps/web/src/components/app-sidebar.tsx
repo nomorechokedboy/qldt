@@ -10,7 +10,8 @@ import {
 	List,
 	UserRoundCog,
 	Package,
-	History
+	History,
+	ArrowLeftRight
 } from 'lucide-react'
 import {
 	Sidebar,
@@ -107,6 +108,11 @@ const data = {
 					title: 'Danh mục vật tư',
 					url: '/quan-ly-vat-tu/danh-muc',
 					icon: Package
+				},
+				{
+					title: 'Chuyển giao nguồn lực',
+					url: '/chuyen-giao-tai-san',
+					icon: ArrowLeftRight
 				}
 			]
 		},

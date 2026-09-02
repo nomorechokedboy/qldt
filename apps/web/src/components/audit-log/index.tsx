@@ -30,18 +30,19 @@ import type { audit_logs } from '@/api/client'
 const PAGE_SIZE = 20
 
 const RESOURCE_LABELS: Record<string, string> = {
-	students: 'Học viên',
+	students: 'Quân nhân',
 	material_assets: 'Vũ khí/trang bị',
 	material_types: 'Danh mục vật tư',
 	material_stocks: 'Tồn kho vật tư',
 	buildings: 'Tòa nhà',
 	rooms: 'Phòng',
-	classes: 'Lớp học',
+	classes: 'Đơn vị',
 	units: 'Đơn vị',
 	roles: 'Vai trò',
 	permissions: 'Quyền',
 	users: 'Người dùng',
-	user_roles: 'Phân quyền người dùng'
+	user_roles: 'Phân quyền người dùng',
+	transfer_requests: 'Yêu cầu chuyển giao'
 }
 
 const ACTION_LABELS: Record<string, string> = {

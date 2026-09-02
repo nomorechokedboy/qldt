@@ -46,6 +46,7 @@ export default class Client {
 	public readonly resources: resources.ServiceClient
 	public readonly roles: roles.ServiceClient
 	public readonly students: students.ServiceClient
+	public readonly transfer_requests: transfer_requests.ServiceClient
 	public readonly units: units.ServiceClient
 	public readonly user_roles: user_roles.ServiceClient
 	public readonly users: users.ServiceClient
@@ -76,6 +77,7 @@ export default class Client {
 		this.resources = new resources.ServiceClient(base)
 		this.roles = new roles.ServiceClient(base)
 		this.students = new students.ServiceClient(base)
+		this.transfer_requests = new transfer_requests.ServiceClient(base)
 		this.units = new units.ServiceClient(base)
 		this.user_roles = new user_roles.ServiceClient(base)
 		this.users = new users.ServiceClient(base)
@@ -1377,7 +1379,9 @@ export namespace notifications {
 
 			return await this.baseClient.createStreamIn(
 				`/notifications/stream`,
-				{ query }
+				{
+					query
+				}
 			)
 		}
 	}
@@ -2171,7 +2175,9 @@ export namespace students {
 				'GET',
 				`/students/cron`,
 				undefined,
-				{ query }
+				{
+					query
+				}
 			)
 		}
 
@@ -2193,6 +2199,291 @@ export namespace students {
 				JSON.stringify(params)
 			)
 			return (await resp.json()) as UpdateStudentStatusResponse
+		}
+	}
+}
+
+export namespace transfer_requests {
+	export interface ApproveTransferRequestResponse {
+		data: TransferRequestResp
+	}
+
+	export interface CancelTransferRequestResponse {
+		data: TransferRequestResp
+	}
+
+	export interface CreateTransferRequestBody {
+		sourceUnitId: number
+		destinationUnitId: number
+		destinationRoomId?: number | null
+		approverUserId: number
+		troopers?: schema.CreateTransferRequestTrooperInput[]
+		materialAssets?: schema.CreateTransferRequestMaterialAssetInput[]
+		materialStocks?: schema.CreateTransferRequestMaterialStockInput[]
+	}
+
+	export interface CreateTransferRequestResponse {
+		data: TransferRequestResp
+	}
+
+	export interface GetTransferDestinationUnitsResponse {
+		data: UnitSummary[]
+	}
+
+	export interface GetTransferEligibleApproversQuery {
+		sourceUnitId: number
+		destinationUnitId: number
+	}
+
+	export interface GetTransferEligibleApproversResponse {
+		data: UserSummary[]
+	}
+
+	export interface GetTransferRequestResponse {
+		data: TransferRequestResp
+	}
+
+	export interface GetTransferRequestsQuery {
+		status?: schema.TransferRequestStatus
+	}
+
+	export interface GetTransferRequestsResponse {
+		data: TransferRequestResp[]
+	}
+
+	export interface MaterialAssetSummary {
+		id: number
+		serialNumber: string
+		materialTypeId: number
+		unitId: number
+		roomId: number | null
+		condition: string | null
+		status: string
+	}
+
+	export interface MaterialTypeSummary {
+		id: number
+		name: string
+		unitOfMeasure: string | null
+	}
+
+	export interface RejectTransferRequestRequest {
+		reason: string
+	}
+
+	export interface RejectTransferRequestResponse {
+		data: TransferRequestResp
+	}
+
+	export interface RoomSummary {
+		id: number
+		name: string
+	}
+
+	export interface StudentSummary {
+		id: number
+		fullName: string | null
+		unitId: number | null
+	}
+
+	export interface TransferRequestMaterialAssetItemResp {
+		id: number
+		itemStatus: string
+		failureReason: string | null
+		materialAsset?: MaterialAssetSummary
+	}
+
+	export interface TransferRequestMaterialStockItemResp {
+		id: number
+		condition: string
+		quantity: number
+		itemStatus: string
+		failureReason: string | null
+		materialType?: MaterialTypeSummary
+	}
+
+	export interface TransferRequestResp {
+		id: number
+		status: string
+		rejectionReason: string | null
+		decidedAt: string | null
+		createdAt: string
+		updatedAt: string
+		sourceUnit?: UnitSummary
+		destinationUnit?: UnitSummary
+		destinationRoom?: RoomSummary | null
+		requestedBy?: UserSummary
+		approver?: UserSummary
+		decidedBy?: UserSummary | null
+		troopers?: TransferRequestTrooperItemResp[]
+		materialAssetItems?: TransferRequestMaterialAssetItemResp[]
+		materialStockItems?: TransferRequestMaterialStockItemResp[]
+		canDecide: boolean
+	}
+
+	export interface TransferRequestTrooperItemResp {
+		id: number
+		itemStatus: string
+		failureReason: string | null
+		student?: StudentSummary
+	}
+
+	export interface UnitSummary {
+		id: number
+		alias: string
+		name: string
+		level: string
+	}
+
+	/**
+	 * Encore's static analyzer cannot resolve Drizzle's InferSelectModel-derived
+	 * schema types (e.g. TransferRequest) when they're used directly in an
+	 * api()-exposed signature — it fails app-graph building with cascading
+	 * "type never" errors. The rest of this codebase works around this by
+	 * defining plain, hand-written response types for the API surface (see
+	 * units/units.ts's local UnitDB, users/users.ts's local UserDB, etc.) and
+	 * mapping the schema type onto them at the boundary. Same pattern here.
+	 */
+	export interface UserSummary {
+		id: number
+		username: string
+		displayName: string
+	}
+
+	export class ServiceClient {
+		private baseClient: BaseClient
+
+		constructor(baseClient: BaseClient) {
+			this.baseClient = baseClient
+			this.ApproveTransferRequest = this.ApproveTransferRequest.bind(this)
+			this.CancelTransferRequest = this.CancelTransferRequest.bind(this)
+			this.CreateTransferRequest = this.CreateTransferRequest.bind(this)
+			this.GetTransferDestinationUnits =
+				this.GetTransferDestinationUnits.bind(this)
+			this.GetTransferEligibleApprovers =
+				this.GetTransferEligibleApprovers.bind(this)
+			this.GetTransferRequest = this.GetTransferRequest.bind(this)
+			this.GetTransferRequests = this.GetTransferRequests.bind(this)
+			this.RejectTransferRequest = this.RejectTransferRequest.bind(this)
+		}
+
+		public async ApproveTransferRequest(
+			id: number
+		): Promise<ApproveTransferRequestResponse> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'POST',
+				`/transfer-requests/${encodeURIComponent(id)}/approve`
+			)
+			return (await resp.json()) as ApproveTransferRequestResponse
+		}
+
+		public async CancelTransferRequest(
+			id: number
+		): Promise<CancelTransferRequestResponse> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'POST',
+				`/transfer-requests/${encodeURIComponent(id)}/cancel`
+			)
+			return (await resp.json()) as CancelTransferRequestResponse
+		}
+
+		public async CreateTransferRequest(
+			params: CreateTransferRequestBody
+		): Promise<CreateTransferRequestResponse> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'POST',
+				`/transfer-requests`,
+				JSON.stringify(params)
+			)
+			return (await resp.json()) as CreateTransferRequestResponse
+		}
+
+		/**
+		 * Candidate destination units for a transfer request: all Company-level-or-
+		 * larger units org-wide, independent of the requester's own validUnitIds
+		 * scope. A transfer's destination unit need not belong to the requester's
+		 * own command chain.
+		 */
+		public async GetTransferDestinationUnits(): Promise<GetTransferDestinationUnitsResponse> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'GET',
+				`/transfer-requests/destination-units`
+			)
+			return (await resp.json()) as GetTransferDestinationUnitsResponse
+		}
+
+		/**
+		 * Users eligible to approve a transfer between the given source and
+		 * destination units — commanders/deputy commanders/political commanders/
+		 * deputy political commanders of any unit that is an ancestor-or-self of
+		 * both. Used to populate the approver picker with only valid choices.
+		 */
+		public async GetTransferEligibleApprovers(
+			params: GetTransferEligibleApproversQuery
+		): Promise<GetTransferEligibleApproversResponse> {
+			// Convert our params into the objects we need for the request
+			const query = makeRecord<string, string | string[]>({
+				destinationUnitId: String(params.destinationUnitId),
+				sourceUnitId: String(params.sourceUnitId)
+			})
+
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'GET',
+				`/transfer-requests/eligible-approvers`,
+				undefined,
+				{ query }
+			)
+			return (await resp.json()) as GetTransferEligibleApproversResponse
+		}
+
+		public async GetTransferRequest(
+			id: number
+		): Promise<GetTransferRequestResponse> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'GET',
+				`/transfer-requests/${encodeURIComponent(id)}`
+			)
+			return (await resp.json()) as GetTransferRequestResponse
+		}
+
+		public async GetTransferRequests(
+			params: GetTransferRequestsQuery
+		): Promise<GetTransferRequestsResponse> {
+			// Convert our params into the objects we need for the request
+			const query = makeRecord<string, string | string[]>({
+				status:
+					params.status === undefined
+						? undefined
+						: String(params.status)
+			})
+
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'GET',
+				`/transfer-requests`,
+				undefined,
+				{ query }
+			)
+			return (await resp.json()) as GetTransferRequestsResponse
+		}
+
+		public async RejectTransferRequest(
+			id: number,
+			params: RejectTransferRequestRequest
+		): Promise<RejectTransferRequestResponse> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'POST',
+				`/transfer-requests/${encodeURIComponent(id)}/reject`,
+				JSON.stringify(params)
+			)
+			return (await resp.json()) as RejectTransferRequestResponse
 		}
 	}
 }
@@ -2810,12 +3101,31 @@ export namespace schema {
 		roleIds: number[]
 	}
 
-	export type AuditAction = 'create' | 'update' | 'delete'
+	export type AuditAction =
+		| 'create'
+		| 'update'
+		| 'delete'
+		| 'approve'
+		| 'reject'
 
 	export interface CreateRoleRequest {
 		name: string
 		description?: string
 		permissionIds?: number[]
+	}
+
+	export interface CreateTransferRequestMaterialAssetInput {
+		materialAssetId: number
+	}
+
+	export interface CreateTransferRequestMaterialStockInput {
+		materialTypeId: number
+		condition: MaterialConditionName
+		quantity: number
+	}
+
+	export interface CreateTransferRequestTrooperInput {
+		studentId: number
 	}
 
 	export type ExportResourceType =
@@ -2879,6 +3189,12 @@ export namespace schema {
 		createdAt: string
 		updatedAt: string
 	}
+
+	export type TransferRequestStatus =
+		| 'pending'
+		| 'approved'
+		| 'rejected'
+		| 'cancelled'
 
 	export type UnitLevelName =
 		| 'corps'
@@ -2956,7 +3272,7 @@ class WebSocketConnection {
 	private hasUpdateHandlers: (() => void)[] = []
 
 	constructor(url: string, headers?: Record<string, string>) {
-		let protocols = ['encore-ws']
+		const protocols = ['encore-ws']
 		if (headers) {
 			protocols.push(encodeWebSocketHeaders(headers))
 		}
