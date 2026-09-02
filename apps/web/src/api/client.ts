@@ -1379,9 +1379,7 @@ export namespace notifications {
 
 			return await this.baseClient.createStreamIn(
 				`/notifications/stream`,
-				{
-					query
-				}
+				{ query }
 			)
 		}
 	}
@@ -2175,9 +2173,7 @@ export namespace students {
 				'GET',
 				`/students/cron`,
 				undefined,
-				{
-					query
-				}
+				{ query }
 			)
 		}
 
@@ -3272,7 +3268,7 @@ class WebSocketConnection {
 	private hasUpdateHandlers: (() => void)[] = []
 
 	constructor(url: string, headers?: Record<string, string>) {
-		const protocols = ['encore-ws']
+		let protocols = ['encore-ws']
 		if (headers) {
 			protocols.push(encodeWebSocketHeaders(headers))
 		}

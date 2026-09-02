@@ -110,7 +110,7 @@ const data = {
 					icon: Package
 				},
 				{
-					title: 'Chuyển giao nguồn lực',
+					title: 'Chuyển giao quân số/vật chất',
 					url: '/chuyen-giao-tai-san',
 					icon: ArrowLeftRight
 				}

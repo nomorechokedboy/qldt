@@ -48,7 +48,9 @@ const RESOURCE_LABELS: Record<string, string> = {
 const ACTION_LABELS: Record<string, string> = {
 	create: 'Tạo mới',
 	update: 'Cập nhật',
-	delete: 'Xoá'
+	delete: 'Xoá',
+	approve: 'Phê duyệt',
+	reject: 'Từ chối'
 }
 
 const ACTION_BADGE_VARIANT: Record<
