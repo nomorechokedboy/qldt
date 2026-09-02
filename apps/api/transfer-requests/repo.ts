@@ -23,9 +23,9 @@ const WITH_DETAILS = {
 	sourceUnit: true,
 	destinationUnit: true,
 	destinationRoom: true,
-	requestedBy: true,
-	approver: true,
-	decidedBy: true,
+	requestedBy: { columns: { password: false } },
+	approver: { columns: { password: false } },
+	decidedBy: { columns: { password: false } },
 	troopers: { with: { student: true } },
 	materialAssetItems: { with: { materialAsset: true } },
 	materialStockItems: { with: { materialType: true } }

@@ -6,7 +6,7 @@ INSERT INTO actions (name, display_name, description) VALUES
 
 -- Insert the transfer_requests resource
 INSERT INTO resources (name, display_name, description) VALUES
-('transfer_requests', 'Chuyển giao nguồn lực', 'Quản lý yêu cầu chuyển giao quân nhân, vũ khí, khí tài giữa các đơn vị');
+('transfer_requests', 'Chuyển giao quân số/vật chất', 'Quản lý yêu cầu chuyển giao quân nhân, vũ khí, khí tài giữa các đơn vị');
 --> statement-breakpoint
 
 -- Insert permissions for the transfer_requests resource (existing

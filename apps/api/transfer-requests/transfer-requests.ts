@@ -114,10 +114,132 @@ interface TransferRequestResp {
 	canDecide: boolean
 }
 
+// Explicit field-by-field mapping (rather than a `{ ...tr }` spread) so
+// relations carrying sensitive columns — most importantly users.password on
+// requestedBy/approver/decidedBy — can never leak onto the wire just because
+// a Drizzle `with` clause happened to include them.
+function toUserSummary(
+	u: { id: number; username: string; displayName: string } | null | undefined
+): UserSummary | undefined {
+	if (u === null || u === undefined) return undefined
+	return { id: u.id, username: u.username, displayName: u.displayName }
+}
+
+function toUnitSummary(
+	u:
+		| { id: number; alias: string; name: string; level: string }
+		| null
+		| undefined
+): UnitSummary | undefined {
+	if (u === null || u === undefined) return undefined
+	return { id: u.id, alias: u.alias, name: u.name, level: u.level }
+}
+
+function toRoomSummary(
+	r: { id: number; name: string } | null | undefined
+): RoomSummary | undefined {
+	if (r === null || r === undefined) return undefined
+	return { id: r.id, name: r.name }
+}
+
+function toStudentSummary(
+	s:
+		| { id: number; fullName: string | null; unitId: number | null }
+		| null
+		| undefined
+): StudentSummary | undefined {
+	if (s === null || s === undefined) return undefined
+	return { id: s.id, fullName: s.fullName, unitId: s.unitId }
+}
+
+function toMaterialAssetSummary(
+	a:
+		| {
+				id: number
+				serialNumber: string
+				materialTypeId: number
+				unitId: number
+				roomId: number | null
+				condition: string | null
+				status: string
+		  }
+		| null
+		| undefined
+): MaterialAssetSummary | undefined {
+	if (a === null || a === undefined) return undefined
+	return {
+		id: a.id,
+		serialNumber: a.serialNumber,
+		materialTypeId: a.materialTypeId,
+		unitId: a.unitId,
+		roomId: a.roomId,
+		condition: a.condition,
+		status: a.status
+	}
+}
+
+function toMaterialTypeSummary(
+	m:
+		| { id: number; name: string; unitOfMeasure: string | null }
+		| null
+		| undefined
+): MaterialTypeSummary | undefined {
+	if (m === null || m === undefined) return undefined
+	return { id: m.id, name: m.name, unitOfMeasure: m.unitOfMeasure }
+}
+
 function toResponse(
 	tr: TransferRequest
 ): Omit<TransferRequestResp, 'canDecide'> {
-	return { ...tr } as unknown as Omit<TransferRequestResp, 'canDecide'>
+	return {
+		id: tr.id,
+		status: tr.status,
+		rejectionReason: tr.rejectionReason,
+		decidedAt: tr.decidedAt,
+		createdAt: tr.createdAt ?? '',
+		updatedAt: tr.updatedAt ?? '',
+		sourceUnit: toUnitSummary(tr.sourceUnit),
+		destinationUnit: toUnitSummary(tr.destinationUnit),
+		destinationRoom: toRoomSummary(tr.destinationRoom) ?? null,
+		requestedBy: toUserSummary(tr.requestedBy),
+		approver: toUserSummary(tr.approver),
+		decidedBy: toUserSummary(tr.decidedBy) ?? null,
+		troopers: tr.troopers?.map((t) => ({
+			id: t.id,
+			itemStatus: t.itemStatus,
+			failureReason: t.failureReason,
+			student: toStudentSummary(t.student)
+		})),
+		materialAssetItems: tr.materialAssetItems?.map((m) => ({
+			id: m.id,
+			itemStatus: m.itemStatus,
+			failureReason: m.failureReason,
+			// MaterialAsset's TS type Omits the flat FK columns (materialTypeId/
+			// unitId/roomId) in favor of nested relations, but the repo query
+			// has no column restriction, so they're still present at runtime.
+			materialAsset: toMaterialAssetSummary(
+				m.materialAsset as unknown as
+					| {
+							id: number
+							serialNumber: string
+							materialTypeId: number
+							unitId: number
+							roomId: number | null
+							condition: string | null
+							status: string
+					  }
+					| undefined
+			)
+		})),
+		materialStockItems: tr.materialStockItems?.map((m) => ({
+			id: m.id,
+			condition: m.condition,
+			quantity: m.quantity,
+			itemStatus: m.itemStatus,
+			failureReason: m.failureReason,
+			materialType: toMaterialTypeSummary(m.materialType)
+		}))
+	}
 }
 
 // Whether the given actor currently holds one of the 4 leadership roles on

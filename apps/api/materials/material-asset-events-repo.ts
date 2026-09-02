@@ -39,7 +39,7 @@ class repo implements MaterialAssetEventRepository {
 						: conditions.length === 1
 							? conditions[0]
 							: and(...conditions),
-				with: { actor: true }
+				with: { actor: { columns: { password: false } } }
 			})
 			.catch(handleDatabaseErr) as unknown as MaterialAssetEvent[]
 	}
