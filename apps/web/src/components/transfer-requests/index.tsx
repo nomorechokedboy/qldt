@@ -29,7 +29,8 @@ import useAuth from '@/hooks/useAuth'
 import useTransferRequests from '@/hooks/useTransferRequests'
 import {
 	useApproveTransferRequest,
-	useCancelTransferRequest
+	useCancelTransferRequest,
+	useExportTransferRequestHandover
 } from '@/hooks/useTransferRequestActions'
 import type { transfer_requests } from '@/api/client'
 import CreateTransferRequestForm from './create-transfer-request-form'
@@ -84,6 +85,7 @@ export default function TransferRequestsTab() {
 
 	const approveMutation = useApproveTransferRequest()
 	const cancelMutation = useCancelTransferRequest()
+	const exportHandoverMutation = useExportTransferRequestHandover()
 
 	const canApprove = hasPermission('transfer_requests:approve')
 	const canReject = hasPermission('transfer_requests:reject')
@@ -96,6 +98,18 @@ export default function TransferRequestsTab() {
 		} catch (err) {
 			toast.error(
 				err instanceof Error ? err.message : 'Duyệt yêu cầu thất bại!'
+			)
+		}
+	}
+
+	const handleExportHandover = async (id: number) => {
+		try {
+			await exportHandoverMutation.mutateAsync(id)
+		} catch (err) {
+			toast.error(
+				err instanceof Error
+					? err.message
+					: 'Xuất biên bản bàn giao thất bại!'
 			)
 		}
 	}
@@ -183,6 +197,9 @@ export default function TransferRequestsTab() {
 								const isRequester =
 									user?.id === row.requestedBy?.id
 								const isPending = row.status === 'pending'
+								const hasMaterialItems =
+									!!row.materialAssetItems?.length ||
+									!!row.materialStockItems?.length
 
 								return (
 									<TableRow key={row.id}>
@@ -277,6 +294,23 @@ export default function TransferRequestsTab() {
 														Hủy
 													</Button>
 												)}
+												{row.status === 'approved' &&
+													hasMaterialItems && (
+														<Button
+															variant='ghost'
+															size='sm'
+															disabled={
+																exportHandoverMutation.isPending
+															}
+															onClick={() =>
+																handleExportHandover(
+																	row.id
+																)
+															}
+														>
+															Xuất biên bản
+														</Button>
+													)}
 											</div>
 										</TableCell>
 									</TableRow>

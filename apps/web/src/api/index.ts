@@ -549,3 +549,10 @@ export function CancelTransferRequest(id: number) {
 		.CancelTransferRequest(id)
 		.then((resp) => resp.data)
 }
+
+export function ExportTransferRequestHandover(id: number) {
+	return requestClient.transfer_requests.ExportTransferRequestHandover(
+		'GET',
+		String(id)
+	)
+}

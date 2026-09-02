@@ -20,14 +20,26 @@ import {
 import { handleDatabaseErr } from '../utils'
 
 const WITH_DETAILS = {
-	sourceUnit: true,
-	destinationUnit: true,
+	sourceUnit: {
+		with: {
+			parent: true,
+			commander: { columns: { password: false } }
+		}
+	},
+	destinationUnit: {
+		with: {
+			parent: true,
+			commander: { columns: { password: false } }
+		}
+	},
 	destinationRoom: true,
 	requestedBy: { columns: { password: false } },
 	approver: { columns: { password: false } },
 	decidedBy: { columns: { password: false } },
 	troopers: { with: { student: true } },
-	materialAssetItems: { with: { materialAsset: true } },
+	materialAssetItems: {
+		with: { materialAsset: { with: { materialType: true } } }
+	},
 	materialStockItems: { with: { materialType: true } }
 } as const
 

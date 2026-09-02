@@ -1,4 +1,4 @@
-import { api, Query } from 'encore.dev/api'
+import { api, APIError, Query } from 'encore.dev/api'
 import { APICallMeta, currentRequest } from 'encore.dev'
 import log from 'encore.dev/log'
 import { getAuthData } from '~encore/auth'
@@ -13,6 +13,7 @@ import {
 	TransferRequestStatus
 } from '../schema/transfer-requests'
 import transferRequestController from './controller'
+import { buildHandoverReport } from './handover-export'
 
 function requireActorUserId(): number {
 	const authData = getAuthData()
@@ -536,5 +537,46 @@ export const CancelTransferRequest = api(
 		})
 
 		return { data: await toResponseWithCanDecide(data, actorUserId) }
+	}
+)
+
+export const ExportTransferRequestHandover = api.raw(
+	{
+		auth: true,
+		expose: true,
+		method: 'GET',
+		path: '/transfer-requests/:id/export-handover'
+	},
+	async (req, resp) => {
+		try {
+			const { id } = (currentRequest() as APICallMeta).pathParams as {
+				id: string
+			}
+			const city =
+				new URL(req.url ?? '', 'http://localhost').searchParams.get(
+					'city'
+				) ?? ''
+
+			const buffer = await buildHandoverReport(Number(id), city)
+
+			resp.setHeader(
+				'Content-Type',
+				'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+			)
+			resp.setHeader(
+				'Content-Disposition',
+				`attachment; filename="bien-ban-ban-giao-${id}.docx"`
+			)
+			resp.writeHead(200, { Connection: 'close' })
+			return resp.end(buffer)
+		} catch (err) {
+			log.error('ExportTransferRequestHandover error', { err })
+
+			if (err instanceof APIError) {
+				throw err
+			}
+
+			throw APIError.internal('Internal error for exporting file')
+		}
 	}
 )

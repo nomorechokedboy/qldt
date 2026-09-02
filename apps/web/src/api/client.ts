@@ -1379,7 +1379,9 @@ export namespace notifications {
 
 			return await this.baseClient.createStreamIn(
 				`/notifications/stream`,
-				{ query }
+				{
+					query
+				}
 			)
 		}
 	}
@@ -2173,7 +2175,9 @@ export namespace students {
 				'GET',
 				`/students/cron`,
 				undefined,
-				{ query }
+				{
+					query
+				}
 			)
 		}
 
@@ -2354,6 +2358,8 @@ export namespace transfer_requests {
 			this.ApproveTransferRequest = this.ApproveTransferRequest.bind(this)
 			this.CancelTransferRequest = this.CancelTransferRequest.bind(this)
 			this.CreateTransferRequest = this.CreateTransferRequest.bind(this)
+			this.ExportTransferRequestHandover =
+				this.ExportTransferRequestHandover.bind(this)
 			this.GetTransferDestinationUnits =
 				this.GetTransferDestinationUnits.bind(this)
 			this.GetTransferEligibleApprovers =
@@ -2395,6 +2401,20 @@ export namespace transfer_requests {
 				JSON.stringify(params)
 			)
 			return (await resp.json()) as CreateTransferRequestResponse
+		}
+
+		public async ExportTransferRequestHandover(
+			method: 'GET',
+			id: string,
+			body?: RequestInit['body'],
+			options?: CallParameters
+		): Promise<globalThis.Response> {
+			return this.baseClient.callAPI(
+				method,
+				`/transfer-requests/${encodeURIComponent(id)}/export-handover`,
+				body,
+				options
+			)
 		}
 
 		/**
@@ -3268,7 +3288,7 @@ class WebSocketConnection {
 	private hasUpdateHandlers: (() => void)[] = []
 
 	constructor(url: string, headers?: Record<string, string>) {
-		let protocols = ['encore-ws']
+		const protocols = ['encore-ws']
 		if (headers) {
 			protocols.push(encodeWebSocketHeaders(headers))
 		}

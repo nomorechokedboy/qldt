@@ -189,6 +189,7 @@ const PERMISSION_MAP: Record<string, string[]> = {
 	'GET:/transfer-requests/destination-units': ['transfer_requests:create'],
 	'GET:/transfer-requests/eligible-approvers': ['transfer_requests:create'],
 	'GET:/transfer-requests/:id': ['transfer_requests:read'],
+	'GET:/transfer-requests/:id/export-handover': ['transfer_requests:read'],
 	'POST:/transfer-requests/:id/approve': ['transfer_requests:approve'],
 	'POST:/transfer-requests/:id/reject': ['transfer_requests:reject'],
 	'POST:/transfer-requests/:id/cancel': ['transfer_requests:update']
