@@ -286,6 +286,11 @@ export interface Unit extends Base {
 	parent?: Unit | null
 	children: Unit[]
 	classes?: Class[]
+
+	commanderId?: number | null
+	deputyCommanderId?: number | null
+	politicalCommanderId?: number | null
+	deputyPoliticalCommanderId?: number | null
 }
 
 export interface GetUnitResponse {
@@ -297,6 +302,11 @@ export interface UnitBody {
 	name: string
 	level: UnitLevel
 	parentId?: number | null
+
+	commanderId?: number | null
+	deputyCommanderId?: number | null
+	politicalCommanderId?: number | null
+	deputyPoliticalCommanderId?: number | null
 }
 
 export type UpdateUnitBody = {

@@ -15,6 +15,12 @@ import { useUpdateUnits } from '@/hooks/useUpdateUnits'
 import useUnitsData from '@/hooks/useUnitsData'
 import { isLargerUnitLevel, unitLevelOptions } from '@/data/unit-levels'
 import type { Unit, UnitLevel } from '@/types'
+import UnitCommanderFields, {
+	commanderValuesFromUnit,
+	commanderValuesToPayload,
+	type CommanderFieldKey,
+	type UnitCommanderValues
+} from '@/components/unit-commander-fields'
 
 const NO_PARENT = 'none'
 
@@ -42,6 +48,9 @@ export default function UnitEditForm({
 			? String(unitData.parent.id)
 			: NO_PARENT
 	)
+	const [commanders, setCommanders] = useState<UnitCommanderValues>(
+		commanderValuesFromUnit(unitData)
+	)
 
 	const { data: allUnits } = useUnitsData()
 	const updateUnitMutation = useUpdateUnits()
@@ -58,7 +67,14 @@ export default function UnitEditForm({
 
 		try {
 			await updateUnitMutation.mutateAsync([
-				{ id: unitData.id, alias, name, level, parentId: nextParentId }
+				{
+					id: unitData.id,
+					alias,
+					name,
+					level,
+					parentId: nextParentId,
+					...commanderValuesToPayload(commanders)
+				}
 			])
 			toast.success('Cập nhật thông tin đơn vị thành công')
 			onUpdate({ alias, name, level, parentId: nextParentId })
@@ -144,6 +160,14 @@ export default function UnitEditForm({
 						</SelectContent>
 					</Select>
 				</div>
+
+				<UnitCommanderFields
+					idPrefix='edit-unit'
+					values={commanders}
+					onChange={(field: CommanderFieldKey, value: string) =>
+						setCommanders((prev) => ({ ...prev, [field]: value }))
+					}
+				/>
 
 				<div className='flex justify-end gap-2 pt-2'>
 					<Button type='button' onClick={onClose} variant='outline'>

@@ -446,26 +446,6 @@ export namespace export_templates {
 			this.UploadExportTemplate = this.UploadExportTemplate.bind(this)
 		}
 
-		public async DownloadExampleExportTemplate(
-			resourceType?: schema.ExportResourceType
-		): Promise<globalThis.Response> {
-			const query = makeRecord<string, string | string[]>({
-				resourceType:
-					resourceType === undefined
-						? undefined
-						: String(resourceType)
-			})
-
-			return this.baseClient.callAPI(
-				'GET',
-				`/export-templates/example`,
-				undefined,
-				{
-					query
-				}
-			)
-		}
-
 		public async DeleteExportTemplate(id: number): Promise<{
 			id: number
 		}> {
@@ -477,6 +457,19 @@ export namespace export_templates {
 			return (await resp.json()) as {
 				id: number
 			}
+		}
+
+		public async DownloadExampleExportTemplate(
+			method: 'GET',
+			body?: RequestInit['body'],
+			options?: CallParameters
+		): Promise<globalThis.Response> {
+			return this.baseClient.callAPI(
+				method,
+				`/export-templates/example`,
+				body,
+				options
+			)
 		}
 
 		public async GetExportTemplates(
@@ -1384,9 +1377,7 @@ export namespace notifications {
 
 			return await this.baseClient.createStreamIn(
 				`/notifications/stream`,
-				{
-					query
-				}
+				{ query }
 			)
 		}
 	}
@@ -2180,9 +2171,7 @@ export namespace students {
 				'GET',
 				`/students/cron`,
 				undefined,
-				{
-					query
-				}
+				{ query }
 			)
 		}
 
@@ -2302,6 +2291,10 @@ export namespace units {
 		alias: string
 		name: string
 		level: schema.UnitLevelName
+		commanderId?: number | null
+		deputyCommanderId?: number | null
+		politicalCommanderId?: number | null
+		deputyPoliticalCommanderId?: number | null
 		id: number
 		createdAt: string
 		updatedAt: string
@@ -2315,6 +2308,10 @@ export namespace units {
 		name: string
 		level: schema.UnitLevelName
 		parentId?: number | null
+		commanderId?: number | null
+		deputyCommanderId?: number | null
+		politicalCommanderId?: number | null
+		deputyPoliticalCommanderId?: number | null
 	}
 
 	export interface UnitDB {
@@ -2322,6 +2319,10 @@ export namespace units {
 		name: string
 		level: schema.UnitLevelName
 		parentId?: number | null
+		commanderId?: number | null
+		deputyCommanderId?: number | null
+		politicalCommanderId?: number | null
+		deputyPoliticalCommanderId?: number | null
 		id: number
 		createdAt: string
 		updatedAt: string
@@ -2337,12 +2338,20 @@ export namespace units {
 		name?: string
 		level?: schema.UnitLevelName
 		parentId?: number | null
+		commanderId?: number | null
+		deputyCommanderId?: number | null
+		politicalCommanderId?: number | null
+		deputyPoliticalCommanderId?: number | null
 	}
 
 	export interface unit {
 		alias: string
 		name: string
 		level: schema.UnitLevelName
+		commanderId?: number | null
+		deputyCommanderId?: number | null
+		politicalCommanderId?: number | null
+		deputyPoliticalCommanderId?: number | null
 		id: number
 		createdAt: string
 		updatedAt: string
@@ -2809,7 +2818,10 @@ export namespace schema {
 		permissionIds?: number[]
 	}
 
-	export type ExportResourceType = 'material_assets'
+	export type ExportResourceType =
+		| 'material_assets'
+		| 'students'
+		| 'material_stocks'
 
 	export type MaterialAssetEventType =
 		| 'assigned'
@@ -2944,7 +2956,7 @@ class WebSocketConnection {
 	private hasUpdateHandlers: (() => void)[] = []
 
 	constructor(url: string, headers?: Record<string, string>) {
-		const protocols = ['encore-ws']
+		let protocols = ['encore-ws']
 		if (headers) {
 			protocols.push(encodeWebSocketHeaders(headers))
 		}

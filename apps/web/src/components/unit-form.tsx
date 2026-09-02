@@ -24,6 +24,12 @@ import { useCreateUnit } from '@/hooks/useCreateUnit'
 import useUnitsData from '@/hooks/useUnitsData'
 import { isLargerUnitLevel, unitLevelOptions } from '@/data/unit-levels'
 import type { UnitLevel } from '@/types'
+import UnitCommanderFields, {
+	emptyCommanderValues,
+	commanderValuesToPayload,
+	type UnitCommanderValues,
+	type CommanderFieldKey
+} from '@/components/unit-commander-fields'
 
 const NO_PARENT = 'none'
 
@@ -37,6 +43,8 @@ export default function UnitForm({ onSuccess }: UnitFormProps) {
 	const [name, setName] = useState('')
 	const [level, setLevel] = useState<UnitLevel>('battalion')
 	const [parentId, setParentId] = useState<string>(NO_PARENT)
+	const [commanders, setCommanders] =
+		useState<UnitCommanderValues>(emptyCommanderValues)
 
 	const { data: allUnits } = useUnitsData()
 	const createUnitMutation = useCreateUnit()
@@ -49,6 +57,7 @@ export default function UnitForm({ onSuccess }: UnitFormProps) {
 		setName('')
 		setLevel('battalion')
 		setParentId(NO_PARENT)
+		setCommanders(emptyCommanderValues)
 	}
 
 	const handleSubmit = async (e: React.FormEvent) => {
@@ -59,7 +68,8 @@ export default function UnitForm({ onSuccess }: UnitFormProps) {
 				alias,
 				name,
 				level,
-				parentId: parentId === NO_PARENT ? null : Number(parentId)
+				parentId: parentId === NO_PARENT ? null : Number(parentId),
+				...commanderValuesToPayload(commanders)
 			})
 			toast.success('Thêm mới đơn vị thành công')
 			onSuccess?.()
@@ -154,6 +164,17 @@ export default function UnitForm({ onSuccess }: UnitFormProps) {
 							</SelectContent>
 						</Select>
 					</div>
+
+					<UnitCommanderFields
+						idPrefix='unit'
+						values={commanders}
+						onChange={(field: CommanderFieldKey, value: string) =>
+							setCommanders((prev) => ({
+								...prev,
+								[field]: value
+							}))
+						}
+					/>
 
 					<DialogFooter>
 						<DialogClose asChild>
