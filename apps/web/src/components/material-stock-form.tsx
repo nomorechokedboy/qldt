@@ -23,6 +23,7 @@ import {
 import { useAddMaterialStock } from '@/hooks/useAddMaterialStock'
 import { materialConditionOptions } from '@/data/material-categories'
 import type { MaterialType, Room, Unit } from '@/types'
+import { getErrorMessage } from '@/lib/utils'
 
 const NONE = 'none'
 
@@ -79,7 +80,7 @@ export default function MaterialStockForm({
 			setOpen(false)
 		} catch (err) {
 			console.error('Error adding material stock:', err)
-			toast.error('Thêm vật tư thất bại!')
+			toast.error(getErrorMessage(err, 'Thêm vật tư thất bại!'))
 		}
 	}
 

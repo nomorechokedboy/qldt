@@ -14,6 +14,7 @@ import {
 	SelectValue
 } from '@/components/ui/select'
 import { X } from 'lucide-react'
+import { getErrorMessage } from '@/lib/utils'
 
 interface ClassEditFormProps {
 	classData: Class
@@ -54,7 +55,12 @@ export default function ClassEditForm({
 			onClose()
 		} catch (err) {
 			console.error('Error updating class:', err)
-			toast.error('Cập nhật thông tin tiểu đội học thất bại!')
+			toast.error(
+				getErrorMessage(
+					err,
+					'Cập nhật thông tin tiểu đội học thất bại!'
+				)
+			)
 		}
 	}
 

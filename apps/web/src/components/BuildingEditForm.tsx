@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useUpdateBuilding } from '@/hooks/useUpdateBuilding'
 import type { Building } from '@/types'
+import { getErrorMessage } from '@/lib/utils'
 
 interface BuildingEditFormProps {
 	data: Building
@@ -37,7 +38,7 @@ export default function BuildingEditForm({
 			onClose()
 		} catch (err) {
 			console.error('Error updating building:', err)
-			toast.error('Cập nhật nhà/khu nhà thất bại!')
+			toast.error(getErrorMessage(err, 'Cập nhật nhà/khu nhà thất bại!'))
 		}
 	}
 

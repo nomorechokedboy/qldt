@@ -22,6 +22,7 @@ import {
 import { useInitRootUnit } from '@/hooks/useInitRootUnit'
 import { rootUnitLevelOptions } from '@/data/unit-levels'
 import type { UnitLevel } from '@/types'
+import { getErrorMessage } from '@/lib/utils'
 
 export default function InitializeRootUnitForm() {
 	const navigate = useNavigate()
@@ -43,7 +44,12 @@ export default function InitializeRootUnitForm() {
 			navigate({ to: '/khoi-tao-qtv', replace: true })
 		} catch (err) {
 			console.error('Failed to create root unit:', err)
-			toast.error('Khởi tạo đơn vị thất bại, đã có lỗi xảy ra!')
+			toast.error(
+				getErrorMessage(
+					err,
+					'Khởi tạo đơn vị thất bại, đã có lỗi xảy ra!'
+				)
+			)
 		}
 	}
 

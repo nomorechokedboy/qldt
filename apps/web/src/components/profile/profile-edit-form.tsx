@@ -15,6 +15,7 @@ import { toast } from 'sonner'
 import { useEffect } from 'react'
 import { userRankOptions, userPositionOptions } from '@/data/ethnics'
 import type { User } from '@/types'
+import { getErrorMessage } from '@/lib/utils'
 
 const schema = z.object({
 	id: z.number(),
@@ -46,7 +47,7 @@ export default function ProfileEditForm({
 		},
 		onError: (error) => {
 			console.error('Failed to update profile:', error)
-			toast.error('Cập nhật thông tin thất bại')
+			toast.error(getErrorMessage(error, 'Cập nhật thông tin thất bại'))
 		}
 	})
 

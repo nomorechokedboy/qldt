@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useCreateRoom } from '@/hooks/useCreateRoom'
+import { getErrorMessage } from '@/lib/utils'
 
 export interface RoomFormProps {
 	unitId: number
@@ -56,7 +57,7 @@ export default function RoomForm({
 			setOpen(false)
 		} catch (err) {
 			console.error('Error creating room:', err)
-			toast.error('Thêm mới phòng thất bại!')
+			toast.error(getErrorMessage(err, 'Thêm mới phòng thất bại!'))
 		}
 	}
 

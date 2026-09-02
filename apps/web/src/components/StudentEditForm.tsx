@@ -22,6 +22,7 @@ import { getMediaUri } from '../lib/utils'
 import { useAppForm } from '@/hooks/demo.form'
 import { toast } from 'sonner'
 import useUploadFiles from '@/hooks/useUploadFiles'
+import { getErrorMessage } from '@/lib/utils'
 import {
 	Plus,
 	Trash2,
@@ -119,7 +120,12 @@ export default function StudentEditForm({
 				if (onClose) onClose()
 			} catch (err) {
 				console.error('UpdateStudentInfo err: ', err)
-				toast.error('Chỉnh sửa thông tin quân nhân không thành công!')
+				toast.error(
+					getErrorMessage(
+						err,
+						'Chỉnh sửa thông tin quân nhân không thành công!'
+					)
+				)
 			}
 		}
 	})

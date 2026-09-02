@@ -14,6 +14,7 @@ import {
 import { useUpdateMaterialStock } from '@/hooks/useUpdateMaterialStock'
 import { materialConditionOptions } from '@/data/material-categories'
 import type { MaterialStock, Room } from '@/types'
+import { getErrorMessage } from '@/lib/utils'
 
 const NONE = 'none'
 
@@ -59,7 +60,7 @@ export default function MaterialStockEditForm({
 			onClose()
 		} catch (err) {
 			console.error('Error updating material stock:', err)
-			toast.error('Cập nhật vật tư thất bại!')
+			toast.error(getErrorMessage(err, 'Cập nhật vật tư thất bại!'))
 		}
 	}
 

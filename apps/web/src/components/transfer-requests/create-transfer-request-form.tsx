@@ -33,6 +33,7 @@ import useTransferDestinationUnits from '@/hooks/useTransferDestinationUnits'
 import useTransferEligibleApprovers from '@/hooks/useTransferEligibleApprovers'
 import useUnitsData from '@/hooks/useUnitsData'
 import { isCompanyOrAboveLevel } from '@/data/unit-levels'
+import { getErrorMessage } from '@/lib/utils'
 import type { transfer_requests } from '@/api/client'
 
 const NONE = 'none'
@@ -231,9 +232,7 @@ export default function CreateTransferRequestForm({
 			setOpen(false)
 		} catch (err) {
 			toast.error(
-				err instanceof Error
-					? err.message
-					: 'Tạo yêu cầu chuyển giao thất bại!'
+				getErrorMessage(err, 'Tạo yêu cầu chuyển giao thất bại!')
 			)
 		}
 	}

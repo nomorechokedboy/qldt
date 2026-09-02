@@ -12,6 +12,7 @@ import {
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useRejectTransferRequest } from '@/hooks/useTransferRequestActions'
+import { getErrorMessage } from '@/lib/utils'
 
 export default function RejectDialog({
 	id,
@@ -40,9 +41,7 @@ export default function RejectDialog({
 			onOpenChange(false)
 			onSuccess?.()
 		} catch (err) {
-			toast.error(
-				err instanceof Error ? err.message : 'Từ chối yêu cầu thất bại!'
-			)
+			toast.error(getErrorMessage(err, 'Từ chối yêu cầu thất bại!'))
 		}
 	}
 

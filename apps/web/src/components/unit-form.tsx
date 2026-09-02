@@ -29,6 +29,7 @@ import {
 	unitLevelOrder
 } from '@/data/unit-levels'
 import type { UnitLevel } from '@/types'
+import { getErrorMessage } from '@/lib/utils'
 import UnitCommanderFields, {
 	emptyCommanderValues,
 	commanderValuesToPayload,
@@ -119,7 +120,7 @@ export default function UnitForm({ onSuccess }: UnitFormProps) {
 			setOpen(false)
 		} catch (err) {
 			console.error('Error creating unit:', err)
-			toast.error('Thêm mới đơn vị thất bại!')
+			toast.error(getErrorMessage(err, 'Thêm mới đơn vị thất bại!'))
 		}
 	}
 

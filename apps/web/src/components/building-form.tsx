@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/select'
 import { useCreateBuilding } from '@/hooks/useCreateBuilding'
 import type { Unit } from '@/types'
+import { getErrorMessage } from '@/lib/utils'
 
 export interface BuildingFormProps {
 	unitOptions: Unit[]
@@ -64,7 +65,7 @@ export default function BuildingForm({
 			setOpen(false)
 		} catch (err) {
 			console.error('Error creating building:', err)
-			toast.error('Thêm mới nhà/khu nhà thất bại!')
+			toast.error(getErrorMessage(err, 'Thêm mới nhà/khu nhà thất bại!'))
 		}
 	}
 

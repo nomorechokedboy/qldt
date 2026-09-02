@@ -24,6 +24,7 @@ import {
 import { useCreateMaterialType } from '@/hooks/useCreateMaterialType'
 import { materialCategoryOptions } from '@/data/material-categories'
 import type { materials } from '@/api/client'
+import { getErrorMessage } from '@/lib/utils'
 
 export interface MaterialTypeFormProps {
 	onSuccess?: () => void
@@ -62,7 +63,9 @@ export default function MaterialTypeForm({ onSuccess }: MaterialTypeFormProps) {
 			setOpen(false)
 		} catch (err) {
 			console.error('Error creating material type:', err)
-			toast.error('Thêm mới danh mục vật tư thất bại!')
+			toast.error(
+				getErrorMessage(err, 'Thêm mới danh mục vật tư thất bại!')
+			)
 		}
 	}
 

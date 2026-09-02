@@ -32,6 +32,7 @@ import {
 	useCancelTransferRequest,
 	useExportTransferRequestHandover
 } from '@/hooks/useTransferRequestActions'
+import { getErrorMessage } from '@/lib/utils'
 import type { transfer_requests } from '@/api/client'
 import CreateTransferRequestForm from './create-transfer-request-form'
 import RejectDialog from './reject-dialog'
@@ -96,9 +97,7 @@ export default function TransferRequestsTab() {
 			await approveMutation.mutateAsync(id)
 			toast.success('Đã duyệt yêu cầu chuyển giao')
 		} catch (err) {
-			toast.error(
-				err instanceof Error ? err.message : 'Duyệt yêu cầu thất bại!'
-			)
+			toast.error(getErrorMessage(err, 'Duyệt yêu cầu thất bại!'))
 		}
 	}
 
@@ -107,9 +106,7 @@ export default function TransferRequestsTab() {
 			await exportHandoverMutation.mutateAsync(id)
 		} catch (err) {
 			toast.error(
-				err instanceof Error
-					? err.message
-					: 'Xuất biên bản bàn giao thất bại!'
+				getErrorMessage(err, 'Xuất biên bản bàn giao thất bại!')
 			)
 		}
 	}
@@ -120,9 +117,7 @@ export default function TransferRequestsTab() {
 			await cancelMutation.mutateAsync(id)
 			toast.success('Đã hủy yêu cầu chuyển giao')
 		} catch (err) {
-			toast.error(
-				err instanceof Error ? err.message : 'Hủy yêu cầu thất bại!'
-			)
+			toast.error(getErrorMessage(err, 'Hủy yêu cầu thất bại!'))
 		}
 	}
 

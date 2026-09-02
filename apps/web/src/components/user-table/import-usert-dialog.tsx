@@ -16,6 +16,7 @@ import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import type { Class, ClassBody } from '@/types'
 import { toast } from 'sonner'
+import { getErrorMessage } from '@/lib/utils'
 
 const schema = z.object({
 	name: z.string().min(1, 'Tên lớp không được bỏ trống'),
@@ -60,7 +61,7 @@ export default function ClassForm({ onSuccess, unitId }: ClassFormProps) {
 				formApi.reset()
 			} catch (err) {
 				console.error(err)
-				toast.error('Thêm mới lớp thất bại')
+				toast.error(getErrorMessage(err, 'Thêm mới lớp thất bại'))
 			} finally {
 				setOpen(false)
 			}

@@ -20,6 +20,7 @@ import {
 	unitLevelOptions
 } from '@/data/unit-levels'
 import type { Unit, UnitLevel } from '@/types'
+import { getErrorMessage } from '@/lib/utils'
 import UnitCommanderFields, {
 	commanderValuesFromUnit,
 	commanderValuesToPayload,
@@ -93,7 +94,9 @@ export default function UnitEditForm({
 			onClose()
 		} catch (err) {
 			console.error('Error updating unit:', err)
-			toast.error('Cập nhật thông tin đơn vị thất bại!')
+			toast.error(
+				getErrorMessage(err, 'Cập nhật thông tin đơn vị thất bại!')
+			)
 		}
 	}
 

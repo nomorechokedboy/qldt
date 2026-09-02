@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { queryClient } from '@/integrations/tanstack-query/root-provider'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
+import { getErrorMessage } from '@/lib/utils'
 
 export default function CreateRoleForm() {
 	const { mutateAsync } = useMutation({
@@ -19,7 +20,7 @@ export default function CreateRoleForm() {
 		onError: (err) => {
 			console.error('CreateRole error', err)
 			toast.error('Thêm mới vai trò thất bại.', {
-				description: err.message
+				description: getErrorMessage(err, 'Vui lòng thử lại sau.')
 			})
 		}
 	})

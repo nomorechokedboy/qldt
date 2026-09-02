@@ -126,6 +126,27 @@ export function getMediaUri(uri: string) {
 	return `${ApiUrl}/${mediaUrl}/${uri}`
 }
 
+// Backend error messages are written in English by convention (internal/
+// defensive-guard errors, mostly) except for a handful that were deliberately
+// localized for the end user (e.g. duplicate-value errors). Users of this app
+// only read Vietnamese, so: show the backend message only when it's already
+// Vietnamese (detected via diacritics), otherwise fall back to the caller's
+// Vietnamese message - this never leaks raw English to the UI, while still
+// surfacing specific backend messages once/if they get localized too.
+const VIETNAMESE_DIACRITICS =
+	/[àáạảãăằắặẳẵâầấậẩẫèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i
+
+export function getErrorMessage(err: unknown, fallback: string): string {
+	if (
+		err instanceof Error &&
+		err.message &&
+		VIETNAMESE_DIACRITICS.test(err.message)
+	) {
+		return err.message
+	}
+	return fallback
+}
+
 export const isSuperAdmin = (): boolean => {
 	try {
 		const token = localStorage.getItem('qlhvAccessToken')

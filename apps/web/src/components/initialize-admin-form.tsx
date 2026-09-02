@@ -13,6 +13,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { InitAdmin } from '@/api'
 import { toast } from 'sonner'
 import { useNavigate } from '@tanstack/react-router'
+import { getErrorMessage } from '@/lib/utils'
 
 const InitAdminSchema = z
 	.object({
@@ -59,7 +60,10 @@ export default function InitializeAdminForm({
 		onError: (err) => {
 			console.error('InitAdmin failed', err)
 			toast.error(
-				'Khởi tạo tài khoản quản trị thất bại, đã có lỗi xảy ra, vui lòng liên hệ kỹ thuật viên!'
+				getErrorMessage(
+					err,
+					'Khởi tạo tài khoản quản trị thất bại, đã có lỗi xảy ra, vui lòng liên hệ kỹ thuật viên!'
+				)
 			)
 		}
 	})

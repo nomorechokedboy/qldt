@@ -15,6 +15,7 @@ import {
 import { useUpdateMaterialType } from '@/hooks/useUpdateMaterialType'
 import { materialCategoryOptions } from '@/data/material-categories'
 import type { MaterialType } from '@/types'
+import { getErrorMessage } from '@/lib/utils'
 
 interface MaterialTypeEditFormProps {
 	data: MaterialType
@@ -54,7 +55,9 @@ export default function MaterialTypeEditForm({
 			onClose()
 		} catch (err) {
 			console.error('Error updating material type:', err)
-			toast.error('Cập nhật danh mục vật tư thất bại!')
+			toast.error(
+				getErrorMessage(err, 'Cập nhật danh mục vật tư thất bại!')
+			)
 		}
 	}
 

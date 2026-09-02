@@ -16,6 +16,7 @@ import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import type { Class, ClassBody } from '@/types'
 import { toast } from 'sonner'
+import { getErrorMessage } from '@/lib/utils'
 
 const schema = z.object({
 	name: z.string().min(1, 'Tên tiểu đội không được bỏ trống'),
@@ -60,7 +61,7 @@ export default function ClassForm({
 				formApi.reset()
 			} catch (err) {
 				console.error(err)
-				toast.error('Thêm mới tiểu đội thất bại')
+				toast.error(getErrorMessage(err, 'Thêm mới tiểu đội thất bại'))
 			} finally {
 				setOpen(false)
 			}
