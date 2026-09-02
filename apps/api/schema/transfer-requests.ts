@@ -77,21 +77,23 @@ export const transferRequests = sqlite.sqliteTable('transfer_requests', {
 	sourceUnitId: sqlite
 		.int()
 		.notNull()
-		.references(() => units.id),
+		.references((): sqlite.AnySQLiteColumn => units.id),
 	destinationUnitId: sqlite
 		.int()
 		.notNull()
-		.references(() => units.id),
+		.references((): sqlite.AnySQLiteColumn => units.id),
 	destinationRoomId: sqlite.int().references(() => rooms.id),
 	requestedByUserId: sqlite
 		.int()
 		.notNull()
-		.references(() => users.id),
+		.references((): sqlite.AnySQLiteColumn => users.id),
 	approverUserId: sqlite
 		.int()
 		.notNull()
-		.references(() => users.id),
-	decidedByUserId: sqlite.int().references(() => users.id),
+		.references((): sqlite.AnySQLiteColumn => users.id),
+	decidedByUserId: sqlite
+		.int()
+		.references((): sqlite.AnySQLiteColumn => users.id),
 	decidedAt: sqlite.text(),
 	status: TransferRequestStatusEnum('status')
 		.$type<TransferRequestStatus>()
@@ -99,44 +101,6 @@ export const transferRequests = sqlite.sqliteTable('transfer_requests', {
 		.notNull(),
 	rejectionReason: sqlite.text()
 })
-
-export const transferRequestsRelations = relations(
-	transferRequests,
-	({ one, many }) => ({
-		sourceUnit: one(units, {
-			fields: [transferRequests.sourceUnitId],
-			references: [units.id],
-			relationName: 'transferRequestSourceUnit'
-		}),
-		destinationUnit: one(units, {
-			fields: [transferRequests.destinationUnitId],
-			references: [units.id],
-			relationName: 'transferRequestDestinationUnit'
-		}),
-		destinationRoom: one(rooms, {
-			fields: [transferRequests.destinationRoomId],
-			references: [rooms.id]
-		}),
-		requestedBy: one(users, {
-			fields: [transferRequests.requestedByUserId],
-			references: [users.id],
-			relationName: 'transferRequestRequestedBy'
-		}),
-		approver: one(users, {
-			fields: [transferRequests.approverUserId],
-			references: [users.id],
-			relationName: 'transferRequestApprover'
-		}),
-		decidedBy: one(users, {
-			fields: [transferRequests.decidedByUserId],
-			references: [users.id],
-			relationName: 'transferRequestDecidedBy'
-		}),
-		troopers: many(transferRequestTroopers),
-		materialAssetItems: many(transferRequestMaterialAssets),
-		materialStockItems: many(transferRequestMaterialStocks)
-	})
-)
 
 export const transferRequestTroopers = sqlite.sqliteTable(
 	'transfer_request_troopers',
@@ -239,6 +203,44 @@ export const transferRequestMaterialStocksRelations = relations(
 			fields: [transferRequestMaterialStocks.materialTypeId],
 			references: [materialTypes.id]
 		})
+	})
+)
+
+export const transferRequestsRelations = relations(
+	transferRequests,
+	({ one, many }) => ({
+		sourceUnit: one(units, {
+			fields: [transferRequests.sourceUnitId],
+			references: [units.id],
+			relationName: 'transferRequestSourceUnit'
+		}),
+		destinationUnit: one(units, {
+			fields: [transferRequests.destinationUnitId],
+			references: [units.id],
+			relationName: 'transferRequestDestinationUnit'
+		}),
+		destinationRoom: one(rooms, {
+			fields: [transferRequests.destinationRoomId],
+			references: [rooms.id]
+		}),
+		requestedBy: one(users, {
+			fields: [transferRequests.requestedByUserId],
+			references: [users.id],
+			relationName: 'transferRequestRequestedBy'
+		}),
+		approver: one(users, {
+			fields: [transferRequests.approverUserId],
+			references: [users.id],
+			relationName: 'transferRequestApprover'
+		}),
+		decidedBy: one(users, {
+			fields: [transferRequests.decidedByUserId],
+			references: [users.id],
+			relationName: 'transferRequestDecidedBy'
+		}),
+		troopers: many(transferRequestTroopers),
+		materialAssetItems: many(transferRequestMaterialAssets),
+		materialStockItems: many(transferRequestMaterialStocks)
 	})
 )
 
