@@ -21,6 +21,7 @@ import {
 	SelectValue
 } from '@/components/ui/select'
 import { useCreateMaterialAsset } from '@/hooks/useCreateMaterialAsset'
+import { getErrorMessage } from '@/lib/utils'
 import type { MaterialType, Student, Unit } from '@/types'
 
 const NONE = 'none'
@@ -76,7 +77,7 @@ export default function MaterialAssetForm({
 			setOpen(false)
 		} catch (err) {
 			console.error('Error creating material asset:', err)
-			toast.error('Thêm mới khí tài thất bại!')
+			toast.error(getErrorMessage(err, 'Thêm mới khí tài thất bại!'))
 		}
 	}
 

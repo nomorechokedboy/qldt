@@ -7,6 +7,30 @@ import { getAuthData } from '~encore/auth'
 import { APICallMeta, currentRequest } from 'encore.dev'
 import log from 'encore.dev/log'
 import { setAuditContext } from '../middleware/audit'
+import userRepo from '../users/repo'
+import { AppError } from '../errors'
+
+// Non-super-admins are scoped to their own unit's chain of command; super
+// admins bypass all of the level/parent checks below (undefined actorUnitId
+// signals "skip the scope check" to the controller).
+async function resolveActor(): Promise<{
+	isSuperAdmin: boolean
+	actorUnitId?: number
+}> {
+	const authData = getAuthData()!
+	if (authData.isSuperAdmin) {
+		return { isSuperAdmin: true }
+	}
+
+	const actor = await userRepo.findOne({ id: Number(authData.userID) })
+	if (!actor?.unitId) {
+		throw AppError.handleAppErr(
+			AppError.unauthorized('You are not assigned to a unit')
+		)
+	}
+
+	return { isSuperAdmin: false, actorUnitId: actor.unitId }
+}
 
 type UnitBody = {
 	alias: string
@@ -14,6 +38,11 @@ type UnitBody = {
 	level: UnitLevelName
 
 	parentId?: number | null
+
+	commanderId?: number | null
+	deputyCommanderId?: number | null
+	politicalCommanderId?: number | null
+	deputyPoliticalCommanderId?: number | null
 }
 
 export type UnitDB = UnitBody & {
@@ -37,7 +66,15 @@ export const CreateUnit = api(
 			...u
 		}))
 
-		const createdUnits = await unitController.create(unitParams)
+		const actor = await resolveActor()
+		let scope: { validUnitIds: number[]; actorUnitId: number } | undefined
+		if (!actor.isSuperAdmin) {
+			const callMeta = currentRequest() as APICallMeta
+			const validUnitIds = callMeta.middlewareData?.validUnitIds || []
+			scope = { validUnitIds, actorUnitId: actor.actorUnitId! }
+		}
+
+		const createdUnits = await unitController.create(unitParams, scope)
 
 		const resp = createdUnits.map((u) => ({ ...u }) as UnitDB)
 
@@ -132,11 +169,16 @@ export const DeleteUnits = api(
 		log.trace('units.DeleteUnits body', { body })
 		const callMeta = currentRequest() as APICallMeta
 		const validUnitIds = callMeta.middlewareData?.validUnitIds || []
+		const authData = getAuthData()!
 
 		const units: SchemaUnitDB[] = body.ids.map(
 			(id) => ({ id }) as SchemaUnitDB
 		)
-		const deleted = await unitController.delete(units, validUnitIds)
+		const deleted = await unitController.delete(
+			units,
+			validUnitIds,
+			authData.isSuperAdmin
+		)
 
 		setAuditContext({ resourceIds: body.ids, previousValue: deleted })
 
@@ -159,12 +201,14 @@ export const UpdateUnits = api(
 		const callMeta = currentRequest() as APICallMeta
 		const validUnitIds = callMeta.middlewareData?.validUnitIds || []
 
+		const actor = await resolveActor()
+
 		const units: SchemaUnitDB[] = body.data.map(
 			(u) => ({ ...u }) as SchemaUnitDB
 		)
 		const ids = units.map((u) => u.id)
 		const previous = await unitRepo.findByIds(ids)
-		const updated = await unitController.update(units, validUnitIds)
+		const updated = await unitController.update(units, validUnitIds, actor)
 
 		setAuditContext({
 			resourceIds: ids,

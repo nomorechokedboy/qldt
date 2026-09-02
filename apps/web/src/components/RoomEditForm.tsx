@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useUpdateRoom } from '@/hooks/useUpdateRoom'
 import type { Room } from '@/types'
+import { getErrorMessage } from '@/lib/utils'
 
 interface RoomEditFormProps {
 	data: Room
@@ -43,7 +44,7 @@ export default function RoomEditForm({
 			onClose()
 		} catch (err) {
 			console.error('Error updating room:', err)
-			toast.error('Cập nhật phòng thất bại!')
+			toast.error(getErrorMessage(err, 'Cập nhật phòng thất bại!'))
 		}
 	}
 

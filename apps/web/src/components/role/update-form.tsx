@@ -7,6 +7,7 @@ import { useState } from 'react'
 import { queryClient } from '@/integrations/tanstack-query/root-provider'
 import { Button } from '../ui/button'
 import { Edit2 } from 'lucide-react'
+import { getErrorMessage } from '@/lib/utils'
 
 interface UpdateRoleFormProps {
 	id: number
@@ -28,7 +29,7 @@ export default function UpdateRoleForm({
 		},
 		onError: (err) => {
 			toast.error('Chỉnh sửa vai trò thất bại.', {
-				description: err.message
+				description: getErrorMessage(err, 'Vui lòng thử lại sau.')
 			})
 		}
 	})

@@ -14,6 +14,7 @@ import { useMutation } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { useEffect } from 'react'
 import useAuth from '@/hooks/useAuth'
+import { getErrorMessage } from '@/lib/utils'
 
 const schema = z
 	.object({
@@ -49,11 +50,10 @@ export default function PasswordChangeForm({
 		},
 		onError: (error: any) => {
 			console.error('Failed to change password:', error)
-			const message = error?.message || 'Đổi mật khẩu thất bại'
 			toast.error(
-				message === 'Incorrect password'
+				error?.message === 'Incorrect password'
 					? 'Mật khẩu hiện tại không đúng'
-					: message
+					: getErrorMessage(error, 'Đổi mật khẩu thất bại')
 			)
 		}
 	})

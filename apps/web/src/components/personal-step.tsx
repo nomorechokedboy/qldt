@@ -191,7 +191,7 @@ export default function PersonalStep({ form }: { form: any }) {
 				</form.AppField>
 				<form.AppField name='dob'>
 					{(field: any) => (
-						<field.TextField
+						<field.DatePicker
 							label='Ngày sinh'
 							placeholder='Ngày/tháng/năm'
 						/>

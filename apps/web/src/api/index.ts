@@ -40,6 +40,7 @@ import Client, {
 	type facilities,
 	type materials,
 	type students,
+	type transfer_requests,
 	type units
 } from './client'
 
@@ -491,4 +492,67 @@ export function GetMaterialAssetEvents(assetId: number) {
 	return requestClient.materials
 		.GetMaterialAssetEvents(assetId)
 		.then((resp) => resp.data)
+}
+
+// Transfer requests
+
+export function GetTransferRequests(
+	params?: transfer_requests.GetTransferRequestsQuery
+) {
+	return requestClient.transfer_requests
+		.GetTransferRequests(params ?? {})
+		.then((resp) => resp.data)
+}
+
+export function GetTransferDestinationUnits() {
+	return requestClient.transfer_requests
+		.GetTransferDestinationUnits()
+		.then((resp) => resp.data)
+}
+
+export function GetTransferEligibleApprovers(
+	params: transfer_requests.GetTransferEligibleApproversQuery
+) {
+	return requestClient.transfer_requests
+		.GetTransferEligibleApprovers(params)
+		.then((resp) => resp.data)
+}
+
+export function GetTransferRequest(id: number) {
+	return requestClient.transfer_requests
+		.GetTransferRequest(id)
+		.then((resp) => resp.data)
+}
+
+export function CreateTransferRequest(
+	body: transfer_requests.CreateTransferRequestBody
+) {
+	return requestClient.transfer_requests
+		.CreateTransferRequest(body)
+		.then((resp) => resp.data)
+}
+
+export function ApproveTransferRequest(id: number) {
+	return requestClient.transfer_requests
+		.ApproveTransferRequest(id)
+		.then((resp) => resp.data)
+}
+
+export function RejectTransferRequest(id: number, reason: string) {
+	return requestClient.transfer_requests
+		.RejectTransferRequest(id, { reason })
+		.then((resp) => resp.data)
+}
+
+export function CancelTransferRequest(id: number) {
+	return requestClient.transfer_requests
+		.CancelTransferRequest(id)
+		.then((resp) => resp.data)
+}
+
+export function ExportTransferRequestHandover(id: number) {
+	return requestClient.transfer_requests.ExportTransferRequestHandover(
+		'GET',
+		String(id)
+	)
 }

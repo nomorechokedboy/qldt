@@ -71,6 +71,23 @@ const AUDIT_MAP: Record<string, AuditRouteConfig> = {
 	'DELETE:/export-templates/:id': {
 		resource: 'export_templates',
 		action: 'delete'
+	},
+
+	'POST:/transfer-requests': {
+		resource: 'transfer_requests',
+		action: 'create'
+	},
+	'POST:/transfer-requests/:id/approve': {
+		resource: 'transfer_requests',
+		action: 'approve'
+	},
+	'POST:/transfer-requests/:id/reject': {
+		resource: 'transfer_requests',
+		action: 'reject'
+	},
+	'POST:/transfer-requests/:id/cancel': {
+		resource: 'transfer_requests',
+		action: 'update'
 	}
 }
 
@@ -84,7 +101,12 @@ function matchAuditRoute(
 	}
 
 	for (const [pattern, config] of Object.entries(AUDIT_MAP)) {
-		const [patternMethod, patternPath] = pattern.split(':')
+		// Route paths can contain params (":id"), so only split on the first
+		// colon - a naive pattern.split(':') truncates "/transfer-requests/:id/approve"
+		// down to just "/transfer-requests", silently breaking the regex match below.
+		const sepIndex = pattern.indexOf(':')
+		const patternMethod = pattern.slice(0, sepIndex)
+		const patternPath = pattern.slice(sepIndex + 1)
 		if (method !== patternMethod) continue
 
 		const regexPattern = patternPath
@@ -103,6 +125,29 @@ interface AuditContext {
 	resourceIds: Array<number | string>
 	previousValue?: unknown
 	newValue?: unknown
+}
+
+// Handlers pass raw domain objects (often with nested Drizzle relations,
+// e.g. transfer_requests.approver: UserDB) into setAuditContext. Rather than
+// trust every call site to pre-sanitize, strip sensitive keys here — the one
+// place all of them funnel through before the value is persisted.
+const SENSITIVE_KEYS = new Set(['password'])
+
+function sanitizeAuditValue(value: unknown, seen = new WeakSet()): unknown {
+	if (Array.isArray(value)) {
+		return value.map((v) => sanitizeAuditValue(v, seen))
+	}
+	if (value !== null && typeof value === 'object') {
+		if (seen.has(value)) return undefined
+		seen.add(value)
+		const out: Record<string, unknown> = {}
+		for (const [key, val] of Object.entries(value)) {
+			if (SENSITIVE_KEYS.has(key)) continue
+			out[key] = sanitizeAuditValue(val, seen)
+		}
+		return out
+	}
+	return value
 }
 
 // Extend the middleware data type
@@ -166,8 +211,8 @@ export const auditMiddleware = middleware(
 			method: meta.method,
 			path: meta.path,
 			statusCode: 200,
-			previousValue: audit.previousValue,
-			newValue: audit.newValue
+			previousValue: sanitizeAuditValue(audit.previousValue),
+			newValue: sanitizeAuditValue(audit.newValue)
 		}).catch((err) => {
 			log.error('auditMiddleware: failed to publish audit log event', {
 				err

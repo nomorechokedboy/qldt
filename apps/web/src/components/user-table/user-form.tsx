@@ -15,6 +15,7 @@ import type { Class, ClassBody, User, UserBody, UserFormData } from '@/types'
 import { toast } from 'sonner'
 import useUnitsData from '@/hooks/useUnitsData'
 import { userRankOptions, userPositionOptions } from '@/data/ethnics'
+import { getErrorMessage } from '@/lib/utils'
 
 const schema = z.object({
 	username: z.string().min(1, 'Tên tài khoản không được bỏ trống'),
@@ -67,7 +68,9 @@ export default function UserForm({ onSuccess, open, setOpen }: UserFormProps) {
 				formApi.reset()
 			} catch (err) {
 				console.error(err)
-				toast.error('Thêm mới người dùng thất bại')
+				toast.error(
+					getErrorMessage(err, 'Thêm mới người dùng thất bại')
+				)
 			} finally {
 				setOpen(false)
 			}

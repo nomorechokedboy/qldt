@@ -11,7 +11,15 @@ import {
 	UpdateUnitMap
 } from '../schema'
 import unitRepo from './repo'
+import userRepo from '../users/repo'
 import { GetUnitsQuery, UnitDB } from './units'
+
+const COMMANDER_FIELDS = [
+	'commanderId',
+	'deputyCommanderId',
+	'politicalCommanderId',
+	'deputyPoliticalCommanderId'
+] as const
 
 type findOneRequest = {
 	id?: number
@@ -75,8 +83,39 @@ class controller {
 		}
 	}
 
-	async create(params: UnitParams[]): Promise<UnitParams[]> {
-		log.trace('UnitController.create params', { params })
+	private async validateCommanders(
+		params: Array<
+			Partial<Record<(typeof COMMANDER_FIELDS)[number], number | null>>
+		>
+	): Promise<void> {
+		const ids = Array.from(
+			new Set(
+				params
+					.flatMap((p) => COMMANDER_FIELDS.map((f) => p[f]))
+					.filter(
+						(id): id is number => id !== undefined && id !== null
+					)
+			)
+		)
+		if (ids.length === 0) return
+
+		const found = await userRepo.findByIds(ids)
+		const foundIds = new Set(found.map((u) => u.id))
+		const missing = ids.filter((id) => !foundIds.has(id))
+		if (missing.length > 0) {
+			throw AppError.handleAppErr(
+				AppError.invalidArgument(
+					`Commander/deputy user(s) not found: ${missing.join(', ')}`
+				)
+			)
+		}
+	}
+
+	async create(
+		params: UnitParams[],
+		scope?: { validUnitIds: number[]; actorUnitId: number }
+	): Promise<UnitParams[]> {
+		log.trace('UnitController.create params', { params, scope })
 
 		if (params.length === 0) {
 			throw AppError.handleAppErr(
@@ -84,11 +123,57 @@ class controller {
 			)
 		}
 
+		if (scope) {
+			await this.validateActorScope(params, scope)
+		}
+
 		for (const param of params) {
 			await this.validateHierarchy(param.level, param.parentId)
 		}
+		await this.validateCommanders(params)
 
 		return this.repo.create(params).catch(AppError.handleAppErr)
+	}
+
+	// Commanders may only stand up units below their own unit, inside their
+	// own chain of command - e.g. a battalion commander can create company,
+	// platoon, or squad units under their battalion (or a unit under it),
+	// but not another battalion/department/brigade. Super admins skip this
+	// (no scope passed) since they aren't attached to a single unit.
+	private async validateActorScope(
+		params: UnitParams[],
+		scope: { validUnitIds: number[]; actorUnitId: number }
+	): Promise<void> {
+		const actorUnit = await this.repo.getOne({ id: scope.actorUnitId })
+		if (actorUnit === undefined) {
+			throw AppError.handleAppErr(
+				AppError.unauthorized('Your unit could not be found')
+			)
+		}
+		const actorLevel = UnitLevel.fromName(actorUnit.level)
+
+		for (const param of params) {
+			if (
+				param.parentId === undefined ||
+				param.parentId === null ||
+				!scope.validUnitIds.includes(param.parentId)
+			) {
+				throw AppError.handleAppErr(
+					AppError.unauthorized(
+						"You don't have permission to create a unit under this parent"
+					)
+				)
+			}
+
+			const newLevel = UnitLevel.fromName(param.level)
+			if (!UnitLevel.isLargerThan(actorLevel, newLevel)) {
+				throw AppError.handleAppErr(
+					AppError.unauthorized(
+						`You can only create units below your own unit level (${actorUnit.level})`
+					)
+				)
+			}
+		}
 	}
 
 	async isInitRootUnit(): Promise<{
@@ -119,12 +204,21 @@ class controller {
 
 	async delete(
 		units: InteralUnitDB[],
-		validUnitIds: number[]
+		validUnitIds: number[],
+		isSuperAdmin: boolean
 	): Promise<InteralUnitDB[]> {
 		log.trace('UnitController.delete params', {
 			params: units,
-			validUnitIds
+			validUnitIds,
+			isSuperAdmin
 		})
+
+		if (!isSuperAdmin) {
+			throw AppError.handleAppErr(
+				AppError.unauthorized('Only a super admin can delete units')
+			)
+		}
+
 		const ids = units.map((u) => u.id)
 		const checkUnitIds = ids.every((id) => validUnitIds.includes(id))
 		if (checkUnitIds === false) {
@@ -152,9 +246,14 @@ class controller {
 
 	async update(
 		params: InteralUnitDB[],
-		validUnitIds: number[]
+		validUnitIds: number[],
+		actor: { isSuperAdmin: boolean; actorUnitId?: number }
 	): Promise<InteralUnitDB[]> {
-		log.trace('UnitController.update params', { params, validUnitIds })
+		log.trace('UnitController.update params', {
+			params,
+			validUnitIds,
+			actor
+		})
 
 		const ids = params.map((u) => u.id)
 		const isIdsEmpty = ids.length === 0
@@ -184,6 +283,32 @@ class controller {
 				)
 			}
 
+			// A unit's level and parent are fixed once created - only a
+			// super admin can restructure the hierarchy after the fact.
+			if (!actor.isSuperAdmin) {
+				if (
+					param.parentId !== undefined &&
+					param.parentId !== existing.parentId
+				) {
+					throw AppError.handleAppErr(
+						AppError.unauthorized(
+							"Only a super admin can change a unit's parent"
+						)
+					)
+				}
+
+				if (
+					param.level !== undefined &&
+					param.level !== existing.level
+				) {
+					throw AppError.handleAppErr(
+						AppError.unauthorized(
+							"Only a super admin can change a unit's level"
+						)
+					)
+				}
+			}
+
 			const effectiveLevel = param.level ?? existing.level
 			const effectiveParentId =
 				param.parentId !== undefined
@@ -196,6 +321,7 @@ class controller {
 				param.id
 			)
 		}
+		await this.validateCommanders(params)
 
 		const updateMap: UpdateUnitMap = params.map(
 			({ id, ...updatePayload }) => {

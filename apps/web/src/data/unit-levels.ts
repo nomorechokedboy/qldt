@@ -41,6 +41,10 @@ export function isLargerUnitLevel(a: UnitLevel, b: UnitLevel): boolean {
 	return unitLevelOrder.indexOf(a) > unitLevelOrder.indexOf(b)
 }
 
+export function isCompanyOrAboveLevel(level: UnitLevel): boolean {
+	return unitLevelOrder.indexOf(level) >= unitLevelOrder.indexOf('company')
+}
+
 // Route prefix for a unit's detail page, keyed by level. Levels not listed
 // here fall back to the generic '/don-vi' route. Add an entry here when a
 // new level gets its own dedicated route instead of branching call sites.

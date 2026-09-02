@@ -4,6 +4,7 @@ import { CreatePermission } from '@/api'
 import { toast } from 'sonner'
 import { queryClient } from '@/integrations/tanstack-query/root-provider'
 import { useAppForm } from '@/hooks/demo.form'
+import { getErrorMessage } from '@/lib/utils'
 
 export default function PermissionForm() {
 	const [open, setOpen] = useState(false)
@@ -11,7 +12,9 @@ export default function PermissionForm() {
 		mutationFn: CreatePermission,
 		onError: (err) => {
 			console.error('CreatePermission error', err)
-			toast.error('Thêm mới thất bại.', { description: err.message })
+			toast.error('Thêm mới thất bại.', {
+				description: getErrorMessage(err, 'Vui lòng thử lại sau.')
+			})
 		},
 		onSuccess: () => {
 			toast.success('Thêm mới thành công!')

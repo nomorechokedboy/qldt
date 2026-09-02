@@ -19,6 +19,7 @@ import {
 import { Shield } from 'lucide-react'
 import { toast } from 'sonner'
 import { queryClient } from '@/integrations/tanstack-query/root-provider'
+import { getErrorMessage } from '@/lib/utils'
 
 interface PermissionsModalProps {
 	role: Role
@@ -44,7 +45,7 @@ export default function PermissionsModal({ role }: PermissionsModalProps) {
 		},
 		onError: (err) => {
 			toast.error('Chỉnh sửa vai trò thất bại.', {
-				description: err.message
+				description: getErrorMessage(err, 'Vui lòng thử lại sau.')
 			})
 		}
 	})

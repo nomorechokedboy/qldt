@@ -10,7 +10,8 @@ import {
 	List,
 	UserRoundCog,
 	Package,
-	History
+	History,
+	ArrowLeftRight
 } from 'lucide-react'
 import {
 	Sidebar,
@@ -107,6 +108,11 @@ const data = {
 					title: 'Danh mục vật tư',
 					url: '/quan-ly-vat-tu/danh-muc',
 					icon: Package
+				},
+				{
+					title: 'Chuyển giao quân số/vật chất',
+					url: '/chuyen-giao-tai-san',
+					icon: ArrowLeftRight
 				}
 			]
 		},
@@ -381,15 +387,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 			</SidebarHeader>
 
 			<SidebarContent>
-				{!isCollapsed && (
-					<div className='p-4 w-full'>
-						<StudentForm
-							buttonProps={{ className: 'w-full' }}
-							onSuccess={() => {}}
-						/>
-					</div>
-				)}
-
 				{newData.navMain.map((item) => (
 					<Collapsible
 						key={item.title}

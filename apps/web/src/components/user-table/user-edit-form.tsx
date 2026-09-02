@@ -16,47 +16,57 @@ import { toast } from 'sonner'
 import { useEffect } from 'react'
 import useUnitsData from '@/hooks/useUnitsData'
 import { userRankOptions, userPositionOptions } from '@/data/ethnics'
+import { getErrorMessage } from '@/lib/utils'
 
-const schema = z.object({
-	id: z.number().optional(),
-	displayName: z.string().min(1, 'Họ và tên không được bỏ trống'),
-	password: z.string().optional(),
-	confirmPassword: z.string().optional(),
-	unitId: z.preprocess(
-		(val) => {
-			if (typeof val === 'string') {
-				return Number.parseInt(val)
-			}
+const schema = z
+	.object({
+		id: z.number().optional(),
+		displayName: z.string().min(1, 'Họ và tên không được bỏ trống'),
+		password: z.string().optional(),
+		confirmPassword: z.string().optional(),
+		unitId: z.preprocess(
+			(val) => {
+				if (typeof val === 'string') {
+					return Number.parseInt(val)
+				}
+				return val
+			},
+			z.number().min(1, 'Đơn vị không được bỏ trống')
+		),
+		isSuperUser: z.preprocess((val) => {
+			if (val === 'true' || val === true) return true
+			if (val === 'false' || val === false) return false
 			return val
+		}, z.boolean()),
+		rank: z.string().optional(),
+		position: z.string().optional()
+	})
+	.refine(
+		(data) => {
+			// If password provided, must match confirmPassword
+			if (data.password && data.password.length > 0) {
+				return data.password === data.confirmPassword
+			}
+			return true
 		},
-		z.number().min(1, 'Đơn vị không được bỏ trống')
-	),
-	isSuperUser: z.preprocess((val) => {
-		if (val === 'true' || val === true) return true
-		if (val === 'false' || val === false) return false
-		return val
-	}, z.boolean()),
-	rank: z.string().optional(),
-	position: z.string().optional()
-}).refine((data) => {
-	// If password provided, must match confirmPassword
-	if (data.password && data.password.length > 0) {
-		return data.password === data.confirmPassword
-	}
-	return true
-}, {
-	message: 'Mật khẩu xác nhận không khớp',
-	path: ['confirmPassword']
-}).refine((data) => {
-	// If password provided, minimum length
-	if (data.password && data.password.length > 0) {
-		return data.password.length >= 6
-	}
-	return true
-}, {
-	message: 'Mật khẩu phải có ít nhất 6 ký tự',
-	path: ['password']
-})
+		{
+			message: 'Mật khẩu xác nhận không khớp',
+			path: ['confirmPassword']
+		}
+	)
+	.refine(
+		(data) => {
+			// If password provided, minimum length
+			if (data.password && data.password.length > 0) {
+				return data.password.length >= 6
+			}
+			return true
+		},
+		{
+			message: 'Mật khẩu phải có ít nhất 6 ký tự',
+			path: ['password']
+		}
+	)
 
 export interface UserFormProps {
 	onSuccess: (
@@ -116,7 +126,7 @@ export default function UserEditForm({
 				formApi.reset()
 			} catch (err) {
 				console.error(err)
-				toast.error('Sửa người dùng thất bại')
+				toast.error(getErrorMessage(err, 'Sửa người dùng thất bại'))
 			} finally {
 				setOpen(false)
 			}
@@ -236,11 +246,11 @@ export default function UserEditForm({
 						<div className='space-y-2'>
 							<form.AppField name='position'>
 								{(field: any) => (
-									<field.Select 
-									label='Chức vụ'
-									placeholder='Chọn chức vụ'
-									values={userPositionOptions}
-									value={field.state.value}
+									<field.Select
+										label='Chức vụ'
+										placeholder='Chọn chức vụ'
+										values={userPositionOptions}
+										value={field.state.value}
 									/>
 								)}
 							</form.AppField>

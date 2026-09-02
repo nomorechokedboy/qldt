@@ -98,19 +98,19 @@ export default function AssignRoleDialog({
 												handleRoleToggle(role.id)
 											}
 										/>
-										<div className='grid gap-1.5 leading-none'>
-											<Label
-												htmlFor={`role-${role.id}`}
-												className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer'
-											>
-												{role.name}
-											</Label>
+										<Label
+											className='grid gap-1.5 leading-none'
+											htmlFor={`role-${role.id}`}
+										>
+											<div className='text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer'>
+												{role.description}
+											</div>
 											{role.description && (
 												<p className='text-sm text-muted-foreground'>
-													{role.description}
+													{role.name}
 												</p>
 											)}
-										</div>
+										</Label>
 									</div>
 								))
 							)}

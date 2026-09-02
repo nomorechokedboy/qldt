@@ -57,7 +57,7 @@ class repo implements AuditLogRepository {
 		const [data, totalResult] = await Promise.all([
 			this.db.query.auditLogs.findMany({
 				where,
-				with: { actor: true },
+				with: { actor: { columns: { password: false } } },
 				orderBy: desc(auditLogs.createdAt),
 				limit: pageSize,
 				offset: (page - 1) * pageSize

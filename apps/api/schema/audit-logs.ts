@@ -4,9 +4,15 @@ import { AppError } from '../errors'
 import { baseSchema } from './base'
 import { users } from './users'
 
-export type AuditAction = 'create' | 'update' | 'delete'
+export type AuditAction = 'create' | 'update' | 'delete' | 'approve' | 'reject'
 
-const auditActions: AuditAction[] = ['create', 'update', 'delete']
+const auditActions: AuditAction[] = [
+	'create',
+	'update',
+	'delete',
+	'approve',
+	'reject'
+]
 
 const AuditActionEnum = sqlite.customType<{
 	data: string

@@ -17,6 +17,7 @@ import {
 	materialConditionOptions
 } from '@/data/material-categories'
 import type { MaterialAsset, MaterialAssetStatus, Student } from '@/types'
+import { getErrorMessage } from '@/lib/utils'
 
 const NONE = 'none'
 
@@ -67,7 +68,7 @@ export default function MaterialAssetEditForm({
 			onClose()
 		} catch (err) {
 			console.error('Error updating material asset:', err)
-			toast.error('Cập nhật khí tài thất bại!')
+			toast.error(getErrorMessage(err, 'Cập nhật khí tài thất bại!'))
 		}
 	}
 

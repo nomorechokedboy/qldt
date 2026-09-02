@@ -21,7 +21,7 @@ import type { ContactPerson, Student, StudentBody } from '@/types'
 import MilitaryStep from '@/components/military-step'
 import { toast } from 'sonner'
 import type { VariantProps } from 'class-variance-authority'
-import { convertToIso } from '@/lib/utils'
+import { convertToIso, getErrorMessage } from '@/lib/utils'
 import { StudentFormSchema } from './student-form-schema'
 import type { StudentFormSchemaType } from './student-form-schema'
 import useUploadFiles from '@/hooks/useUploadFiles'
@@ -184,7 +184,9 @@ export default function StudentForm({
 				setOpen(false)
 			} catch (err) {
 				console.error(err)
-				toast.error('Thêm mới quân nhân thất bại!')
+				toast.error(
+					getErrorMessage(err, 'Thêm mới quân nhân thất bại!')
+				)
 			}
 		},
 		validators: { onSubmit: StudentFormSchema }
