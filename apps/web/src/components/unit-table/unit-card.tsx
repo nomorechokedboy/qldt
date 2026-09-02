@@ -14,6 +14,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import UnitEditForm from '@/components/UnitEditForm'
 import { useDeleteUnits } from '@/hooks/useDeleteUnits'
+import useAuth from '@/hooks/useAuth'
 import {
 	getUnitDetailUrl,
 	unitDetailRoutePrefix,
@@ -44,6 +45,8 @@ export default function UnitCard({ data, onEdit, onDelete }: UnitCardProps) {
 	const [openEdit, setOpenEdit] = useState(false)
 	const [openDelete, setOpenDelete] = useState(false)
 	const deleteUnitMutation = useDeleteUnits()
+	const { user } = useAuth()
+	const isSuperAdmin = !!user?.isSuperAdmin
 
 	const handleDelete = async () => {
 		try {
@@ -106,7 +109,7 @@ export default function UnitCard({ data, onEdit, onDelete }: UnitCardProps) {
 						>
 							<Pencil size={18} />
 						</Button>
-						{!isRoot && (
+						{!isRoot && isSuperAdmin && (
 							<Button
 								type='button'
 								variant='ghost'

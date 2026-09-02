@@ -13,7 +13,12 @@ import {
 } from '@/components/ui/select'
 import { useUpdateUnits } from '@/hooks/useUpdateUnits'
 import useUnitsData from '@/hooks/useUnitsData'
-import { isLargerUnitLevel, unitLevelOptions } from '@/data/unit-levels'
+import useAuth from '@/hooks/useAuth'
+import {
+	isLargerUnitLevel,
+	unitLevelLabels,
+	unitLevelOptions
+} from '@/data/unit-levels'
 import type { Unit, UnitLevel } from '@/types'
 import UnitCommanderFields, {
 	commanderValuesFromUnit,
@@ -54,6 +59,13 @@ export default function UnitEditForm({
 
 	const { data: allUnits } = useUnitsData()
 	const updateUnitMutation = useUpdateUnits()
+	const { user } = useAuth()
+
+	// A unit's level and parent are fixed once created - only a super
+	// admin can restructure the hierarchy afterwards (mirrors the backend
+	// check in units/controller.ts#update). Non-super-admins still see the
+	// current values, just as read-only text rather than editable pickers.
+	const isSuperAdmin = !!user?.isSuperAdmin
 
 	const parentOptions =
 		allUnits?.filter(
@@ -122,43 +134,79 @@ export default function UnitEditForm({
 
 				<div className='space-y-2'>
 					<Label htmlFor='edit-unit-level'>Cấp đơn vị</Label>
-					<Select
-						value={level}
-						onValueChange={(value) => {
-							setLevel(value as UnitLevel)
-							setParentId(NO_PARENT)
-						}}
-					>
-						<SelectTrigger id='edit-unit-level'>
-							<SelectValue placeholder='Chọn cấp đơn vị' />
-						</SelectTrigger>
-						<SelectContent>
-							{unitLevelOptions.map((opt) => (
-								<SelectItem key={opt.value} value={opt.value}>
-									{opt.label}
-								</SelectItem>
-							))}
-						</SelectContent>
-					</Select>
+					{isSuperAdmin ? (
+						<Select
+							value={level}
+							onValueChange={(value) => {
+								setLevel(value as UnitLevel)
+								setParentId(NO_PARENT)
+							}}
+						>
+							<SelectTrigger id='edit-unit-level'>
+								<SelectValue placeholder='Chọn cấp đơn vị' />
+							</SelectTrigger>
+							<SelectContent>
+								{unitLevelOptions.map((opt) => (
+									<SelectItem
+										key={opt.value}
+										value={opt.value}
+									>
+										{opt.label}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+					) : (
+						<>
+							<Input
+								id='edit-unit-level'
+								value={unitLevelLabels[unitData.level]}
+								disabled
+								readOnly
+							/>
+							<p className='text-xs text-muted-foreground'>
+								Chỉ quản trị viên hệ thống mới có thể thay đổi
+								cấp đơn vị
+							</p>
+						</>
+					)}
 				</div>
 
 				<div className='space-y-2'>
 					<Label htmlFor='edit-unit-parent'>Thuộc đơn vị</Label>
-					<Select value={parentId} onValueChange={setParentId}>
-						<SelectTrigger id='edit-unit-parent'>
-							<SelectValue placeholder='Chọn đơn vị cấp trên' />
-						</SelectTrigger>
-						<SelectContent>
-							<SelectItem value={NO_PARENT}>
-								Không có (đơn vị gốc)
-							</SelectItem>
-							{parentOptions.map((u) => (
-								<SelectItem key={u.id} value={String(u.id)}>
-									{u.name}
+					{isSuperAdmin ? (
+						<Select value={parentId} onValueChange={setParentId}>
+							<SelectTrigger id='edit-unit-parent'>
+								<SelectValue placeholder='Chọn đơn vị cấp trên' />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value={NO_PARENT}>
+									Không có (đơn vị gốc)
 								</SelectItem>
-							))}
-						</SelectContent>
-					</Select>
+								{parentOptions.map((u) => (
+									<SelectItem key={u.id} value={String(u.id)}>
+										{u.name}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+					) : (
+						<>
+							<Input
+								id='edit-unit-parent'
+								value={
+									unitData.parent?.name ??
+									'Không có (đơn vị gốc)'
+								}
+								disabled
+								readOnly
+							/>
+							<p className='text-xs text-muted-foreground'>
+								Chỉ quản trị viên hệ thống mới có thể thay đổi
+								đơn vị cấp trên
+							</p>
+						</>
+					)}
 				</div>
 
 				<UnitCommanderFields

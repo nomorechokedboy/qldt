@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -22,7 +22,12 @@ import {
 } from '@/components/ui/select'
 import { useCreateUnit } from '@/hooks/useCreateUnit'
 import useUnitsData from '@/hooks/useUnitsData'
-import { isLargerUnitLevel, unitLevelOptions } from '@/data/unit-levels'
+import useAuth from '@/hooks/useAuth'
+import {
+	isLargerUnitLevel,
+	unitLevelOptions,
+	unitLevelOrder
+} from '@/data/unit-levels'
 import type { UnitLevel } from '@/types'
 import UnitCommanderFields, {
 	emptyCommanderValues,
@@ -48,14 +53,51 @@ export default function UnitForm({ onSuccess }: UnitFormProps) {
 
 	const { data: allUnits } = useUnitsData()
 	const createUnitMutation = useCreateUnit()
+	const { user } = useAuth()
+
+	const isSuperAdmin = !!user?.isSuperAdmin
+	// Non-super-admins are scoped to their own unit's chain of command -
+	// GetUnits already only returns units in that subtree, so filtering
+	// against allUnits is enough for the parent picker. The level picker
+	// still needs an explicit floor: they can only stand up units below
+	// their own unit's level (mirrors the backend check in units/controller.ts).
+	const myUnit = allUnits?.find((u) => u.id === user?.unitId)
+	const levelOptions =
+		isSuperAdmin || !myUnit
+			? unitLevelOptions
+			: unitLevelOptions.filter(
+					(opt) =>
+						unitLevelOrder.indexOf(opt.value) <
+						unitLevelOrder.indexOf(myUnit.level)
+				)
 
 	const parentOptions =
 		allUnits?.filter((u) => isLargerUnitLevel(u.level, level)) ?? []
 
+	// Keep the selected level valid whenever the allowed set narrows (e.g.
+	// once myUnit resolves for a non-super-admin).
+	useEffect(() => {
+		if (!levelOptions.some((opt) => opt.value === level)) {
+			setLevel(levelOptions[0]?.value ?? 'squad')
+		}
+	}, [levelOptions])
+
+	// Non-super-admins can't create root units, so default the parent to
+	// their own unit instead of leaving the (hidden) NO_PARENT selected.
+	useEffect(() => {
+		if (
+			!isSuperAdmin &&
+			myUnit &&
+			!parentOptions.some((u) => String(u.id) === parentId)
+		) {
+			setParentId(String(myUnit.id))
+		}
+	}, [isSuperAdmin, myUnit, parentOptions])
+
 	const resetForm = () => {
 		setAlias('')
 		setName('')
-		setLevel('battalion')
+		setLevel(levelOptions[0]?.value ?? 'battalion')
 		setParentId(NO_PARENT)
 		setCommanders(emptyCommanderValues)
 	}
@@ -134,7 +176,7 @@ export default function UnitForm({ onSuccess }: UnitFormProps) {
 								<SelectValue placeholder='Chọn cấp đơn vị' />
 							</SelectTrigger>
 							<SelectContent>
-								{unitLevelOptions.map((opt) => (
+								{levelOptions.map((opt) => (
 									<SelectItem
 										key={opt.value}
 										value={opt.value}
@@ -153,9 +195,11 @@ export default function UnitForm({ onSuccess }: UnitFormProps) {
 								<SelectValue placeholder='Chọn đơn vị cấp trên' />
 							</SelectTrigger>
 							<SelectContent>
-								<SelectItem value={NO_PARENT}>
-									Không có (đơn vị gốc)
-								</SelectItem>
+								{isSuperAdmin && (
+									<SelectItem value={NO_PARENT}>
+										Không có (đơn vị gốc)
+									</SelectItem>
+								)}
 								{parentOptions.map((u) => (
 									<SelectItem key={u.id} value={String(u.id)}>
 										{u.name}
