@@ -27,7 +27,11 @@ export default function Header() {
 	]
 
 	return (
-		<header className='flex flex-row items-center justify-between h-16 shrink-0 gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 sticky top-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-20 border-b'>
+		<header className='relative flex flex-row items-center justify-between h-16 shrink-0 gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 sticky top-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-20 border-b'>
+			<div
+				className='absolute inset-x-0 top-0 h-[3px]'
+				style={{ backgroundImage: 'var(--gradient-header)' }}
+			/>
 			<div className='flex items-center gap-2 px-4'>
 				<SidebarTrigger className='-ml-1' />
 				<Separator

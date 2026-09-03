@@ -258,7 +258,7 @@ export function DataTable<TData, TValue>({
 
 	const renderTableView = () => {
 		return (
-			<div className={`rounded-md border ${tableClassName}`}>
+			<div className={`rounded-md border bg-muted ${tableClassName}`}>
 				<Table>
 					<TableHeader>
 						{table.getHeaderGroups().map((headerGroup) => (

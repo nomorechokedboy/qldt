@@ -17,7 +17,7 @@ import { useEffectOnce } from 'react-use'
 import { requestClient } from '@/api'
 import useInfiniteNotification from '@/hooks/useInfiniteNotification'
 import useUnreadNotificationCount from '@/hooks/useUnreadNotificationCount'
-import Cdhc2Logo from '@/assets/lu75.jpg'
+import Cdhc2Logo from '@/assets/artillery-icon.png'
 import useIsInitAdmin from '@/hooks/useIsInitAdmin'
 import useIsInitRootUnit from '@/hooks/useIsInitRootUnit'
 import useUnitsData from '@/hooks/useUnitsData'
@@ -165,7 +165,7 @@ function RootLayout() {
 					<Outlet />
 				</div>
 			</SidebarProvider>
-			<TanStackRouterDevtools />
+			{import.meta.env.PROD !== true && <TanStackRouterDevtools />}
 			<TanStackQueryLayout />
 		</>
 	)

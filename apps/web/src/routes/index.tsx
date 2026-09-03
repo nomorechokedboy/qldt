@@ -3,6 +3,7 @@ import ProtectedRoute from '@/components/ProtectedRoute'
 import { SidebarInset } from '@/components/ui/sidebar'
 import { Button } from '@/components/ui/button'
 import { Building2, PieChart } from 'lucide-react'
+import ArtilleryIcon from '@/assets/artillery-icon.png'
 
 export const Route = createFileRoute('/')({
 	component: RouteComponent
@@ -17,7 +18,7 @@ function RouteComponent() {
 					{/* Hero */}
 					<div className='flex flex-col items-center text-center space-y-4'>
 						<img
-							src='logo.png'
+							src={ArtilleryIcon}
 							alt='Logo'
 							className='w-35 h-35 drop-shadow-md animate-fadeInUp'
 						/>

@@ -28,7 +28,7 @@ import {
 	SidebarMenuSubItem,
 	SidebarRail
 } from '@/components/ui/sidebar'
-import { Link } from '@tanstack/react-router'
+import { Link, useLocation } from '@tanstack/react-router'
 import StudentForm from '@/components/student-form'
 import {
 	Collapsible,
@@ -37,7 +37,7 @@ import {
 } from '@/components/ui/collapsible'
 import useUnitsData from '@/hooks/useUnitsData'
 import { getUnitDetailUrl } from '@/data/unit-levels'
-import Cdhc2Logo from '@/assets/lu75.jpg'
+import { ArtilleryEmblem } from './artillery-emblem'
 import { AppSidebarSkeleton } from './app-sidebar-skeleton'
 import { ThemeToggle } from './theme-toggle'
 import useAuth from '@/hooks/useAuth'
@@ -188,12 +188,17 @@ function NavMenuItems({
 }
 
 // Individual menu item component
+const navButtonClass =
+	'flex items-center gap-3 rounded-xl px-4 py-2 font-medium text-sidebar-foreground/85 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:bg-sidebar-accent cursor-pointer border-l-2 border-transparent data-[active=true]:border-primary data-[active=true]:text-sidebar-foreground'
+
 function NavMenuItem({ item, level }: { item: NavItem; level: number }) {
 	const { state } = useSidebar()
 	const isCollapsed = state === 'collapsed'
+	const location = useLocation()
 
 	const hasChildren = item.items && item.items.length > 0
 	const Icon = item.icon
+	const isActive = !hasChildren && item.url === location.pathname
 
 	const [isOpen, setIsOpen] = React.useState(false)
 
@@ -208,7 +213,7 @@ function NavMenuItem({ item, level }: { item: NavItem; level: number }) {
 						defaultOpen={false}
 					>
 						<CollapsibleTrigger asChild>
-							<SidebarMenuButton className='flex items-center gap-3 rounded-xl px-4 py-2 font-medium text-gray-700 transition-colors hover:bg-gray-200 focus:bg-blue-100 cursor-pointer'>
+							<SidebarMenuButton className={navButtonClass}>
 								{Icon && <Icon className='w-5 h-5' />}
 								{!isCollapsed && <span>{item.title}</span>}
 								{!isCollapsed && (
@@ -234,8 +239,8 @@ function NavMenuItem({ item, level }: { item: NavItem; level: number }) {
 				<SidebarMenuItem>
 					<SidebarMenuButton
 						asChild
-						isActive={item.isActive}
-						className='flex items-center gap-3 rounded-xl px-4 py-2 font-medium text-gray-700 transition-colors hover:bg-gray-200 focus:bg-blue-100 cursor-pointer'
+						isActive={isActive}
+						className={navButtonClass}
 					>
 						<Link
 							to={item.url}
@@ -256,7 +261,7 @@ function NavMenuItem({ item, level }: { item: NavItem; level: number }) {
 			{hasChildren ? (
 				<Collapsible open={isOpen} onOpenChange={setIsOpen}>
 					<CollapsibleTrigger asChild>
-						<SidebarMenuSubButton className='flex items-center gap-3 rounded-xl px-4 py-2 font-medium text-gray-700 transition-colors hover:bg-gray-200 focus:bg-blue-100 cursor-pointer'>
+						<SidebarMenuSubButton className={navButtonClass}>
 							{Icon && <Icon className='w-5 h-5  ' />}
 							{!isCollapsed && <span>{item.title}</span>}
 							{!isCollapsed && (
@@ -278,8 +283,8 @@ function NavMenuItem({ item, level }: { item: NavItem; level: number }) {
 			) : (
 				<SidebarMenuSubButton
 					asChild
-					isActive={item.isActive}
-					className='flex items-center gap-3 rounded-xl px-4 py-2 font-medium text-gray-700 transition-colors  hover:bg-gray-200  focus:bg-blue-100 '
+					isActive={isActive}
+					className={navButtonClass}
 				>
 					<Link
 						to={item.url}
@@ -371,19 +376,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 		<Sidebar {...props}>
 			<SidebarHeader>
 				<div className='flex items-center gap-2 px-4 py-2'>
-					<div className='flex h-8 w-8 items-center justify-center rounded-lg bg-secondary text-primary-foreground'>
-						<img
-							src={Cdhc2Logo}
-							alt='Logo Trường Cao đẳng hậu cần 2'
-							className='h-6 w-6'
-						/>
+					<div
+						className='flex h-9 w-9 items-center justify-center rounded-md ring-1 ring-gold/40 shadow-sm'
+						style={{ backgroundImage: 'var(--gradient-primary)' }}
+					>
+						<ArtilleryEmblem variant='mark' className='h-6 w-6' />
 					</div>
 					{!isCollapsed && (
 						<div className='flex flex-col'>
-							<span className='text-sm font-semibold'>
+							<span className='text-sm font-serif font-semibold text-sidebar-foreground tracking-wide'>
 								Quản lý doanh trại
 							</span>
-							<span className='text-xs text-muted-foreground'>
+							<span className='text-xs text-sidebar-foreground/60'>
 								Tiểu đoàn 1, Lữ đoàn 75
 							</span>
 						</div>
@@ -427,8 +431,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 			<SidebarRail />
 			<SidebarFooter>
 				<div className='w-full flex items-center justify-between'>
-					<div></div>
-					<div className=''>
+					<div className='hidden'>
 						<ThemeToggle />
 					</div>
 				</div>
