@@ -159,6 +159,11 @@ const PERMISSION_MAP: Record<string, string[]> = {
 	'PATCH:/material-types': ['material_types:update'],
 	'DELETE:/material-types': ['material_types:delete'],
 
+	'POST:/positions': ['positions:create'],
+	'GET:/positions': ['positions:read'],
+	'PATCH:/positions': ['positions:update'],
+	'DELETE:/positions': ['positions:delete'],
+
 	'POST:/material-stocks': ['material_stocks:create'],
 	'GET:/material-stocks': ['material_stocks:read'],
 	'PATCH:/material-stocks': ['material_stocks:update'],

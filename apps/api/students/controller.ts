@@ -23,6 +23,7 @@ import studentRepo from './repo'
 import {
 	ExportStudentDataDynamicRequest,
 	ExportStudentDataRequest,
+	ExportUnitRosterExtractRequest,
 	GetStudentsQuery
 } from './students'
 import {
@@ -30,9 +31,20 @@ import {
 	normalizeRawForDocx,
 	normalizeRowForDocx
 } from '../export/docx-utils'
+import {
+	buildRosterRows,
+	buildRosterSummary,
+	RosterClassNode,
+	RosterPosition,
+	RosterStudent,
+	RosterUnitNode
+} from '../export/roster-utils'
 import exportTemplateController from '../export-templates/controller'
 import unitRepo from '../units/repo'
 import unitStatsRepo from '../units/stats-repo'
+import classRepo from '../classes/repo'
+import positionRepo from '../positions/repo'
+import { UnitLevelName } from '../schema/units'
 import log from 'encore.dev/log'
 import dayjs from 'dayjs'
 import quarterOfYear from 'dayjs/plugin/quarterOfYear.js'
@@ -634,6 +646,129 @@ export class Controller {
 		} catch (err) {
 			console.error('handleExportStudentDataDynamic error', err)
 			log.error('handleExportStudentDataDynamic error', { err })
+
+			throw APIError.internal('Internal error for exporting file')
+		}
+	}
+
+	async handleExportUnitRosterExtract(
+		req: ExportUnitRosterExtractRequest
+	): Promise<Uint8Array> {
+		try {
+			log.info('ExportUnitRosterExtract starting')
+			const {
+				unitAlias,
+				unitLevel,
+				unitName,
+				underUnitName,
+				city,
+				commanderName,
+				commanderPosition,
+				commanderRank,
+				date,
+				reportTitle
+			} = req
+
+			const rootUnit = await this.unitRepo.findOne({
+				alias: unitAlias,
+				level: unitLevel as UnitLevelName
+			})
+			if (rootUnit === undefined) {
+				AppError.handleAppErr(
+					AppError.notFound(
+						`unit with alias: ${unitAlias} and level: ${unitLevel} not found`
+					)
+				)
+			}
+
+			const unitIds = await unitStatsRepo.findDescendantUnitIds(
+				rootUnit.id
+			)
+			const unitList = await unitRepo.findByIds(unitIds)
+			const classList = await classRepo.find({ unitIds })
+			const classIds = classList.map((c) => c.id)
+
+			const students = await this.repo.find({ classIds, unitIds })
+
+			const rosterUnits: RosterUnitNode[] = unitList.map((u) => ({
+				id: u.id,
+				name: u.name,
+				parentId: u.parentId,
+				level: u.level
+			}))
+			const rosterClasses: RosterClassNode[] = classList.map((c) => ({
+				id: c.id,
+				name: c.name,
+				unitId: c.unitId
+			}))
+			const rosterStudents: RosterStudent[] = students.map((s) => ({
+				fullName: s.fullName ?? '',
+				rank: s.rank ?? '',
+				position: s.position ?? '',
+				enlistmentPeriod: s.enlistmentPeriod ?? '',
+				unitId: s.unit?.id,
+				classId: s.class?.id
+			}))
+
+			const positionRows = await positionRepo.find({})
+			const rosterPositions: RosterPosition[] = positionRows.map((p) => ({
+				level: p.level,
+				code: p.code,
+				priority: p.priority
+			}))
+
+			const rows = buildRosterRows(
+				{
+					id: rootUnit.id,
+					name: rootUnit.name,
+					parentId: undefined,
+					level: rootUnit.level
+				},
+				rosterUnits,
+				rosterClasses,
+				rosterStudents,
+				rosterPositions
+			)
+			const summary = buildRosterSummary(rosterStudents)
+
+			const dateObj = dayjs(date)
+			const day = dateObj.format('DD')
+			const month = dateObj.format('MM')
+			const year = dateObj.year()
+
+			const template = await readFile(
+				path.join('./templates', 'unit-roster-extract-templ.docx')
+			)
+
+			return await createReport({
+				template,
+				data: {
+					unitName,
+					underUnitName,
+					city,
+					day,
+					month,
+					year,
+					reportTitle,
+					total: summary.total,
+					sq: summary.sq,
+					qncn: summary.qncn,
+					hsq: summary.hsq,
+					bs: summary.bs,
+					rows,
+					commanderPosition,
+					commanderRank,
+					commanderName
+				},
+				cmdDelimiter: ['{', '}']
+			})
+		} catch (err) {
+			console.error('handleExportUnitRosterExtract error', err)
+			log.error('handleExportUnitRosterExtract error', { err })
+
+			if (err instanceof AppError) {
+				throw err
+			}
 
 			throw APIError.internal('Internal error for exporting file')
 		}

@@ -83,6 +83,7 @@ interface StudentBody {
 	phone: string
 	classId?: number
 	unitId?: number
+	positionId?: number
 	avatar?: string
 	siblings?: ChildrenInfo[]
 	contactPerson?: Partial<ContactPerson>
@@ -100,6 +101,13 @@ interface StudentDBResponse extends StudentBody {
 interface StudentResponse extends StudentDBResponse {
 	class: { id: number; description: string; name: string } | null
 	unit: Unit | null
+	positionRef: {
+		id: number
+		level: string
+		code: string
+		name: string
+		priority: number
+	} | null
 }
 
 interface BulkStudentResponse {
@@ -460,6 +468,61 @@ export const ExportStudentDataDynamic = api.raw(
 			return resp.end(buffer)
 		} catch (err) {
 			log.error('Student dynamic export error', { err })
+
+			if (err instanceof APIError) {
+				throw err
+			}
+
+			throw APIError.internal('Internal error for exporting file')
+		}
+	}
+)
+
+const ExportUnitRosterExtractRequestSchema = v.object({
+	unitAlias: v.string(),
+	unitLevel: v.string(),
+	unitName: v.string(),
+	underUnitName: v.string(),
+	city: v.string(),
+	commanderName: v.string(),
+	commanderPosition: v.string(),
+	commanderRank: v.string(),
+	date: v.optional(
+		v.pipe(v.string(), v.isoDate()),
+		dayjs().format('YYYY-MM-DD')
+	),
+	reportTitle: v.string()
+})
+
+export type ExportUnitRosterExtractRequest = v.InferInput<
+	typeof ExportUnitRosterExtractRequestSchema
+>
+
+export const ExportUnitRosterExtract = api.raw(
+	{
+		auth: true,
+		expose: true,
+		method: 'POST',
+		path: '/students/export-roster'
+	},
+	async (req, resp) => {
+		try {
+			const body = await getTypedRequestBody(
+				req,
+				ExportUnitRosterExtractRequestSchema
+			)
+
+			const buffer =
+				await studentController.handleExportUnitRosterExtract(body)
+
+			resp.setHeader(
+				'Content-Type',
+				'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+			)
+			resp.writeHead(200, { Connection: 'close' })
+			return resp.end(buffer)
+		} catch (err) {
+			log.error('Unit roster extract export error', { err })
 
 			if (err instanceof APIError) {
 				throw err

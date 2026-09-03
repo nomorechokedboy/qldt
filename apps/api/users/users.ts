@@ -4,6 +4,7 @@ import userRepo from './repo'
 import { getAuthData } from '~encore/auth'
 import { AppError } from '../errors'
 import { setAuditContext } from '../middleware/audit'
+import { UserUnit } from '../schema'
 
 interface CreateUserRequest {
 	username: string
@@ -73,6 +74,8 @@ interface BulkUserResponse {
 
 export interface User extends UserDB {
 	roles: RoleDB[]
+	unitName?: string
+	unit?: UserUnit
 }
 interface GetUsersResponse extends BulkUserResponse {}
 
