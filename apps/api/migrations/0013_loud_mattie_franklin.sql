@@ -1,0 +1,1 @@
+ALTER TABLE `students` ADD `positionId` integer REFERENCES positions(id);

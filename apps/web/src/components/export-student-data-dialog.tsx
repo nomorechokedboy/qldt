@@ -40,10 +40,10 @@ export function ExportStudentDataDialog({
 	const [open, setOpen] = useState(false)
 	const form = useAppForm({
 		defaultValues: {
-			city: 'Thành phố Hồ Chí Minh',
+			city: 'Đồng Nai',
 			commanderName: user?.displayName ?? '',
 			commanderPosition: 'CHỈ HUY ĐƠN VỊ',
-			commanderRank: '',
+			commanderRank: user?.rank ?? '',
 			data,
 			underUnitName: defaultValues?.underUnitName ?? '',
 			unitName: defaultValues?.unitName ?? '',

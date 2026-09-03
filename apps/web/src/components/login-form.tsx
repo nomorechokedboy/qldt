@@ -1,6 +1,6 @@
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import cdhc2Logo from '@/assets/lu75.jpg'
+import { ArtilleryEmblem } from '@/components/artillery-emblem'
 import { useAppForm } from '@/hooks/demo.form'
 import useAuth from '@/hooks/useAuth'
 
@@ -26,10 +26,9 @@ export function LoginForm() {
 			<div className='z-10 w-full max-w-md px-4 animate-fadeInUp'>
 				{/* Logo + tiêu đề */}
 				<div className='flex flex-col items-center mb-8 pt-3'>
-					<img
-						src={cdhc2Logo}
-						alt='Logo'
-						className='h-28 mb-3 drop-shadow-md'
+					<ArtilleryEmblem
+						variant='badge'
+						className='h-28 w-28 mb-3 text-primary drop-shadow-md'
 					/>
 					<h1 className='text-2xl uppercase font-extrabold text-gray-800 text-center'>
 						Lữ đoàn 75, Quân khu 7

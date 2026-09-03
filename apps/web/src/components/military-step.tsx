@@ -1,12 +1,35 @@
-import { rankOptions } from '@/data/ethnics'
+import { rankOptions, soldierPositionOptions } from '@/data/ethnics'
+import usePositionsData from '@/hooks/usePositionsData'
+
+const LEVEL_LABELS: Record<string, string> = {
+	battalion: 'Tiểu đoàn',
+	company: 'Đại đội',
+	platoon: 'Trung đội',
+	squad: 'Tiểu đội',
+	department: 'Phòng, ban'
+}
 
 export default function MilitaryStep({ form }: { form: any }) {
+	const { data: positions } = usePositionsData(undefined, { enabled: true })
+
+	const positionOptions = [...(positions ?? [])]
+		.sort(
+			(a, b) => a.level.localeCompare(b.level) || a.priority - b.priority
+		)
+		.map((p) => ({
+			label: p.name,
+			value: p.code,
+			group: LEVEL_LABELS[p.level] ?? p.level
+		}))
+
+	const allPositionOptions = [...positionOptions, ...soldierPositionOptions]
+
 	return (
 		<div className='space-y-6 py-2'>
 			<div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
 				<form.AppField name='rank'>
 					{(field: any) => (
-						<field.Combobox
+						<field.Select
 							values={rankOptions}
 							label='Cấp bậc'
 							placeholder='Chọn cấp bậc'
@@ -14,28 +37,17 @@ export default function MilitaryStep({ form }: { form: any }) {
 						/>
 					)}
 				</form.AppField>
+				<form.AppField name='position'>
+					{(field: any) => (
+						<field.Select
+							values={allPositionOptions}
+							label='Chức vụ'
+							placeholder='Chọn chức vụ'
+						/>
+					)}
+				</form.AppField>
 				<form.AppField name='enlistmentPeriod'>
 					{(field: any) => <field.TextField label='Ngày nhập ngũ' />}
-				</form.AppField>
-				<form.AppField name='policyBeneficiaryGroup'>
-					{(field: any) => (
-						<field.TextField label='Diện chính sách' />
-					)}
-				</form.AppField>
-				<form.AppField name='relatedDocumentations'>
-					{(field: any) => (
-						<field.TextField label='Hồ sơ nộp tại đơn vị mới' />
-					)}
-				</form.AppField>
-			</div>
-			<div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-				<form.AppField name='previousUnit'>
-					{(field: any) => <field.TextField label='Đơn vị cũ' />}
-				</form.AppField>
-				<form.AppField name='previousPosition'>
-					{(field: any) => (
-						<field.TextField label='Chức vụ công tác tại đơn vị cũ' />
-					)}
 				</form.AppField>
 			</div>
 			<div className='grid grid-cols-2 gap-6'>

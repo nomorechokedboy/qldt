@@ -13,22 +13,21 @@ import {
 	DialogDescription,
 	DialogFooter,
 	DialogHeader,
-	DialogTitle,
-	DialogTrigger
+	DialogTitle
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { useAppForm } from '@/hooks/demo.form'
 import useAuth from '@/hooks/useAuth'
 import { useExportTemplates } from '@/hooks/useExportTemplates'
 import type { Student } from '@/types'
-import type { ReactNode } from 'react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
 const NO_TEMPLATE_VALUE = '__default__'
 
 export interface ExportStudentDataDynamicDialogProps {
-	children: ReactNode
+	open: boolean
+	onOpenChange: (open: boolean) => void
 	data: Student[]
 	defaultFilename: string
 	defaultValues?: {
@@ -39,7 +38,8 @@ export interface ExportStudentDataDynamicDialogProps {
 }
 
 export function ExportStudentDataDynamicDialog({
-	children,
+	open,
+	onOpenChange,
 	data,
 	defaultFilename,
 	defaultValues,
@@ -47,7 +47,6 @@ export function ExportStudentDataDynamicDialog({
 }: ExportStudentDataDynamicDialogProps) {
 	const { user } = useAuth()
 	const { data: templates } = useExportTemplates('students')
-	const [open, setOpen] = useState(false)
 	const [previewOpen, setPreviewOpen] = useState(false)
 	const [previewBuffer, setPreviewBuffer] = useState<ArrayBuffer | null>(null)
 	const [previewFilename, setPreviewFilename] = useState(defaultFilename)
@@ -65,11 +64,11 @@ export function ExportStudentDataDynamicDialog({
 
 	const form = useAppForm({
 		defaultValues: {
-			city: 'Thành phố Hồ Chí Minh',
+			city: 'Đồng Nai',
 			commanderName: user?.displayName ?? '',
 			commanderPosition: 'CHỈ HUY ĐƠN VỊ',
 			commanderRank: user?.rank ?? '',
-			reportTitle: 'Báo cáo danh sách học viên',
+			reportTitle: 'Báo cáo danh sách quân nhân',
 			underUnitName: defaultValues?.underUnitName ?? '',
 			unitName: defaultValues?.unitName ?? '',
 			filename: defaultFilename,
@@ -104,7 +103,7 @@ export function ExportStudentDataDynamicDialog({
 				setPreviewBuffer(buffer)
 				setPreviewFilename(value.filename)
 				setPreviewOpen(true)
-				setOpen(false)
+				onOpenChange(false)
 				formApi.reset()
 			} catch (err) {
 				console.error('handleExport error', err)
@@ -115,7 +114,7 @@ export function ExportStudentDataDynamicDialog({
 
 	return (
 		<>
-			<Dialog open={open} onOpenChange={setOpen}>
+			<Dialog open={open} onOpenChange={onOpenChange}>
 				<form
 					id={id}
 					onSubmit={(e) => {
@@ -124,7 +123,6 @@ export function ExportStudentDataDynamicDialog({
 						form.handleSubmit()
 					}}
 				>
-					<DialogTrigger asChild>{children}</DialogTrigger>
 					<DialogContent className='container' key={id}>
 						<DialogHeader>
 							<DialogTitle>Xuất dữ liệu học viên</DialogTitle>

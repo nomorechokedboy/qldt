@@ -43,6 +43,7 @@ export default class Client {
 	public readonly media: media.ServiceClient
 	public readonly notifications: notifications.ServiceClient
 	public readonly permissions: permissions.ServiceClient
+	public readonly positions: positions.ServiceClient
 	public readonly resources: resources.ServiceClient
 	public readonly roles: roles.ServiceClient
 	public readonly students: students.ServiceClient
@@ -74,6 +75,7 @@ export default class Client {
 		this.media = new media.ServiceClient(base)
 		this.notifications = new notifications.ServiceClient(base)
 		this.permissions = new permissions.ServiceClient(base)
+		this.positions = new positions.ServiceClient(base)
 		this.resources = new resources.ServiceClient(base)
 		this.roles = new roles.ServiceClient(base)
 		this.students = new students.ServiceClient(base)
@@ -1379,9 +1381,7 @@ export namespace notifications {
 
 			return await this.baseClient.createStreamIn(
 				`/notifications/stream`,
-				{
-					query
-				}
+				{ query }
 			)
 		}
 	}
@@ -1437,6 +1437,131 @@ export namespace permissions {
 				`/permissions`
 			)
 			return (await resp.json()) as GetPermissionsResponse
+		}
+	}
+}
+
+export namespace positions {
+	export interface CreatePositionRequest {
+		data: PositionBody[]
+	}
+
+	export interface CreatePositionResponse {
+		data: PositionDB[]
+	}
+
+	export interface DeletePositionRequest {
+		ids: number[]
+	}
+
+	export interface DeletePositionResponse {
+		ids: number[]
+	}
+
+	export interface GetPositionsQuery {
+		level?: string
+	}
+
+	export interface GetPositionsResponse {
+		data: PositionDB[]
+	}
+
+	export interface PositionBody {
+		level: string
+		code: string
+		name: string
+		priority: number
+	}
+
+	export interface PositionDB {
+		level: string
+		code: string
+		name: string
+		priority: number
+		id: number
+		createdAt: string
+		updatedAt: string
+	}
+
+	export interface UpdatePositionBody {
+		data: UpdatePositionPayload[]
+	}
+
+	export interface UpdatePositionPayload {
+		id: number
+		level?: string
+		code?: string
+		name?: string
+		priority?: number
+	}
+
+	export class ServiceClient {
+		private baseClient: BaseClient
+
+		constructor(baseClient: BaseClient) {
+			this.baseClient = baseClient
+			this.CreatePositions = this.CreatePositions.bind(this)
+			this.DeletePositions = this.DeletePositions.bind(this)
+			this.GetPositions = this.GetPositions.bind(this)
+			this.UpdatePositions = this.UpdatePositions.bind(this)
+		}
+
+		public async CreatePositions(
+			params: CreatePositionRequest
+		): Promise<CreatePositionResponse> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'POST',
+				`/positions`,
+				JSON.stringify(params)
+			)
+			return (await resp.json()) as CreatePositionResponse
+		}
+
+		public async DeletePositions(
+			params: DeletePositionRequest
+		): Promise<DeletePositionResponse> {
+			// Convert our params into the objects we need for the request
+			const query = makeRecord<string, string | string[]>({
+				ids: params.ids.map((v) => String(v))
+			})
+
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'DELETE',
+				`/positions`,
+				undefined,
+				{ query }
+			)
+			return (await resp.json()) as DeletePositionResponse
+		}
+
+		public async GetPositions(
+			params: GetPositionsQuery
+		): Promise<GetPositionsResponse> {
+			// Convert our params into the objects we need for the request
+			const query = makeRecord<string, string | string[]>({
+				level: params.level
+			})
+
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'GET',
+				`/positions`,
+				undefined,
+				{ query }
+			)
+			return (await resp.json()) as GetPositionsResponse
+		}
+
+		public async UpdatePositions(
+			params: UpdatePositionBody
+		): Promise<void> {
+			await this.baseClient.callTypedAPI(
+				'PATCH',
+				`/positions`,
+				JSON.stringify(params)
+			)
 		}
 	}
 }
@@ -1673,6 +1798,7 @@ export namespace students {
 		phone: string
 		classId?: number
 		unitId?: number
+		positionId?: number
 		avatar?: string
 		siblings?: ChildrenInfo[]
 		contactPerson?: {
@@ -1737,6 +1863,7 @@ export namespace students {
 		phone: string
 		classId?: number
 		unitId?: number
+		positionId?: number
 		avatar?: string
 		siblings?: ChildrenInfo[]
 		contactPerson?: {
@@ -1808,6 +1935,7 @@ export namespace students {
 		phone: string
 		classId?: number
 		unitId?: number
+		positionId?: number
 		avatar?: string
 		siblings?: ChildrenInfo[]
 		contactPerson?: {
@@ -1835,6 +1963,13 @@ export namespace students {
 			name: string
 		} | null
 		unit: units.Unit | null
+		positionRef: {
+			id: number
+			level: string
+			code: string
+			name: string
+			priority: number
+		} | null
 		id: number
 		createdAt: string
 		updatedAt: string
@@ -1889,6 +2024,7 @@ export namespace students {
 		phone: string
 		classId?: number
 		unitId?: number
+		positionId?: number
 		avatar?: string
 		siblings?: ChildrenInfo[]
 		contactPerson?: {
@@ -1946,6 +2082,7 @@ export namespace students {
 		phone?: string
 		classId?: number
 		unitId?: number
+		positionId?: number
 		avatar?: string
 		siblings?: ChildrenInfo[]
 		contactPerson?: {
@@ -1984,6 +2121,8 @@ export namespace students {
 			this.ExportStudentData = this.ExportStudentData.bind(this)
 			this.ExportStudentDataDynamic =
 				this.ExportStudentDataDynamic.bind(this)
+			this.ExportUnitRosterExtract =
+				this.ExportUnitRosterExtract.bind(this)
 			this.GetPoliticsQualityReport =
 				this.GetPoliticsQualityReport.bind(this)
 			this.GetStudents = this.GetStudents.bind(this)
@@ -2068,6 +2207,19 @@ export namespace students {
 			return this.baseClient.callAPI(
 				method,
 				`/students/export-dynamic`,
+				body,
+				options
+			)
+		}
+
+		public async ExportUnitRosterExtract(
+			method: 'POST',
+			body?: RequestInit['body'],
+			options?: CallParameters
+		): Promise<globalThis.Response> {
+			return this.baseClient.callAPI(
+				method,
+				`/students/export-roster`,
 				body,
 				options
 			)
@@ -2175,9 +2327,7 @@ export namespace students {
 				'GET',
 				`/students/cron`,
 				undefined,
-				{
-					query
-				}
+				{ query }
 			)
 		}
 
@@ -2948,6 +3098,8 @@ export namespace users {
 
 	export interface User {
 		roles: RoleDB[]
+		unitName?: string
+		unit?: schema.UserUnit
 		id: number
 		createdAt: string
 		updatedAt: string
@@ -3232,6 +3384,7 @@ export namespace schema {
 	export interface User {
 		roles?: Role[]
 		unitName?: string
+		unit?: UserUnit
 		username: string
 		password: string
 		displayName: string
@@ -3243,6 +3396,25 @@ export namespace schema {
 		id: number
 		createdAt: string
 		updatedAt: string
+	}
+
+	/**
+	 * Hand-declared (not derived from InferSelectModel<typeof units>) because
+	 * referencing that inferred type here trips Encore's client-gen static
+	 * analyzer over the units.ts<->users.ts circular type inference.
+	 */
+	export interface UserUnit {
+		id: number
+		createdAt: string
+		updatedAt: string
+		alias: string
+		name: string
+		level: string
+		parentId?: number | null
+		commanderId?: number | null
+		deputyCommanderId?: number | null
+		politicalCommanderId?: number | null
+		deputyPoliticalCommanderId?: number | null
 	}
 }
 
@@ -3288,7 +3460,7 @@ class WebSocketConnection {
 	private hasUpdateHandlers: (() => void)[] = []
 
 	constructor(url: string, headers?: Record<string, string>) {
-		const protocols = ['encore-ws']
+		let protocols = ['encore-ws']
 		if (headers) {
 			protocols.push(encodeWebSocketHeaders(headers))
 		}

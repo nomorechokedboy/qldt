@@ -13,6 +13,7 @@ import {
 	type ExportPoliticsQualityReport,
 	type ExportResourceType,
 	type ExportStudentDataDynamicData,
+	type ExportUnitRosterExtractData,
 	type GetUnitQuery,
 	type GetUserRolesResponse,
 	type InitAdminRequest,
@@ -39,6 +40,7 @@ import Client, {
 	type export_templates,
 	type facilities,
 	type materials,
+	type positions,
 	type students,
 	type transfer_requests,
 	type units
@@ -284,6 +286,13 @@ export function ExportStudentDataDynamic(data: ExportStudentDataDynamicData) {
 	)
 }
 
+export function ExportUnitRosterExtract(data: ExportUnitRosterExtractData) {
+	return requestClient.students.ExportUnitRosterExtract(
+		'POST',
+		JSON.stringify(data)
+	)
+}
+
 export function ListExportTemplates(resourceType: ExportResourceType) {
 	return requestClient.export_templates
 		.GetExportTemplates({ resourceType })
@@ -438,6 +447,28 @@ export function UpdateMaterialTypes(body: materials.UpdateMaterialTypeBody) {
 
 export function DeleteMaterialTypes(ids: number[]) {
 	return requestClient.materials.DeleteMaterialTypes({ ids })
+}
+
+// Positions
+
+export function GetPositions(params?: positions.GetPositionsQuery) {
+	return requestClient.positions
+		.GetPositions(params ?? {})
+		.then((resp) => resp.data)
+}
+
+export function CreatePosition(body: positions.PositionBody) {
+	return requestClient.positions
+		.CreatePositions({ data: [body] })
+		.then((resp) => resp.data)
+}
+
+export function UpdatePositions(body: positions.UpdatePositionBody) {
+	return requestClient.positions.UpdatePositions(body)
+}
+
+export function DeletePositions(ids: number[]) {
+	return requestClient.positions.DeletePositions({ ids })
 }
 
 // Material stocks

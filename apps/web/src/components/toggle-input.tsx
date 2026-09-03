@@ -11,7 +11,9 @@ import { Input } from '@/components/ui/input'
 import {
 	Select,
 	SelectContent,
+	SelectGroup,
 	SelectItem,
+	SelectLabel,
 	SelectTrigger,
 	SelectValue
 } from '@/components/ui/select'
@@ -47,6 +49,20 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 type Option = {
 	value: string
 	label: string
+	group?: string
+}
+
+function groupOptions(options: Option[]) {
+	const groups: { group: string | undefined; options: Option[] }[] = []
+	for (const option of options) {
+		const last = groups[groups.length - 1]
+		if (last && last.group === option.group) {
+			last.options.push(option)
+		} else {
+			groups.push({ group: option.group, options: [option] })
+		}
+	}
+	return groups
 }
 
 export type InputType = 'text' | 'date' | 'select' | 'combobox'
@@ -315,14 +331,30 @@ export default function ToggleInput<T extends InputType>(
 							<SelectValue placeholder={placeholder as string} />
 						</SelectTrigger>
 						<SelectContent>
-							{selectProps.options.map((option) => (
-								<SelectItem
-									key={option.value}
-									value={option.value}
-								>
-									{option.label}
-								</SelectItem>
-							))}
+							{groupOptions(selectProps.options).map((group) =>
+								group.group ? (
+									<SelectGroup key={group.group}>
+										<SelectLabel>{group.group}</SelectLabel>
+										{group.options.map((option) => (
+											<SelectItem
+												key={option.value}
+												value={option.value}
+											>
+												{option.label}
+											</SelectItem>
+										))}
+									</SelectGroup>
+								) : (
+									group.options.map((option) => (
+										<SelectItem
+											key={option.value}
+											value={option.value}
+										>
+											{option.label}
+										</SelectItem>
+									))
+								)
+							)}
 						</SelectContent>
 					</Select>
 				)
@@ -373,10 +405,15 @@ export default function ToggleInput<T extends InputType>(
 										{comboboxProps.emptyMessage ||
 											'No options found.'}
 									</CommandEmpty>
-									<CommandGroup>
-										<ScrollArea>
-											{comboboxProps.options.map(
-												(option) => (
+									<ScrollArea>
+										{groupOptions(
+											comboboxProps.options
+										).map((group, idx) => (
+											<CommandGroup
+												key={group.group ?? idx}
+												heading={group.group}
+											>
+												{group.options.map((option) => (
 													<CommandItem
 														key={option.value}
 														value={option.value}
@@ -397,10 +434,10 @@ export default function ToggleInput<T extends InputType>(
 														/>
 														{option.label}
 													</CommandItem>
-												)
-											)}
-										</ScrollArea>
-									</CommandGroup>
+												))}
+											</CommandGroup>
+										))}
+									</ScrollArea>
 								</CommandList>
 							</Command>
 						</PopoverContent>

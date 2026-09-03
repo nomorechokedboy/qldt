@@ -254,7 +254,8 @@ class StudentSqliteRepo implements Repository {
 					class: {
 						with: { unit: true }
 					},
-					unit: true
+					unit: true,
+					positionRef: true
 				}
 			})
 			.catch(handleDatabaseErr) as unknown as Array<Student>

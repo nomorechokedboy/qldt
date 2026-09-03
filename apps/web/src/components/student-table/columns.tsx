@@ -6,6 +6,7 @@ import { DataTableColumnHeader } from '../data-table/data-table-column-header'
 import { DataTableRowActions } from '../data-table/data-table-row-actions'
 import EditableCell from '../data-table/editable-cell'
 import EditableMilitaryRank from '../data-table/editable-military-rank'
+import EditablePosition from '../data-table/editable-position'
 import { toDdMmYyyy } from '@/common'
 
 function isoToDdMmYyyy(isoDate: string): string {
@@ -315,7 +316,7 @@ export const columns: ColumnDef<Student>[] = [
 	{
 		accessorKey: 'position',
 		header: 'Chức vụ',
-		cell: EditableCell,
+		cell: EditablePosition,
 		enableHiding: true,
 		meta: {
 			label: 'Chức vụ'
@@ -753,7 +754,7 @@ export const battalionStudentColumns: ColumnDef<Student>[] = [
 	{
 		accessorKey: 'position',
 		header: 'Chức vụ',
-		cell: EditableCell,
+		cell: EditablePosition,
 		enableHiding: true,
 		meta: {
 			label: 'Chức vụ'
@@ -1188,7 +1189,7 @@ export const battalionStudentColumnsWithoutAction: ColumnDef<Student>[] = [
 	{
 		accessorKey: 'position',
 		header: 'Chức vụ',
-		cell: EditableCell,
+		cell: EditablePosition,
 		enableHiding: true,
 		meta: {
 			label: 'Chức vụ'
@@ -1565,7 +1566,7 @@ export const columnsWithoutAction: ColumnDef<Student>[] = [
 	{
 		accessorKey: 'position',
 		header: 'Chức vụ',
-		cell: EditableCell,
+		cell: EditablePosition,
 		enableHiding: true,
 		meta: {
 			label: 'Chức vụ'
@@ -1983,7 +1984,7 @@ export const hcyuTableColumns: ColumnDef<Student>[] = [
 	{
 		accessorKey: 'position',
 		header: 'Chức vụ',
-		cell: EditableCell,
+		cell: EditablePosition,
 		enableHiding: true,
 		meta: {
 			label: 'Chức vụ'
@@ -2446,7 +2447,7 @@ export const adversityTableColumns: ColumnDef<Student>[] = [
 	{
 		accessorKey: 'position',
 		header: 'Chức vụ',
-		cell: EditableCell,
+		cell: EditablePosition,
 		enableHiding: true,
 		meta: {
 			label: 'Chức vụ'

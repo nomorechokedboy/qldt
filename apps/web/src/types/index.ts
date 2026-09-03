@@ -54,6 +54,8 @@ export type StudentBody = {
 	politicalOrg?: PoliticalOrg
 	politicalOrgOfficialDate?: string
 	position?: string
+	positionId?: number
+	positionRef?: Position | null
 	previousPosition?: string
 	previousUnit?: string
 	rank?: string
@@ -358,6 +360,19 @@ export type ExportStudentDataDynamicData = ExportMaterialAssetsData & {
 	rawData?: Record<string, unknown>[]
 }
 
+export type ExportUnitRosterExtractData = {
+	unitAlias: string
+	unitLevel: string
+	unitName: string
+	underUnitName: string
+	city: string
+	commanderName: string
+	commanderPosition: string
+	commanderRank: string
+	date?: string
+	reportTitle: string
+}
+
 export type ExportMaterialStocksData = ExportMaterialAssetsData
 
 export type ExportData = {
@@ -485,6 +500,13 @@ export interface MaterialType extends Base {
 	category: MaterialCategory
 	unitOfMeasure?: string
 	isSerialized: boolean
+}
+
+export interface Position extends Base {
+	level: string
+	code: string
+	name: string
+	priority: number
 }
 
 export interface Building extends Base {

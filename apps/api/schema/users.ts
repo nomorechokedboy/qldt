@@ -56,9 +56,27 @@ export interface UserDB extends Base {
 	alias?: string
 }
 
+// Hand-declared (not derived from InferSelectModel<typeof units>) because
+// referencing that inferred type here trips Encore's client-gen static
+// analyzer over the units.ts<->users.ts circular type inference.
+export interface UserUnit {
+	id: number
+	createdAt: string
+	updatedAt: string
+	alias: string
+	name: string
+	level: string
+	parentId?: number | null
+	commanderId?: number | null
+	deputyCommanderId?: number | null
+	politicalCommanderId?: number | null
+	deputyPoliticalCommanderId?: number | null
+}
+
 export interface User extends UserDB {
 	roles?: Role[]
 	unitName?: string
+	unit?: UserUnit
 }
 
 export interface CreateUserRequest {

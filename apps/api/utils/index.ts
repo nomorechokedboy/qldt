@@ -40,7 +40,12 @@ const UNIQUE_FIELD_LABELS: Record<string, string> = {
 function handleLibsqlError(code: SQLiteErrorCode, message?: string): AppError {
 	switch (code) {
 		case 'SQLITE_CONSTRAINT_UNIQUE': {
-			const field = message?.match(/UNIQUE constraint failed: (\S+)/)?.[1]
+			// A composite unique index reports all its columns, comma-separated
+			// (e.g. "units.alias, units.parentId") - the first is the one worth
+			// naming in the error, so stop at the comma as well as whitespace.
+			const field = message?.match(
+				/UNIQUE constraint failed: ([^,\s]+)/
+			)?.[1]
 			const label = field ? UNIQUE_FIELD_LABELS[field] : undefined
 			return AppError.alreadyExists(
 				`${label ?? 'Giá trị này'} đã được sử dụng, vui lòng chọn giá trị khác`

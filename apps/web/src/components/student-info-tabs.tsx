@@ -120,7 +120,7 @@ export default function StudentInfoTabs({ student }: StudentInfoTabsProps) {
 							/>
 						</div>
 						{student.status === 'pending' && (
-							<div className='absolute -top-2 -right-2 bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-md'>
+							<div className='absolute -top-2 -right-2 bg-yellow-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-md hidden'>
 								Chờ xác nhận
 							</div>
 						)}
@@ -230,7 +230,7 @@ export default function StudentInfoTabs({ student }: StudentInfoTabsProps) {
 							id='ExportStudentEnrollmentFormDialog'
 						>
 							<Button
-								className='flex-1 lg:w-full whitespace-nowrap'
+								className='flex-1 lg:w-full whitespace-nowrap hidden'
 								size='sm'
 							>
 								<FileDown className='mr-2 h-4 w-4' /> Tải phiếu
@@ -243,7 +243,7 @@ export default function StudentInfoTabs({ student }: StudentInfoTabsProps) {
 								disabled={isUpdating}
 								variant='default'
 								size='sm'
-								className='bg-green-600 hover:bg-green-700 flex-1 lg:w-full whitespace-nowrap'
+								className='bg-green-600 hover:bg-green-700 flex-1 lg:w-full whitespace-nowrap hidden'
 							>
 								<CheckCircle className='mr-2 h-4 w-4' /> Xác
 								nhận

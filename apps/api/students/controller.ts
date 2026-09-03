@@ -23,6 +23,7 @@ import studentRepo from './repo'
 import {
 	ExportStudentDataDynamicRequest,
 	ExportStudentDataRequest,
+	ExportUnitRosterExtractRequest,
 	GetStudentsQuery
 } from './students'
 import {
@@ -30,9 +31,20 @@ import {
 	normalizeRawForDocx,
 	normalizeRowForDocx
 } from '../export/docx-utils'
+import {
+	buildRosterRows,
+	buildRosterSummary,
+	RosterClassNode,
+	RosterPosition,
+	RosterStudent,
+	RosterUnitNode
+} from '../export/roster-utils'
 import exportTemplateController from '../export-templates/controller'
 import unitRepo from '../units/repo'
 import unitStatsRepo from '../units/stats-repo'
+import classRepo from '../classes/repo'
+import positionRepo from '../positions/repo'
+import { UnitLevelName } from '../schema/units'
 import log from 'encore.dev/log'
 import dayjs from 'dayjs'
 import quarterOfYear from 'dayjs/plugin/quarterOfYear.js'
@@ -60,6 +72,133 @@ export class Controller {
 		private readonly unitRepo: UnitRepository,
 		private readonly imageStorage: ImageProvider
 	) {}
+
+	// Trung đội trưởng ('bt', priority 0) and the various Tiểu/khẩu đội
+	// trưởng codes (priority 1-2) are one-of-a-kind roles: a platoon has
+	// exactly one commander, and each squad has exactly one leader. Regular
+	// soldier positions (priority 3+) have no such limit. Scope is unitId
+	// (the platoon) for the platoon commander, classId (the squad) for
+	// squad leaders - mirrors students/controller.ts's classId-xor-unitId
+	// ownership model.
+	private async validateUniqueLeaderPositions(
+		entries: Array<{
+			id?: number
+			position?: string | null
+			unitId?: number | null
+			classId?: number | null
+		}>,
+		existingById?: Map<number, Student>
+	): Promise<void> {
+		const changing = entries.filter(
+			(e) => e.position !== undefined && e.position !== null
+		)
+		if (changing.length === 0) return
+
+		const normalizeCode = (code: string) => code.trim().toLowerCase()
+
+		const platoonPositions = await positionRepo.find({ level: 'platoon' })
+		const leaderPositionsByCode = new Map(
+			platoonPositions
+				.filter((p) => p.priority <= 2)
+				.map((p) => [normalizeCode(p.code), p])
+		)
+
+		type ScopedEntry = (typeof changing)[number] & {
+			scopeType: 'unit' | 'class'
+			scopeId: number
+			positionName: string
+		}
+		const scoped: ScopedEntry[] = []
+
+		for (const e of changing) {
+			const leaderPos = leaderPositionsByCode.get(
+				normalizeCode(e.position!)
+			)
+			if (leaderPos === undefined) continue
+
+			const existing =
+				e.id !== undefined ? existingById?.get(e.id) : undefined
+			const unitId =
+				e.unitId !== undefined ? e.unitId : existing?.unit?.id
+			const classId =
+				e.classId !== undefined ? e.classId : existing?.class?.id
+
+			if (leaderPos.priority === 0 && unitId != null) {
+				scoped.push({
+					...e,
+					scopeType: 'unit',
+					scopeId: unitId,
+					positionName: leaderPos.name
+				})
+			} else if (leaderPos.priority > 0 && classId != null) {
+				scoped.push({
+					...e,
+					scopeType: 'class',
+					scopeId: classId,
+					positionName: leaderPos.name
+				})
+			}
+		}
+		if (scoped.length === 0) return
+
+		// Conflicts within this same batch.
+		const seen = new Map<string, ScopedEntry>()
+		for (const e of scoped) {
+			const key = `${e.scopeType}:${e.scopeId}:${normalizeCode(e.position!)}`
+			if (seen.has(key)) {
+				throw AppError.handleAppErr(
+					AppError.invalidArgument(
+						`${e.positionName} chỉ được chỉ định cho một quân nhân duy nhất`
+					)
+				)
+			}
+			seen.set(key, e)
+		}
+
+		// Conflicts against existing DB state.
+		const unitIds = Array.from(
+			new Set(
+				scoped
+					.filter((e) => e.scopeType === 'unit')
+					.map((e) => e.scopeId)
+			)
+		)
+		const classIds = Array.from(
+			new Set(
+				scoped
+					.filter((e) => e.scopeType === 'class')
+					.map((e) => e.scopeId)
+			)
+		)
+		const [unitHolders, classHolders] = await Promise.all([
+			unitIds.length > 0
+				? this.repo.find({ unitIds })
+				: Promise.resolve([]),
+			classIds.length > 0
+				? this.repo.find({ classIds })
+				: Promise.resolve([])
+		])
+		const holders = [...unitHolders, ...classHolders]
+
+		for (const e of scoped) {
+			const conflict = holders.find(
+				(s) =>
+					s.id !== e.id &&
+					s.position != null &&
+					normalizeCode(s.position) === normalizeCode(e.position!) &&
+					(e.scopeType === 'unit'
+						? s.unit?.id === e.scopeId
+						: s.class?.id === e.scopeId)
+			)
+			if (conflict !== undefined) {
+				throw AppError.handleAppErr(
+					AppError.invalidArgument(
+						`${e.positionName} đã được chỉ định cho quân nhân khác: ${conflict.fullName}`
+					)
+				)
+			}
+		}
+	}
 
 	async create(
 		params: StudentParam[],
@@ -107,6 +246,8 @@ export class Controller {
 				)
 			}
 		}
+
+		await this.validateUniqueLeaderPositions(params)
 
 		return this.repo.create(params).catch(AppError.handleAppErr)
 	}
@@ -250,6 +391,8 @@ export class Controller {
 				)
 			)
 		}
+
+		await this.validateUniqueLeaderPositions(params, existingById)
 
 		const updateMap: UpdateStudentMap = params.map(
 			({ id, ...updatePayload }) => {
@@ -634,6 +777,129 @@ export class Controller {
 		} catch (err) {
 			console.error('handleExportStudentDataDynamic error', err)
 			log.error('handleExportStudentDataDynamic error', { err })
+
+			throw APIError.internal('Internal error for exporting file')
+		}
+	}
+
+	async handleExportUnitRosterExtract(
+		req: ExportUnitRosterExtractRequest
+	): Promise<Uint8Array> {
+		try {
+			log.info('ExportUnitRosterExtract starting')
+			const {
+				unitAlias,
+				unitLevel,
+				unitName,
+				underUnitName,
+				city,
+				commanderName,
+				commanderPosition,
+				commanderRank,
+				date,
+				reportTitle
+			} = req
+
+			const rootUnit = await this.unitRepo.findOne({
+				alias: unitAlias,
+				level: unitLevel as UnitLevelName
+			})
+			if (rootUnit === undefined) {
+				AppError.handleAppErr(
+					AppError.notFound(
+						`unit with alias: ${unitAlias} and level: ${unitLevel} not found`
+					)
+				)
+			}
+
+			const unitIds = await unitStatsRepo.findDescendantUnitIds(
+				rootUnit.id
+			)
+			const unitList = await unitRepo.findByIds(unitIds)
+			const classList = await classRepo.find({ unitIds })
+			const classIds = classList.map((c) => c.id)
+
+			const students = await this.repo.find({ classIds, unitIds })
+
+			const rosterUnits: RosterUnitNode[] = unitList.map((u) => ({
+				id: u.id,
+				name: u.name,
+				parentId: u.parentId,
+				level: u.level
+			}))
+			const rosterClasses: RosterClassNode[] = classList.map((c) => ({
+				id: c.id,
+				name: c.name,
+				unitId: c.unitId
+			}))
+			const rosterStudents: RosterStudent[] = students.map((s) => ({
+				fullName: s.fullName ?? '',
+				rank: s.rank ?? '',
+				position: s.position ?? '',
+				enlistmentPeriod: s.enlistmentPeriod ?? '',
+				unitId: s.unit?.id,
+				classId: s.class?.id
+			}))
+
+			const positionRows = await positionRepo.find({})
+			const rosterPositions: RosterPosition[] = positionRows.map((p) => ({
+				level: p.level,
+				code: p.code,
+				priority: p.priority
+			}))
+
+			const rows = buildRosterRows(
+				{
+					id: rootUnit.id,
+					name: rootUnit.name,
+					parentId: undefined,
+					level: rootUnit.level
+				},
+				rosterUnits,
+				rosterClasses,
+				rosterStudents,
+				rosterPositions
+			)
+			const summary = buildRosterSummary(rosterStudents)
+
+			const dateObj = dayjs(date)
+			const day = dateObj.format('DD')
+			const month = dateObj.format('MM')
+			const year = dateObj.year()
+
+			const template = await readFile(
+				path.join('./templates', 'unit-roster-extract-templ.docx')
+			)
+
+			return await createReport({
+				template,
+				data: {
+					unitName,
+					underUnitName,
+					city,
+					day,
+					month,
+					year,
+					reportTitle,
+					total: summary.total,
+					sq: summary.sq,
+					qncn: summary.qncn,
+					hsq: summary.hsq,
+					bs: summary.bs,
+					rows,
+					commanderPosition,
+					commanderRank,
+					commanderName
+				},
+				cmdDelimiter: ['{', '}']
+			})
+		} catch (err) {
+			console.error('handleExportUnitRosterExtract error', err)
+			log.error('handleExportUnitRosterExtract error', { err })
+
+			if (err instanceof AppError) {
+				throw err
+			}
 
 			throw APIError.internal('Internal error for exporting file')
 		}

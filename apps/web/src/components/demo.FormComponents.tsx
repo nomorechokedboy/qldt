@@ -137,6 +137,23 @@ export function TextArea({
 	)
 }
 
+function groupByField<T>(
+	items: T[],
+	getGroup: (item: T) => string | undefined
+) {
+	const groups: { key: string | undefined; items: T[] }[] = []
+	for (const item of items) {
+		const key = getGroup(item)
+		const last = groups[groups.length - 1]
+		if (last && last.key === key) {
+			last.items.push(item)
+		} else {
+			groups.push({ key, items: [item] })
+		}
+	}
+	return groups
+}
+
 export function Select({
 	label,
 	values,
@@ -145,7 +162,7 @@ export function Select({
 	onChange
 }: {
 	label: string
-	values: Array<{ label: string; value: string }>
+	values: Array<{ label: string; value: string; group?: string }>
 	placeholder?: string
 	defaultValue?: string
 	onChange?: (value: string) => void
@@ -172,19 +189,39 @@ export function Select({
 					<ShadcnSelect.SelectValue placeholder={placeholder} />
 				</ShadcnSelect.SelectTrigger>
 				<ShadcnSelect.SelectContent>
-					<ShadcnSelect.SelectGroup>
-						<ShadcnSelect.SelectLabel>
-							{label}
-						</ShadcnSelect.SelectLabel>
-						{values.map((value) => (
-							<ShadcnSelect.SelectItem
-								key={value.value}
-								value={value.value}
+					{values.some((value) => value.group) ? (
+						groupByField(values, (v) => v.group).map((group) => (
+							<ShadcnSelect.SelectGroup
+								key={group.key ?? '__ungrouped__'}
 							>
-								{value.label}
-							</ShadcnSelect.SelectItem>
-						))}
-					</ShadcnSelect.SelectGroup>
+								<ShadcnSelect.SelectLabel>
+									{group.key ?? label}
+								</ShadcnSelect.SelectLabel>
+								{group.items.map((value) => (
+									<ShadcnSelect.SelectItem
+										key={value.value}
+										value={value.value}
+									>
+										{value.label}
+									</ShadcnSelect.SelectItem>
+								))}
+							</ShadcnSelect.SelectGroup>
+						))
+					) : (
+						<ShadcnSelect.SelectGroup>
+							<ShadcnSelect.SelectLabel>
+								{label}
+							</ShadcnSelect.SelectLabel>
+							{values.map((value) => (
+								<ShadcnSelect.SelectItem
+									key={value.value}
+									value={value.value}
+								>
+									{value.label}
+								</ShadcnSelect.SelectItem>
+							))}
+						</ShadcnSelect.SelectGroup>
+					)}
 				</ShadcnSelect.SelectContent>
 			</ShadcnSelect.Select>
 			{field.state.meta.isTouched && <ErrorMessages errors={errors} />}

@@ -17,6 +17,7 @@ import useUnitData from '@/hooks/useUnitData'
 import { createFileRoute } from '@tanstack/react-router'
 import type { UnitLevel } from '@/types'
 import z from 'zod'
+import useAuth from '@/hooks/useAuth'
 
 const aliasSearchSchema = z.object({
 	level: z.enum(unitLevelOrder as [string, ...string[]]).default('battalion'),
@@ -33,6 +34,7 @@ function RouteComponent() {
 	const { level: rawLevel } = Route.useSearch()
 	const level = rawLevel as UnitLevel
 
+	const { user } = useAuth()
 	const { createFacetedFilter } = useDataTableToolbarConfig()
 	const {
 		data: students = [],
@@ -124,7 +126,11 @@ function RouteComponent() {
 					<TabsContent value='students'>
 						<StudentTable
 							params={{ unitAlias: alias, unitLevel: level }}
-							columnVisibility={defaultBirthdayColumnVisibility}
+							columnVisibility={{
+								...defaultBirthdayColumnVisibility,
+								address: false,
+								status: false
+							}}
 							columns={[
 								...battalionStudentColumnsWithoutAction,
 								actionColumn
@@ -134,8 +140,7 @@ function RouteComponent() {
 							exportConfig={{
 								filename,
 								defaultExportValues: {
-									unitName:
-										'Trường Cao đẳng hậu cần 2'.toUpperCase(),
+									unitName: unit?.parent?.name.toUpperCase(),
 									underUnitName: unit?.name.toUpperCase()
 								}
 							}}
