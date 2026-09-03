@@ -4,6 +4,7 @@ import { customType } from 'drizzle-orm/sqlite-core'
 import { AppError } from '../errors/index'
 import { baseSchema } from './base'
 import { Class, classes } from './classes'
+import { PositionDB, positions } from './positions'
 import { Unit, units } from './units'
 
 const PoliticalOrgEnum = customType<{ data: string; driverData: string }>({
@@ -30,6 +31,11 @@ export const students = sqlite.sqliteTable('students', {
 	previousUnit: sqlite.text().default(''),
 	previousPosition: sqlite.text().default(''),
 	position: sqlite.text().default('Chiến sĩ'),
+	// FK into positions.ts, currently only populated for battalion-level
+	// students. `position` above stays the source-of-truth text field —
+	// this FK is a supplementary link for rows already seeded in the
+	// positions table, not a replacement.
+	positionId: sqlite.integer().references(() => positions.id),
 	ethnic: sqlite.text().default(''),
 	religion: sqlite.text().default('Không'),
 	enlistmentPeriod: sqlite.text().default(''),
@@ -93,14 +99,19 @@ export const studentsRelations = relations(students, ({ one }) => ({
 	unit: one(units, {
 		fields: [students.unitId],
 		references: [units.id]
+	}),
+	positionRef: one(positions, {
+		fields: [students.positionId],
+		references: [positions.id]
 	})
 }))
 
 export type StudentDB = InferSelectModel<typeof students>
 
-export type Student = Omit<StudentDB, 'classId' | 'unitId'> & {
+export type Student = Omit<StudentDB, 'classId' | 'unitId' | 'positionId'> & {
 	class: Omit<Class, 'studentCount'> | null
 	unit: Unit | null
+	positionRef: PositionDB | null
 }
 
 export type StudentParam = InferInsertModel<typeof students>

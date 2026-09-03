@@ -108,7 +108,7 @@ export const units = sqlite.sqliteTable(
 	{
 		...baseSchema,
 
-		alias: sqlite.text().unique().notNull(),
+		alias: sqlite.text().notNull(),
 		name: sqlite.text().unique().notNull(),
 		level: UnitLevelEnum('level').$type<UnitLevelName>().notNull(),
 
@@ -137,7 +137,8 @@ export const units = sqlite.sqliteTable(
 			columns: [t.parentId],
 			foreignColumns: [t.id],
 			name: 'parent_id_fk'
-		})
+		}),
+		sqlite.unique('units_alias_id_unique').on(t.alias, t.id)
 	]
 )
 
