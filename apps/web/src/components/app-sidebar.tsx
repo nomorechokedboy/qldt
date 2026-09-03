@@ -66,24 +66,24 @@ const data = {
 				}
 			]
 		},
-		{
-			title: 'Sự kiện đơn vị',
-			url: '#',
-			superAdminOnly: false,
-			icon: Calendar,
-			items: [
-				{
-					title: 'Sinh nhật đồng đội',
-					url: '/birthday',
-					icon: Calendar
-				},
-				{
-					title: '☭ Chuyển Đảng chính thức ',
-					url: '/chuyen-dang-chinh-thuc'
-					// icon: HeartHandshake
-				}
-			]
-		},
+		/* {
+            title: 'Sự kiện đơn vị',
+            url: '#',
+            superAdminOnly: false,
+            icon: Calendar,
+            items: [
+                {
+                    title: 'Sinh nhật đồng đội',
+                    url: '/birthday',
+                    icon: Calendar
+                },
+                {
+                    title: '☭ Chuyển Đảng chính thức ',
+                    url: '/chuyen-dang-chinh-thuc'
+                    // icon: HeartHandshake
+                }
+            ]
+        }, */
 		// Chức năng khác -> import quân nhân
 		// {
 		// 	title: 'Chức năng khác',
@@ -136,6 +136,11 @@ const data = {
 					title: 'Nhật ký hoạt động',
 					url: '/nhat-ky-hoat-dong',
 					icon: History
+				},
+				{
+					title: 'Chức vụ',
+					url: '/chuc-vu',
+					icon: List
 				}
 			]
 		}
@@ -391,7 +396,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 					<Collapsible
 						key={item.title}
 						className='group/collapsible'
-						defaultOpen={false}
+						defaultOpen
 					>
 						<SidebarGroup>
 							{!isCollapsed && (

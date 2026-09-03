@@ -65,7 +65,7 @@ export function ExportMaterialAssetsDialog({
 
 	const form = useAppForm({
 		defaultValues: {
-			city: 'Thành phố Hồ Chí Minh',
+			city: 'Đồng Nai',
 			commanderName: user?.displayName ?? '',
 			commanderPosition: 'CHỈ HUY ĐƠN VỊ',
 			commanderRank: user?.rank ?? '',

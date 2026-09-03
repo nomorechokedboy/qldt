@@ -70,29 +70,42 @@ export const priorities = [
 	}
 ]
 
-export const MilitaryRankOptions = [
-	'Binh nhì',
-	'Binh nhất',
-	'Hạ sĩ',
-	'Trung sĩ',
-	'Thượng sĩ',
-	'Thiếu úy',
-	'Trung úy',
-	'Thượng úy',
-	'Đại úy',
-	'Thiếu tá',
-	'Trung tá',
-	'Thượng tá',
-	'Đại tá',
-	'Thiếu úy chuyên nghiệp',
-	'Trung úy chuyên nghiệp',
-	'Thượng úy chuyên nghiệp',
-	'Đại úy chuyên nghiệp',
-	'Thiếu tá chuyên nghiệp',
-	'Trung tá chuyên nghiệp',
-	'Thượng tá chuyên nghiệp',
-	'Đại tá chuyên nghiệp'
-].map((el) => ({ label: el, value: el }))
+const MilitaryRankGroups: { group: string; ranks: string[] }[] = [
+	{
+		group: 'HSQ-BS',
+		ranks: ['Binh nhì', 'Binh nhất', 'Hạ sĩ', 'Trung sĩ', 'Thượng sĩ']
+	},
+	{
+		group: 'SQ',
+		ranks: [
+			'Thiếu úy',
+			'Trung úy',
+			'Thượng úy',
+			'Đại úy',
+			'Thiếu tá',
+			'Trung tá',
+			'Thượng tá',
+			'Đại tá'
+		]
+	},
+	{
+		group: 'QNCN',
+		ranks: [
+			'Thiếu úy chuyên nghiệp',
+			'Trung úy chuyên nghiệp',
+			'Thượng úy chuyên nghiệp',
+			'Đại úy chuyên nghiệp',
+			'Thiếu tá chuyên nghiệp',
+			'Trung tá chuyên nghiệp',
+			'Thượng tá chuyên nghiệp'
+		]
+	}
+]
+
+export const MilitaryRankOptions = MilitaryRankGroups.flatMap(
+	({ group, ranks }) =>
+		ranks.map((rank) => ({ label: rank, value: rank, group }))
+)
 
 export const EduLevelOptions = [
 	'7/12',

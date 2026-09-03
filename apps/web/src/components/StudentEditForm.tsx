@@ -13,10 +13,12 @@ import {
 	religionOptions,
 	eduLevelOptions,
 	politicalOptions,
-	rankOptions
+	rankOptions,
+	soldierPositionOptions
 } from '@/data/ethnics'
 import useClassData from '@/hooks/useClasses'
 import useUnitsData from '@/hooks/useUnitsData'
+import usePositionsData from '@/hooks/usePositionsData'
 import { unitLevelLabels } from '@/data/unit-levels'
 import { getMediaUri } from '../lib/utils'
 import { useAppForm } from '@/hooks/demo.form'
@@ -67,6 +69,14 @@ export default function StudentEditForm({
 					label: `${u.name} (${unitLevelLabels[u.level]})`
 				})),
 		[units]
+	)
+	const { data: positions = [] } = usePositionsData()
+	const positionOptions = useMemo(
+		() => [
+			...positions.map((p) => ({ value: p.code, label: p.name })),
+			...soldierPositionOptions
+		],
+		[positions]
 	)
 	const [membershipType, setMembershipType] = useState<'class' | 'unit'>(
 		student.unitId !== undefined && student.unitId !== null
@@ -382,6 +392,7 @@ export default function StudentEditForm({
 										<Field
 											name='position'
 											label='Chức vụ'
+											options={positionOptions}
 										/>
 										<div className='flex flex-col gap-1'>
 											<Label>Thuộc về</Label>

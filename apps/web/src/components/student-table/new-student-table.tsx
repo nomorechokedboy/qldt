@@ -11,13 +11,20 @@ import type { QueryObserverResult } from '@tanstack/react-query'
 import type { ColumnDef, VisibilityState } from '@tanstack/react-table'
 import { ArrowDownToLine, RefreshCw, Settings } from 'lucide-react'
 import type { ReactNode } from 'react'
+import { useState } from 'react'
 import { DataTable } from '../data-table'
 import { ExportStudentDataDynamicDialog } from '../export-student-data-dynamic-dialog'
 import { ExportTemplateManager } from '../export-template-manager'
+import { ExportUnitRosterExtractDialog } from '../export-unit-roster-extract-dialog'
 import StudentForm from '../student-form'
 import TableSkeleton from '../table-skeleton'
 import { Button } from '../ui/button'
-import { DropdownMenu, DropdownMenuTrigger } from '../ui/dropdown-menu'
+import {
+	DropdownMenu,
+	DropdownMenuContent,
+	DropdownMenuItem,
+	DropdownMenuTrigger
+} from '../ui/dropdown-menu'
 import { columnsWithoutAction } from './columns'
 
 interface StudentTableProps {
@@ -85,6 +92,8 @@ export default function StudentTable({
 		refetch: refetchStudent
 	} = useStudentData(params)
 	const actionColumn = useActionColumn(handleRefreshStudents)
+	const [exportFileOpen, setExportFileOpen] = useState(false)
+	const [exportRosterOpen, setExportRosterOpen] = useState(false)
 
 	if (isLoadingStudents) {
 		return <TableSkeleton />
@@ -148,7 +157,35 @@ export default function StudentTable({
 												Quản lý mẫu
 											</Button>
 										</ExportTemplateManager>
+										<DropdownMenu>
+											<DropdownMenuTrigger asChild>
+												<Button>
+													<ArrowDownToLine />
+													Xuất dữ liệu
+												</Button>
+											</DropdownMenuTrigger>
+											<DropdownMenuContent align='end'>
+												<DropdownMenuItem
+													onSelect={() =>
+														setExportRosterOpen(
+															true
+														)
+													}
+												>
+													Xuất danh sách biên chế
+												</DropdownMenuItem>
+												<DropdownMenuItem
+													onSelect={() =>
+														setExportFileOpen(true)
+													}
+												>
+													Xuất file
+												</DropdownMenuItem>
+											</DropdownMenuContent>
+										</DropdownMenu>
 										<ExportStudentDataDynamicDialog
+											open={exportFileOpen}
+											onOpenChange={setExportFileOpen}
 											data={
 												exportHook.exportableData
 													.data as unknown as Student[]
@@ -159,12 +196,22 @@ export default function StudentTable({
 											defaultValues={
 												exportConfig.defaultExportValues
 											}
-										>
-											<Button>
-												<ArrowDownToLine />
-												Xuất file
-											</Button>
-										</ExportStudentDataDynamicDialog>
+										/>
+										{params.unitAlias !== undefined &&
+											params.unitLevel !== undefined && (
+												<ExportUnitRosterExtractDialog
+													open={exportRosterOpen}
+													onOpenChange={
+														setExportRosterOpen
+													}
+													unitAlias={params.unitAlias}
+													unitLevel={params.unitLevel}
+													defaultFilename={`bien-che-${exportConfig.filename}`}
+													defaultValues={
+														exportConfig.defaultExportValues
+													}
+												/>
+											)}
 									</>
 								) : null
 				}

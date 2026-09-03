@@ -1,10 +1,5 @@
-import { ExportMaterialStocks } from '@/api'
+import { ExportUnitRosterExtract } from '@/api'
 import { DocxPreviewDialog } from '@/components/docx-preview-dialog'
-import { ExportColumnPicker } from '@/components/export-column-picker'
-import {
-	buildMaterialStockExportRow,
-	materialStockExportFields
-} from '@/components/material-stock-table/export-row'
 import { Button } from '@/components/ui/button'
 import {
 	Dialog,
@@ -13,23 +8,18 @@ import {
 	DialogDescription,
 	DialogFooter,
 	DialogHeader,
-	DialogTitle,
-	DialogTrigger
+	DialogTitle
 } from '@/components/ui/dialog'
-import { Label } from '@/components/ui/label'
 import { useAppForm } from '@/hooks/demo.form'
 import useAuth from '@/hooks/useAuth'
-import { useExportTemplates } from '@/hooks/useExportTemplates'
-import type { MaterialStock } from '@/types'
-import type { ReactNode } from 'react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 
-const NO_TEMPLATE_VALUE = '__default__'
-
-export interface ExportMaterialStocksDialogProps {
-	children: ReactNode
-	data: MaterialStock[]
+export interface ExportUnitRosterExtractDialogProps {
+	open: boolean
+	onOpenChange: (open: boolean) => void
+	unitAlias: string
+	unitLevel: string
 	defaultFilename: string
 	defaultValues?: {
 		unitName?: string
@@ -38,30 +28,19 @@ export interface ExportMaterialStocksDialogProps {
 	id?: string
 }
 
-export function ExportMaterialStocksDialog({
-	children,
-	data,
+export function ExportUnitRosterExtractDialog({
+	open,
+	onOpenChange,
+	unitAlias,
+	unitLevel,
 	defaultFilename,
 	defaultValues,
-	id = 'exportMaterialStocksForm'
-}: ExportMaterialStocksDialogProps) {
+	id = 'exportUnitRosterExtractForm'
+}: ExportUnitRosterExtractDialogProps) {
 	const { user } = useAuth()
-	const { data: templates } = useExportTemplates('material_stocks')
-	const [open, setOpen] = useState(false)
 	const [previewOpen, setPreviewOpen] = useState(false)
 	const [previewBuffer, setPreviewBuffer] = useState<ArrayBuffer | null>(null)
 	const [previewFilename, setPreviewFilename] = useState(defaultFilename)
-	const [selectedColumns, setSelectedColumns] = useState(
-		materialStockExportFields.map((f) => f.key)
-	)
-
-	const templateOptions = [
-		{ label: 'Mặc định', value: NO_TEMPLATE_VALUE },
-		...(templates ?? []).map((t) => ({
-			label: t.name,
-			value: String(t.id)
-		}))
-	]
 
 	const form = useAppForm({
 		defaultValues: {
@@ -69,44 +48,33 @@ export function ExportMaterialStocksDialog({
 			commanderName: user?.displayName ?? '',
 			commanderPosition: 'CHỈ HUY ĐƠN VỊ',
 			commanderRank: user?.rank ?? '',
-			reportTitle: 'Báo cáo vật tư sinh hoạt',
+			reportTitle: 'danh sách biên chế'.toUpperCase(),
 			underUnitName: defaultValues?.underUnitName ?? '',
 			unitName: defaultValues?.unitName ?? '',
-			filename: defaultFilename,
-			templateId: NO_TEMPLATE_VALUE
+			filename: defaultFilename
 		},
 		onSubmit: async ({ value, formApi }) => {
-			if (selectedColumns.length === 0) {
-				toast.error('Hãy chọn ít nhất một cột để xuất dữ liệu')
-				return
-			}
-
 			try {
-				const resp = await ExportMaterialStocks({
+				const resp = await ExportUnitRosterExtract({
+					unitAlias,
+					unitLevel,
 					city: value.city,
 					commanderName: value.commanderName,
 					commanderPosition: value.commanderPosition,
 					commanderRank: value.commanderRank,
-					data: data.map((stock) =>
-						buildMaterialStockExportRow(stock, selectedColumns)
-					),
 					reportTitle: value.reportTitle,
 					underUnitName: value.underUnitName,
-					unitName: value.unitName,
-					templateId:
-						value.templateId === NO_TEMPLATE_VALUE
-							? undefined
-							: Number(value.templateId)
+					unitName: value.unitName
 				})
 				const buffer = await resp.arrayBuffer()
 
 				setPreviewBuffer(buffer)
 				setPreviewFilename(value.filename)
 				setPreviewOpen(true)
-				setOpen(false)
+				onOpenChange(false)
 				formApi.reset()
 			} catch (err) {
-				console.error('handleExport error', err)
+				console.error('handleExportUnitRosterExtract error', err)
 				toast.error('Chưa thể xuất file, đã có lỗi xảy ra!')
 			}
 		}
@@ -114,7 +82,7 @@ export function ExportMaterialStocksDialog({
 
 	return (
 		<>
-			<Dialog open={open} onOpenChange={setOpen}>
+			<Dialog open={open} onOpenChange={onOpenChange}>
 				<form
 					id={id}
 					onSubmit={(e) => {
@@ -123,15 +91,12 @@ export function ExportMaterialStocksDialog({
 						form.handleSubmit()
 					}}
 				>
-					<DialogTrigger asChild>{children}</DialogTrigger>
 					<DialogContent className='container' key={id}>
 						<DialogHeader>
-							<DialogTitle>
-								Xuất dữ liệu vật tư sinh hoạt
-							</DialogTitle>
+							<DialogTitle>Xuất danh sách biên chế</DialogTitle>
 							<DialogDescription>
-								Hãy điền những thông tin cần thiết để xuất dữ
-								liệu
+								Danh sách biên chế của đơn vị này và toàn bộ đơn
+								vị trực thuộc, phân theo từng đơn vị
 							</DialogDescription>
 						</DialogHeader>
 						<div className='grid grid-cols-3 gap-4'>
@@ -198,22 +163,19 @@ export function ExportMaterialStocksDialog({
 									<field.EditableInput label='Tiêu đề báo cáo' />
 								)}
 							</form.AppField>
-							<form.AppField name='templateId'>
+							<form.AppField
+								name='city'
+								validators={{
+									onBlur: ({ value }) =>
+										!value
+											? 'Địa danh không được bỏ trống'
+											: undefined
+								}}
+							>
 								{(field) => (
-									<field.Select
-										label='Mẫu xuất dữ liệu'
-										values={templateOptions}
-									/>
+									<field.EditableInput label='Địa danh' />
 								)}
 							</form.AppField>
-						</div>
-						<div className='grid gap-2'>
-							<Label>Cột dữ liệu muốn xuất</Label>
-							<ExportColumnPicker
-								options={materialStockExportFields}
-								selected={selectedColumns}
-								onChange={setSelectedColumns}
-							/>
 						</div>
 						<div className='grid grid-cols-3 gap-4'>
 							<form.AppField
@@ -227,7 +189,7 @@ export function ExportMaterialStocksDialog({
 							>
 								{(field) => (
 									<field.EditableInput
-										label='Cấp bậc của chỉ huy'
+										label='Chức vụ chỉ huy'
 										ellipsisMaxWidth='500px'
 									/>
 								)}

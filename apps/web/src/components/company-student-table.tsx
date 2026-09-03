@@ -88,7 +88,7 @@ export default function CompanyStudentTable({
 				<div className='flex items-center justify-between space-y-2'>
 					<div>
 						<h2 className='text-2xl font-bold tracking-tight'>
-							Danh sách quân nhân Đại đội
+							Danh sách quân nhân
 						</h2>
 						<p className='text-muted-foreground'>
 							Đây là danh sách quân nhân của {unit?.name}
@@ -97,7 +97,11 @@ export default function CompanyStudentTable({
 				</div>
 				<StudentTable
 					params={{ unitAlias: alias, unitLevel: level }}
-					columnVisibility={defaultBirthdayColumnVisibility}
+					columnVisibility={{
+						...defaultBirthdayColumnVisibility,
+						address: false,
+						status: false
+					}}
 					columns={[...columnsWithoutAction, actionColumn]}
 					facetedFilters={facetedFilters}
 					placeholder='Chưa có thông tin quân nhân.'

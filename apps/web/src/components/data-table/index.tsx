@@ -26,7 +26,7 @@ import {
 	DataTableToolbar,
 	type DataTableToolbarProps
 } from './data-table-toolbar'
-import { type ComponentType, useEffect, useState } from 'react'
+import { type ComponentType, useEffect, useId, useState } from 'react'
 import type { QueryObserverResult } from '@tanstack/react-query'
 import type { DataTableExportHook } from '@/hooks/useDataTableExport'
 import useDataTableExport from '@/hooks/useDataTableExport'
@@ -37,8 +37,6 @@ import { Button } from '../ui/button'
 import type { FacetedFilterConfig } from '@/types'
 
 type ToolbarProps<TData> = Omit<DataTableToolbarProps<TData>, 'table'>
-
-const deleteDataToastId = 'selection-toast'
 
 interface DataTableProps<TData, TValue> {
 	cardClassName?: string
@@ -100,6 +98,7 @@ export function DataTable<TData, TValue>({
 	const [sorting, setSorting] = useState<SortingState>([])
 	const [viewMode, setViewMode] = useState<ViewMode>(defaultViewMode)
 	const [isDeleting, setIsDeleting] = useState(false)
+	const deleteDataToastId = `selection-toast-${useId()}`
 
 	const table = useReactTable({
 		data,
@@ -135,6 +134,7 @@ export function DataTable<TData, TValue>({
 
 	const handleReset = () => {
 		table.resetRowSelection()
+		toast.dismiss(deleteDataToastId)
 	}
 
 	const handleDeleteSelected = async () => {
@@ -153,6 +153,7 @@ export function DataTable<TData, TValue>({
 				)
 			) {
 				await onDeleteRows(ids)
+				toast.dismiss(deleteDataToastId)
 				toast.success('Xóa dữ liệu thành công!')
 				table.resetRowSelection()
 			} else {
@@ -184,6 +185,7 @@ export function DataTable<TData, TValue>({
 				)
 			) {
 				await onConfirmRows(ids)
+				toast.dismiss(deleteDataToastId)
 				toast.success('Xác nhận thành công!')
 				table.resetRowSelection()
 			} else {
