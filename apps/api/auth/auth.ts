@@ -56,7 +56,12 @@ interface LoginResponse {
 }
 
 export const Login = api(
-	{ expose: true, method: 'POST', path: '/authn/login' },
+	{
+		expose: true,
+		method: 'POST',
+		path: '/authn/login',
+		tags: ['rate_limit']
+	},
 	async ({ username, password }: LoginRequest): Promise<LoginResponse> => {
 		const { accessToken, refreshToken } = await authController.login({
 			password,
