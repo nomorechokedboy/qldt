@@ -1,4 +1,4 @@
-import { useAppForm } from '@/hooks/demo.form'
+import { useAppForm } from '@/hooks/use-app-form'
 import {
 	Dialog,
 	DialogHeader,
@@ -15,7 +15,8 @@ import type { UpdateUserBody, User, UserUpdate } from '@/types'
 import { toast } from 'sonner'
 import { useEffect } from 'react'
 import useUnitsData from '@/hooks/useUnitsData'
-import { userRankOptions, userPositionOptions } from '@/data/ethnics'
+import { userRankOptions } from '@/data/ranks'
+import { userPositionOptions } from '@/data/positions'
 import { getErrorMessage } from '@/lib/utils'
 
 const schema = z

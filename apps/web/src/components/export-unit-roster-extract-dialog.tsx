@@ -10,7 +10,7 @@ import {
 	DialogHeader,
 	DialogTitle
 } from '@/components/ui/dialog'
-import { useAppForm } from '@/hooks/demo.form'
+import { useAppForm } from '@/hooks/use-app-form'
 import useAuth from '@/hooks/useAuth'
 import { useState } from 'react'
 import { toast } from 'sonner'

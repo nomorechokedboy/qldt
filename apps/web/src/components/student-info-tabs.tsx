@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
 import StudentEditForm from './StudentEditForm'
 import type { Student } from '@/types'
-import { politicalOptions } from '@/data/ethnics'
+import { politicalOptions } from '@/data/political-status'
 import useClassData from '@/hooks/useClasses'
 import { getMediaUri, isSuperAdmin } from '@/lib/utils'
 import {

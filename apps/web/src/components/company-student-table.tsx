@@ -4,7 +4,7 @@ import {
 	columnsWithoutAction
 } from '@/components/student-table/columns'
 import { SidebarInset } from '@/components/ui/sidebar'
-import { EhtnicOptions } from '@/data/ethnics'
+import { EhtnicOptions } from '@/data/ethnicities'
 import useDataTableToolbarConfig from '@/hooks/useDataTableToolbarConfig'
 import useStudentData from '@/hooks/useStudents'
 import type { UnitLevel } from '@/types'

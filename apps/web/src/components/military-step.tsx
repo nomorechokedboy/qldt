@@ -1,4 +1,5 @@
-import { rankOptions, soldierPositionOptions } from '@/data/ethnics'
+import { rankOptions } from '@/data/ranks'
+import { soldierPositionOptions } from '@/data/positions'
 import usePositionsData from '@/hooks/usePositionsData'
 
 const LEVEL_LABELS: Record<string, string> = {

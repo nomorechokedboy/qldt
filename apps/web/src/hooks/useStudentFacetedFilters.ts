@@ -1,7 +1,7 @@
 import useDataTableToolbarConfig from '@/hooks/useDataTableToolbarConfig'
 import useClassData from '@/hooks/useClasses'
 import { EduLevelOptions } from '@/components/data-table/data/data'
-import { EhtnicOptions } from '@/data/ethnics'
+import { EhtnicOptions } from '@/data/ethnicities'
 import type { Student } from '@/types'
 
 export function useStudentFacetedFilters(students: Student[]) {

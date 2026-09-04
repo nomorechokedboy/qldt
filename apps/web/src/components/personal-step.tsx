@@ -1,4 +1,6 @@
-import { EhtnicOptions, religionOptions, eduLevelOptions } from '@/data/ethnics'
+import { EhtnicOptions } from '@/data/ethnicities'
+import { religionOptions } from '@/data/religions'
+import { eduLevelOptions } from '@/data/education-levels'
 import useClassData from '@/hooks/useClasses'
 import useUnitsData from '@/hooks/useUnitsData'
 import { unitLevelLabels } from '@/data/unit-levels'

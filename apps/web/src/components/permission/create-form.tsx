@@ -3,7 +3,7 @@ import { useMutation } from '@tanstack/react-query'
 import { CreatePermission } from '@/api'
 import { toast } from 'sonner'
 import { queryClient } from '@/integrations/tanstack-query/root-provider'
-import { useAppForm } from '@/hooks/demo.form'
+import { useAppForm } from '@/hooks/use-app-form'
 import { getErrorMessage } from '@/lib/utils'
 
 export default function PermissionForm() {

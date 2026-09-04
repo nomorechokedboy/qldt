@@ -7,7 +7,7 @@ import {
 } from '@/types'
 import { DataTable } from '../data-table'
 import { columnsWithoutAction } from '@/components/student-table/columns'
-import { EhtnicOptions } from '@/data/ethnics'
+import { EhtnicOptions } from '@/data/ethnicities'
 import { EduLevelOptions } from '@/components/data-table/data/data'
 import TableSkeleton from '../table-skeleton'
 import { Button } from '../ui/button'
@@ -53,7 +53,9 @@ export default function StudentTable({
 	}))
 
 	const previousUnitSet = new Set(
-		students.filter((s) => !!s.previousUnit).map((s) => s.previousUnit as string)
+		students
+			.filter((s) => !!s.previousUnit)
+			.map((s) => s.previousUnit as string)
 	)
 	const previousUnitOptions = Array.from(previousUnitSet).map((pu) => ({
 		label: pu,
