@@ -177,7 +177,11 @@ class controller {
 
 	async refreshToken(req: RefreshTokenRequest): Promise<TokenResponse> {
 		try {
-			const { userId, isSuperUser } = this.verifyToken(req.token)
+			const { userId, isSuperUser, type } = this.verifyToken(req.token)
+			if (type !== 'refresh') {
+				throw AppError.unauthenticated('Invalid token type')
+			}
+
 			const user = await this.userRepo
 				.findOne({ id: userId } as UserDB)
 				.catch(AppError.handleAppErr)
