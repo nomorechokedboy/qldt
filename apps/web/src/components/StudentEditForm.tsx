@@ -8,20 +8,18 @@ import { Label } from '@/components/ui/label'
 import type { Student, ChildrenInfo } from '@/types'
 import usePatchStudentInfo from '@/hooks/usePatchStudentInfo'
 // option cho dân tộc, tôn giáo, trình độ học vấn
-import {
-	EhtnicOptions,
-	religionOptions,
-	eduLevelOptions,
-	politicalOptions,
-	rankOptions,
-	soldierPositionOptions
-} from '@/data/ethnics'
+import { EhtnicOptions } from '@/data/ethnicities'
+import { religionOptions } from '@/data/religions'
+import { eduLevelOptions } from '@/data/education-levels'
+import { politicalOptions } from '@/data/political-status'
+import { rankOptions } from '@/data/ranks'
+import { soldierPositionOptions } from '@/data/positions'
 import useClassData from '@/hooks/useClasses'
 import useUnitsData from '@/hooks/useUnitsData'
 import usePositionsData from '@/hooks/usePositionsData'
 import { unitLevelLabels } from '@/data/unit-levels'
 import { getMediaUri } from '../lib/utils'
-import { useAppForm } from '@/hooks/demo.form'
+import { useAppForm } from '@/hooks/use-app-form'
 import { toast } from 'sonner'
 import useUploadFiles from '@/hooks/useUploadFiles'
 import { getErrorMessage } from '@/lib/utils'

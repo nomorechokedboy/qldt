@@ -9,8 +9,8 @@ import {
 	TextField,
 	UploadField,
 	AvatarField
-} from '@/components/demo.FormComponents'
-import { fieldContext, formContext } from './demo.form-context'
+} from '@/components/FormComponents'
+import { fieldContext, formContext } from './form-context'
 
 export const { useAppForm } = createFormHook({
 	fieldComponents: {

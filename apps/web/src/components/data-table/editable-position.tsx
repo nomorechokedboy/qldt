@@ -3,7 +3,7 @@ import type { Student } from '@/types'
 import type { CellContext } from '@tanstack/react-table'
 import ToggleInput from '@/components/toggle-input'
 import { Badge } from '@/components/ui/badge'
-import { soldierPositionOptions } from '@/data/ethnics'
+import { soldierPositionOptions } from '@/data/positions'
 import usePositionsData from '@/hooks/usePositionsData'
 
 const LEVEL_LABELS: Record<string, string> = {

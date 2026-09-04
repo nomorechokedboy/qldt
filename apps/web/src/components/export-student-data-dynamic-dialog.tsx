@@ -16,7 +16,7 @@ import {
 	DialogTitle
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
-import { useAppForm } from '@/hooks/demo.form'
+import { useAppForm } from '@/hooks/use-app-form'
 import useAuth from '@/hooks/useAuth'
 import { useExportTemplates } from '@/hooks/useExportTemplates'
 import type { Student } from '@/types'

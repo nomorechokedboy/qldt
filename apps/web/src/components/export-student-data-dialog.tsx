@@ -9,7 +9,7 @@ import {
 	DialogTitle,
 	DialogTrigger
 } from '@/components/ui/dialog'
-import { useAppForm } from '@/hooks/demo.form'
+import { useAppForm } from '@/hooks/use-app-form'
 import useAuth from '@/hooks/useAuth'
 import useExportButton from '@/hooks/useExportButton'
 import type { TemplType } from '@/types'

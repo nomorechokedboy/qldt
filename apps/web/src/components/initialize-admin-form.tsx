@@ -7,7 +7,7 @@ import {
 	CardHeader,
 	CardTitle
 } from '@/components/ui/card'
-import { useAppForm } from '@/hooks/demo.form'
+import { useAppForm } from '@/hooks/use-app-form'
 import * as z from 'zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { InitAdmin } from '@/api'

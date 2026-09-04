@@ -1,4 +1,4 @@
-import { useAppForm } from '@/hooks/demo.form'
+import { useAppForm } from '@/hooks/use-app-form'
 import {
 	Dialog,
 	DialogHeader,
@@ -13,7 +13,8 @@ import { UpdateUser } from '@/api'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { useEffect } from 'react'
-import { userRankOptions, userPositionOptions } from '@/data/ethnics'
+import { userRankOptions } from '@/data/ranks'
+import { userPositionOptions } from '@/data/positions'
 import type { User } from '@/types'
 import { getErrorMessage } from '@/lib/utils'
 
