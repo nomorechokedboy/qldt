@@ -662,9 +662,7 @@ export class Controller {
 			const template = await this.getTemplate(templateType!)
 
 			let templData: any = {}
-			if (templateType !== 'StudentEnrollmentFormTempl') {
-				templData = { ...templateData }
-			} else {
+			if (templateType === 'StudentEnrollmentFormTempl') {
 				const stu = rows.at(0)
 				if (stu === undefined) {
 					AppError.handleAppErr(
@@ -672,17 +670,52 @@ export class Controller {
 					)
 				}
 
-				const parentUnit = await this.unitRepo
-					.getOne({ id: stu.class.unit.parentId })
+				// A student belongs to exactly one of a class (squad) or a
+				// unit (platoon and above) - see Controller.create. The
+				// "đơn vị" chain is anchored at whichever one this student
+				// has: the class's owning unit, or the unit directly.
+				const leafUnitId: number | undefined =
+					stu.class?.unit?.id ?? stu.unit?.id
+				if (leafUnitId === undefined) {
+					AppError.handleAppErr(
+						AppError.internal(
+							'Student has no unit or class assigned'
+						)
+					)
+				}
+
+				// Nearest-first ancestor chain, e.g. [platoon, company, battalion].
+				const chain = await this.unitRepo
+					.findAncestorChain(leafUnitId)
 					.catch(AppError.handleAppErr)
+				const chainNames = chain.map((u) => u.name)
+				// The root (battalion) is only dropped when the student sits
+				// below a class (squad) - there the class name already
+				// pins the deepest, most specific level, and the full
+				// chain (root included) would be one level too long. A
+				// student assigned directly to a unit (battalion, company,
+				// or platoon) always shows its full chain, root included.
+				const hasClass = Boolean(stu.class?.name)
+				if (hasClass) {
+					chainNames.unshift(stu.class.name)
+				}
+				const displayNames =
+					hasClass && chainNames.length > 1
+						? chainNames.slice(0, -1)
+						: chainNames
+				stu.donVi = displayNames.reverse().join(', ')
 
 				const { rows: _, ...templateDataWithoutRows } = templateData
 				templData = {
 					stu,
-					companyName: stu.class.unit.name,
-					batalionName: parentUnit?.name,
+					unit: {
+						name: chain[0]?.name,
+						parentName: chain[1]?.name
+					},
 					...templateDataWithoutRows
 				}
+			} else {
+				templData = { ...templateData }
 			}
 
 			// Get the student's avatar key from storage
@@ -768,9 +801,11 @@ export class Controller {
 					reportTitle,
 					rows,
 					troopers,
-					underUnitName,
-					unitName,
-					year
+					year,
+					unit: {
+						parentName: underUnitName,
+						name: unitName
+					}
 				},
 				cmdDelimiter: ['{', '}']
 			})

@@ -458,11 +458,11 @@ export default function StudentEditForm({
 										/>
 										<Field
 											name='previousUnit'
-											label='Đơn vị trước khi nhập học'
+											label='Đơn vị cũ'
 										/>
 										<Field
 											name='previousPosition'
-											label='Chức vụ trước khi nhập học'
+											label='Chức vụ cũ'
 										/>
 									</div>
 								</div>
