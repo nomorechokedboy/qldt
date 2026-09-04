@@ -380,7 +380,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 						className='flex h-9 w-9 items-center justify-center rounded-md ring-1 ring-gold/40 shadow-sm'
 						style={{ backgroundImage: 'var(--gradient-primary)' }}
 					>
-						<ArtilleryEmblem variant='mark' className='h-6 w-6' />
+						<ArtilleryEmblem
+							variant='mark'
+							className='h-6 w-6'
+							withBackground={false}
+						/>
 					</div>
 					{!isCollapsed && (
 						<div className='flex flex-col'>

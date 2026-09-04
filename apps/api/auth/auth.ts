@@ -7,6 +7,7 @@ import { getAuthData } from '~encore/auth'
 import userController from '../users/controller'
 import { UserDB } from '../schema'
 import { User } from '../users/users'
+import { getLockedLoginUsernames, unlockLogin } from '../middleware/rate-limit'
 
 interface AuthParams {
 	authorization: Header<'Authorization'>
@@ -111,6 +112,34 @@ export const GetUserInfo = api(
 			permissions: authData.permissions,
 			isSuperAdmin: authData.isSuperAdmin
 		}
+	}
+)
+
+export const GetLockedLoginUsernames = api(
+	{ auth: true, expose: true, method: 'GET', path: '/authn/locked-users' },
+	async (): Promise<{ usernames: string[] }> => {
+		return { usernames: getLockedLoginUsernames() }
+	}
+)
+
+interface UnlockLoginRequest {
+	username: string
+}
+
+export const UnlockLogin = api(
+	{
+		auth: true,
+		expose: true,
+		method: 'POST',
+		path: '/authn/unlock-login'
+	},
+	async ({ username }: UnlockLoginRequest): Promise<{ success: true }> => {
+		unlockLogin(username)
+		log.info('AuthController.UnlockLogin cleared login rate limit', {
+			username,
+			requestedBy: getAuthData()?.userID
+		})
+		return { success: true }
 	}
 )
 

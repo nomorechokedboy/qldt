@@ -136,6 +136,9 @@ const PERMISSION_MAP: Record<string, string[]> = {
 	'PATCH:/users': ['users:update'],
 	'DELETE:/users': ['users:delete'],
 
+	'POST:/authn/unlock-login': ['users:update'],
+	'GET:/authn/locked-users': ['users:read'],
+
 	'GET:/resources': ['resources:read'],
 
 	'POST:/roles': ['roles:create'],

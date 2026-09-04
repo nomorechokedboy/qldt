@@ -1,5 +1,6 @@
 import { GetUserInfo, Login } from '@/api'
 import { AuthController } from '@/biz'
+import { getErrorMessage } from '@/lib/utils'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { toast } from 'sonner'
@@ -43,7 +44,7 @@ export default function useAuth() {
 		},
 		onError: (error) => {
 			console.error('Login failed:', error)
-			toast.error('Đăng nhập thất bại')
+			toast.error(getErrorMessage(error, 'Đăng nhập thất bại'))
 		}
 	})
 
