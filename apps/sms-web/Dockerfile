@@ -27,6 +27,13 @@ RUN apk update
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
+# Copy the pruned workspace package.json files and lockfile
+COPY --from=builder /app/out/json/ .
+COPY --from=builder /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
+
+# Install dependencies using the pruned lockfile
+RUN pnpm install --frozen-lockfile
+
 ARG VITE_APP_TITLE
 ARG VITE_CLIENT_ID
 ARG VITE_OAUTH2_URL
@@ -42,13 +49,6 @@ ENV VITE_REDIRECT_URI=$VITE_REDIRECT_URI
 ENV VITE_API_URL=$VITE_API_URL
 
 # RUN echo "BUILD WITH OAUTH2=$VITE_OAUTH2_URL API=$VITE_API_URL"
-
-# Copy the pruned workspace package.json files and lockfile
-COPY --from=builder /app/out/json/ .
-COPY --from=builder /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
-
-# Install dependencies using the pruned lockfile
-RUN pnpm install --frozen-lockfile
 
 # Copy the pruned source code and build
 COPY --from=builder /app/out/full/ .

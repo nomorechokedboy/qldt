@@ -12,6 +12,14 @@
 							"name": "notification-processor-subscription"
 						}
 					}
+				},
+				"audit-log-events": {
+					"name": "audit-log-events-topic",
+					"subscriptions": {
+						"audit-log-writer": {
+							"name": "audit-log-writer-subscription"
+						}
+					}
 				}
 			}
 		}

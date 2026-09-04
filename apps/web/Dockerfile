@@ -27,16 +27,16 @@ RUN apk update
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-ARG VITE_API_URL
-
-ENV VITE_API_URL=$VITE_API_URL
-
 # Copy the pruned workspace package.json files and lockfile
 COPY --from=builder /app/out/json/ .
 COPY --from=builder /app/out/pnpm-lock.yaml ./pnpm-lock.yaml
 
 # Install dependencies using the pruned lockfile
 RUN pnpm install --frozen-lockfile
+
+ARG VITE_API_URL
+
+ENV VITE_API_URL=$VITE_API_URL
 
 # Copy the pruned source code and build
 COPY --from=builder /app/out/full/ .
