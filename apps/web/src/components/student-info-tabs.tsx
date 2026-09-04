@@ -24,6 +24,7 @@ import { ExportStudentDataDialog } from './export-student-data-dialog'
 import useUpdateStudent from '@/hooks/useUpdateStudent'
 import { toast } from 'sonner'
 import { useQueryClient } from '@tanstack/react-query'
+import useAuth from '@/hooks/useAuth'
 
 interface StudentInfoTabsProps {
 	student: Student
@@ -35,6 +36,7 @@ export default function StudentInfoTabs({ student }: StudentInfoTabsProps) {
 	const { mutateAsync: updateStudent, isPending: isUpdating } =
 		useUpdateStudent()
 
+	const { user } = useAuth()
 	const { data: classes = [] } = useClassData()
 	// options cho select lớp
 	const classOptions = useMemo(
@@ -221,19 +223,22 @@ export default function StudentInfoTabs({ student }: StudentInfoTabsProps) {
 					<div className='flex flex-row lg:flex-col gap-2 w-full lg:w-auto'>
 						<ExportStudentDataDialog
 							data={[student as any]}
-							defaultFilename={`Phiếu-học-viên-${student.fullName?.replace(' ', '_')}`}
+							defaultFilename={`trich-ngang-quan-nhan-${student.fullName?.replace(' ', '_')}`}
 							defaultValues={{
-								underUnitName: 'TRƯỜNG CAO ĐẲNG HẬU CẦN 2',
-								unitName: '	TỔNG CỤC HẬU CẦN – KỸ THUẬT'
+								unitName: '',
+								underUnitName:
+									user?.unit?.name ?? ''.toUpperCase()
+								// city: 'Đồng Nai'
 							}}
 							templType='StudentEnrollmentFormTempl'
 							id='ExportStudentEnrollmentFormDialog'
 						>
 							<Button
-								className='flex-1 lg:w-full whitespace-nowrap hidden'
+								className='flex-1 lg:w-full whitespace-nowrap'
 								size='sm'
 							>
-								<FileDown className='mr-2 h-4 w-4' /> Tải phiếu
+								<FileDown className='mr-2 h-4 w-4' />
+								Tải trích ngang
 							</Button>
 						</ExportStudentDataDialog>
 
@@ -385,7 +390,7 @@ export default function StudentInfoTabs({ student }: StudentInfoTabsProps) {
 										value={student.position}
 									/>
 									<Field
-										label='Đơn vị (Tiểu đội)'
+										label='Đơn vị'
 										value={
 											student.unit
 												? student.unit.name
@@ -401,11 +406,11 @@ export default function StudentInfoTabs({ student }: StudentInfoTabsProps) {
 										value={student.enlistmentPeriod}
 									/>
 									<Field
-										label='Đơn vị trước khi nhập học'
+										label='Đơn vị cũ'
 										value={student.previousUnit}
 									/>
 									<Field
-										label='Chức vụ trước khi nhập học'
+										label='Chức vụ cũ'
 										value={student.previousPosition}
 									/>
 								</div>

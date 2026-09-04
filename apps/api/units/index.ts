@@ -26,4 +26,5 @@ export interface Repository {
 	): Promise<UnitDB | undefined>
 	getOne(params: Partial<UnitDB>): Promise<Unit | undefined>
 	findRoot(): Promise<UnitDB | undefined>
+	findAncestorChain(unitId: number): Promise<UnitDB[]>
 }
