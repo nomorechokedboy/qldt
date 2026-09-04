@@ -137,8 +137,13 @@ export const rateLimitMiddleware = middleware(
 				endpoint: `${meta.method}:${meta.path}`,
 				identity
 			})
+			// Vietnamese, not English: apps/web only forwards a backend error
+			// message to the user verbatim when it's already Vietnamese (see
+			// getErrorMessage in apps/web/src/lib/utils.ts) - an English
+			// message here would silently fall back to a generic toast and
+			// the user would have no idea they'd been rate limited.
 			throw APIError.resourceExhausted(
-				'Too many requests. Please try again later.'
+				'Bạn đã thực hiện quá nhiều yêu cầu. Vui lòng thử lại sau.'
 			)
 		}
 

@@ -1,25 +1,18 @@
 import { useState } from 'react'
 import useUserData from '@/hooks/useUsers'
-import { defaultStudentColumnVisibility, type TemplType } from '@/types'
 import type { User } from '@/types'
 import { DataTable } from '../data-table'
 import { baseUsersColumns } from './columns'
 import { Button } from '../ui/button'
-import { ArrowDownToLine, PlusIcon } from 'lucide-react'
-import { ExportStudentDataDialog } from '../export-student-data-dialog'
+import { PlusIcon } from 'lucide-react'
 import UserForm from './user-form'
 import { UserTableContext } from './UserTableContext'
 
 interface UserTableProps {
-	filename: string
 	enabledCreation?: boolean
-	templType?: TemplType
 }
 
-export default function UserTable({
-	filename,
-	templType = 'UserInfoTempl'
-}: UserTableProps) {
+export default function UserTable(_props: UserTableProps) {
 	const { data: users = [], refetch: refetchUsers } = useUserData()
 
 	// State for create form
@@ -55,19 +48,8 @@ export default function UserTable({
 					data={users}
 					columns={baseUsersColumns}
 					withDynamicColsData={false}
-					renderToolbarActions={({ exportHook }) => (
+					renderToolbarActions={() => (
 						<div className='flex gap-2'>
-							<ExportStudentDataDialog
-								data={exportHook.exportableData.data}
-								defaultFilename={filename}
-								templType={templType}
-							>
-								<Button variant='outline'>
-									<ArrowDownToLine className='w-4 h-4 mr-2' />
-									Xuất file
-								</Button>
-							</ExportStudentDataDialog>
-
 							<Button onClick={handleAddUser}>
 								<PlusIcon className='w-4 h-4 mr-2' />
 								Thêm người dùng
