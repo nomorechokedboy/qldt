@@ -1,295 +1,77 @@
-Welcome to your new TanStack app!
+# SMS Web
 
-# Getting Started
+Frontend for **SMS** (Student Management System). React + Vite + TanStack Router/Query, talking to [`apps/sms-api`](../sms-api/README.md), which in turn talks to Moodle.
 
-To run this application:
+## Prerequisites
 
-```bash
-pnpm install
-pnpm start
-```
+- Node.js 20+, pnpm (see the [root README](../../README.md))
+- A running `apps/sms-api` (and, behind it, a reachable Moodle instance — see [`deploy/moodle/`](../../deploy/moodle))
 
-# Building For Production
+## Configuration
 
-To build this application for production:
+Env vars are validated via [`@t3-oss/env-core`](https://env.t3.gg) in `src/env.ts`, prefixed `VITE_`:
 
-```bash
-pnpm build
-```
+| Variable | Required | Default | Purpose |
+| --- | --- | --- | --- |
+| `VITE_CLIENT_ID` | **yes** | — | Moodle OAuth2 client id (must match `apps/sms-api`'s `CLIENT_ID`) |
+| `VITE_OAUTH2_URL` | no | `http://localhost:8081` | Moodle OAuth2 base URL |
+| `VITE_TOKEN_URI` | no | `local/oauth2/login.php` | Moodle OAuth2 login path |
+| `VITE_REDIRECT_URI` | no | `http://localhost:4000/oauth2/callback` | Must match `apps/sms-api`'s `REDIRECT_URL` |
+| `VITE_API_URL` | no | `''` (same-origin) | Base URL of `apps/sms-api` |
+| `VITE_APP_TITLE` | no | — | App title |
 
-## Testing
+Create `apps/sms-web/.env` (or `.env.local`) for local overrides.
 
-This project uses [Vitest](https://vitest.dev/) for testing. You can run the tests with:
-
-```bash
-pnpm test
-```
-
-## Styling
-
-This project uses [Tailwind CSS](https://tailwindcss.com/) for styling.
-
-## Shadcn
-
-Add components using the latest version of [Shadcn](https://ui.shadcn.com/).
+## Running locally
 
 ```bash
-pnpx shadcn@latest add button
+cd apps/sms-web
+pnpm dev      # http://localhost:3000 (alias: pnpm start)
 ```
-
-## Routing
-
-This project uses [TanStack Router](https://tanstack.com/router). The initial setup is a file based router. Which means that the routes are managed as files in `src/routes`.
-
-### Adding A Route
-
-To add a new route to your application just add another a new file in the `./src/routes` directory.
-
-TanStack will automatically generate the content of the route file for you.
-
-Now that you have two routes you can use a `Link` component to navigate between them.
-
-### Adding Links
-
-To use SPA (Single Page Application) navigation you will need to import the `Link` component from `@tanstack/react-router`.
-
-```tsx
-import { Link } from '@tanstack/react-router'
-```
-
-Then anywhere in your JSX you can use it like so:
-
-```tsx
-<Link to='/about'>About</Link>
-```
-
-This will create a link that will navigate to the `/about` route.
-
-More information on the `Link` component can be found in the [Link documentation](https://tanstack.com/router/v1/docs/framework/react/api/router/linkComponent).
-
-### Using A Layout
-
-In the File Based Routing setup the layout is located in `src/routes/__root.tsx`. Anything you add to the root route will appear in all the routes. The route content will appear in the JSX where you use the `<Outlet />` component.
-
-Here is an example layout that includes a header:
-
-```tsx
-import { Outlet, createRootRoute } from '@tanstack/react-router'
-import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
-
-import { Link } from '@tanstack/react-router'
-
-export const Route = createRootRoute({
-	component: () => (
-		<>
-			<header>
-				<nav>
-					<Link to='/'>Home</Link>
-					<Link to='/about'>About</Link>
-				</nav>
-			</header>
-			<Outlet />
-			<TanStackRouterDevtools />
-		</>
-	)
-})
-```
-
-The `<TanStackRouterDevtools />` component is not required so you can remove it if you don't want it in your layout.
-
-More information on layouts can be found in the [Layouts documentation](https://tanstack.com/router/latest/docs/framework/react/guide/routing-concepts#layouts).
-
-## Data Fetching
-
-There are multiple ways to fetch data in your application. You can use TanStack Query to fetch data from a server. But you can also use the `loader` functionality built into TanStack Router to load the data for a route before it's rendered.
-
-For example:
-
-```tsx
-const peopleRoute = createRoute({
-	getParentRoute: () => rootRoute,
-	path: '/people',
-	loader: async () => {
-		const response = await fetch('https://swapi.dev/api/people')
-		return response.json() as Promise<{
-			results: {
-				name: string
-			}[]
-		}>
-	},
-	component: () => {
-		const data = peopleRoute.useLoaderData()
-		return (
-			<ul>
-				{data.results.map((person) => (
-					<li key={person.name}>{person.name}</li>
-				))}
-			</ul>
-		)
-	}
-})
-```
-
-Loaders simplify your data fetching logic dramatically. Check out more information in the [Loader documentation](https://tanstack.com/router/latest/docs/framework/react/guide/data-loading#loader-parameters).
-
-### React-Query
-
-React-Query is an excellent addition or alternative to route loading and integrating it into you application is a breeze.
-
-First add your dependencies:
 
 ```bash
-pnpm add @tanstack/react-query @tanstack/react-query-devtools
+pnpm build    # production build → dist/
+pnpm serve    # preview the production build locally
+pnpm test     # vitest run
 ```
 
-Next we'll need to create a query client and provider. We recommend putting those in `main.tsx`.
+## Architecture
 
-```tsx
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
+- **Routing**: [TanStack Router](https://tanstack.com/router), file-based under `src/routes/`.
+- **Data fetching**: [TanStack Query](https://tanstack.com/query) via `src/hooks/`.
+- **Auth**: OAuth2 redirect flow against Moodle — the user is sent to Moodle's login (`VITE_OAUTH2_URL` + `VITE_TOKEN_URI`), Moodle redirects back to `apps/sms-api`'s `/oauth2/callback`, which then redirects to this app's `VITE_REDIRECT_URI` with tokens.
+- **UI components**: shared primitives from `@repo/ui` (`packages/ui`); app-specific components in `src/components/`.
+- **i18n**: `src/i18n/` (Vietnamese strings in `vi.json`).
+- **State/business logic**: `src/biz/`, `src/const/`, `src/data/`, `src/types/`.
 
-// ...
+## Directory reference
 
-const queryClient = new QueryClient()
-
-// ...
-
-if (!rootElement.innerHTML) {
-	const root = ReactDOM.createRoot(rootElement)
-
-	root.render(
-		<QueryClientProvider client={queryClient}>
-			<RouterProvider router={router} />
-		</QueryClientProvider>
-	)
-}
+```
+apps/sms-web/
+├── src/
+│   ├── routes/          File-based TanStack Router routes
+│   ├── api/               API client wrappers
+│   ├── hooks/              TanStack Query hooks
+│   ├── components/         App-specific React components
+│   ├── i18n/                Localization
+│   ├── biz/, const/, data/, lib/, types/, assets/, integrations/
+│   └── env.ts               Typed env var validation
+├── public/
+├── vite.config.ts
+├── components.json         shadcn config
+└── Dockerfile               Multi-stage: turbo-pruned pnpm build → static nginx image
 ```
 
-You can also add TanStack Query Devtools to the root route (optional).
-
-```tsx
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools'
-
-const rootRoute = createRootRoute({
-	component: () => (
-		<>
-			<Outlet />
-			<ReactQueryDevtools buttonPosition='top-right' />
-			<TanStackRouterDevtools />
-		</>
-	)
-})
-```
-
-Now you can use `useQuery` to fetch your data.
-
-```tsx
-import { useQuery } from '@tanstack/react-query'
-
-import './App.css'
-
-function App() {
-	const { data } = useQuery({
-		queryKey: ['people'],
-		queryFn: () =>
-			fetch('https://swapi.dev/api/people')
-				.then((res) => res.json())
-				.then((data) => data.results as { name: string }[]),
-		initialData: []
-	})
-
-	return (
-		<div>
-			<ul>
-				{data.map((person) => (
-					<li key={person.name}>{person.name}</li>
-				))}
-			</ul>
-		</div>
-	)
-}
-
-export default App
-```
-
-You can find out everything you need to know on how to use React-Query in the [React-Query documentation](https://tanstack.com/query/latest/docs/framework/react/overview).
-
-## State Management
-
-Another common requirement for React applications is state management. There are many options for state management in React. TanStack Store provides a great starting point for your project.
-
-First you need to add TanStack Store as a dependency:
+## Docker
 
 ```bash
-pnpm add @tanstack/store
+docker build -t <your-tag>:sms-web -f apps/sms-web/Dockerfile \
+  --build-arg VITE_CLIENT_ID=... \
+  --build-arg VITE_OAUTH2_URL=... \
+  --build-arg VITE_TOKEN_URI=... \
+  --build-arg VITE_REDIRECT_URI=... \
+  --build-arg VITE_API_URL=... \
+  .
 ```
 
-Now let's create a simple counter in the `src/App.tsx` file as a demonstration.
-
-```tsx
-import { useStore } from '@tanstack/react-store'
-import { Store } from '@tanstack/store'
-import './App.css'
-
-const countStore = new Store(0)
-
-function App() {
-	const count = useStore(countStore)
-	return (
-		<div>
-			<button onClick={() => countStore.setState((n) => n + 1)}>
-				Increment - {count}
-			</button>
-		</div>
-	)
-}
-
-export default App
-```
-
-One of the many nice features of TanStack Store is the ability to derive state from other state. That derived state will update when the base state updates.
-
-Let's check this out by doubling the count using derived state.
-
-```tsx
-import { useStore } from '@tanstack/react-store'
-import { Store, Derived } from '@tanstack/store'
-import './App.css'
-
-const countStore = new Store(0)
-
-const doubledStore = new Derived({
-	fn: () => countStore.state * 2,
-	deps: [countStore]
-})
-doubledStore.mount()
-
-function App() {
-	const count = useStore(countStore)
-	const doubledCount = useStore(doubledStore)
-
-	return (
-		<div>
-			<button onClick={() => countStore.setState((n) => n + 1)}>
-				Increment - {count}
-			</button>
-			<div>Doubled - {doubledCount}</div>
-		</div>
-	)
-}
-
-export default App
-```
-
-We use the `Derived` class to create a new store that is derived from another store. The `Derived` class has a `mount` method that will start the derived store updating.
-
-Once we've created the derived store we can use it in the `App` component just like we would any other store using the `useStore` hook.
-
-You can find out everything you need to know on how to use TanStack Store in the [TanStack Store documentation](https://tanstack.com/store/latest).
-
-# Demo files
-
-Files prefixed with `demo` can be safely deleted. They are there to provide a starting point for you to play around with the features you've installed.
-
-# Learn More
-
-You can learn more about all of the offerings from TanStack in the [TanStack documentation](https://tanstack.com).
+Build from the **repo root** — the Dockerfile runs `turbo prune sms-web --docker` against the full monorepo before installing/building. All `VITE_*` vars must be passed as `--build-arg`s (Vite bakes client env vars into the bundle at build time). CI (`.github/workflows/ci.yaml`) builds this image twice, once per network (`wan`/`lan`), against different GitHub Environments — each network reaches a different Moodle/API endpoint.

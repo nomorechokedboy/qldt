@@ -1,160 +1,132 @@
-# REST API Starter
+# QLHV API
 
-This is a RESTful API Starter with a single Hello World API endpoint.
+Backend for **QLHV** (Quản lý học viên — trainee/personnel management): units, classes, students, facilities (buildings/rooms), materiel (weapons/equipment inventory), role-based authorization, and audit logging for a military training organization.
 
-## Prerequisites 
+Built on [Encore.ts](https://encore.dev/docs/ts) (TypeScript), with [Drizzle ORM](https://orm.drizzle.team) over SQLite (via [libSQL](https://github.com/tursodatabase/libsql)).
 
-**Install Encore:**
-- **macOS:** `brew install encoredev/tap/encore`
-- **Linux:** `curl -L https://encore.dev/install.sh | bash`
-- **Windows:** `iwr https://encore.dev/install.ps1 | iex`
+## Prerequisites
 
-## Create app
+- **[Encore CLI](https://encore.dev/docs/install)** — `curl -L https://encore.dev/install.sh | bash` (Linux) — required to run, build, and check this app; it is not a plain Node server.
+- **Docker** — Encore spins up local infra containers (e.g. object storage emulation) even for `encore run`.
+- **Node.js 20+** and **pnpm** (installed at the repo root — see the [root README](../../README.md)).
 
-Create a local app from this template:
+## Configuration
+
+Config is loaded from `process.env` via `dotenv` + a [valibot](https://valibot.dev) schema (`configs/index.ts`). Create `apps/api/.env` with:
+
+| Variable | Required | Default | Purpose |
+| --- | --- | --- | --- |
+| `HASH_SECRET` | **yes** | — | Argon2 pepper for password hashing (`auth/controller.ts`) |
+| `JWT_PRIVATE_KEY` | **yes** | — | Symmetric secret used to sign/verify access & refresh JWTs |
+| `S3_ACCESS_KEY` | **yes** | — | S3-compatible object storage (MinIO in dev/prod) credentials |
+| `S3_SECRET_KEY` | **yes** | — | " |
+| `PORT` | no | `8080` | HTTP port |
+| `S3_ENDPOINT` | no | `http://localhost:9000` | MinIO/S3 endpoint |
+| `S3_DEFAULT_BUCKET` | no | `my-first-bucket` | Bucket used for uploads (media, export templates) |
+| `S3_REGION` | no | `us-west-rack-2` | |
+| `DATABASE_URI` | no | `./data/local.db` | SQLite/libSQL connection string |
+
+In production (`infra.config.json`), Pub/Sub (see below) is backed by NSQ rather than Encore's default; MinIO and NSQ connection details there come from the deployment's env, not this table.
+
+## Running locally
 
 ```bash
-encore app create my-app-name --example=ts/hello-world
-```
-
-## Run app locally
-
-Run this command from your application's root folder:
-
-```bash
+cd apps/api
 encore run
 ```
-### Using the API
 
-To see that your app is running, you can ping the API.
+- API: `http://localhost:4000`
+- Encore local dev dashboard (traces, service catalog, architecture diagram): `http://localhost:9400`
+- On first run, Encore applies `migrations/*.sql` automatically against a local SQLite DB (Docker-backed).
 
-```bash
-curl http://localhost:4000/hello/World
-```
-
-### Local Development Dashboard
-
-While `encore run` is running, open [http://localhost:9400/](http://localhost:9400/) to access Encore's [local developer dashboard](https://encore.dev/docs/observability/dev-dash).
-
-Here you can see traces for all requests that you made, see your architecture diagram (just a single service for this simple example), and view API documentation in the Service Catalog.
-
-## Development
-
-### Add a new service
-
-To create a new microservice, add a file named encore.service.ts in a new directory.
-The file should export a service definition by calling `new Service`, imported from `encore.dev/service`.
-
-```ts
-import { Service } from "encore.dev/service";
-
-export default new Service("my-service");
-```
-
-Encore will now consider this directory and all its subdirectories as part of the service.
-
-Learn more in the docs: https://encore.dev/docs/ts/primitives/services
-
-### Add a new endpoint
-
-Create a new `.ts` file in your new service directory and write a regular async function within it. Then to turn it into an API endpoint, use the `api` function from the `encore.dev/api` module. This function designates it as an API endpoint.
-
-Learn more in the docs: https://encore.dev/docs/ts/primitives/defining-apis
-
-### Service-to-service API calls
-
-Calling API endpoints between services looks like regular function calls with Encore.ts.
-The only thing you need to do is import the service you want to call from `~encore/clients` and then call its API endpoints like functions.
-
-In the example below, we import the service `hello` and call the `ping` endpoint using a function call to `hello.ping`:
-
-```ts
-import { hello } from "~encore/clients"; // import 'hello' service
-
-export const myOtherAPI = api({}, async (): Promise<void> => {
-  const resp = await hello.ping({ name: "World" });
-  console.log(resp.message); // "Hello World!"
-});
-```
-
-Learn more in the docs: https://encore.dev/docs/ts/primitives/api-calls
-
-### Add a database
-
-To create a database, import `encore.dev/storage/sqldb` and call `new SQLDatabase`, assigning the result to a top-level variable. For example:
-
-```ts
-import { SQLDatabase } from "encore.dev/storage/sqldb";
-
-// Create the todo database and assign it to the "db" variable
-const db = new SQLDatabase("todo", {
-  migrations: "./migrations",
-});
-```
-
-Then create a directory `migrations` inside the service directory and add a migration file `0001_create_table.up.sql` to define the database schema. For example:
-
-```sql
-CREATE TABLE todo_item (
-  id BIGSERIAL PRIMARY KEY,
-  title TEXT NOT NULL,
-  done BOOLEAN NOT NULL DEFAULT false
-  -- etc...
-);
-```
-
-Once you've added a migration, restart your app with `encore run` to start up the database and apply the migration. Keep in mind that you need to have [Docker](https://docker.com) installed and running to start the database.
-
-Learn more in the docs: https://encore.dev/docs/ts/primitives/databases
-
-### Learn more
-
-There are many more features to explore in Encore.ts, for example:
-
-- [Request Validation](https://encore.dev/docs/ts/primitives/validation)
-- [Streaming APIs](https://encore.dev/docs/ts/primitives/streaming-apis)
-- [Cron jobs](https://encore.dev/docs/ts/primitives/cron-jobs)
-- [Pub/Sub](https://encore.dev/docs/ts/primitives/pubsub)
-- [Object Storage](https://encore.dev/docs/ts/primitives/object-storage)
-- [Secrets](https://encore.dev/docs/ts/primitives/secrets)
-- [Authentication handlers](https://encore.dev/docs/ts/develop/auth)
-- [Middleware](https://encore.dev/docs/ts/develop/middleware)
-
-## Deployment
-
-### Self-hosting
-
-See the [self-hosting instructions](https://encore.dev/docs/self-host/docker-build) for how to use `encore build docker` to create a Docker image and configure it.
-
-### Encore Cloud Platform
-
-Deploy your application to a free staging environment in Encore's development cloud using `git push encore`:
+### Useful scripts (`package.json`)
 
 ```bash
-git add -A .
-git commit -m 'Commit message'
-git push encore
+pnpm test       # vitest
+pnpm generate   # drizzle-kit generate — create a new migration from schema.ts changes
+pnpm migrate    # drizzle-kit migrate — apply pending migrations
+pnpm push       # drizzle-kit push   — push schema directly (dev convenience, skips migration files)
+pnpm gen        # encore gen client --output=../web/src/api/client.ts --env=local
 ```
 
-You can also open your app in the [Cloud Dashboard](https://app.encore.dev) to integrate with GitHub, or connect your AWS/GCP account, enabling Encore to automatically handle cloud deployments for you.
+`pnpm gen` regenerates the typed API client consumed by `apps/web` — run it after adding/changing any endpoint so the frontend's `apps/web/src/api/client.ts` stays in sync.
 
-## Link to GitHub
+> Don't run `tsc` directly in this app — Encore.ts uses its own build/typecheck pipeline. Use `encore run` for dev, `encore check` to typecheck without starting the server, and `pnpm <script>` (as above) via Encore where relevant.
 
-Follow these steps to link your app to GitHub:
+## Architecture
 
-1. Create a GitHub repo, commit and push the app.
-2. Open your app in the [Cloud Dashboard](https://app.encore.dev).
-3. Go to **Settings ➔ GitHub** and click on **Link app to GitHub** to link your app to GitHub and select the repo you just created.
-4. To configure Encore to automatically trigger deploys when you push to a specific branch name, go to the **Overview** page for your intended environment. Click on **Settings** and then in the section **Branch Push** configure the **Branch name** and hit **Save**.
-5. Commit and push a change to GitHub to trigger a deploy.
+### Services
 
-[Learn more in the docs](https://encore.dev/docs/how-to/github)
+Encore.ts treats every directory containing an `encore.service.ts` as an independent service; API endpoints (`export const Foo = api(...)`) live in plain `.ts` files inside that directory and its subdirectories. Services in this app:
 
+`actions`, `audit-logs` (service name `audit_logs`), `auth`, `classes`, `export-templates`, `facilities`, `materials`, `permissions`, `positions`, `resources`, `roles`, `students`, `transfer-requests`, `units`, `user-roles`, `users`.
+
+A few directories provide endpoints or shared logic without being their own service — they're folded into whichever service imports them, or (like `auth`) are Encore's "implicit" folder-derived service:
+
+- `notifications/`, `healthcheck/` — expose their own endpoints via an implicit service (no `encore.service.ts` needed if nothing else is registered there)
+- `media/`, `topics/`, `export/`, `objectStorage/`, `logger/` — shared library code (S3 upload helpers, Pub/Sub topic definitions, docx/xlsx export helpers, structured logging) consumed by the services above, not endpoints themselves
+- `middleware/` — cross-cutting Encore middlewares wired into services via each `encore.service.ts`'s `middlewares: [...]` array:
+  - `authz.ts` — `authzMiddleware` (computes the caller's visible unit/class IDs from their org position) and `permissionMiddleware` (RBAC enforcement against a `method:path → required permission[]` map)
+  - `audit.ts` — `auditMiddleware` (writes an audit-log event for mutating routes listed in its route map, sanitizing sensitive fields like `password` first)
+  - `rate-limit.ts` — `rateLimitMiddleware` (generic, tag-based rate limiting — opt an endpoint in with `tags: ['rate_limit']` plus an entry in `RATE_LIMIT_RULES`; currently used on `POST /authn/login`, keyed by username, counting only failed attempts)
+  - `permission-tags.ts` — `PermissionTag` constants (`perm:<resource>:<action>`) used when seeding/assigning permissions
+
+See [`AUTHORIZATION_PATTERNS.md`](../../AUTHORIZATION_PATTERNS.md) at the repo root for the full RBAC design, and [`claude.md`](../../claude.md) for the database ERD.
+
+### Auth
+
+- Login (`POST /authn/login`) verifies an Argon2 hash (peppered with `HASH_SECRET`) and issues a short-lived access JWT (30m) and a longer-lived refresh JWT (7d), both signed with `JWT_PRIVATE_KEY` and scoped with an `issuer`/`audience` claim (`auth/controller.ts`).
+- The Encore `Gateway`'s `authHandler` (`auth/auth.ts`) verifies the access token on every `auth: true` endpoint and rejects a token whose `type` isn't `'access'`; `POST /authn/refresh` does the mirror check for `'refresh'`.
+- `authzMiddleware` + `permissionMiddleware` run after authentication to enforce RBAC and unit-scoped visibility on every request.
+
+### Database & migrations
+
+Schema lives in `schema/` (Drizzle table definitions); SQL migrations in `migrations/`. Workflow:
+
+```bash
+# after changing schema/*.ts
+pnpm generate    # writes a new migrations/xxxx_*.sql from the schema diff
+pnpm migrate     # applies it (encore run also auto-applies pending migrations on start)
+```
+
+For data-only/seed migrations (no schema change — e.g. seeding a new permission), write the `.sql` file by hand rather than via `drizzle-kit generate`. See `claude.md`'s "Generate Migrations" / "Workflow" sections for the full convention.
+
+### Pub/Sub
+
+Two topics (see `infra.config.json`): `notification-events` and `audit-log-events`, each with one subscription. In production these are backed by NSQ (`nsq-nsqd.amqp.svc.cluster.local:4150`); locally Encore provisions an in-process/dev equivalent automatically.
 
 ## Testing
 
-To run tests, configure the `test` command in your `package.json` to the test runner of your choice, and then use the command `encore test` from the CLI. The `encore test` command sets up all the necessary infrastructure in test mode before handing over to the test runner. [Learn more](https://encore.dev/docs/ts/develop/testing)
+```bash
+pnpm test
+```
+
+Runs Vitest. (`encore test` also exists upstream in Encore.ts and additionally spins up test infra first — use it if a test needs a real database/Pub/Sub rather than mocks.)
+
+## Docker
 
 ```bash
-encore test
+# from apps/api/
+encore build docker temp-api:build --base=node:22-slim --config ./infra.config.json
+docker build -t <your-tag>:api .
+```
+
+The `Dockerfile` here just layers timezone data (`Asia/Ho_Chi_Minh`) and a writable `/workspace/apps/api/data` directory on top of the image Encore's own build step produces — it is **not** a standalone Dockerfile you can `docker build .` without the `encore build docker` step first. See `Makefile`'s `api` target and [`deploy/README.md`](../../deploy/README.md) for how this fits into the full stack (env file, volumes for `templates/` and `local.db`, NSQ/MinIO dependencies).
+
+## Directory reference
+
+```
+apps/api/
+├── <service>/            One dir per Encore service (see Services above): *.ts endpoints, repo.ts, controller.ts
+├── middleware/            Cross-cutting Encore middlewares (authz, audit, rate-limit)
+├── schema/                 Drizzle table definitions
+├── migrations/             SQL migrations (schema + seed)
+├── configs/                Env var loading/validation (valibot)
+├── errors/                 AppError → Encore APIError mapping
+├── utils/                  Shared helpers (DB error mapping, etc.)
+├── templates/               docx/xlsx export templates
+├── encore.app               Encore app manifest (CORS config, etc.)
+├── infra.config.json         Production infra bindings (NSQ Pub/Sub)
+├── drizzle.config.ts         Drizzle Kit config (used by generate/migrate/push)
+└── Dockerfile                Final image layer on top of `encore build docker`'s output
 ```
