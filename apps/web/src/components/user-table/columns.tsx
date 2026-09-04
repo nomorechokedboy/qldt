@@ -3,6 +3,7 @@ import type { User } from '@/types'
 import { Badge } from '@/components/ui/badge'
 import { DataTableColumnHeader } from '../data-table/data-table-column-header'
 import { DataTableRowActions } from './data-user-table-row-actions'
+import UserLockIndicator from './user-lock-indicator'
 import { Shield, Award, Briefcase } from 'lucide-react'
 
 // Helper function to format ISO date to DD/MM/YYYY
@@ -50,7 +51,7 @@ export const baseUsersColumns: ColumnDef<User>[] = [
 			<DataTableColumnHeader column={column} title='Tên tài khoản' />
 		),
 		cell: ({ row }) => (
-			<div className='min-w-32'>
+			<div className='min-w-32 flex items-center gap-2'>
 				{row.original.username || <EmptyCell />}
 			</div>
 		),
@@ -125,7 +126,11 @@ export const baseUsersColumns: ColumnDef<User>[] = [
 		),
 		cell: ({ row }) => (
 			<div className='min-w-28 text-gray-600'>
-				{row.original.createdAt ? formatDate(row.original.createdAt) : <EmptyCell />}
+				{row.original.createdAt ? (
+					formatDate(row.original.createdAt)
+				) : (
+					<EmptyCell />
+				)}
 			</div>
 		),
 		meta: {
@@ -134,7 +139,14 @@ export const baseUsersColumns: ColumnDef<User>[] = [
 	},
 	{
 		id: 'actions',
-		cell: ({ row }) => <DataTableRowActions row={row} />
+		cell: ({ row }) => (
+			<div className='flex items-center gap-4'>
+				<DataTableRowActions row={row} />
+				{row.original.username && (
+					<UserLockIndicator username={row.original.username} />
+				)}
+			</div>
+		)
 	}
 ]
 
@@ -188,7 +200,9 @@ export const battalionStudentColumnsWithoutAction: ColumnDef<User>[] = [
 		),
 		cell: ({ row }) => (
 			<div className='flex items-center gap-2'>
-				{row.original.rank && <Award className='w-4 h-4 text-amber-600' />}
+				{row.original.rank && (
+					<Award className='w-4 h-4 text-amber-600' />
+				)}
 				<span>{row.original.rank || '-'}</span>
 			</div>
 		),
@@ -204,7 +218,9 @@ export const battalionStudentColumnsWithoutAction: ColumnDef<User>[] = [
 		),
 		cell: ({ row }) => (
 			<div className='flex items-center gap-2'>
-				{row.original.position && <Briefcase className='w-4 h-4 text-blue-600' />}
+				{row.original.position && (
+					<Briefcase className='w-4 h-4 text-blue-600' />
+				)}
 				<span>{row.original.position || '-'}</span>
 			</div>
 		),
@@ -220,7 +236,9 @@ export const battalionStudentColumnsWithoutAction: ColumnDef<User>[] = [
 		),
 		cell: ({ row }) => (
 			<div className='text-gray-600'>
-				{row.original.createdAt ? formatDate(row.original.createdAt) : '-'}
+				{row.original.createdAt
+					? formatDate(row.original.createdAt)
+					: '-'}
 			</div>
 		),
 		meta: {

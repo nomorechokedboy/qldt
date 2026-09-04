@@ -28,7 +28,7 @@ function RouteComponent() {
 						</div>
 					</div>
 					<div className='mt-4'>
-						<UserTable filename='danh-sach-nguoi-dung' />
+						<UserTable />
 					</div>
 				</div>
 			</SidebarInset>

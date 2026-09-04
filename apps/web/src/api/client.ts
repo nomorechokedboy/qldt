@@ -198,6 +198,10 @@ export namespace auth {
 		password: string
 	}
 
+	export interface GetLockedLoginUsernamesResponse {
+		usernames: string[]
+	}
+
 	export interface GetUserInfoResponse {
 		data: users.User
 		permissions: string[]
@@ -223,15 +227,22 @@ export namespace auth {
 		refreshToken: string
 	}
 
+	export interface UnlockLoginRequest {
+		username: string
+	}
+
 	export class ServiceClient {
 		private baseClient: BaseClient
 
 		constructor(baseClient: BaseClient) {
 			this.baseClient = baseClient
 			this.ChangeUserPassword = this.ChangeUserPassword.bind(this)
+			this.GetLockedLoginUsernames =
+				this.GetLockedLoginUsernames.bind(this)
 			this.GetUserInfo = this.GetUserInfo.bind(this)
 			this.Login = this.Login.bind(this)
 			this.RefreshToken = this.RefreshToken.bind(this)
+			this.UnlockLogin = this.UnlockLogin.bind(this)
 		}
 
 		public async ChangeUserPassword(
@@ -242,6 +253,15 @@ export namespace auth {
 				`/authn/change-pwd`,
 				JSON.stringify(params)
 			)
+		}
+
+		public async GetLockedLoginUsernames(): Promise<GetLockedLoginUsernamesResponse> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'GET',
+				`/authn/locked-users`
+			)
+			return (await resp.json()) as GetLockedLoginUsernamesResponse
 		}
 
 		public async GetUserInfo(): Promise<GetUserInfoResponse> {
@@ -270,6 +290,20 @@ export namespace auth {
 				JSON.stringify(params)
 			)
 			return (await resp.json()) as RefreshTokenResponse
+		}
+
+		public async UnlockLogin(params: UnlockLoginRequest): Promise<{
+			success: boolean
+		}> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'POST',
+				`/authn/unlock-login`,
+				JSON.stringify(params)
+			)
+			return (await resp.json()) as {
+				success: boolean
+			}
 		}
 	}
 }

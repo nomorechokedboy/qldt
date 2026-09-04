@@ -116,6 +116,40 @@ function recordHit(key: string, windowMs: number): void {
 	bucket.count++
 }
 
+// Lets an admin lift a rate limit early (e.g. a user fat-fingered their
+// password enough times to get blocked and shouldn't have to wait out the
+// window). `identity` must match what the rule's `keyFn` (or, absent one,
+// clientIp) would have produced for the blocked request.
+export function clearRateLimit(
+	method: string,
+	path: string,
+	identity: string
+): void {
+	buckets.delete(`${method}:${path}:${identity}`)
+}
+
+export function unlockLogin(username: string): void {
+	clearRateLimit('POST', '/authn/login', username.toLowerCase())
+}
+
+// Usernames currently blocked from /authn/login, so the UI can flag them
+// (e.g. a lock icon in the user table) instead of an admin having to guess
+// who fat-fingered their password enough times to trip the limit.
+export function getLockedLoginUsernames(): string[] {
+	const rule = RATE_LIMIT_RULES['POST:/authn/login']
+	const prefix = 'POST:/authn/login:'
+
+	const usernames: string[] = []
+	for (const [key, bucket] of buckets) {
+		if (!key.startsWith(prefix)) continue
+		if (Date.now() - bucket.windowStart >= rule.windowMs) continue
+		if (bucket.count < rule.max) continue
+		usernames.push(key.slice(prefix.length))
+	}
+
+	return usernames
+}
+
 export const rateLimitMiddleware = middleware(
 	{ target: { tags: ['rate_limit'] } },
 	async (req, next) => {

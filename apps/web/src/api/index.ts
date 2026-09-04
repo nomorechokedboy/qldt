@@ -250,6 +250,16 @@ export function ChangePassword(params: {
 	return requestClient.auth.ChangeUserPassword(params)
 }
 
+export function UnlockLogin(username: string) {
+	return requestClient.auth.UnlockLogin({ username })
+}
+
+export function GetLockedLoginUsernames() {
+	return requestClient.auth
+		.GetLockedLoginUsernames()
+		.then((resp) => resp.usernames)
+}
+
 export function GetUsers() {
 	return requestClient.users.GetUsers().then((resp) => resp.data)
 }
