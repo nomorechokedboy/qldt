@@ -9,13 +9,14 @@ import {
 } from '@/types'
 import type { QueryObserverResult } from '@tanstack/react-query'
 import type { ColumnDef, VisibilityState } from '@tanstack/react-table'
-import { ArrowDownToLine, RefreshCw, Settings } from 'lucide-react'
+import { ArrowDownToLine, RefreshCw, Settings, Upload } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useState } from 'react'
 import { DataTable } from '../data-table'
 import { ExportStudentDataDynamicDialog } from '../export-student-data-dynamic-dialog'
 import { ExportTemplateManager } from '../export-template-manager'
 import { ExportUnitRosterExtractDialog } from '../export-unit-roster-extract-dialog'
+import { ImportStudentsDialog } from '../import-students-dialog'
 import StudentForm from '../student-form'
 import TableSkeleton from '../table-skeleton'
 import { Button } from '../ui/button'
@@ -100,12 +101,18 @@ export default function StudentTable({
 	const actionColumn = useActionColumn(handleRefreshStudents)
 	const [exportFileOpen, setExportFileOpen] = useState(false)
 	const [exportRosterOpen, setExportRosterOpen] = useState(false)
+	const [importOpen, setImportOpen] = useState(false)
 
 	if (isLoadingStudents) {
 		return <TableSkeleton />
 	}
 
 	const handleFormSuccess = () => {
+		refetchStudent()
+		onCreateSuccess?.()
+	}
+
+	const handleImportSuccess = () => {
 		refetchStudent()
 		onCreateSuccess?.()
 	}
@@ -124,6 +131,12 @@ export default function StudentTable({
 		<>
 			{leftToolbarSection}
 			{enableCreation && <StudentForm onSuccess={handleFormSuccess} />}
+			{enableCreation && (
+				<Button variant='outline' onClick={() => setImportOpen(true)}>
+					<Upload />
+					Import danh sách
+				</Button>
+			)}
 			{showRefreshButton && (
 				<Button onClick={handleRefresh}>
 					<RefreshCw />
@@ -135,6 +148,13 @@ export default function StudentTable({
 
 	return (
 		<div>
+			{enableCreation && (
+				<ImportStudentsDialog
+					isOpen={importOpen}
+					onClose={() => setImportOpen(false)}
+					onSuccess={handleImportSuccess}
+				/>
+			)}
 			<DataTable
 				data={students}
 				columns={[...columnsWithoutAction, actionColumn]}

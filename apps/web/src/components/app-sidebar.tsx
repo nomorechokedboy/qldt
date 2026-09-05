@@ -83,20 +83,6 @@ const data = {
                 }
             ]
         }, */
-		// Chức năng khác -> import quân nhân
-		// {
-		// 	title: 'Chức năng khác',
-		// 	url: '#',
-		// 	superAdminOnly: false,
-		// 	icon: Star,
-		// 	items: [
-		// 		{
-		// 			title: 'Import quân nhân',
-		// 			url: '/import-students',
-		// 			icon: UserPlus
-		// 		}
-		// 	]
-		// },
 		{
 			title: 'Vật tư',
 			url: '#',
