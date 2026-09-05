@@ -26,7 +26,7 @@ import { unitLevelLabels, unitLevelOrder } from '@/data/unit-levels'
 function flattenUnitOptions(unit: Unit): { id: number; label: string }[] {
 	const self = {
 		id: unit.id,
-		label: `${unit.name} (${unitLevelLabels[unit.level]})`
+		label: `${unit.name} ${unit.parent?.name !== undefined ? `(${unit.parent.name})` : ''}`
 	}
 	return [self, ...(unit.children ?? []).flatMap(flattenUnitOptions)]
 }
@@ -123,10 +123,10 @@ export function ImportStudentsDialog({
 				'birthPlace',
 				'address',
 				'dob',
+				'phone',
+				'unitId',
 				'rank',
 				'positionId',
-				'previousUnit',
-				'previousPosition',
 				'ethnic',
 				'religion',
 				'enlistmentPeriod',
@@ -157,28 +157,25 @@ export function ImportStudentsDialog({
 				'familyBackground',
 				'familyBirthOrder',
 				'achievement',
-				'disciplinaryHistory',
-				'childrenInfos',
-				'phone',
-				'unitId'
+				'disciplinaryHistory'
 			]
 
 			const vietnameseHeaders = [
 				'Họ và tên',
-				'Mã học viên',
+				'Mã số quân nhân',
 				'Nơi sinh',
 				'Địa chỉ',
 				'Ngày sinh',
+				'Số điện thoại',
+				'Đơn vị',
 				'Cấp bậc',
 				'Chức vụ',
-				'Đơn vị cũ',
-				'Chức vụ cũ',
 				'Dân tộc',
 				'Tôn giáo',
 				'Thời gian nhập ngũ',
 				'Đoàn/Đảng',
 				'Ngày chính thức vào Đảng/Đoàn',
-				'ID Đảng viên',
+				'Số thẻ Đảng',
 				'Trình độ học vấn',
 				'Tên trường',
 				'Chuyên ngành',
@@ -203,10 +200,7 @@ export function ImportStudentsDialog({
 				'Hoàn cảnh gia đình',
 				'Thứ tự sinh',
 				'Thành tích',
-				'Lịch sử kỷ luật',
-				'Thông tin con cái',
-				'Số điện thoại',
-				'Đơn vị'
+				'Lịch sử kỷ luật'
 			]
 
 			const sampleData = [
@@ -215,10 +209,10 @@ export function ImportStudentsDialog({
 				'Hà Nội',
 				'123 Đường ABC',
 				'01/01/2000',
+				'0911222333',
+				unitOptions.length ? unitOptions[0].label : '',
 				'Binh nhất',
 				positionOptions.length ? positionOptions[0].label : '',
-				'Đại đội 1',
-				'',
 				'Kinh',
 				'Không',
 				'2024',
@@ -249,17 +243,14 @@ export function ImportStudentsDialog({
 				'Không',
 				'Con cả',
 				'Học sinh giỏi',
-				'',
-				[],
-				'0911222333',
-				unitOptions.length ? unitOptions[0].label : ''
+				'Không'
 			]
 
 			// ===== Sheet Mẫu Import =====
 			const sheet = workbook.addWorksheet('Mẫu Import')
 			const headerRowVN = sheet.addRow(vietnameseHeaders)
 			const headerRowAPI = sheet.addRow(headers)
-			sheet.addRow(sampleData)
+			headerRowAPI.hidden = true
 
 			headerRowVN.eachCell((cell) => {
 				cell.font = { bold: true, color: { argb: 'FFFFFFFF' } }
@@ -398,11 +389,23 @@ export function ImportStudentsDialog({
 				'spouseDob'
 			]
 			const numberFields = ['familySize']
+			const forcedTextFields = [
+				'phone',
+				'fatherPhoneNumber',
+				'motherPhoneNumber',
+				'spousePhoneNumber',
+				'enlistmentPeriod',
+				'studentId',
+				'cpvId'
+			]
 
 			// set format cho từng column
 			headers.forEach((field, index) => {
 				const col = sheet.getColumn(index + 1)
-				if (textDateFields.includes(field)) {
+				if (
+					textDateFields.includes(field) ||
+					forcedTextFields.includes(field)
+				) {
 					col.numFmt = '@' // format text
 				}
 				if (numberFields.includes(field)) {
@@ -450,6 +453,9 @@ export function ImportStudentsDialog({
 			instructionData.forEach((r) => instructionSheet.addRow(r))
 			instructionSheet.getColumn(1).width = 100
 
+			// Set sample data
+			sheet.addRow(sampleData)
+
 			// Export file
 			const buffer = await workbook.xlsx.writeBuffer()
 			const blob = new Blob([buffer], {
@@ -459,7 +465,7 @@ export function ImportStudentsDialog({
 
 			const link = document.createElement('a')
 			link.href = url
-			link.download = 'Mau_Import_Hoc_Vien_Co_Dropdown.xlsx'
+			link.download = 'Mau_Import_Quan_Nhan.xlsx'
 			link.click()
 			URL.revokeObjectURL(url)
 		} catch (err) {
@@ -529,6 +535,14 @@ export function ImportStudentsDialog({
 						'motherDob',
 						'spouseDob',
 						'politicalOrgOfficialDate'
+					]
+					const forcedTextFields = [
+						'phone',
+						'fatherPhoneNumber',
+						'motherPhoneNumber',
+						'spousePhoneNumber',
+						'studentId',
+						'cpvId'
 					]
 
 					const rowErrors: { row: number; message: string }[] = []
@@ -665,9 +679,41 @@ export function ImportStudentsDialog({
 							if (dateFields.includes(header)) {
 								value = toIsoDate(value)
 							}
+
+							if (forcedTextFields.includes(header)) {
+								if (typeof value === 'number') {
+									value = String(Math.trunc(value))
+								} else if (value != null) {
+									value = String(value).trim()
+								} else {
+									value = ''
+								}
+							}
+
+							if (header === 'enlistmentPeriod') {
+								console.log('Found it')
+
+								if (typeof value === 'number') {
+									// Excel silently turned "03/2026" into a date serial — decode it
+									// back into month/year instead of losing the data.
+									const decoded =
+										XLSX.SSF.parse_date_code(value)
+									value = decoded
+										? `${String(decoded.m).padStart(2, '0')}/${decoded.y}`
+										: ''
+								} else {
+									value =
+										value != null
+											? String(value).trim()
+											: ''
+								}
+							}
 							student[header] = value
 						})
 
+						student.childrenInfos = []
+						student.previousUnit = ''
+						student.previousPosition = ''
 						return student as StudentBody
 					})
 
