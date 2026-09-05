@@ -65,7 +65,6 @@ const TROOPER_RAW_FIELDS: { field: string; description: string }[] = [
 		field: 'status',
 		description: "Trạng thái ('pending' hoặc 'confirmed')"
 	},
-	{ field: 'class.name', description: 'Tên tiểu đội' },
 	{ field: 'unit.name', description: 'Tên đơn vị' },
 	{
 		field: 'childrenInfos',

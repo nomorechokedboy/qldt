@@ -172,7 +172,6 @@ export const studentExportFields: StudentExportField[] = [
 		getValue: (s) =>
 			s.status === 'confirmed' ? 'Đã xác nhận' : 'Chưa xác nhận'
 	},
-	{ key: 'class', label: 'Tiểu đội', getValue: (s) => s.class?.name ?? '' },
 	{ key: 'unit', label: 'Đơn vị', getValue: (s) => s.unit?.name ?? '' }
 ]
 

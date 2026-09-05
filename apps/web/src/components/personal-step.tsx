@@ -1,37 +1,24 @@
 import { EhtnicOptions } from '@/data/ethnicities'
 import { religionOptions } from '@/data/religions'
 import { eduLevelOptions } from '@/data/education-levels'
-import useClassData from '@/hooks/useClasses'
 import useUnitsData from '@/hooks/useUnitsData'
 import { unitLevelLabels } from '@/data/unit-levels'
-import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
-import { useMemo, useState } from 'react'
+import type { Unit } from '@/types'
+import { useMemo } from 'react'
+
+function flattenUnitOptions(unit: Unit): { value: string; label: string }[] {
+	const self = {
+		value: unit.id.toString(),
+		label: `${unit.name} (${unitLevelLabels[unit.level]})`
+	}
+	return [self, ...(unit.children ?? []).flatMap(flattenUnitOptions)]
+}
 
 export default function PersonalStep({ form }: { form: any }) {
-	const { data: classes = [] } = useClassData()
 	const { data: units = [] } = useUnitsData()
-	const [membershipType, setMembershipType] = useState<'class' | 'unit'>(
-		form.state.values.unitId ? 'unit' : 'class'
-	)
-
-	const classOptions = useMemo(
-		() =>
-			classes.map((c) => ({
-				value: c.id.toString(),
-				label: `${c.name} - ${c.unit.name}`
-			})),
-		[classes]
-	)
 
 	const unitOptions = useMemo(
-		() =>
-			units
-				.filter((u) => u.level !== 'squad')
-				.map((u) => ({
-					value: u.id.toString(),
-					label: `${u.name} (${unitLevelLabels[u.level]})`
-				})),
+		() => units.flatMap(flattenUnitOptions),
 		[units]
 	)
 
@@ -62,66 +49,18 @@ export default function PersonalStep({ form }: { form: any }) {
 						<field.TextField label='Mã số quân nhân' />
 					)}
 				</form.AppField>
-
-				<div className='space-y-2'>
-					<Label>Thuộc về</Label>
-					<div className='flex gap-2'>
-						<Button
-							type='button'
-							size='sm'
-							variant={
-								membershipType === 'class'
-									? 'default'
-									: 'outline'
-							}
-							onClick={() => {
-								setMembershipType('class')
-								form.setFieldValue('unitId', undefined)
-							}}
-						>
-							Tiểu đội
-						</Button>
-						<Button
-							type='button'
-							size='sm'
-							variant={
-								membershipType === 'unit'
-									? 'default'
-									: 'outline'
-							}
-							onClick={() => {
-								setMembershipType('unit')
-								form.setFieldValue('classId', undefined)
-							}}
-						>
-							Đơn vị (Trung đội trở lên)
-						</Button>
-					</div>
-				</div>
 			</div>
 
 			<div className='grid grid-cols-2 gap-6'>
-				{membershipType === 'class' ? (
-					<form.AppField name='classId'>
-						{(field: any) => (
-							<field.Select
-								values={classOptions}
-								label='Tiểu đội'
-								placeholder='Chọn tiểu đội'
-							/>
-						)}
-					</form.AppField>
-				) : (
-					<form.AppField name='unitId'>
-						{(field: any) => (
-							<field.Select
-								values={unitOptions}
-								label='Đơn vị'
-								placeholder='Chọn đơn vị'
-							/>
-						)}
-					</form.AppField>
-				)}
+				<form.AppField name='unitId'>
+					{(field: any) => (
+						<field.Select
+							values={unitOptions}
+							label='Đơn vị'
+							placeholder='Chọn đơn vị'
+						/>
+					)}
+				</form.AppField>
 			</div>
 
 			{/* Birth Place and Address - Two Columns  1*/}

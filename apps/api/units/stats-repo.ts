@@ -1,6 +1,5 @@
-import { eq, inArray, or, sql } from 'drizzle-orm'
+import { eq, inArray, sql } from 'drizzle-orm'
 import orm, { DrizzleDatabase } from '../database'
-import { classes } from '../schema/classes'
 import { buildings } from '../schema/buildings'
 import { rooms } from '../schema/rooms'
 import { materialStocks } from '../schema/material-stocks'
@@ -77,33 +76,13 @@ class repo {
 		return counts
 	}
 
-	async classIdsForUnits(unitIds: number[]): Promise<number[]> {
-		if (unitIds.length === 0) return []
-		const rows = await this.db
-			.select({ id: classes.id })
-			.from(classes)
-			.where(inArray(classes.unitId, unitIds))
-		return rows.map((r) => r.id)
-	}
-
-	async countStudents(
-		unitIds: number[],
-		classIds: number[]
-	): Promise<number> {
-		if (unitIds.length === 0 && classIds.length === 0) return 0
-
-		const conditions = []
-		if (unitIds.length > 0) {
-			conditions.push(inArray(students.unitId, unitIds))
-		}
-		if (classIds.length > 0) {
-			conditions.push(inArray(students.classId, classIds))
-		}
+	async countStudents(unitIds: number[]): Promise<number> {
+		if (unitIds.length === 0) return 0
 
 		const [{ count }] = await this.db
 			.select({ count: sql<number>`count(*)` })
 			.from(students)
-			.where(conditions.length === 1 ? conditions[0] : or(...conditions))
+			.where(inArray(students.unitId, unitIds))
 
 		return count
 	}

@@ -48,10 +48,6 @@ function RouteComponent() {
 	const handleFormSuccess = () => {
 		refetchStudents()
 	}
-	const unitClasses = unit?.children.map((c) => ({
-		classes: c.classes,
-		unit: c
-	}))
 	const actionColumn = useActionColumn(() => {
 		return refetchStudents()
 	})
@@ -67,16 +63,24 @@ function RouteComponent() {
 		label: rank,
 		value: rank
 	}))
-	const classOptions = unitClasses
-		? unitClasses
-				.map((unit) =>
-					unit.classes?.map((c) => ({
-						label: `${c?.name} - ${unit?.unit?.alias}`,
-						value: `${c?.name} - ${unit?.unit?.alias}`
-					}))
-				)
-				.flat()
-		: []
+	const collectSquadOptions = (node?: {
+		alias: string
+		name: string
+		level: string
+		children?: any[]
+	}): { label: string; value: string }[] => {
+		if (!node) return []
+		if (node.level === 'squad') {
+			return [{ label: node.name, value: node.name }]
+		}
+		return (node.children ?? []).flatMap(collectSquadOptions)
+	}
+	const classOptions = (unit?.children ?? []).flatMap((c) =>
+		collectSquadOptions(c).map((opt) => ({
+			label: `${opt.label} - ${c.alias}`,
+			value: `${opt.label} - ${c.alias}`
+		}))
+	)
 
 	const previousUnitSet = new Set(
 		students.filter((s) => !!s.previousUnit).map((s) => s.previousUnit)

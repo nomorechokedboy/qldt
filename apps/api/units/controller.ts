@@ -374,7 +374,7 @@ class controller {
 
 		return this.repo
 			.findById(id, {
-				with: { parent: true, children: true, classes: true }
+				with: { parent: true, children: true }
 			})
 			.catch(AppError.handleAppErr)
 	}

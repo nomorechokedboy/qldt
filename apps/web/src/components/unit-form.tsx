@@ -24,6 +24,7 @@ import { useCreateUnit } from '@/hooks/useCreateUnit'
 import useUnitsData from '@/hooks/useUnitsData'
 import useAuth from '@/hooks/useAuth'
 import {
+	isCompanyOrAboveLevel,
 	isLargerUnitLevel,
 	unitLevelOptions,
 	unitLevelOrder
@@ -63,7 +64,10 @@ export default function UnitForm({ onSuccess }: UnitFormProps) {
 	// still needs an explicit floor: they can only stand up units below
 	// their own unit's level (mirrors the backend check in units/controller.ts).
 	const myUnit = allUnits?.find((u) => u.id === user?.unitId)
-	const levelOptions =
+	// Platoon and squad units are managed from the company's own page (by
+	// the company commander), not from the general unit management page -
+	// see company-platoon-table.tsx / company-squad-table.tsx.
+	const levelOptions = (
 		isSuperAdmin || !myUnit
 			? unitLevelOptions
 			: unitLevelOptions.filter(
@@ -71,6 +75,7 @@ export default function UnitForm({ onSuccess }: UnitFormProps) {
 						unitLevelOrder.indexOf(opt.value) <
 						unitLevelOrder.indexOf(myUnit.level)
 				)
+	).filter((opt) => isCompanyOrAboveLevel(opt.value))
 
 	const parentOptions =
 		allUnits?.filter((u) => isLargerUnitLevel(u.level, level)) ?? []
@@ -79,7 +84,7 @@ export default function UnitForm({ onSuccess }: UnitFormProps) {
 	// once myUnit resolves for a non-super-admin).
 	useEffect(() => {
 		if (!levelOptions.some((opt) => opt.value === level)) {
-			setLevel(levelOptions[0]?.value ?? 'squad')
+			setLevel(levelOptions[0]?.value ?? 'company')
 		}
 	}, [levelOptions])
 

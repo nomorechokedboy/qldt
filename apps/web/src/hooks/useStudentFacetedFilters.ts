@@ -1,11 +1,24 @@
 import useDataTableToolbarConfig from '@/hooks/useDataTableToolbarConfig'
-import useClassData from '@/hooks/useClasses'
+import useUnitsData from '@/hooks/useUnitsData'
 import { EduLevelOptions } from '@/components/data-table/data/data'
 import { EhtnicOptions } from '@/data/ethnicities'
-import type { Student } from '@/types'
+import type { Student, Unit } from '@/types'
+
+function collectSquadOptions(
+	unit: Unit,
+	prefix = ''
+): { label: string; value: string }[] {
+	if (unit.level === 'squad') {
+		const label = prefix ? `${unit.name} - ${prefix}` : unit.name
+		return [{ label, value: label }]
+	}
+	return (unit.children ?? []).flatMap((child) =>
+		collectSquadOptions(child, unit.alias)
+	)
+}
 
 export function useStudentFacetedFilters(students: Student[]) {
-	const { data: classes } = useClassData()
+	const { data: units = [] } = useUnitsData({ level: 'battalion' })
 	const { createFacetedFilter } = useDataTableToolbarConfig()
 
 	// Military Rank Options
@@ -18,12 +31,7 @@ export function useStudentFacetedFilters(students: Student[]) {
 	}))
 
 	// Class Options
-	const classOptions = classes
-		? classes.map((c) => ({
-				label: `${c.name} - ${c.unit.alias}`,
-				value: `${c.name} - ${c.unit.alias}`
-			}))
-		: []
+	const classOptions = units.flatMap((u) => collectSquadOptions(u))
 
 	// Previous Unit Options
 	const previousUnitSet = new Set(

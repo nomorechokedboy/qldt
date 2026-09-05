@@ -17,7 +17,7 @@ function isoToDdMmYyyy(isoDate: string): string {
 export const baseStudentsColumns: ColumnDef<Student>[] = [
 	{
 		id: 'class.name',
-		accessorFn: (row) => row.class?.name ?? row.unit?.name,
+		accessorFn: (row) => row.unit?.name,
 		header: 'Đơn vị',
 		cell: ({ row }) => (
 			<div className='w-20'>
@@ -483,10 +483,7 @@ export const battalionStudentColumns: ColumnDef<Student>[] = [
 	},
 	{
 		id: 'class.name',
-		accessorFn: (row) =>
-			row.class
-				? `${row.class.name} - ${row.class.unit.alias}`
-				: (row.unit?.name ?? ''),
+		accessorFn: (row) => row.unit?.name ?? '',
 		header: 'Đơn vị',
 		cell: ({ row }) => (
 			<div className='w-20'>
@@ -918,10 +915,7 @@ export const battalionStudentColumnsWithoutAction: ColumnDef<Student>[] = [
 	},
 	{
 		id: 'class.name',
-		accessorFn: (row) =>
-			row.class
-				? `${row.class.name} - ${row.class.unit.alias}`
-				: (row.unit?.name ?? ''),
+		accessorFn: (row) => row.unit?.name ?? '',
 		header: 'Đơn vị',
 		cell: ({ row }) => (
 			<div className='w-20'>

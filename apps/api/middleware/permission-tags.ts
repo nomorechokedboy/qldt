@@ -3,13 +3,6 @@
  * Format: "perm:<resource>:<action>"
  */
 export const PermissionTag = {
-	// Classes permissions
-	CLASSES_CREATE: 'perm:classes:create',
-	CLASSES_READ: 'perm:classes:read',
-	CLASSES_UPDATE: 'perm:classes:update',
-	CLASSES_DELETE: 'perm:classes:delete',
-	CLASSES_MANAGE: 'perm:classes:manage',
-
 	// Students permissions
 	STUDENTS_CREATE: 'perm:students:create',
 	STUDENTS_READ: 'perm:students:read',

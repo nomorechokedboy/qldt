@@ -1,15 +1,6 @@
 import type { QueryObserverResult } from '@tanstack/react-query'
 export * from './authz'
 
-export interface Class extends Base {
-	name: string
-	description: string
-	status?: 'ongoing' | 'graduated'
-	studentCount: number
-	graduatedAt: string | null
-	unit: Unit
-}
-
 export interface UserFormData extends Base {
 	username: string
 	password: string
@@ -18,20 +9,12 @@ export interface UserFormData extends Base {
 	issuperuser: boolean
 }
 
-export interface ClassBody {
-	name: string
-	description?: string
-	unitId: number
-}
-
 export type PoliticalOrg = 'hcyu' | 'cpv'
 
 export type StudentBody = {
 	fullName?: string
 	birthPlace?: string
 	address?: string
-	class?: Class
-	classId?: number
 	unit?: Unit
 	unitId?: number
 	cpvId?: string
@@ -124,8 +107,6 @@ export interface User extends Base, UserBody {
 	isSuperAdmin?: boolean
 }
 
-export type ClassResponse = { data: Class[] }
-
 export type StudentResponse = { data: Student[] }
 
 export type UnitResponse = { data: Unit[] }
@@ -171,7 +152,6 @@ export interface StudentQueryParams {
 	birthdayInMonth?: Month
 	birthdayInQuarter?: Quarter
 	birthdayInWeek?: boolean
-	classId?: number
 	isMarried?: boolean
 	politicalOrg?: PoliticalOrg
 	isEthnicMinority?: boolean
@@ -181,7 +161,6 @@ export interface StudentQueryParams {
 	isCpvOfficialThisWeek?: boolean
 	cpvOfficialInMonth?: Month
 	cpvOfficialInQuarter?: Quarter
-	classIds?: number[]
 	withAdversity?: boolean
 }
 
@@ -244,8 +223,8 @@ export const defaultStudentColumnVisibility = {
 
 export interface AppNotificationItem extends Base {
 	notifiableId: number
-	notifiableType: 'classes' | 'students'
-	relatedData: Student | Class
+	notifiableType: 'students'
+	relatedData: Student
 }
 
 export type AppNotificationType = 'birthday' | 'officialCpv'
@@ -287,7 +266,6 @@ export interface Unit extends Base {
 
 	parent?: Unit | null
 	children: Unit[]
-	classes?: Class[]
 
 	commanderId?: number | null
 	deputyCommanderId?: number | null
@@ -395,7 +373,6 @@ export interface UnitPoliticsQualitySummary {
 	name: string
 	politicsQualityReport: PoliticsQualityReport | null
 	children?: UnitPoliticsQualitySummary[]
-	classes?: UnitPoliticsQualitySummary[]
 }
 
 export type PoliticsQualitySummary = {

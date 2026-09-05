@@ -78,8 +78,7 @@ class repo implements Repository {
 						? conditions[0]
 						: and(...conditions),
 				with: {
-					children: { with: { classes: true } },
-					classes: true,
+					children: true,
 					parent: true
 				}
 			})
@@ -89,8 +88,7 @@ class repo implements Repository {
 		return this.db.query.units
 			.findMany({
 				with: {
-					children: { with: { classes: true } },
-					classes: true,
+					children: true,
 					parent: true
 				}
 			})
@@ -108,8 +106,7 @@ class repo implements Repository {
 					eq(units.level, params.level)
 				),
 				with: {
-					children: { with: { classes: true } },
-					classes: true,
+					children: true,
 					parent: true
 				}
 			})
@@ -125,17 +122,13 @@ class repo implements Repository {
 	findById(
 		id: number,
 		opts?: {
-			with: { children?: boolean; classes?: boolean; parent?: boolean }
+			with: { children?: boolean; parent?: boolean }
 		}
 	): Promise<UnitDB | undefined> {
 		const withClause: Record<string, boolean> = {}
 
 		if (opts?.with?.children) {
 			withClause.children = true
-		}
-
-		if (opts?.with?.classes) {
-			withClause.classes = true
 		}
 
 		if (opts?.with?.parent) {
@@ -204,8 +197,7 @@ class repo implements Repository {
 						? conditions[0]
 						: and(...conditions),
 				with: {
-					children: { with: { classes: true } },
-					classes: true,
+					children: true,
 					parent: true
 				}
 			})

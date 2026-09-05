@@ -34,7 +34,6 @@ import {
 import {
 	buildRosterRows,
 	buildRosterSummary,
-	RosterClassNode,
 	RosterPosition,
 	RosterStudent,
 	RosterUnitNode
@@ -42,7 +41,6 @@ import {
 import exportTemplateController from '../export-templates/controller'
 import unitRepo from '../units/repo'
 import unitStatsRepo from '../units/stats-repo'
-import classRepo from '../classes/repo'
 import positionRepo from '../positions/repo'
 import { UnitLevelName } from '../schema/units'
 import log from 'encore.dev/log'
@@ -76,16 +74,13 @@ export class Controller {
 	// Trung đội trưởng ('bt', priority 0) and the various Tiểu/khẩu đội
 	// trưởng codes (priority 1-2) are one-of-a-kind roles: a platoon has
 	// exactly one commander, and each squad has exactly one leader. Regular
-	// soldier positions (priority 3+) have no such limit. Scope is unitId
-	// (the platoon) for the platoon commander, classId (the squad) for
-	// squad leaders - mirrors students/controller.ts's classId-xor-unitId
-	// ownership model.
+	// soldier positions (priority 3+) have no such limit. Both are scoped by
+	// unitId - a squad is itself a unit, so no separate scope is needed.
 	private async validateUniqueLeaderPositions(
 		entries: Array<{
 			id?: number
 			position?: string | null
 			unitId?: number | null
-			classId?: number | null
 		}>,
 		existingById?: Map<number, Student>
 	): Promise<void> {
@@ -104,7 +99,6 @@ export class Controller {
 		)
 
 		type ScopedEntry = (typeof changing)[number] & {
-			scopeType: 'unit' | 'class'
 			scopeId: number
 			positionName: string
 		}
@@ -120,21 +114,11 @@ export class Controller {
 				e.id !== undefined ? existingById?.get(e.id) : undefined
 			const unitId =
 				e.unitId !== undefined ? e.unitId : existing?.unit?.id
-			const classId =
-				e.classId !== undefined ? e.classId : existing?.class?.id
 
-			if (leaderPos.priority === 0 && unitId != null) {
+			if (unitId != null) {
 				scoped.push({
 					...e,
-					scopeType: 'unit',
 					scopeId: unitId,
-					positionName: leaderPos.name
-				})
-			} else if (leaderPos.priority > 0 && classId != null) {
-				scoped.push({
-					...e,
-					scopeType: 'class',
-					scopeId: classId,
 					positionName: leaderPos.name
 				})
 			}
@@ -144,7 +128,7 @@ export class Controller {
 		// Conflicts within this same batch.
 		const seen = new Map<string, ScopedEntry>()
 		for (const e of scoped) {
-			const key = `${e.scopeType}:${e.scopeId}:${normalizeCode(e.position!)}`
+			const key = `${e.scopeId}:${normalizeCode(e.position!)}`
 			if (seen.has(key)) {
 				throw AppError.handleAppErr(
 					AppError.invalidArgument(
@@ -156,29 +140,9 @@ export class Controller {
 		}
 
 		// Conflicts against existing DB state.
-		const unitIds = Array.from(
-			new Set(
-				scoped
-					.filter((e) => e.scopeType === 'unit')
-					.map((e) => e.scopeId)
-			)
-		)
-		const classIds = Array.from(
-			new Set(
-				scoped
-					.filter((e) => e.scopeType === 'class')
-					.map((e) => e.scopeId)
-			)
-		)
-		const [unitHolders, classHolders] = await Promise.all([
-			unitIds.length > 0
-				? this.repo.find({ unitIds })
-				: Promise.resolve([]),
-			classIds.length > 0
-				? this.repo.find({ classIds })
-				: Promise.resolve([])
-		])
-		const holders = [...unitHolders, ...classHolders]
+		const unitIds = Array.from(new Set(scoped.map((e) => e.scopeId)))
+		const holders =
+			unitIds.length > 0 ? await this.repo.find({ unitIds }) : []
 
 		for (const e of scoped) {
 			const conflict = holders.find(
@@ -186,9 +150,7 @@ export class Controller {
 					s.id !== e.id &&
 					s.position != null &&
 					normalizeCode(s.position) === normalizeCode(e.position!) &&
-					(e.scopeType === 'unit'
-						? s.unit?.id === e.scopeId
-						: s.class?.id === e.scopeId)
+					s.unit?.id === e.scopeId
 			)
 			if (conflict !== undefined) {
 				throw AppError.handleAppErr(
@@ -202,49 +164,24 @@ export class Controller {
 
 	async create(
 		params: StudentParam[],
-		classIds: number[],
 		unitIds: number[]
 	): Promise<StudentDB[]> {
-		const hasExactlyOneOwner = params.every((p) => {
-			const hasClass = p.classId !== undefined && p.classId !== null
-			const hasUnit = p.unitId !== undefined && p.unitId !== null
-			return hasClass !== hasUnit
-		})
-		if (hasExactlyOneOwner === false) {
+		const hasUnit = params.every(
+			(p) => p.unitId !== undefined && p.unitId !== null
+		)
+		if (hasUnit === false) {
 			throw AppError.handleAppErr(
-				AppError.invalidArgument(
-					'A student must belong to exactly one of classId (squad) or unitId (platoon and above)'
-				)
+				AppError.invalidArgument('A student must belong to a unitId')
 			)
 		}
 
-		const checkClassIds = params
-			.filter((p) => p.classId !== undefined && p.classId !== null)
-			.every((p) => classIds.includes(p.classId!))
-		const checkUnitIds = params
-			.filter((p) => p.unitId !== undefined && p.unitId !== null)
-			.every((p) => unitIds.includes(p.unitId!))
-		if (checkClassIds === false || checkUnitIds === false) {
+		const checkUnitIds = params.every((p) => unitIds.includes(p.unitId!))
+		if (checkUnitIds === false) {
 			throw AppError.handleAppErr(
 				AppError.unauthorized(
-					'You are not authorized create with this classId or unitId'
+					'You are not authorized create with this unitId'
 				)
 			)
-		}
-
-		const unitIdsInPayload = params
-			.map((p) => p.unitId)
-			.filter((id): id is number => id !== undefined && id !== null)
-		if (unitIdsInPayload.length > 0) {
-			const targetUnits = await this.unitRepo.findByIds(unitIdsInPayload)
-			const hasSquadUnit = targetUnits.some((u) => u.level === 'squad')
-			if (hasSquadUnit) {
-				throw AppError.handleAppErr(
-					AppError.invalidArgument(
-						'unitId must reference a platoon-level unit or larger'
-					)
-				)
-			}
 		}
 
 		await this.validateUniqueLeaderPositions(params)
@@ -252,17 +189,11 @@ export class Controller {
 		return this.repo.create(params).catch(AppError.handleAppErr)
 	}
 
-	async delete(
-		studentsTodelete: StudentDB[],
-		validClassIds: number[],
-		validUnitIds: number[]
-	) {
+	async delete(studentsTodelete: StudentDB[], validUnitIds: number[]) {
 		const ids = studentsTodelete.map((student) => student.id)
 		const students = await this.repo.find({ ids })
 		const hasPermission = students.every((student) =>
-			student.class !== null
-				? validClassIds.includes(student.class.id)
-				: validUnitIds.includes(student.unit!.id)
+			validUnitIds.includes(student.unit!.id)
 		)
 		if (!hasPermission) {
 			throw AppError.handleAppErr(
@@ -276,8 +207,7 @@ export class Controller {
 	}
 
 	async find(
-		{ unitAlias, unitLevel, classId, classIds, ...q }: GetStudentsQuery,
-		validClassIds: number[],
+		{ unitAlias, unitLevel, ...q }: GetStudentsQuery,
 		validUnitIds: number[]
 	): Promise<Student[]> {
 		const isUnitAliasExist = unitAlias !== undefined
@@ -304,16 +234,14 @@ export class Controller {
 			}
 
 			const unitIds = await unitStatsRepo.findDescendantUnitIds(u.id)
-			const classIds = await unitStatsRepo.classIdsForUnits(unitIds)
 			log.trace('studentRepo.find unit case ids', {
-				classIds,
 				unitIds,
 				query: q
 			})
 
-			const isAuthorized =
-				classIds.every((id) => validClassIds.includes(id)) &&
-				unitIds.every((id) => validUnitIds.includes(id))
+			const isAuthorized = unitIds.every((id) =>
+				validUnitIds.includes(id)
+			)
 
 			if (isAuthorized === false) {
 				AppError.handleAppErr(
@@ -324,26 +252,13 @@ export class Controller {
 			}
 
 			return this.repo
-				.find({ ...q, classIds, unitIds })
+				.find({ ...q, unitIds })
 				.catch(AppError.handleAppErr)
-		}
-
-		const cIds: number[] = []
-		if (classIds !== undefined) {
-			cIds.push(...classIds)
-		}
-
-		if (classId !== undefined) {
-			cIds.push(classId)
-		}
-		if (cIds.length === 0) {
-			cIds.push(...validClassIds)
 		}
 
 		return this.repo
 			.find({
 				...q,
-				classIds: cIds.length !== 0 ? cIds : undefined,
 				unitIds: validUnitIds.length !== 0 ? validUnitIds : undefined
 			})
 			.catch(AppError.handleAppErr)
@@ -351,7 +266,6 @@ export class Controller {
 
 	async update(
 		params: StudentDB[],
-		validClassIds: number[],
 		validUnitIds: number[]
 	): Promise<StudentDB[]> {
 		const ids = params.map((s) => s.id)
@@ -362,16 +276,13 @@ export class Controller {
 				AppError.invalidArgument('No record IDs provided')
 			)
 		}
-		// classId/unitId are only present in the payload when the caller is
-		// (re)assigning the student's unit; an update that leaves them
+		// unitId is only present in the payload when the caller is
+		// (re)assigning the student's unit; an update that leaves it
 		// untouched is authorized by the existing record instead.
 		const existingById = new Map(
 			(await this.repo.find({ ids })).map((s) => [s.id, s])
 		)
 		const checkOwnership = params.every((p) => {
-			if (p.classId !== undefined && p.classId !== null) {
-				return validClassIds.includes(p.classId)
-			}
 			if (p.unitId !== undefined && p.unitId !== null) {
 				return validUnitIds.includes(p.unitId)
 			}
@@ -380,9 +291,7 @@ export class Controller {
 			if (existing === undefined) {
 				return false
 			}
-			return existing.class !== null
-				? validClassIds.includes(existing.class.id)
-				: validUnitIds.includes(existing.unit!.id)
+			return validUnitIds.includes(existing.unit!.id)
 		})
 		if (checkOwnership === false) {
 			throw AppError.handleAppErr(
@@ -421,13 +330,11 @@ export class Controller {
 	async updateStatus(
 		ids: number[],
 		status: 'pending' | 'confirmed',
-		validClassIds: number[],
 		validUnitIds: number[]
 	): Promise<StudentDB[]> {
 		log.info('StudentController.updateStatus params: ', {
 			ids,
 			status,
-			validClassIds,
 			validUnitIds
 		})
 
@@ -437,7 +344,7 @@ export class Controller {
 			)
 		}
 
-		// get students to check their classIds
+		// get students to check their unitIds
 		const students = await this.repo
 			.find({ ids })
 			.catch(AppError.handleAppErr)
@@ -449,13 +356,11 @@ export class Controller {
 		}
 
 		// auth check
-		const checkClassIds = students.every((student) =>
-			student.class !== null
-				? validClassIds.includes(student.class.id)
-				: validUnitIds.includes(student.unit!.id)
+		const checkUnitIds = students.every((student) =>
+			validUnitIds.includes(student.unit!.id)
 		)
 
-		if (!checkClassIds) {
+		if (!checkUnitIds) {
 			throw AppError.handleAppErr(
 				AppError.unauthorized(
 					"You don't have permission to update status of these students"
@@ -523,15 +428,15 @@ export class Controller {
 			)
 		}
 
-		const classIds = units.flatMap((unit) => {
-			if (unit.level === 'battalion') {
-				return unit.children.flatMap((child) =>
-					child.classes.map((c) => c.id)
-				)
-			}
-
-			return unit.classes.map((c) => c.id)
-		})
+		const descendantIdsPerUnit = await Promise.all(
+			units.map((u) => unitStatsRepo.findDescendantUnitIds(u.id))
+		)
+		const descendantUnits = await this.unitRepo.findByIds(
+			Array.from(new Set(descendantIdsPerUnit.flat()))
+		)
+		const squadIds = descendantUnits
+			.filter((u) => u.level === 'squad')
+			.map((u) => u.id)
 
 		const educationLevelMap = {
 			'7/12': 'Cấp II',
@@ -546,17 +451,17 @@ export class Controller {
 			'Sau đại học': 'Sau ĐH'
 		}
 		const data: Record<number, Record<string, any>> = {}
-		const rows = await this.repo.politicsQualityReport(classIds)
-		for (const { count, value, classId, category } of rows) {
-			if (!data[classId]) {
-				data[classId] = {}
+		const rows = await this.repo.politicsQualityReport(squadIds)
+		for (const { count, value, unitId, category } of rows) {
+			if (!data[unitId]) {
+				data[unitId] = {}
 			}
 
-			if (category === 'classId') {
-				data[classId].total = count
+			if (category === 'unitId') {
+				data[unitId].total = count
 			} else {
-				if (!data[classId][category]) {
-					data[classId][category] = {}
+				if (!data[unitId][category]) {
+					data[unitId][category] = {}
 				}
 
 				const educationLevelMapKey = String(
@@ -566,15 +471,15 @@ export class Controller {
 				if (educationLevelMap[educationLevelMapKey] !== undefined) {
 					const valueLabel = educationLevelMap[educationLevelMapKey]
 					if (
-						data[classId][category][valueLabel] === undefined ||
-						data[classId][category][valueLabel] === null
+						data[unitId][category][valueLabel] === undefined ||
+						data[unitId][category][valueLabel] === null
 					) {
-						data[classId][category][valueLabel] = 0
+						data[unitId][category][valueLabel] = 0
 					}
 
-					data[classId][category][valueLabel] += count
+					data[unitId][category][valueLabel] += count
 				} else {
-					data[classId][category][String(value)] = count
+					data[unitId][category][String(value)] = count
 				}
 			}
 		}
@@ -670,47 +575,29 @@ export class Controller {
 					)
 				}
 
-				// A student belongs to exactly one of a class (squad) or a
-				// unit (platoon and above) - see Controller.create. The
-				// "đơn vị" chain is anchored at whichever one this student
-				// has: the class's owning unit, or the unit directly.
-				const leafUnitId: number | undefined =
-					stu.class?.unit?.id ?? stu.unit?.id
+				const leafUnitId: number | undefined = stu.unit?.id
 				if (leafUnitId === undefined) {
 					AppError.handleAppErr(
-						AppError.internal(
-							'Student has no unit or class assigned'
-						)
+						AppError.internal('Student has no unit assigned')
 					)
 				}
 
-				// Nearest-first ancestor chain, e.g. [platoon, company, battalion].
+				// Nearest-first ancestor chain, e.g. [squad, platoon, company,
+				// battalion] - always shown in full, root included.
 				const chain = await this.unitRepo
 					.findAncestorChain(leafUnitId)
 					.catch(AppError.handleAppErr)
-				const chainNames = chain.map((u) => u.name)
-				// The root (battalion) is only dropped when the student sits
-				// below a class (squad) - there the class name already
-				// pins the deepest, most specific level, and the full
-				// chain (root included) would be one level too long. A
-				// student assigned directly to a unit (battalion, company,
-				// or platoon) always shows its full chain, root included.
-				const hasClass = Boolean(stu.class?.name)
-				if (hasClass) {
-					chainNames.unshift(stu.class.name)
-				}
-				const displayNames =
-					hasClass && chainNames.length > 1
-						? chainNames.slice(0, -1)
-						: chainNames
-				stu.donVi = displayNames.reverse().join(', ')
+				stu.donVi = chain
+					.map((u) => u.name)
+					.reverse()
+					.join(', ')
 
 				const { rows: _, ...templateDataWithoutRows } = templateData
 				templData = {
 					stu,
 					unit: {
-						name: chain[0]?.name,
-						parentName: chain[1]?.name
+						name: unitName,
+						parentName: underUnitName
 					},
 					...templateDataWithoutRows
 				}
@@ -802,10 +689,8 @@ export class Controller {
 					rows,
 					troopers,
 					year,
-					unit: {
-						parentName: underUnitName,
-						name: unitName
-					}
+					underUnitName,
+					unitName
 				},
 				cmdDelimiter: ['{', '}']
 			})
@@ -851,10 +736,8 @@ export class Controller {
 				rootUnit.id
 			)
 			const unitList = await unitRepo.findByIds(unitIds)
-			const classList = await classRepo.find({ unitIds })
-			const classIds = classList.map((c) => c.id)
 
-			const students = await this.repo.find({ classIds, unitIds })
+			const students = await this.repo.find({ unitIds })
 
 			const rosterUnits: RosterUnitNode[] = unitList.map((u) => ({
 				id: u.id,
@@ -862,18 +745,12 @@ export class Controller {
 				parentId: u.parentId,
 				level: u.level
 			}))
-			const rosterClasses: RosterClassNode[] = classList.map((c) => ({
-				id: c.id,
-				name: c.name,
-				unitId: c.unitId
-			}))
 			const rosterStudents: RosterStudent[] = students.map((s) => ({
 				fullName: s.fullName ?? '',
 				rank: s.rank ?? '',
 				position: s.position ?? '',
 				enlistmentPeriod: s.enlistmentPeriod ?? '',
-				unitId: s.unit?.id,
-				classId: s.class?.id
+				unitId: s.unit?.id
 			}))
 
 			const positionRows = await positionRepo.find({})
@@ -891,7 +768,6 @@ export class Controller {
 					level: rootUnit.level
 				},
 				rosterUnits,
-				rosterClasses,
 				rosterStudents,
 				rosterPositions
 			)

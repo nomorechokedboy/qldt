@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import type { Quarter, StudentQueryParams } from '@/types'
+import { useCallback, useState } from 'react'
+import type { Quarter, Student, StudentQueryParams } from '@/types'
 import { getCurrentQuarter } from '@/lib/utils'
 import {
 	Select,
@@ -28,14 +28,21 @@ export default function CpvOfficialInQuarter() {
 		`Q${getCurrentQuarter()}` as Quarter
 	)
 	const [selectedUnits, setSelectedUnits] = useState<number[]>([])
-	const filteredClassIds = useFilteredClassIds(selectedUnits)
+	const filteredUnitIds = useFilteredClassIds(selectedUnits)
 	const studentQueryParams: StudentQueryParams = {
-		cpvOfficialInQuarter: quarter,
-		classIds: filteredClassIds
+		cpvOfficialInQuarter: quarter
 	}
-	const { data: students = [], refetch: refetchStudents } =
-		useStudentData(studentQueryParams)
+	const { data: students = [] } = useStudentData(studentQueryParams)
 	const facetedFilters = useStudentFacetedFilters(students)
+	const filterStudents = useCallback(
+		(all: Student[]) =>
+			selectedUnits.length === 0
+				? all
+				: all.filter(
+						(s) => s.unit && filteredUnitIds?.includes(s.unit.id)
+					),
+		[selectedUnits, filteredUnitIds]
+	)
 
 	return (
 		<>
@@ -77,6 +84,7 @@ export default function CpvOfficialInQuarter() {
 
 			<StudentTable
 				params={studentQueryParams}
+				filterStudents={filterStudents}
 				columns={battalionStudentColumnsWithoutAction}
 				facetedFilters={facetedFilters}
 				exportConfig={{

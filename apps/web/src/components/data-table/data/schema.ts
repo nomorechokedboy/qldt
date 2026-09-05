@@ -18,21 +18,6 @@ export const taskSchema = z.object({
 
 export type Task = z.infer<typeof taskSchema>
 
-export const UnitSchema = z.object({
-	alias: z.string(),
-	name: z.string(),
-	level: z.enum(['battalion', 'company'])
-})
-
-export const ClassBodySchema = z.object({
-	name: z.string(),
-	description: z.string(),
-
-	unit: UnitSchema
-})
-
-export const ClassSchema = BaseSchema.merge(ClassBodySchema)
-
 export const ChildrenInfoSchema = z.object({
 	fullName: z.string(),
 	dob: z.string()
@@ -42,7 +27,6 @@ export const StudentBodySchema = z.object({
 	fullName: z.string(),
 	birthPlace: z.string(),
 	address: z.string(),
-	class: ClassSchema,
 	cpvId: z.string(),
 	dob: z.string(),
 	educationLevel: z.string(),

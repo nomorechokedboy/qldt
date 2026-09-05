@@ -122,13 +122,8 @@ class controller {
 		return ids.has(userId)
 	}
 
-	// A student is either attached directly to a unit (unitId, e.g. a
-	// company commander) or is a squad member reached only through their
-	// class (classId -> class.unitId). Most rank-and-file troopers are the
-	// latter, so eligibility/transfer logic must fall back to the class's
-	// unit, not just the direct one.
 	private studentUnitId(student: Student): number | undefined {
-		return student.unit?.id ?? student.class?.unit?.id
+		return student.unit?.id
 	}
 
 	// A unit's own resources plus every descendant unit's resources — a
@@ -438,15 +433,11 @@ class controller {
 				continue
 			}
 
-			// A transferred trooper becomes directly attached to the
-			// destination unit; clear classId (mutually exclusive with
-			// unitId) if they were previously a squad member.
 			await studentRepo.update([
 				{
 					id: student.id,
 					updatePayload: {
-						unitId: destinationUnitId,
-						classId: null
+						unitId: destinationUnitId
 					}
 				}
 			])

@@ -64,25 +64,10 @@ export function transformPoliticsQualityData(
 	}
 
 	function traverse(unitNode: Unit): UnitPoliticsQualitySummary {
-		let unitReport: Record<string, any> = {}
-		const classesReport: UnitPoliticsQualitySummary[] = []
+		let unitReport: Record<string, any> = data[unitNode.id] ?? {}
 		const childrenReport: UnitPoliticsQualitySummary[] = []
 
-		// collect class reports
-		if (unitNode.classes && unitNode.classes.length > 0) {
-			for (const cls of unitNode.classes) {
-				const clsReport = data[cls.id] ?? null
-				classesReport.push({
-					name: cls.name,
-					politicsQualityReport: clsReport
-				})
-				if (clsReport) {
-					unitReport = mergeReports(unitReport, clsReport)
-				}
-			}
-		}
-
-		// collect children reports recursively
+		// collect children reports recursively (squads are leaf children too)
 		if (unitNode.children && unitNode.children.length > 0) {
 			for (const child of unitNode.children) {
 				const childSummary = traverse(child)
@@ -102,9 +87,6 @@ export function transformPoliticsQualityData(
 				Object.keys(unitReport).length > 0 ? unitReport : null
 		}
 
-		if (classesReport.length > 0) {
-			unitSummary.classes = classesReport
-		}
 		if (childrenReport.length > 0) {
 			unitSummary.children = childrenReport
 		}

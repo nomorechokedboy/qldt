@@ -101,47 +101,22 @@ function convertToPoliticsQualitySummary(
 	}
 
 	function processDataRecursively(
-		transformData: UnitPoliticsQualitySummary[]
+		transformData: UnitPoliticsQualitySummary[],
+		depth = 0
 	) {
 		transformData.forEach((unit) => {
-			// Process the unit itself
+			const isLeaf = !unit.children || unit.children.length === 0
+
 			const converted = processUnit(unit, idx++)
 			if (converted) {
+				if (depth > 0 && isLeaf) {
+					converted.className = ` - Lớp ${converted.className}`
+				}
 				result.push(converted)
 			}
 
-			// Process children
-			if (unit.children) {
-				unit.children.forEach((child) => {
-					const childConverted = processUnit(child, idx++)
-					if (childConverted) {
-						result.push(childConverted)
-					}
-
-					// Process classes within children
-					if (child.classes) {
-						child.classes.forEach((cls) => {
-							const classConverted = processUnit(cls, idx++)
-							if (classConverted !== null) {
-								classConverted.className = ` - Lớp ${classConverted?.className}`
-							}
-
-							if (classConverted) {
-								result.push(classConverted)
-							}
-						})
-					}
-				})
-			}
-
-			// Process classes at the same level
-			if (unit.classes) {
-				unit.classes.forEach((cls) => {
-					const classConverted = processUnit(cls, idx++)
-					if (classConverted) {
-						result.push(classConverted)
-					}
-				})
+			if (unit.children && unit.children.length > 0) {
+				processDataRecursively(unit.children, depth + 1)
 			}
 		})
 	}

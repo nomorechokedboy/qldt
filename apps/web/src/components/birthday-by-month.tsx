@@ -1,8 +1,8 @@
 import { battalionStudentColumnsWithoutAction } from '@/components/student-table/columns'
 import useStudentData from '@/hooks/useStudents'
-import type { Month, StudentQueryParams } from '@/types'
+import type { Month, Student, StudentQueryParams } from '@/types'
 import dayjs from 'dayjs'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import {
 	Select,
 	SelectContent,
@@ -70,17 +70,21 @@ const monthOptions = [
 export default function BirthdayByMonth() {
 	const [month, setMonth] = useState<Month>(dayjs().format('MM') as Month)
 	const [selectedUnits, setSelectedUnits] = useState<number[]>([])
-	const filteredClassIds = useFilteredClassIds(selectedUnits)
+	const filteredUnitIds = useFilteredClassIds(selectedUnits)
 	const studentQueryParams: StudentQueryParams = {
-		birthdayInMonth: month,
-		classIds: filteredClassIds
+		birthdayInMonth: month
 	}
-	const {
-		data: students = [],
-		isLoading: isLoadingStudents,
-		refetch: refetchStudents
-	} = useStudentData(studentQueryParams)
+	const { data: students = [] } = useStudentData(studentQueryParams)
 	const facetedFilters = useStudentFacetedFilters(students)
+	const filterStudents = useCallback(
+		(all: Student[]) =>
+			selectedUnits.length === 0
+				? all
+				: all.filter(
+						(s) => s.unit && filteredUnitIds?.includes(s.unit.id)
+					),
+		[selectedUnits, filteredUnitIds]
+	)
 	return (
 		<>
 			<div className='flex items-center justify-between space-y-2'>
@@ -119,6 +123,7 @@ export default function BirthdayByMonth() {
 			</div>
 			<StudentTable
 				params={studentQueryParams}
+				filterStudents={filterStudents}
 				columns={battalionStudentColumnsWithoutAction}
 				leftSection={
 					<UnitFacetedFilter

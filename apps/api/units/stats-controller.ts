@@ -46,7 +46,6 @@ class controller {
 		const descendantUnitIds = await unitStatsRepo.findDescendantUnitIds(
 			unit.id
 		)
-		const classIds = await unitStatsRepo.classIdsForUnits(descendantUnitIds)
 
 		const [
 			totalStudents,
@@ -56,7 +55,7 @@ class controller {
 			materialStockSummary,
 			materialAssetSummary
 		] = await Promise.all([
-			unitStatsRepo.countStudents(descendantUnitIds, classIds),
+			unitStatsRepo.countStudents(descendantUnitIds),
 			unitStatsRepo.countBuildings(descendantUnitIds),
 			unitStatsRepo.countRooms(descendantUnitIds),
 			unitStatsRepo.unitCountsByLevel(descendantUnitIds, unit.id),
@@ -85,10 +84,9 @@ class controller {
 		const descendantUnitIds = await unitStatsRepo.findDescendantUnitIds(
 			unit.id
 		)
-		const classIds = await unitStatsRepo.classIdsForUnits(descendantUnitIds)
 
 		return studentRepo
-			.find({ unitIds: descendantUnitIds, classIds })
+			.find({ unitIds: descendantUnitIds })
 			.catch(AppError.handleAppErr)
 	}
 

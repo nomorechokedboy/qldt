@@ -30,6 +30,8 @@ import { columnsWithoutAction } from './columns'
 interface StudentTableProps {
 	// Core data params
 	params: StudentQueryParams
+	// Optional client-side filter applied after fetching (e.g. narrowing by selected unit)
+	filterStudents?: (students: Student[]) => Student[]
 
 	// Required: Columns and filters from parent
 	columns: ColumnDef<Student>[]
@@ -71,6 +73,7 @@ interface StudentTableProps {
 
 export default function StudentTable({
 	params,
+	filterStudents,
 	columns,
 	facetedFilters = [],
 	exportConfig,
@@ -87,10 +90,13 @@ export default function StudentTable({
 	onConfirmRows
 }: StudentTableProps) {
 	const {
-		data: students = [],
+		data: fetchedStudents = [],
 		isLoading: isLoadingStudents,
 		refetch: refetchStudent
 	} = useStudentData(params)
+	const students = filterStudents
+		? filterStudents(fetchedStudents)
+		: fetchedStudents
 	const actionColumn = useActionColumn(handleRefreshStudents)
 	const [exportFileOpen, setExportFileOpen] = useState(false)
 	const [exportRosterOpen, setExportRosterOpen] = useState(false)

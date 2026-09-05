@@ -5,22 +5,26 @@ import { getCurrentWeekNumber } from '@/lib/utils'
 import StudentTable from './student-table/new-student-table'
 import { useStudentFacetedFilters } from '@/hooks/useStudentFacetedFilters'
 import UnitFacetedFilter, { useFilteredClassIds } from './unit-filter'
-import { useState } from 'react'
-import type { StudentQueryParams } from '@/types'
+import { useCallback, useState } from 'react'
+import type { Student, StudentQueryParams } from '@/types'
 
 export default function CpvOfficialThisWeek() {
 	const [selectedUnits, setSelectedUnits] = useState<number[]>([])
-	const filteredClassIds = useFilteredClassIds(selectedUnits)
+	const filteredUnitIds = useFilteredClassIds(selectedUnits)
 	const studentQueryParams: StudentQueryParams = {
-		isCpvOfficialThisWeek: true,
-		classIds: filteredClassIds
+		isCpvOfficialThisWeek: true
 	}
-	const {
-		data: students = [],
-		isLoading: isLoadingStudents,
-		refetch: refetchStudents
-	} = useStudentData(studentQueryParams)
+	const { data: students = [] } = useStudentData(studentQueryParams)
 	const facetedFilters = useStudentFacetedFilters(students)
+	const filterStudents = useCallback(
+		(all: Student[]) =>
+			selectedUnits.length === 0
+				? all
+				: all.filter(
+						(s) => s.unit && filteredUnitIds?.includes(s.unit.id)
+					),
+		[selectedUnits, filteredUnitIds]
+	)
 
 	return (
 		<>
@@ -38,6 +42,7 @@ export default function CpvOfficialThisWeek() {
 			</div>
 			<StudentTable
 				params={studentQueryParams}
+				filterStudents={filterStudents}
 				columnVisibility={defaultCpvOfficialColumnVisibility}
 				columns={battalionStudentColumnsWithoutAction}
 				facetedFilters={facetedFilters}

@@ -208,19 +208,12 @@ export interface RosterUnitNode {
 	level: string
 }
 
-export interface RosterClassNode {
-	id: number
-	name: string
-	unitId: number
-}
-
 export interface RosterStudent {
 	fullName: string
 	rank: string
 	position: string
 	enlistmentPeriod: string
 	unitId: number | null | undefined
-	classId: number | null | undefined
 }
 
 // A row from the `positions` table (level-scoped position-priority
@@ -264,17 +257,16 @@ export function buildRosterSummary(
 }
 
 /**
- * Flattens a unit subtree (units + their classes/squads + their students)
- * into an ordered list of header/member rows for a single-table docx
- * template: {FOR row}{IF row.type=='header'}...{IF row.type=='member'}...
- * — docx-templates can't dynamically merge cells per iteration, so the
+ * Flattens a unit subtree (units, down to squads, + their students) into an
+ * ordered list of header/member rows for a single-table docx template:
+ * {FOR row}{IF row.type=='header'}...{IF row.type=='member'}... —
+ * docx-templates can't dynamically merge cells per iteration, so the
  * template itself carries two row shapes (merged header row, 6-cell member
  * row) and this function decides, per row, which one applies.
  */
 export function buildRosterRows(
 	rootUnit: RosterUnitNode,
 	units: RosterUnitNode[],
-	classes: RosterClassNode[],
 	students: RosterStudent[],
 	positions: RosterPosition[] = []
 ): RosterRow[] {
@@ -300,21 +292,9 @@ export function buildRosterRows(
 		childUnitsByParent.set(u.parentId, list)
 	}
 
-	const classesByUnit = new Map<number, RosterClassNode[]>()
-	for (const c of classes) {
-		const list = classesByUnit.get(c.unitId) ?? []
-		list.push(c)
-		classesByUnit.set(c.unitId, list)
-	}
-
 	const studentsByUnit = new Map<number, RosterStudent[]>()
-	const studentsByClass = new Map<number, RosterStudent[]>()
 	for (const s of students) {
-		if (s.classId !== null && s.classId !== undefined) {
-			const list = studentsByClass.get(s.classId) ?? []
-			list.push(s)
-			studentsByClass.set(s.classId, list)
-		} else if (s.unitId !== null && s.unitId !== undefined) {
+		if (s.unitId !== null && s.unitId !== undefined) {
 			const list = studentsByUnit.get(s.unitId) ?? []
 			list.push(s)
 			studentsByUnit.set(s.unitId, list)
@@ -332,14 +312,6 @@ export function buildRosterRows(
 		const level = unitLevelById.get(unitId) ?? 'company'
 		list.sort((a, b) =>
 			compareRosterStudents(level, positionPriorities, a, b)
-		)
-	}
-	// Squad members are always ordered by the company/platoon/squad scheme
-	// (squad leader first, then members by rank) regardless of the parent
-	// unit's own level.
-	for (const list of studentsByClass.values()) {
-		list.sort((a, b) =>
-			compareRosterStudents('squad', positionPriorities, a, b)
 		)
 	}
 
@@ -362,10 +334,6 @@ export function buildRosterRows(
 	function countUnitMembers(unit: RosterUnitNode): number {
 		let count = (studentsByUnit.get(unit.id) ?? []).length
 
-		for (const cls of classesByUnit.get(unit.id) ?? []) {
-			count += (studentsByClass.get(cls.id) ?? []).length
-		}
-
 		for (const child of childUnitsByParent.get(unit.id) ?? []) {
 			count += countUnitMembers(child)
 		}
@@ -382,14 +350,6 @@ export function buildRosterRows(
 
 		for (const s of studentsByUnit.get(unit.id) ?? []) {
 			rows.push(toMemberRow(s))
-		}
-
-		for (const cls of classesByUnit.get(unit.id) ?? []) {
-			const members = studentsByClass.get(cls.id) ?? []
-			rows.push({ type: 'header', name: cls.name, count: members.length })
-			for (const s of members) {
-				rows.push(toMemberRow(s))
-			}
 		}
 
 		for (const child of childUnitsByParent.get(unit.id) ?? []) {

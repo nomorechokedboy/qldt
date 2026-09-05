@@ -4,8 +4,6 @@ import {
 	type AppNotification,
 	type AppNotificationQuery,
 	type AssignRoleRequest,
-	type Class,
-	type ClassBody,
 	type DeleteStudentsBody,
 	type ExportData,
 	type ExportMaterialAssetsData,
@@ -36,7 +34,6 @@ import {
 import Client, {
 	type audit_logs,
 	type auth,
-	type classes,
 	type export_templates,
 	type facilities,
 	type materials,
@@ -49,36 +46,6 @@ import Client, {
 export const requestClient = new Client(ApiUrl, {
 	fetcher: appFetcher
 })
-
-// ... (omitting middle parts, better to target specific blocks)
-
-export function CreateClass(body: ClassBody) {
-	return requestClient.classes.CreateClass(body).then((resp) => resp.data)
-}
-
-export function DeleteClasses(ids: number[]) {
-	return requestClient.classes.DeleteClasss({ ids }).then((resp) => resp.data)
-}
-
-export function UpdateClasses(data: Class[]) {
-	return requestClient.classes.UpdateClasss({ data }).then((resp) => resp)
-}
-
-export async function GetClasses(
-	params: classes.GetClassesRequest = {}
-): Promise<Class[]> {
-	return requestClient.classes
-		.GetClasses(params)
-		.then((resp) => resp.data.map((d) => ({ ...d }) as unknown as Class))
-}
-
-export function GetClassById(id: number): Promise<Class | undefined> {
-	return requestClient.classes
-		.GetClassById(id)
-		.then((resp) =>
-			resp === undefined ? resp : ({ ...resp.data } as Class)
-		)
-}
 
 export function CreateStudent(body: StudentBody) {
 	return requestClient.students
