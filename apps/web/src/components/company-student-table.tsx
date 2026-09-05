@@ -15,11 +15,12 @@ import StudentTable from './student-table/new-student-table'
 import useUnitData from '@/hooks/useUnitData'
 import useActionColumn from '@/hooks/useActionColumn'
 
-type CompanyStudentTableProps = { alias: string; level: UnitLevel }
+type CompanyStudentTableProps = { alias: string; level: UnitLevel; id: number }
 
 export default function CompanyStudentTable({
 	alias,
-	level
+	level,
+	id
 }: CompanyStudentTableProps) {
 	const { createFacetedFilter } = useDataTableToolbarConfig()
 	const {
@@ -31,7 +32,7 @@ export default function CompanyStudentTable({
 		refetchStudents()
 	}
 	const handleDeleteStudents = useOnDeleteStudents(refetchStudents)
-	const { data: unit } = useUnitData({ alias, level })
+	const { data: unit } = useUnitData({ alias, level, id })
 	const filename = `danh-sach-quan-nhan-${alias}`
 	const actionColumn = useActionColumn(() => {
 		return refetchStudents()
@@ -48,27 +49,22 @@ export default function CompanyStudentTable({
 		label: rank,
 		value: rank
 	}))
-	const classOptions = (unit?.children ?? []).map((c) => ({
-		label: c.name,
+	const unitOptions = (unit?.children ?? []).map((c) => ({
+		label: `${c.name} (${unit?.name})`,
 		value: c.name
 	}))
 
-	const previousUnitSet = new Set(
-		students.filter((s) => !!s.previousUnit).map((s) => s.previousUnit)
-	)
-	const previousUnitOptions = Array.from(previousUnitSet).map((pu) => ({
-		label: pu,
-		value: pu
-	}))
 	const statusOptions = [
 		{ label: 'Chưa xác nhận', value: 'pending' },
 		{ label: 'Đã xác nhận', value: 'confirmed' }
 	]
 
 	const facetedFilters = [
-		createFacetedFilter('class.name', 'Tiểu đội', classOptions),
+		createFacetedFilter('unit.name', 'Đơn vị', [
+			{ label: unit?.name, value: unit?.name },
+			...unitOptions
+		]),
 		createFacetedFilter('rank', 'Cấp bậc', militaryRankOptions),
-		createFacetedFilter('previousUnit', 'Đơn vị cũ', previousUnitOptions),
 		createFacetedFilter('ethnic', 'Dân tộc', EhtnicOptions),
 		createFacetedFilter(
 			'educationLevel',

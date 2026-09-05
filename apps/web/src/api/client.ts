@@ -1610,6 +1610,7 @@ export namespace students {
 		cpvOfficialInMonth?: Month
 		cpvOfficialInQuarter?: Quarter
 		withAdversity?: boolean
+		unitId?: number
 	}
 
 	export interface GetStudentsResponse {
@@ -2017,6 +2018,7 @@ export namespace students {
 			this.GetPoliticsQualityReport =
 				this.GetPoliticsQualityReport.bind(this)
 			this.GetStudents = this.GetStudents.bind(this)
+			this.GetUnitTroopers = this.GetUnitTroopers.bind(this)
 			this.StudentCronjob = this.StudentCronjob.bind(this)
 			this.UpdateStudents = this.UpdateStudents.bind(this)
 			this.updateStudentStatus = this.updateStudentStatus.bind(this)
@@ -2181,6 +2183,10 @@ export namespace students {
 						? undefined
 						: String(params.politicalOrg),
 				unitAlias: params.unitAlias,
+				unitId:
+					params.unitId === undefined
+						? undefined
+						: String(params.unitId),
 				unitLevel:
 					params.unitLevel === undefined
 						? undefined
@@ -2197,6 +2203,15 @@ export namespace students {
 				`/students`,
 				undefined,
 				{ query }
+			)
+			return (await resp.json()) as GetStudentsResponse
+		}
+
+		public async GetUnitTroopers(id: number): Promise<GetStudentsResponse> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'GET',
+				`/troopers/unit/${encodeURIComponent(id)}`
 			)
 			return (await resp.json()) as GetStudentsResponse
 		}

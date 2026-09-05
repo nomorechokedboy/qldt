@@ -33,7 +33,7 @@ function UnitManagement() {
 			</div>
 
 			{levelsLargestFirst.map((level) => {
-				if (level === 'platoon' || level === 'squad') {
+				if (level === 'squad') {
 					return
 				}
 				const unitsOfLevel =

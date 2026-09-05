@@ -23,16 +23,19 @@ import {
 import type { Unit } from '@/types'
 
 function unitDetailLink(data: Unit) {
-	const to = getUnitDetailUrl(data.level, data.alias)
+	const to = getUnitDetailUrl(data.level, encodeURIComponent(data.alias))
 
 	// Levels without a dedicated route (see unitDetailRoutePrefix) fall back
 	// to the generic '/don-vi' route, which needs the level/name search
 	// params the dedicated routes don't.
 	if (unitDetailRoutePrefix[data.level] === undefined) {
-		return { to, search: { level: data.level, name: '' } } as const
+		return {
+			to,
+			search: { level: data.level, name: '', id: data.id }
+		} as const
 	}
 
-	return { to } as const
+	return { to, search: { level: data.level, name: '', id: data.id } } as const
 }
 
 interface UnitCardProps {
