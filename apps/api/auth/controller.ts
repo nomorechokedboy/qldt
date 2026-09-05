@@ -58,7 +58,7 @@ class controller {
 				status: user.status,
 				permissions,
 				type: 'access'
-				// Removed validClassIds and validUnitIds - computed dynamically in middleware
+				// validUnitIds computed dynamically in middleware
 			}
 
 			const refreshPayload: Omit<TokenPayload, 'iat' | 'exp'> = {

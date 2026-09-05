@@ -45,8 +45,7 @@ export const personalInfoSchema = z.object({
 		.max(2_000_000)
 		.nullable(),
 	fullName: z.string().nonempty('Họ và tên không được bỏ trống'),
-	classId: z.preprocess(toOptionalNumber, z.number().min(1).optional()),
-	unitId: z.preprocess(toOptionalNumber, z.number().min(1).optional()),
+	unitId: z.preprocess(toOptionalNumber, z.number().min(1)),
 	birthPlace: z.string().optional(),
 	address: z.string().optional(),
 	ethnic: z.string().nonempty('Dân tộc không được bỏ trống'),
@@ -113,23 +112,11 @@ export const familyInfoSchema = z.object({
 	isMarried: z.boolean().default(false)
 })
 
-const hasExactlyOneOwner = (data: { classId?: number; unitId?: number }) =>
-	(data.classId !== undefined) !== (data.unitId !== undefined)
-
-const ownerRefinement = {
-	message: 'Vui lòng chọn tiểu đội hoặc đơn vị',
-	path: ['classId']
-} as const
-
-export const personalInfoValidationSchema = personalInfoSchema.refine(
-	hasExactlyOneOwner,
-	ownerRefinement
-)
+export const personalInfoValidationSchema = personalInfoSchema
 
 export const StudentFormSchema = personalInfoSchema
 	.extend(militaryInfoSchema.shape)
 	.extend(parentInfoSchema.shape)
 	.extend(familyInfoSchema.shape)
-	.refine(hasExactlyOneOwner, ownerRefinement)
 
 export type StudentFormSchemaType = z.infer<typeof StudentFormSchema>

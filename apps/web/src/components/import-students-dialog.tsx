@@ -16,9 +16,22 @@ import {
 import useCreateStudents from '@/hooks/useCreateStudents'
 import { toIsoDate } from '@/common'
 import type { StudentBody } from '@/types'
-import useClassData from '@/hooks/useClasses'
+import useUnitsData from '@/hooks/useUnitsData'
+import type { Unit } from '@/types'
 import { array } from 'zod'
 import { de } from '@faker-js/faker'
+
+function collectSquadOptions(
+	unit: Unit,
+	parentName = ''
+): { id: number; name: string; unitName: string }[] {
+	if (unit.level === 'squad') {
+		return [{ id: unit.id, name: unit.name, unitName: parentName }]
+	}
+	return (unit.children ?? []).flatMap((child) =>
+		collectSquadOptions(child, unit.name)
+	)
+}
 export interface ImportStudentsDialogProps {
 	isOpen: boolean
 	onClose: () => void
@@ -35,14 +48,16 @@ export function ImportStudentsDialog({
 	onClose,
 	onSuccess
 }: ImportStudentsDialogProps) {
-	const { data: classes = [] } = useClassData()
+	const { data: units = [] } = useUnitsData({ level: 'battalion' })
 	const classOptions = useMemo(
 		() =>
-			classes.map((c) => ({
-				value: c.id.toString(),
-				label: `${c.name} - ${c.unit.name}`
-			})),
-		[classes]
+			units
+				.flatMap((u) => collectSquadOptions(u))
+				.map((c) => ({
+					value: c.id.toString(),
+					label: `${c.name} - ${c.unitName}`
+				})),
+		[units]
 	)
 
 	const createStudentsMutation = useCreateStudents()
@@ -105,7 +120,7 @@ export function ImportStudentsDialog({
 				'disciplinaryHistory',
 				'childrenInfos',
 				'phone',
-				'classId'
+				'unitId'
 			]
 
 			const vietnameseHeaders = [
@@ -149,7 +164,7 @@ export function ImportStudentsDialog({
 				'Lịch sử kỷ luật',
 				'Thông tin con cái',
 				'Số điện thoại',
-				'ID Lớp'
+				'ID Tiểu đội'
 			]
 
 			const sampleData = [
@@ -285,8 +300,8 @@ export function ImportStudentsDialog({
 				}
 			})
 
-			// Dropdown cho classId
-			const classCol = headers.indexOf('classId')
+			// Dropdown cho unitId
+			const classCol = headers.indexOf('unitId')
 			if (
 				classCol >= 0 &&
 				Array.isArray(classOptions) &&
@@ -358,7 +373,7 @@ export function ImportStudentsDialog({
 
 			// ===== Sheet Danh sách lớp =====
 			const classSheet = workbook.addWorksheet('Danh sách lớp')
-			classSheet.addRow(['ID Lớp', 'Tên lớp - Tên đơn vị'])
+			classSheet.addRow(['ID Tiểu đội', 'Tên tiểu đội - Tên đơn vị'])
 			classOptions.forEach((c) => classSheet.addRow([c.value, c.label]))
 
 			// Export file
@@ -507,8 +522,8 @@ export function ImportStudentsDialog({
 								value = value != null ? String(value) : ''
 							}
 
-							// ✅ classId → number
-							if (header === 'classId') {
+							// ✅ unitId → number
+							if (header === 'unitId') {
 								if (typeof value === 'string') {
 									const parsed = parseInt(value)
 									value = isNaN(parsed) ? null : parsed

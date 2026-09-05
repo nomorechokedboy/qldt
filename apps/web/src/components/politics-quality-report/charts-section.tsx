@@ -38,8 +38,11 @@ const politicalOrgNameMapping = { cpv: 'Đảng', hcyu: 'Đoàn' }
 export function ChartsSection({ data }: ChartsSectionProps) {
 	const units = data
 
+	const isLeaf = (entity: UnitPoliticsQualitySummary) =>
+		!entity.children || entity.children.length === 0
+
 	/**
-	 * Flatten only classes (leaf data for aggregation)
+	 * Flatten only leaf units - squads (leaf data for aggregation)
 	 */
 	const flattenClasses = (
 		entity: UnitPoliticsQualitySummary,
@@ -47,22 +50,22 @@ export function ChartsSection({ data }: ChartsSectionProps) {
 	): any[] => {
 		const rows: any[] = []
 
-		entity.classes?.forEach((cls) => {
-			rows.push({
-				name: prefix ? `${prefix} - ${cls.name}` : cls.name,
-				...(cls.politicsQualityReport ?? {})
-			})
-		})
-
 		entity.children?.forEach((child) => {
-			rows.push(...flattenClasses(child, entity.name))
+			if (isLeaf(child)) {
+				rows.push({
+					name: prefix ? `${prefix} - ${child.name}` : child.name,
+					...(child.politicsQualityReport ?? {})
+				})
+			} else {
+				rows.push(...flattenClasses(child, entity.name))
+			}
 		})
 
 		return rows
 	}
 
 	/**
-	 * Flatten all (units + classes) for BarChart
+	 * Flatten all (units + squads) for BarChart
 	 */
 	const flattenReports = (
 		entity: UnitPoliticsQualitySummary,
@@ -75,15 +78,15 @@ export function ChartsSection({ data }: ChartsSectionProps) {
 			...(entity.politicsQualityReport ?? {})
 		})
 
-		entity.classes?.forEach((cls) => {
-			rows.push({
-				name: `${entity.name} - ${cls.name}`,
-				...(cls.politicsQualityReport ?? {})
-			})
-		})
-
 		entity.children?.forEach((child) => {
-			rows.push(...flattenReports(child, entity.name))
+			if (isLeaf(child)) {
+				rows.push({
+					name: `${entity.name} - ${child.name}`,
+					...(child.politicsQualityReport ?? {})
+				})
+			} else {
+				rows.push(...flattenReports(child, entity.name))
+			}
 		})
 
 		return rows

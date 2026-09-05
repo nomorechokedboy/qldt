@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState } from 'react'
 import * as Tabs from '@radix-ui/react-tabs'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -6,7 +6,6 @@ import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
 import StudentEditForm from './StudentEditForm'
 import type { Student } from '@/types'
 import { politicalOptions } from '@/data/political-status'
-import useClassData from '@/hooks/useClasses'
 import { getMediaUri, isSuperAdmin } from '@/lib/utils'
 import {
 	FileDown,
@@ -37,16 +36,6 @@ export default function StudentInfoTabs({ student }: StudentInfoTabsProps) {
 		useUpdateStudent()
 
 	const { user } = useAuth()
-	const { data: classes = [] } = useClassData()
-	// options cho select lớp
-	const classOptions = useMemo(
-		() =>
-			classes.map((c) => ({
-				value: c.id.toString(),
-				label: `${c.name} - ${c.unit.name}`
-			})),
-		[classes]
-	)
 
 	const handleConfirmStudent = async () => {
 		const confirmed = confirm(
@@ -60,9 +49,7 @@ export default function StudentInfoTabs({ student }: StudentInfoTabsProps) {
 					{
 						id: student.id,
 						status: 'confirmed',
-						...(student.class
-							? { classId: student.class.id }
-							: { unitId: student.unit?.id })
+						unitId: student.unit?.id
 					}
 				]
 			})
@@ -179,16 +166,10 @@ export default function StudentInfoTabs({ student }: StudentInfoTabsProps) {
 								<Users className='h-4 w-4 text-purple-600 shrink-0' />
 								<div>
 									<p className='text-xs text-gray-500'>
-										{student.unit ? 'Đơn vị' : 'Tiểu đội'}
+										Đơn vị
 									</p>
 									<p className='font-semibold text-gray-900'>
-										{student.unit
-											? student.unit.name
-											: classOptions.find(
-													(c) =>
-														c.value ===
-														student?.class?.id?.toString()
-												)?.label || 'Chưa có tiểu đội'}
+										{student.unit?.name || 'Chưa có đơn vị'}
 									</p>
 								</div>
 							</div>
@@ -391,15 +372,7 @@ export default function StudentInfoTabs({ student }: StudentInfoTabsProps) {
 									/>
 									<Field
 										label='Đơn vị'
-										value={
-											student.unit
-												? student.unit.name
-												: classOptions.find(
-														(c) =>
-															c.value ===
-															student?.class?.id?.toString()
-													)?.label
-										}
+										value={student.unit?.name}
 									/>
 									<Field
 										label='Ngày nhập ngũ'

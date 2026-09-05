@@ -16,7 +16,7 @@ import { desc, eq, inArray, isNull } from 'drizzle-orm'
 import log from 'encore.dev/log'
 import { v4 as uuidv4 } from 'uuid'
 import { notificationItems } from '../schema/notification-items'
-import { classes, students } from '../schema'
+import { students } from '../schema'
 
 class NotificationSqliteRepo implements Repository {
 	constructor(private db: DrizzleDatabase) {}
@@ -179,14 +179,6 @@ class NotificationSqliteRepo implements Repository {
 				const ids = typeItems.map((item) => item.notifiableId)
 
 				switch (type) {
-					case 'classes':
-						return {
-							type,
-							data: await this.db
-								.select()
-								.from(classes)
-								.where(inArray(classes.id, ids))
-						}
 					case 'students':
 						return {
 							type,

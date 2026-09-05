@@ -32,7 +32,7 @@ export const auth = authHandler<AuthParams, AuthData>(async (params) => {
 			throw new Error('Invalid token type')
 		}
 
-		// Return simplified auth data - validClassIds and validUnitIds computed in middleware
+		// Return simplified auth data - validUnitIds computed in middleware
 		return {
 			userID: payload.userId.toString(),
 			permissions: payload.permissions || [],

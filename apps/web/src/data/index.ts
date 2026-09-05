@@ -11,7 +11,6 @@ export const STEPS = [
 		title: 'Thông tin cá nhân',
 		fields: [
 			'fullName',
-			'classId',
 			'unitId',
 			'birthPlace',
 			'address',

@@ -37,8 +37,6 @@ export default function CompanyStudentTable({
 		return refetchStudents()
 	})
 
-	const unitClasses = unit?.classes
-
 	if (isLoadingStudents) {
 		return <TableSkeleton />
 	}
@@ -50,12 +48,10 @@ export default function CompanyStudentTable({
 		label: rank,
 		value: rank
 	}))
-	const classOptions = unitClasses
-		? unitClasses.map((c) => ({
-				label: c?.name,
-				value: c?.name
-			}))
-		: []
+	const classOptions = (unit?.children ?? []).map((c) => ({
+		label: c.name,
+		value: c.name
+	}))
 
 	const previousUnitSet = new Set(
 		students.filter((s) => !!s.previousUnit).map((s) => s.previousUnit)

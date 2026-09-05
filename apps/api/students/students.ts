@@ -81,7 +81,6 @@ interface StudentBody {
 	disciplinaryHistory: string
 	childrenInfos: ChildrenInfo[]
 	phone: string
-	classId?: number
 	unitId?: number
 	positionId?: number
 	avatar?: string
@@ -99,7 +98,6 @@ interface StudentDBResponse extends StudentBody {
 }
 
 interface StudentResponse extends StudentDBResponse {
-	class: { id: number; description: string; name: string } | null
 	unit: Unit | null
 	positionRef: {
 		id: number
@@ -122,12 +120,10 @@ export const CreateStudent = api(
 		}
 		log.trace('students.CreateStudent body', { studentParam })
 		const callMeta = currentRequest() as APICallMeta
-		const classIds = callMeta.middlewareData?.validClassIds || []
 		const unitIds = callMeta.middlewareData?.validUnitIds || []
 
 		const createdStudent = await studentController.create(
 			[studentParam],
-			classIds,
 			unitIds
 		)
 
@@ -150,12 +146,10 @@ export const CreateStudents = api(
 	{ expose: true, method: 'POST', path: '/students/bulk' },
 	async (body: StudentBulkBody): Promise<BulkStudentResponse> => {
 		const callMeta = currentRequest() as APICallMeta
-		const classIds = callMeta.middlewareData?.validClassIds || []
 		const unitIds = callMeta.middlewareData?.validUnitIds || []
 		const studentParams = body.data.map((b) => ({ ...b }) as StudentParam)
 		const createdStudent = await studentController.create(
 			studentParams,
-			classIds,
 			unitIds
 		)
 
@@ -188,7 +182,6 @@ export interface GetStudentsQuery {
 	birthdayInMonth?: Month
 	birthdayInQuarter?: Quarter
 	birthdayInWeek?: boolean
-	classId?: number
 	hasReligion?: boolean
 	ids?: Array<number>
 	isEthnicMinority?: boolean
@@ -199,7 +192,6 @@ export interface GetStudentsQuery {
 	isCpvOfficialThisWeek?: boolean
 	cpvOfficialInMonth?: Month
 	cpvOfficialInQuarter?: Quarter
-	classIds?: number[]
 	withAdversity?: boolean
 }
 
@@ -207,12 +199,10 @@ export const GetStudents = api(
 	{ auth: true, expose: true, method: 'GET', path: '/students' },
 	async ({ ...query }: GetStudentsQuery): Promise<GetStudentsResponse> => {
 		const callMeta = currentRequest() as APICallMeta
-		const validClassIds = callMeta.middlewareData?.validClassIds || []
 		const validUnitIds = callMeta.middlewareData?.validUnitIds || []
 		log.trace('students.GetStudents query params', { params: query })
 		const students = await studentController.find(
 			{ ...query },
-			validClassIds,
 			validUnitIds
 		)
 		const resp = students.map(
@@ -236,17 +226,12 @@ export const DeleteStudents = api(
 	async (body: DeleteStudentRequest): Promise<DeleteStudentResponse> => {
 		log.trace('students.DeleteStudents body', { body })
 		const callMeta = currentRequest() as APICallMeta
-		const validClassIds = callMeta.middlewareData?.validClassIds || []
 		const validUnitIds = callMeta.middlewareData?.validUnitIds || []
 
 		const students: StudentDB[] = body.ids.map(
 			(id) => ({ id }) as StudentDB
 		)
-		const deleted = await studentController.delete(
-			students,
-			validClassIds,
-			validUnitIds
-		)
+		const deleted = await studentController.delete(students, validUnitIds)
 
 		setAuditContext({
 			resourceIds: body.ids,
@@ -269,18 +254,13 @@ export const UpdateStudents = api(
 	{ auth: true, expose: true, method: 'PATCH', path: '/students' },
 	async (body: UpdateStudentBody) => {
 		const callMeta = currentRequest() as APICallMeta
-		const validClassIds = callMeta.middlewareData?.validClassIds || []
 		const validUnitIds = callMeta.middlewareData?.validUnitIds || []
 		const students: StudentDB[] = body.data.map(
 			(s) => ({ ...s }) as StudentDB
 		)
 		const ids = students.map((s) => s.id)
 		const previous = await studentRepo.find({ ids })
-		const updated = await studentController.update(
-			students,
-			validClassIds,
-			validUnitIds
-		)
+		const updated = await studentController.update(students, validUnitIds)
 
 		setAuditContext({
 			resourceIds: ids,
@@ -312,13 +292,11 @@ export const updateStudentStatus = api(
 		req: UpdateStudentStatusRequest
 	): Promise<UpdateStudentStatusResponse> => {
 		const callMeta = currentRequest() as APICallMeta
-		const validClassIds = callMeta.middlewareData?.validClassIds || []
 		const validUnitIds = callMeta.middlewareData?.validUnitIds || []
 
 		await studentController.updateStatus(
 			req.studentIds,
 			req.status,
-			validClassIds,
 			validUnitIds
 		)
 

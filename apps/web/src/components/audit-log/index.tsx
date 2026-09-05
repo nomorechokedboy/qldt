@@ -36,7 +36,6 @@ const RESOURCE_LABELS: Record<string, string> = {
 	material_stocks: 'Tồn kho vật tư',
 	buildings: 'Tòa nhà',
 	rooms: 'Phòng',
-	classes: 'Đơn vị',
 	units: 'Đơn vị',
 	roles: 'Vai trò',
 	permissions: 'Quyền',

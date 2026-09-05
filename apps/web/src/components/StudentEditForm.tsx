@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import type { Student, ChildrenInfo } from '@/types'
+import type { Student, ChildrenInfo, Unit } from '@/types'
 import usePatchStudentInfo from '@/hooks/usePatchStudentInfo'
 // option cho dân tộc, tôn giáo, trình độ học vấn
 import { EhtnicOptions } from '@/data/ethnicities'
@@ -14,7 +14,6 @@ import { eduLevelOptions } from '@/data/education-levels'
 import { politicalOptions } from '@/data/political-status'
 import { rankOptions } from '@/data/ranks'
 import { soldierPositionOptions } from '@/data/positions'
-import useClassData from '@/hooks/useClasses'
 import useUnitsData from '@/hooks/useUnitsData'
 import usePositionsData from '@/hooks/usePositionsData'
 import { unitLevelLabels } from '@/data/unit-levels'
@@ -47,25 +46,19 @@ export default function StudentEditForm({
 	const { handlePatchStudentInfo, isPending } = usePatchStudentInfo(student)
 	const { mutateAsync: uploadFilesMutate } = useUploadFiles()
 
-	const { data: classes = [] } = useClassData()
 	const { data: units = [] } = useUnitsData()
-	// options cho select lớp
-	const classOptions = useMemo(
-		() =>
-			classes.map((c) => ({
-				value: c.id.toString(),
-				label: `${c.name} - ${c.unit.name}`
-			})),
-		[classes]
-	)
 	const unitOptions = useMemo(
 		() =>
-			units
-				.filter((u) => u.level !== 'squad')
-				.map((u) => ({
+			units.flatMap(function flatten(u: Unit): {
+				value: string
+				label: string
+			}[] {
+				const self = {
 					value: u.id.toString(),
 					label: `${u.name} (${unitLevelLabels[u.level]})`
-				})),
+				}
+				return [self, ...(u.children ?? []).flatMap(flatten)]
+			}),
 		[units]
 	)
 	const { data: positions = [] } = usePositionsData()
@@ -75,11 +68,6 @@ export default function StudentEditForm({
 			...soldierPositionOptions
 		],
 		[positions]
-	)
-	const [membershipType, setMembershipType] = useState<'class' | 'unit'>(
-		student.unitId !== undefined && student.unitId !== null
-			? 'unit'
-			: 'class'
 	)
 
 	const form = useAppForm({
@@ -91,10 +79,6 @@ export default function StudentEditForm({
 			avatar: student.avatar || (null as File | null),
 			relatedDocumentations: student.relatedDocumentations || '',
 			studentId: student.studentId || '',
-			classId:
-				student.classId !== undefined && student.classId !== null
-					? Number(student.classId)
-					: undefined,
 			unitId:
 				student.unitId !== undefined && student.unitId !== null
 					? Number(student.unitId)
@@ -115,10 +99,6 @@ export default function StudentEditForm({
 					value.avatar = resp.uris[0]
 				}
 
-				value.classId =
-					value.classId !== undefined
-						? Number(value.classId)
-						: undefined
 				value.unitId =
 					value.unitId !== undefined
 						? Number(value.unitId)
@@ -278,15 +258,7 @@ export default function StudentEditForm({
 						</p>
 						<p className='text-gray-600'>Cấp bậc: {student.rank}</p>
 						<p className='text-gray-600'>
-							{student.unit
-								? `Đơn vị: ${student.unit.name}`
-								: `Tiểu đội: ${
-										classOptions.find(
-											(c) =>
-												c.value ===
-												student.class?.id.toString()
-										)?.label || 'Chưa có tiểu đội'
-									}`}
+							Đơn vị: {student.unit?.name || 'Chưa có đơn vị'}
 						</p>
 					</div>
 				</CardHeader>
@@ -392,66 +364,11 @@ export default function StudentEditForm({
 											label='Chức vụ'
 											options={positionOptions}
 										/>
-										<div className='flex flex-col gap-1'>
-											<Label>Thuộc về</Label>
-											<div className='flex gap-2'>
-												<Button
-													type='button'
-													size='sm'
-													variant={
-														membershipType ===
-														'class'
-															? 'default'
-															: 'outline'
-													}
-													onClick={() => {
-														setMembershipType(
-															'class'
-														)
-														form.setFieldValue(
-															'unitId',
-															undefined
-														)
-													}}
-												>
-													Tiểu đội
-												</Button>
-												<Button
-													type='button'
-													size='sm'
-													variant={
-														membershipType ===
-														'unit'
-															? 'default'
-															: 'outline'
-													}
-													onClick={() => {
-														setMembershipType(
-															'unit'
-														)
-														form.setFieldValue(
-															'classId',
-															undefined
-														)
-													}}
-												>
-													Đơn vị
-												</Button>
-											</div>
-										</div>
-										{membershipType === 'class' ? (
-											<Field
-												name='classId'
-												label='Tiểu đội'
-												options={classOptions}
-											/>
-										) : (
-											<Field
-												name='unitId'
-												label='Đơn vị'
-												options={unitOptions}
-											/>
-										)}
+										<Field
+											name='unitId'
+											label='Đơn vị'
+											options={unitOptions}
+										/>
 										<Field
 											name='enlistmentPeriod'
 											label='Ngày nhập ngũ'

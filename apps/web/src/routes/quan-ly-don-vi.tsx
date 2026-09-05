@@ -33,6 +33,9 @@ function UnitManagement() {
 			</div>
 
 			{levelsLargestFirst.map((level) => {
+				if (level === 'platoon' || level === 'squad') {
+					return
+				}
 				const unitsOfLevel =
 					units?.filter((u) => u.level === level) ?? []
 				if (unitsOfLevel.length === 0) return null

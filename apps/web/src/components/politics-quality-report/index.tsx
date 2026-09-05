@@ -22,6 +22,7 @@ import {
 	TooltipTrigger
 } from '@/components/ui/tooltip'
 import useUnitsData from '@/hooks/useUnitsData'
+import type { Unit } from '@/types'
 import {
 	Collapsible,
 	CollapsibleContent,
@@ -29,21 +30,18 @@ import {
 } from '../ui/collapsible'
 import useAuth from '@/hooks/useAuth'
 
-// Recursive renderer for children + classes
+// Recursive renderer for children
 function UnitBlock({
 	unit
 }: {
 	unit: {
 		name: string
 		politicsQualityReport: any
-		classes?: any[]
 		children?: any[]
 	}
 }) {
 	const [isOpen, setIsOpen] = useState(false)
-	const isParent =
-		(unit.children !== undefined && unit.children?.length > 0) ||
-		(unit.classes !== undefined && unit.classes.length > 0)
+	const isParent = unit.children !== undefined && unit.children?.length > 0
 
 	if (isParent) {
 		return (
@@ -72,23 +70,6 @@ function UnitBlock({
 				</div>
 
 				<CollapsibleContent className='flex flex-col gap-4 p-4 border rounded-lg'>
-					{/* Render classes */}
-					{unit.classes &&
-						unit.classes.map((cls) => (
-							<div
-								key={cls.name}
-								className='flex items-center justify-between p-4 border rounded-lg ml-4'
-							>
-								<div>
-									<h4 className='font-medium'>{cls.name}</h4>
-									<p className='text-sm text-muted-foreground'>
-										Tổng quân số:{' '}
-										{cls.politicsQualityReport?.total ?? 0}
-									</p>
-								</div>
-							</div>
-						))}
-
 					{/* Render children recursively */}
 					{unit.children &&
 						unit.children.map((child) => (
@@ -109,31 +90,6 @@ function UnitBlock({
 					Tổng quân số: {unit.politicsQualityReport?.total ?? 0}
 				</p>
 			</div>
-
-			{/* Render classes */}
-			{unit.classes &&
-				unit.classes.map((cls) => (
-					<div
-						key={cls.name}
-						className='flex items-center justify-between p-4 border rounded-lg ml-4'
-					>
-						<div>
-							<h4 className='font-medium'>{cls.name}</h4>
-							<p className='text-sm text-muted-foreground'>
-								Tổng quân số:{' '}
-								{cls.politicsQualityReport?.total ?? 0}
-							</p>
-						</div>
-					</div>
-				))}
-
-			{/* Render children recursively */}
-			{unit.children &&
-				unit.children.map((child) => (
-					<div key={child.name} className='ml-4'>
-						<UnitBlock unit={child} />
-					</div>
-				))}
 		</div>
 	)
 }
@@ -165,17 +121,16 @@ export function PoliticalQualityDashboard() {
 	const totalBattalionUnits = politicsQualityData?.units.length ?? 0
 	const totalUnit = totalBattalionUnits + totalCompanyUnits
 
-	const totalChildrenClasses =
+	const countSquads = (unit: Unit): number =>
+		unit.level === 'squad'
+			? 1
+			: (unit.children?.reduce(
+					(accum, child) => accum + countSquads(child),
+					0
+				) ?? 0)
+	const totalSquads =
 		politicsQualityData?.units
-			.map((unit) =>
-				unit?.children
-					?.map((u) => u.classes.length ?? 0)
-					.reduce((accum, curr) => accum + curr, 0)
-			)
-			.reduce((accum, curr) => accum + curr, 0) ?? 0
-	const totalUnitClasses =
-		politicsQualityData?.units
-			.map((unit) => unit?.classes?.length)
+			.map((unit) => countSquads(unit as unknown as Unit))
 			.reduce((accum, curr) => accum + curr, 0) ?? 0
 
 	return (
@@ -223,7 +178,7 @@ export function PoliticalQualityDashboard() {
 					</CardHeader>
 					<CardContent>
 						<div className='text-2xl font-bold text-green-900'>
-							{totalChildrenClasses + totalUnitClasses}
+							{totalSquads}
 						</div>
 						<p className='text-xs text-muted-foreground'>
 							Tiểu đội

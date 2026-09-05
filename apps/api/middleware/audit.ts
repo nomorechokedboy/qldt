@@ -44,10 +44,6 @@ const AUDIT_MAP: Record<string, AuditRouteConfig> = {
 	'PATCH:/rooms': { resource: 'rooms', action: 'update' },
 	'DELETE:/rooms': { resource: 'rooms', action: 'delete' },
 
-	'POST:/classes': { resource: 'classes', action: 'create' },
-	'PATCH:/classes': { resource: 'classes', action: 'update' },
-	'DELETE:/classes': { resource: 'classes', action: 'delete' },
-
 	'POST:/units': { resource: 'units', action: 'create' },
 	'PATCH:/units': { resource: 'units', action: 'update' },
 	'DELETE:/units': { resource: 'units', action: 'delete' },

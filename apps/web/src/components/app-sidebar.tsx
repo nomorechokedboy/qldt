@@ -29,7 +29,6 @@ import {
 	SidebarRail
 } from '@/components/ui/sidebar'
 import { Link, useLocation } from '@tanstack/react-router'
-import StudentForm from '@/components/student-form'
 import {
 	Collapsible,
 	CollapsibleContent,
@@ -308,7 +307,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 	const getUnitsQuery: GetUnitQuery | undefined =
 		user?.isSuperUser === true
 			? {
-					level: 'battalion'
+					id: user.userId
 				}
 			: undefined
 	const { data: units, isLoading: isLoadingUnits } =
@@ -335,13 +334,14 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 					{
 						title: 'Tổng quan',
 						url: `/don-vi/${unit.alias}`,
-						search: { level: unit.level, name: '' },
+						search: { level: unit.level, name: unit.name },
 						icon: Home
 					},
 					...unit.children.map((child) => ({
 						title: child.name,
 						url: getUnitDetailUrl(child.level, child.alias),
-						icon: Building2
+						icon: Building2,
+						search: { level: child.level, name: child.name }
 					}))
 				],
 				icon: Building

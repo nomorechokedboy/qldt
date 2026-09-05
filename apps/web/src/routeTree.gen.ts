@@ -35,7 +35,6 @@ import { Route as TrungDoiPlatoonAliasRouteImport } from './routes/trung-doi/$pl
 import { Route as QuanLyVatTuDanhMucRouteImport } from './routes/quan-ly-vat-tu.danh-muc'
 import { Route as DonViAliasRouteImport } from './routes/don-vi/$alias'
 import { Route as DaiDoiCompanyAliasRouteImport } from './routes/dai-doi/$companyAlias'
-import { Route as ClassesClassIdRouteImport } from './routes/classes/$classId'
 
 const VaiTroRoute = VaiTroRouteImport.update({
   id: '/vai-tro',
@@ -167,11 +166,6 @@ const DaiDoiCompanyAliasRoute = DaiDoiCompanyAliasRouteImport.update({
   path: '/dai-doi/$companyAlias',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ClassesClassIdRoute = ClassesClassIdRouteImport.update({
-  id: '/classes/$classId',
-  path: '/classes/$classId',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -196,7 +190,6 @@ export interface FileRoutesByFullPath {
   '/thong-ke-chinh-tri': typeof ThongKeChinhTriRoute
   '/thong-ke-doanh-trai': typeof ThongKeDoanhTraiRoute
   '/vai-tro': typeof VaiTroRoute
-  '/classes/$classId': typeof ClassesClassIdRoute
   '/dai-doi/$companyAlias': typeof DaiDoiCompanyAliasRoute
   '/don-vi/$alias': typeof DonViAliasRoute
   '/quan-ly-vat-tu/danh-muc': typeof QuanLyVatTuDanhMucRoute
@@ -225,7 +218,6 @@ export interface FileRoutesByTo {
   '/thong-ke-chinh-tri': typeof ThongKeChinhTriRoute
   '/thong-ke-doanh-trai': typeof ThongKeDoanhTraiRoute
   '/vai-tro': typeof VaiTroRoute
-  '/classes/$classId': typeof ClassesClassIdRoute
   '/dai-doi/$companyAlias': typeof DaiDoiCompanyAliasRoute
   '/don-vi/$alias': typeof DonViAliasRoute
   '/quan-ly-vat-tu/danh-muc': typeof QuanLyVatTuDanhMucRoute
@@ -255,7 +247,6 @@ export interface FileRoutesById {
   '/thong-ke-chinh-tri': typeof ThongKeChinhTriRoute
   '/thong-ke-doanh-trai': typeof ThongKeDoanhTraiRoute
   '/vai-tro': typeof VaiTroRoute
-  '/classes/$classId': typeof ClassesClassIdRoute
   '/dai-doi/$companyAlias': typeof DaiDoiCompanyAliasRoute
   '/don-vi/$alias': typeof DonViAliasRoute
   '/quan-ly-vat-tu/danh-muc': typeof QuanLyVatTuDanhMucRoute
@@ -286,7 +277,6 @@ export interface FileRouteTypes {
     | '/thong-ke-chinh-tri'
     | '/thong-ke-doanh-trai'
     | '/vai-tro'
-    | '/classes/$classId'
     | '/dai-doi/$companyAlias'
     | '/don-vi/$alias'
     | '/quan-ly-vat-tu/danh-muc'
@@ -315,7 +305,6 @@ export interface FileRouteTypes {
     | '/thong-ke-chinh-tri'
     | '/thong-ke-doanh-trai'
     | '/vai-tro'
-    | '/classes/$classId'
     | '/dai-doi/$companyAlias'
     | '/don-vi/$alias'
     | '/quan-ly-vat-tu/danh-muc'
@@ -344,7 +333,6 @@ export interface FileRouteTypes {
     | '/thong-ke-chinh-tri'
     | '/thong-ke-doanh-trai'
     | '/vai-tro'
-    | '/classes/$classId'
     | '/dai-doi/$companyAlias'
     | '/don-vi/$alias'
     | '/quan-ly-vat-tu/danh-muc'
@@ -374,7 +362,6 @@ export interface RootRouteChildren {
   ThongKeChinhTriRoute: typeof ThongKeChinhTriRoute
   ThongKeDoanhTraiRoute: typeof ThongKeDoanhTraiRoute
   VaiTroRoute: typeof VaiTroRoute
-  ClassesClassIdRoute: typeof ClassesClassIdRoute
   DaiDoiCompanyAliasRoute: typeof DaiDoiCompanyAliasRoute
   DonViAliasRoute: typeof DonViAliasRoute
   QuanLyVatTuDanhMucRoute: typeof QuanLyVatTuDanhMucRoute
@@ -565,13 +552,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DaiDoiCompanyAliasRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/classes/$classId': {
-      id: '/classes/$classId'
-      path: '/classes/$classId'
-      fullPath: '/classes/$classId'
-      preLoaderRoute: typeof ClassesClassIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -598,7 +578,6 @@ const rootRouteChildren: RootRouteChildren = {
   ThongKeChinhTriRoute: ThongKeChinhTriRoute,
   ThongKeDoanhTraiRoute: ThongKeDoanhTraiRoute,
   VaiTroRoute: VaiTroRoute,
-  ClassesClassIdRoute: ClassesClassIdRoute,
   DaiDoiCompanyAliasRoute: DaiDoiCompanyAliasRoute,
   DonViAliasRoute: DonViAliasRoute,
   QuanLyVatTuDanhMucRoute: QuanLyVatTuDanhMucRoute,

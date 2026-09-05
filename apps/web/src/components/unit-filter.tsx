@@ -4,7 +4,7 @@ import FacetedFilter, {
 	type GroupedOption,
 	type Option
 } from './faceted-filter'
-import type { UnitLevel } from '@/types'
+import type { Unit, UnitLevel } from '@/types'
 import FacetedFilterSkeleton from './faceted-filter-skeleton'
 import FacetedFilterError from './facted-filter-error'
 
@@ -84,7 +84,14 @@ export default function UnitFacetedFilter({
 	)
 }
 
-// Export the helper function as a custom hook for getting filtered class IDs
+function collectSquadUnitIds(unit: Unit): number[] {
+	if (unit.level === 'squad') {
+		return [unit.id]
+	}
+	return (unit.children ?? []).flatMap(collectSquadUnitIds)
+}
+
+// Export the helper function as a custom hook for getting filtered squad unit IDs
 export function useFilteredClassIds(
 	selectedUnits: number[],
 	level: UnitLevel = 'battalion'
@@ -92,8 +99,8 @@ export function useFilteredClassIds(
 	const { data: units } = useUnitsData({ level })
 
 	return units?.flatMap((unit) =>
-		unit.children
-			?.filter((child) => selectedUnits.includes(child.id))
-			.flatMap((child) => child.classes?.map((cls) => cls.id) ?? [])
+		(unit.children ?? [])
+			.filter((child) => selectedUnits.includes(child.id))
+			.flatMap(collectSquadUnitIds)
 	)
 }

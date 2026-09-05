@@ -2,7 +2,6 @@ import { api, Query } from 'encore.dev/api'
 import { UnitDB as SchemaUnitDB, UnitLevelName, UnitParams } from '../schema'
 import unitController from './controller'
 import unitRepo from './repo'
-import { ClassResponse } from '../classes/classes'
 import { getAuthData } from '~encore/auth'
 import { APICallMeta, currentRequest } from 'encore.dev'
 import log from 'encore.dev/log'
@@ -131,7 +130,6 @@ type unit = Omit<UnitDB, 'parentId'>
 export type Unit = unit & {
 	parent: unit | null
 	children: Unit[]
-	classes: ClassResponse[]
 }
 
 export interface GetUnitsQuery {
