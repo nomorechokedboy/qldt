@@ -327,7 +327,10 @@ export function ImportStudentsDialog({
 				],
 				isGraduated: ['Có', 'Không'],
 				isMarried: ['Có', 'Không'],
-				politicalOrg: ['Đoàn', 'Đảng', 'Chưa tham gia']
+				// Backend requires politicalOrg to be exactly 'hcyu'/'cpv'
+				// (NOT NULL, no default - see schema/student.ts) - there is
+				// no "not yet joined" state, so don't offer one here.
+				politicalOrg: ['Đoàn', 'Đảng']
 			}
 
 			Object.entries(dropdowns).forEach(([field, values]) => {
@@ -536,7 +539,7 @@ export function ImportStudentsDialog({
 						headers.forEach((header, index) => {
 							let value = row[index] ?? ''
 
-							// hcyu/cpv/none → Đoàn/Đảng/Chưa tham gia
+							// Đoàn/Đảng → hcyu/cpv (backend enum, required)
 							if (header === 'politicalOrg') {
 								if (typeof value === 'string') {
 									const normalized = value
@@ -554,6 +557,12 @@ export function ImportStudentsDialog({
 									) {
 										value = 'cpv'
 									} else {
+										// Backend requires exactly 'hcyu'/'cpv' (NOT NULL,
+										// no default) - anything else fails the whole insert batch.
+										rowErrors.push({
+											row: rowIndex + 4,
+											message: `Giá trị "${value}" không hợp lệ cho Đoàn/Đảng - chỉ chấp nhận "Đoàn" hoặc "Đảng"`
+										})
 										value = ''
 									}
 								}
