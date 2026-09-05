@@ -154,6 +154,35 @@ function groupByField<T>(
 	return groups
 }
 
+function handleValueWithGroup(
+	values: Array<{ label: string; value: string; group?: string }>,
+	label: string
+) {
+	const groupedValues = groupByField(values, (v) => v.group)
+	return groupedValues.map((group, idx) => {
+		return (
+			<>
+				<ShadcnSelect.SelectGroup key={group.key ?? '__ungrouped__'}>
+					<ShadcnSelect.SelectLabel>
+						{group.key ?? label}
+					</ShadcnSelect.SelectLabel>
+					{group.items.map((value) => (
+						<ShadcnSelect.SelectItem
+							key={value.value}
+							value={value.value}
+						>
+							{value.label}
+						</ShadcnSelect.SelectItem>
+					))}
+				</ShadcnSelect.SelectGroup>
+				{idx !== groupedValues.length - 1 && (
+					<ShadcnSelect.SelectSeparator />
+				)}
+			</>
+		)
+	})
+}
+
 export function Select({
 	label,
 	values,
@@ -190,23 +219,7 @@ export function Select({
 				</ShadcnSelect.SelectTrigger>
 				<ShadcnSelect.SelectContent>
 					{values.some((value) => value.group) ? (
-						groupByField(values, (v) => v.group).map((group) => (
-							<ShadcnSelect.SelectGroup
-								key={group.key ?? '__ungrouped__'}
-							>
-								<ShadcnSelect.SelectLabel>
-									{group.key ?? label}
-								</ShadcnSelect.SelectLabel>
-								{group.items.map((value) => (
-									<ShadcnSelect.SelectItem
-										key={value.value}
-										value={value.value}
-									>
-										{value.label}
-									</ShadcnSelect.SelectItem>
-								))}
-							</ShadcnSelect.SelectGroup>
-						))
+						handleValueWithGroup(values, label)
 					) : (
 						<ShadcnSelect.SelectGroup>
 							<ShadcnSelect.SelectLabel>

@@ -12,6 +12,7 @@ export type UpdatePositionMap = {
 		code: string
 		name: string
 		priority: number
+		group: string | null
 	}>
 }[]
 

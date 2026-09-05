@@ -31,6 +31,7 @@ export const STEPS = [
 		title: 'Thông tin khác',
 		fields: [
 			'rank',
+			'positionId',
 			'enlistmentPeriod',
 			'policyBeneficiaryGroup',
 			'previousUnit',

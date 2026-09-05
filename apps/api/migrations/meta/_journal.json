@@ -127,6 +127,13 @@
 			"when": 1788569612330,
 			"tag": "0017_dark_meggan",
 			"breakpoints": true
+		},
+		{
+			"idx": 18,
+			"version": "6",
+			"when": 1788576244845,
+			"tag": "0018_chunky_chat",
+			"breakpoints": true
 		}
 	]
 }

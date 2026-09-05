@@ -60,6 +60,10 @@ export const personalInfoSchema = z.object({
 
 export const militaryInfoSchema = z.object({
 	rank: z.string(),
+	positionId: z.preprocess(
+		toOptionalNumber,
+		z.number().min(1, 'Chức vụ không được bỏ trống')
+	),
 	enlistmentPeriod: z.string().optional(),
 	policyBeneficiaryGroup: z.string().optional(),
 	previousUnit: z.string().optional(),

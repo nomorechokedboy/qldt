@@ -35,9 +35,6 @@ export function DataTableRowActions<TData>({
 	onDeleteRows
 }: DataTableRowActionsProps<TData>) {
 	const user = row.original as unknown as User
-	// Thêm log để debug
-	console.log('Row original:', row.original)
-	console.log('Student cast:', user)
 	const [dialogOpen, setDialogOpen] = useState(false)
 	const { refetch: refetchStudents } = useUserData()
 
