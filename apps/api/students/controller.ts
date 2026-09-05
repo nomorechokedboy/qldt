@@ -162,6 +162,43 @@ export class Controller {
 		}
 	}
 
+	// `position` is a derived, read-only mirror of the selected positionId's
+	// `code` (see schema/student.ts) - callers only ever submit positionId,
+	// never free-form position text. Deriving `code` (not `name`) keeps this
+	// compatible with the existing code-based matching in
+	// validateUniqueLeaderPositions and roster-utils.ts's export sorting.
+	private async resolvePositionText<
+		T extends { positionId?: number | null; position?: string | null }
+	>(entries: T[]): Promise<void> {
+		const ids = Array.from(
+			new Set(
+				entries
+					.map((e) => e.positionId)
+					.filter(
+						(id): id is number => id !== undefined && id !== null
+					)
+			)
+		)
+		if (ids.length === 0) return
+
+		const found = await positionRepo.find({ ids })
+		const byId = new Map(found.map((p) => [p.id, p]))
+
+		for (const e of entries) {
+			if (e.positionId === undefined || e.positionId === null) continue
+
+			const position = byId.get(e.positionId)
+			if (position === undefined) {
+				throw AppError.handleAppErr(
+					AppError.invalidArgument(
+						`positionId ${e.positionId} không tồn tại`
+					)
+				)
+			}
+			e.position = position.code
+		}
+	}
+
 	async create(
 		params: StudentParam[],
 		unitIds: number[]
@@ -184,6 +221,7 @@ export class Controller {
 			)
 		}
 
+		await this.resolvePositionText(params)
 		await this.validateUniqueLeaderPositions(params)
 
 		return this.repo.create(params).catch(AppError.handleAppErr)
@@ -301,6 +339,7 @@ export class Controller {
 			)
 		}
 
+		await this.resolvePositionText(params)
 		await this.validateUniqueLeaderPositions(params, existingById)
 
 		const updateMap: UpdateStudentMap = params.map(

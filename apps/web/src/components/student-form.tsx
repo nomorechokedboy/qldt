@@ -91,7 +91,7 @@ export default function StudentForm({
 			rank: '',
 			previousUnit: '',
 			previousPosition: '',
-			position: '',
+			positionId: undefined,
 			ethnic: '',
 			religion: '',
 			enlistmentPeriod: '',
@@ -147,6 +147,7 @@ export default function StudentForm({
 					value.unitId !== undefined
 						? Number(value.unitId)
 						: undefined
+				value.positionId = Number(value.positionId)
 
 				const familySize = value.familySize
 				value.familySize = Number(familySize)

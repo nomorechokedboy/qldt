@@ -20,7 +20,11 @@ export const positions = sqlite.sqliteTable(
 		level: sqlite.text().notNull(),
 		code: sqlite.text().notNull(),
 		name: sqlite.text().notNull(),
-		priority: sqlite.int().notNull()
+		priority: sqlite.int().notNull(),
+		// Role-category label for grouping the position picker in the UI
+		// (e.g. "Trợ lý", "NVCM-KT") - independent of `level`, which
+		// stays a unit level used by the roster-sort/leader-dedupe logic.
+		group: sqlite.text()
 	},
 	(t) => [sqlite.unique('positions_level_code_unique').on(t.level, t.code)]
 )

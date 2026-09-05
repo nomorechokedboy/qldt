@@ -13,10 +13,9 @@ import { religionOptions } from '@/data/religions'
 import { eduLevelOptions } from '@/data/education-levels'
 import { politicalOptions } from '@/data/political-status'
 import { rankOptions } from '@/data/ranks'
-import { soldierPositionOptions } from '@/data/positions'
 import useUnitsData from '@/hooks/useUnitsData'
 import usePositionsData from '@/hooks/usePositionsData'
-import { unitLevelLabels } from '@/data/unit-levels'
+import { unitLevelLabels, unitLevelOrder } from '@/data/unit-levels'
 import { getMediaUri } from '../lib/utils'
 import { useAppForm } from '@/hooks/use-app-form'
 import { toast } from 'sonner'
@@ -37,6 +36,23 @@ import {
 interface StudentEditFormProps {
 	student: Student
 	onClose?: () => void
+}
+
+function groupConsecutive<T>(
+	items: T[],
+	getGroup: (item: T) => string | undefined
+) {
+	const groups: { key: string | undefined; items: T[] }[] = []
+	for (const item of items) {
+		const key = getGroup(item)
+		const last = groups[groups.length - 1]
+		if (last && last.key === key) {
+			last.items.push(item)
+		} else {
+			groups.push({ key, items: [item] })
+		}
+	}
+	return groups
 }
 
 export default function StudentEditForm({
@@ -63,10 +79,27 @@ export default function StudentEditForm({
 	)
 	const { data: positions = [] } = usePositionsData()
 	const positionOptions = useMemo(
-		() => [
-			...positions.map((p) => ({ value: p.code, label: p.name })),
-			...soldierPositionOptions
-		],
+		() =>
+			[...positions]
+				.sort((a, b) => {
+					const levelDiff =
+						unitLevelOrder.indexOf(a.level as never) -
+						unitLevelOrder.indexOf(b.level as never)
+					if (levelDiff !== 0) return levelDiff
+
+					const groupDiff = (a.group ?? '').localeCompare(
+						b.group ?? ''
+					)
+					if (groupDiff !== 0) return groupDiff
+
+					return a.priority - b.priority
+				})
+				.map((p) => ({
+					value: String(p.id),
+					label: p.name,
+					group:
+						p.group ?? unitLevelLabels[p.level as never] ?? p.level
+				})),
 		[positions]
 	)
 
@@ -82,6 +115,10 @@ export default function StudentEditForm({
 			unitId:
 				student.unitId !== undefined && student.unitId !== null
 					? Number(student.unitId)
+					: undefined,
+			positionId:
+				student.positionId !== undefined && student.positionId !== null
+					? Number(student.positionId)
 					: undefined,
 			contactPerson: student.contactPerson || {
 				name: '',
@@ -102,6 +139,10 @@ export default function StudentEditForm({
 				value.unitId =
 					value.unitId !== undefined
 						? Number(value.unitId)
+						: undefined
+				value.positionId =
+					value.positionId !== undefined
+						? Number(value.positionId)
 						: undefined
 				value.familySize = Number(value.familySize)
 				await handlePatchStudentInfo({ ...value })
@@ -179,7 +220,7 @@ export default function StudentEditForm({
 		name: K | string
 		label: string
 		type?: string
-		options?: { label: string; value: string }[]
+		options?: { label: string; value: string; group?: string }[]
 	}) => (
 		<form.Field
 			name={name as any}
@@ -197,14 +238,36 @@ export default function StudentEditForm({
 					) : options && options.length > 0 ? (
 						<select
 							className='border rounded px-2 py-1'
-							value={field.state.value as string}
+							value={String(field.state.value ?? '')}
 							onChange={(e) => field.handleChange(e.target.value)}
 						>
-							{options.map((opt) => (
-								<option key={opt.value} value={opt.value}>
-									{opt.label}
-								</option>
-							))}
+							{options.some((opt) => opt.group)
+								? groupConsecutive(
+										options,
+										(opt) => opt.group
+									).map((group, idx) => (
+										<optgroup
+											key={group.key ?? idx}
+											label={group.key ?? label}
+										>
+											{group.items.map((opt) => (
+												<option
+													key={opt.value}
+													value={opt.value}
+												>
+													{opt.label}
+												</option>
+											))}
+										</optgroup>
+									))
+								: options.map((opt) => (
+										<option
+											key={opt.value}
+											value={opt.value}
+										>
+											{opt.label}
+										</option>
+									))}
 						</select>
 					) : (
 						<Input
@@ -360,7 +423,7 @@ export default function StudentEditForm({
 											options={rankOptions}
 										/>
 										<Field
-											name='position'
+											name='positionId'
 											label='Chức vụ'
 											options={positionOptions}
 										/>

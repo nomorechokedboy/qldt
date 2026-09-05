@@ -22,7 +22,6 @@ import { Unit } from '../units/units.js'
 import { notiTopic } from '../topics/index.js'
 import * as v from 'valibot'
 import XlsxTemplate from 'xlsx-template'
-import { getAuthData } from '~encore/auth'
 import { APICallMeta, currentRequest } from 'encore.dev'
 import { setAuditContext } from '../middleware/audit.js'
 
@@ -45,7 +44,8 @@ interface StudentBody {
 	rank: string
 	previousUnit: string
 	previousPosition: string
-	position: string
+	// Derived from positionId by students/controller.ts#resolvePositionText -
+	// callers submit positionId, not this field directly.
 	ethnic: string
 	religion: string
 	enlistmentPeriod: string

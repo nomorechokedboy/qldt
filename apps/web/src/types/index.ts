@@ -484,6 +484,7 @@ export interface Position extends Base {
 	code: string
 	name: string
 	priority: number
+	group?: string | null
 }
 
 export interface Building extends Base {

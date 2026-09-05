@@ -29,11 +29,12 @@ export const students = sqlite.sqliteTable('students', {
 	rank: sqlite.text().default(''),
 	previousUnit: sqlite.text().default(''),
 	previousPosition: sqlite.text().default(''),
+	// Derived, read-only mirror of positionId's `code` - set automatically
+	// by students/controller.ts#resolvePositionText whenever positionId is
+	// given. Kept as a real column (rather than dropped) because
+	// roster-utils.ts's export sorting and validateUniqueLeaderPositions
+	// both key off this text, not the FK.
 	position: sqlite.text().default('Chiến sĩ'),
-	// FK into positions.ts, currently only populated for battalion-level
-	// students. `position` above stays the source-of-truth text field —
-	// this FK is a supplementary link for rows already seeded in the
-	// positions table, not a replacement.
 	positionId: sqlite.integer().references(() => positions.id),
 	ethnic: sqlite.text().default(''),
 	religion: sqlite.text().default('Không'),

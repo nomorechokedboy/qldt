@@ -50,6 +50,11 @@ export function buildPositionColumns(
 			header: 'Tên chức vụ'
 		},
 		{
+			accessorKey: 'group',
+			header: 'Nhóm',
+			cell: ({ row }) => row.getValue('group') ?? '—'
+		},
+		{
 			id: 'actions',
 			cell: ({ row }) => (
 				<PositionRowActions data={row.original} onChanged={onChanged} />

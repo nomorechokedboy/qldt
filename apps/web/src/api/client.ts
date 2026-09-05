@@ -1356,6 +1356,7 @@ export namespace positions {
 		code: string
 		name: string
 		priority: number
+		group?: string | null
 	}
 
 	export interface PositionDB {
@@ -1363,6 +1364,7 @@ export namespace positions {
 		code: string
 		name: string
 		priority: number
+		group?: string | null
 		id: number
 		createdAt: string
 		updatedAt: string
@@ -1378,6 +1380,7 @@ export namespace positions {
 		code?: string
 		name?: string
 		priority?: number
+		group?: string | null
 	}
 
 	export class ServiceClient {
@@ -1637,7 +1640,12 @@ export namespace students {
 		rank: string
 		previousUnit: string
 		previousPosition: string
-		position: string
+		/**
+		 * Derived from positionId by students/controller.ts#resolvePositionText -
+		 * callers submit positionId, not this field directly.
+		 */
+		position?: string
+
 		ethnic: string
 		religion: string
 		enlistmentPeriod: string
@@ -1701,7 +1709,12 @@ export namespace students {
 		rank: string
 		previousUnit: string
 		previousPosition: string
-		position: string
+		/**
+		 * Derived from positionId by students/controller.ts#resolvePositionText -
+		 * callers submit positionId, not this field directly.
+		 */
+		position?: string
+
 		ethnic: string
 		religion: string
 		enlistmentPeriod: string
@@ -1772,7 +1785,12 @@ export namespace students {
 		rank: string
 		previousUnit: string
 		previousPosition: string
-		position: string
+		/**
+		 * Derived from positionId by students/controller.ts#resolvePositionText -
+		 * callers submit positionId, not this field directly.
+		 */
+		position?: string
+
 		ethnic: string
 		religion: string
 		enlistmentPeriod: string
@@ -1855,7 +1873,12 @@ export namespace students {
 		rank: string
 		previousUnit: string
 		previousPosition: string
-		position: string
+		/**
+		 * Derived from positionId by students/controller.ts#resolvePositionText -
+		 * callers submit positionId, not this field directly.
+		 */
+		position?: string
+
 		ethnic: string
 		religion: string
 		enlistmentPeriod: string

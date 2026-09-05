@@ -1,29 +1,27 @@
 import { rankOptions } from '@/data/ranks'
-import { soldierPositionOptions } from '@/data/positions'
 import usePositionsData from '@/hooks/usePositionsData'
-
-const LEVEL_LABELS: Record<string, string> = {
-	battalion: 'Tiểu đoàn',
-	company: 'Đại đội',
-	platoon: 'Trung đội',
-	squad: 'Tiểu đội',
-	department: 'Phòng, ban'
-}
+import { unitLevelLabels, unitLevelOrder } from '@/data/unit-levels'
 
 export default function MilitaryStep({ form }: { form: any }) {
 	const { data: positions } = usePositionsData(undefined, { enabled: true })
 
 	const positionOptions = [...(positions ?? [])]
-		.sort(
-			(a, b) => a.level.localeCompare(b.level) || a.priority - b.priority
-		)
+		.sort((a, b) => {
+			const levelDiff =
+				unitLevelOrder.indexOf(a.level as any) -
+				unitLevelOrder.indexOf(b.level as any)
+			if (levelDiff !== 0) return levelDiff
+
+			const groupDiff = (a.group ?? '').localeCompare(b.group ?? '')
+			if (groupDiff !== 0) return groupDiff
+
+			return a.priority - b.priority
+		})
 		.map((p) => ({
 			label: p.name,
-			value: p.code,
-			group: LEVEL_LABELS[p.level] ?? p.level
+			value: String(p.id),
+			group: p.group ?? unitLevelLabels[p.level as never] ?? p.level
 		}))
-
-	const allPositionOptions = [...positionOptions, ...soldierPositionOptions]
 
 	return (
 		<div className='space-y-6 py-2'>
@@ -38,10 +36,10 @@ export default function MilitaryStep({ form }: { form: any }) {
 						/>
 					)}
 				</form.AppField>
-				<form.AppField name='position'>
+				<form.AppField name='positionId'>
 					{(field: any) => (
 						<field.Select
-							values={allPositionOptions}
+							values={positionOptions}
 							label='Chức vụ'
 							placeholder='Chọn chức vụ'
 						/>

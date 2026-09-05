@@ -590,8 +590,6 @@ export function ImportStudentsDialog({
 		setUploadStatus('uploading')
 		setUploadMessage('Đang xử lý file...')
 
-		console.log('"Data:"', JSON.stringify(students))
-
 		try {
 			const result = await createStudentsMutation.mutateAsync(students)
 

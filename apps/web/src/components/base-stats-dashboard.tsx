@@ -7,7 +7,10 @@ import {
 	SelectContent,
 	SelectItem,
 	SelectTrigger,
-	SelectValue
+	SelectValue,
+	SelectSeparator,
+	SelectGroup,
+	SelectLabel
 } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { DataTable } from '@/components/data-table'
@@ -24,6 +27,8 @@ import { buildMaterialStockColumns } from '@/components/material-stock-table/col
 import { buildMaterialAssetColumns } from '@/components/material-asset-table/columns'
 import { unitLevelLabels, unitLevelOrder } from '@/data/unit-levels'
 import { materialAssetStatusLabels } from '@/data/material-categories'
+import type { Unit, UnitLevel } from '@/types'
+import type { units } from '@/api/client'
 
 const readOnlyMaterialStockColumns = buildMaterialStockColumns([]).filter(
 	(c) => c.id !== 'actions'
@@ -32,6 +37,23 @@ const readOnlyMaterialAssetColumns = buildMaterialAssetColumns([]).filter(
 	(c) => c.id !== 'actions'
 )
 
+function GroupUnits({ unitsMap }: { unitsMap: Map<UnitLevel, Unit[]> }) {
+	const flatUnitsMapEntries = [...unitsMap.entries()]
+	return flatUnitsMapEntries.map(([level, units], idx) => (
+		<>
+			<SelectGroup key={level}>
+				<SelectLabel>{unitLevelLabels[level]}</SelectLabel>
+				{units.map((u) => (
+					<SelectItem key={u.id} value={u.alias}>
+						{u.name}
+					</SelectItem>
+				))}
+			</SelectGroup>
+			{idx !== flatUnitsMapEntries.length - 1 && <SelectSeparator />}
+		</>
+	))
+}
+
 export default function BaseStatsDashboard() {
 	const navigate = useNavigate({ from: Route.fullPath })
 	const { unit: unitAliasParam } = Route.useSearch()
@@ -39,7 +61,7 @@ export default function BaseStatsDashboard() {
 	const { data: units = [], isLoading: isLoadingUnits } = useUnitsData()
 
 	const rootUnit = units.find((u) => !u.parent)
-	const selectedAlias = unitAliasParam ?? user?.unitAlias ?? rootUnit?.alias
+	const selectedAlias = unitAliasParam ?? user?.unit?.alias ?? rootUnit?.alias
 
 	const { data: stats, isLoading: isLoadingStats } =
 		useUnitStats(selectedAlias)
@@ -61,10 +83,18 @@ export default function BaseStatsDashboard() {
 		navigate({ search: (prev) => ({ ...prev, unit: alias }) })
 	}
 
-	const sortedUnits = [...units].sort((a, b) => {
-		const levelDiff =
-			unitLevelOrder.indexOf(b.level) - unitLevelOrder.indexOf(a.level)
-		return levelDiff !== 0 ? levelDiff : a.name.localeCompare(b.name)
+	const groupedUnits: Map<UnitLevel, units.Unit[]> = new Map()
+	units.forEach((u) => {
+		if (u.level === 'platoon' || u.level === 'squad') {
+			return
+		}
+
+		if (!groupedUnits.has(u.level)) {
+			groupedUnits.set(u.level, [u])
+			return
+		}
+
+		groupedUnits.get(u.level)?.push(u)
 	})
 
 	const kpiCards = [
@@ -109,11 +139,7 @@ export default function BaseStatsDashboard() {
 						<SelectValue placeholder='Chọn đơn vị' />
 					</SelectTrigger>
 					<SelectContent>
-						{sortedUnits.map((unit) => (
-							<SelectItem key={unit.alias} value={unit.alias}>
-								{unit.name} ({unitLevelLabels[unit.level]})
-							</SelectItem>
-						))}
+						<GroupUnits unitsMap={groupedUnits} />
 					</SelectContent>
 				</Select>
 			</div>
