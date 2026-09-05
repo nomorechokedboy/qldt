@@ -143,7 +143,7 @@ interface StudentBulkBody {
 }
 
 export const CreateStudents = api(
-	{ expose: true, method: 'POST', path: '/students/bulk' },
+	{ auth: true, expose: true, method: 'POST', path: '/students/bulk' },
 	async (body: StudentBulkBody): Promise<BulkStudentResponse> => {
 		const callMeta = currentRequest() as APICallMeta
 		const unitIds = callMeta.middlewareData?.validUnitIds || []

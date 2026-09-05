@@ -1644,9 +1644,8 @@ export namespace students {
 		 * Derived from positionId by students/controller.ts#resolvePositionText -
 		 * callers submit positionId, not this field directly.
 		 */
-		position?: string
-
 		ethnic: string
+
 		religion: string
 		enlistmentPeriod: string
 		politicalOrg: 'hcyu' | 'cpv'
@@ -1713,9 +1712,8 @@ export namespace students {
 		 * Derived from positionId by students/controller.ts#resolvePositionText -
 		 * callers submit positionId, not this field directly.
 		 */
-		position?: string
-
 		ethnic: string
+
 		religion: string
 		enlistmentPeriod: string
 		politicalOrg: 'hcyu' | 'cpv'
@@ -1789,9 +1787,8 @@ export namespace students {
 		 * Derived from positionId by students/controller.ts#resolvePositionText -
 		 * callers submit positionId, not this field directly.
 		 */
-		position?: string
-
 		ethnic: string
+
 		religion: string
 		enlistmentPeriod: string
 		politicalOrg: 'hcyu' | 'cpv'
@@ -1877,9 +1874,8 @@ export namespace students {
 		 * Derived from positionId by students/controller.ts#resolvePositionText -
 		 * callers submit positionId, not this field directly.
 		 */
-		position?: string
-
 		ethnic: string
+
 		religion: string
 		enlistmentPeriod: string
 		politicalOrg: 'hcyu' | 'cpv'
@@ -1943,7 +1939,6 @@ export namespace students {
 		rank?: string
 		previousUnit?: string
 		previousPosition?: string
-		position?: string
 		ethnic?: string
 		religion?: string
 		enlistmentPeriod?: string
