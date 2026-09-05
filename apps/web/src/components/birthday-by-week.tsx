@@ -3,25 +3,29 @@ import useStudentData from '@/hooks/useStudents'
 import { defaultBirthdayColumnVisibility } from './student-table/default-columns-visibility'
 import { getCurrentWeekNumber } from '@/lib/utils'
 import StudentTable from './student-table/new-student-table'
-import { useState } from 'react'
-import type { StudentQueryParams } from '@/types'
+import { useCallback, useState } from 'react'
+import type { Student, StudentQueryParams } from '@/types'
 import UnitFacetedFilter, { useFilteredClassIds } from './unit-filter'
 import { useStudentFacetedFilters } from '@/hooks/useStudentFacetedFilters'
 
 export default function BirthdayByWeek() {
 	const [selectedUnits, setSelectedUnits] = useState<number[]>([])
-	const filteredClassIds = useFilteredClassIds(selectedUnits)
+	const filteredUnitIds = useFilteredClassIds(selectedUnits)
 	const studentQueryParams: StudentQueryParams = {
-		birthdayInWeek: true,
-		classIds: filteredClassIds
+		birthdayInWeek: true
 	}
-	const {
-		data: students = [],
-		isLoading: isLoadingStudents,
-		refetch: refetchStudents
-	} = useStudentData(studentQueryParams)
+	const { data: students = [] } = useStudentData(studentQueryParams)
 	const weekNumber = getCurrentWeekNumber()
 	const facetedFilters = useStudentFacetedFilters(students)
+	const filterStudents = useCallback(
+		(all: Student[]) =>
+			selectedUnits.length === 0
+				? all
+				: all.filter(
+						(s) => s.unit && filteredUnitIds?.includes(s.unit.id)
+					),
+		[selectedUnits, filteredUnitIds]
+	)
 
 	return (
 		<>
@@ -38,6 +42,7 @@ export default function BirthdayByWeek() {
 			</div>
 			<StudentTable
 				params={studentQueryParams}
+				filterStudents={filterStudents}
 				columnVisibility={defaultBirthdayColumnVisibility}
 				columns={battalionStudentColumnsWithoutAction}
 				leftSection={

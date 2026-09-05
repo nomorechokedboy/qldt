@@ -1,7 +1,7 @@
 import { battalionStudentColumnsWithoutAction } from '@/components/student-table/columns'
 import useStudentData from '@/hooks/useStudents'
-import type { Quarter, StudentQueryParams } from '@/types'
-import { useState } from 'react'
+import type { Quarter, Student, StudentQueryParams } from '@/types'
+import { useCallback, useState } from 'react'
 import {
 	Select,
 	SelectContent,
@@ -37,21 +37,25 @@ const quarterOptions = [
 
 export default function BirthdayByQuarter() {
 	const [selectedUnits, setSelectedUnits] = useState<number[]>([])
-	const filteredClassIds = useFilteredClassIds(selectedUnits)
+	const filteredUnitIds = useFilteredClassIds(selectedUnits)
 	const [quarter, setQuarter] = useState<Quarter>(
 		`Q${getCurrentQuarter()}` as Quarter
 	)
 	const studentQueryParams: StudentQueryParams = {
-		birthdayInQuarter: quarter,
-		classIds: filteredClassIds
+		birthdayInQuarter: quarter
 	}
 	const filename = `danh-sach-sinh-nhat-dong-doi-${quarter}`
-	const {
-		data: students = [],
-		isLoading: isLoadingStudents,
-		refetch: refetchStudents
-	} = useStudentData(studentQueryParams)
+	const { data: students = [] } = useStudentData(studentQueryParams)
 	const facetedFilters = useStudentFacetedFilters(students)
+	const filterStudents = useCallback(
+		(all: Student[]) =>
+			selectedUnits.length === 0
+				? all
+				: all.filter(
+						(s) => s.unit && filteredUnitIds?.includes(s.unit.id)
+					),
+		[selectedUnits, filteredUnitIds]
+	)
 	return (
 		<>
 			<div className='flex items-center justify-between space-y-2'>
@@ -90,6 +94,7 @@ export default function BirthdayByQuarter() {
 			</div>
 			<StudentTable
 				params={studentQueryParams}
+				filterStudents={filterStudents}
 				columnVisibility={defaultBirthdayColumnVisibility}
 				columns={battalionStudentColumnsWithoutAction}
 				facetedFilters={facetedFilters}

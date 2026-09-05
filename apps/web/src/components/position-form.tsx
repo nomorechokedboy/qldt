@@ -26,6 +26,7 @@ export default function PositionForm({ level, onSuccess }: PositionFormProps) {
 	const [code, setCode] = useState('')
 	const [name, setName] = useState('')
 	const [priority, setPriority] = useState('')
+	const [group, setGroup] = useState('')
 
 	const createMutation = useCreatePosition()
 
@@ -33,6 +34,7 @@ export default function PositionForm({ level, onSuccess }: PositionFormProps) {
 		setCode('')
 		setName('')
 		setPriority('')
+		setGroup('')
 	}
 
 	const handleSubmit = async (e: React.FormEvent) => {
@@ -43,7 +45,8 @@ export default function PositionForm({ level, onSuccess }: PositionFormProps) {
 				level,
 				code,
 				name,
-				priority: Number(priority)
+				priority: Number(priority),
+				group: group.trim() === '' ? null : group
 			})
 			toast.success('Thêm mới chức vụ thành công')
 			onSuccess?.()
@@ -106,6 +109,18 @@ export default function PositionForm({ level, onSuccess }: PositionFormProps) {
 							value={priority}
 							onChange={(e) => setPriority(e.target.value)}
 							required
+						/>
+					</div>
+
+					<div className='space-y-2'>
+						<Label htmlFor='position-group'>
+							Nhóm (tuỳ chọn, dùng để gộp trong danh sách chọn)
+						</Label>
+						<Input
+							id='position-group'
+							value={group}
+							onChange={(e) => setGroup(e.target.value)}
+							placeholder='vd: Trợ lý, NVCM-KT'
 						/>
 					</div>
 

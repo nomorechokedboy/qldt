@@ -1,7 +1,7 @@
 import * as p from 'drizzle-orm/sqlite-core'
 import * as sqlite from 'drizzle-orm/sqlite-core'
 import { Base, baseSchema } from './base'
-import { relations, sql } from 'drizzle-orm'
+import { relations } from 'drizzle-orm'
 import { AppError } from '../errors'
 import { Role } from './roles'
 import { userRoles } from './user-roles'

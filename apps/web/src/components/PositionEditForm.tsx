@@ -22,6 +22,7 @@ export default function PositionEditForm({
 	const [code, setCode] = useState(data.code)
 	const [name, setName] = useState(data.name)
 	const [priority, setPriority] = useState(String(data.priority))
+	const [group, setGroup] = useState(data.group ?? '')
 
 	const updateMutation = useUpdatePosition()
 
@@ -35,7 +36,8 @@ export default function PositionEditForm({
 						id: data.id,
 						code,
 						name,
-						priority: Number(priority)
+						priority: Number(priority),
+						group: group.trim() === '' ? null : group
 					}
 				]
 			})
@@ -91,6 +93,18 @@ export default function PositionEditForm({
 						value={priority}
 						onChange={(e) => setPriority(e.target.value)}
 						required
+					/>
+				</div>
+
+				<div className='space-y-2'>
+					<Label htmlFor='edit-position-group'>
+						Nhóm (tuỳ chọn, dùng để gộp trong danh sách chọn)
+					</Label>
+					<Input
+						id='edit-position-group'
+						value={group}
+						onChange={(e) => setGroup(e.target.value)}
+						placeholder='vd: Trợ lý, NVCM-KT'
 					/>
 				</div>
 

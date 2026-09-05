@@ -53,7 +53,7 @@ export const notificationsRelations = relations(notifications, ({ many }) => ({
 	items: many(notificationItems)
 }))
 
-export type NotifiableType = 'students' | 'classes'
+export type NotifiableType = 'students'
 
 export type NotificationBody = InferInsertModel<typeof notifications>
 

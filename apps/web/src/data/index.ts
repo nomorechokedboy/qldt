@@ -11,7 +11,6 @@ export const STEPS = [
 		title: 'Thông tin cá nhân',
 		fields: [
 			'fullName',
-			'classId',
 			'unitId',
 			'birthPlace',
 			'address',
@@ -32,6 +31,7 @@ export const STEPS = [
 		title: 'Thông tin khác',
 		fields: [
 			'rank',
+			'positionId',
 			'enlistmentPeriod',
 			'policyBeneficiaryGroup',
 			'previousUnit',

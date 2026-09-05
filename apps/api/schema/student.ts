@@ -3,7 +3,6 @@ import * as sqlite from 'drizzle-orm/sqlite-core'
 import { customType } from 'drizzle-orm/sqlite-core'
 import { AppError } from '../errors/index'
 import { baseSchema } from './base'
-import { Class, classes } from './classes'
 import { PositionDB, positions } from './positions'
 import { Unit, units } from './units'
 
@@ -30,11 +29,12 @@ export const students = sqlite.sqliteTable('students', {
 	rank: sqlite.text().default(''),
 	previousUnit: sqlite.text().default(''),
 	previousPosition: sqlite.text().default(''),
+	// Derived, read-only mirror of positionId's `code` - set automatically
+	// by students/controller.ts#resolvePositionText whenever positionId is
+	// given. Kept as a real column (rather than dropped) because
+	// roster-utils.ts's export sorting and validateUniqueLeaderPositions
+	// both key off this text, not the FK.
 	position: sqlite.text().default('Chiến sĩ'),
-	// FK into positions.ts, currently only populated for battalion-level
-	// students. `position` above stays the source-of-truth text field —
-	// this FK is a supplementary link for rows already seeded in the
-	// positions table, not a replacement.
 	positionId: sqlite.integer().references(() => positions.id),
 	ethnic: sqlite.text().default(''),
 	religion: sqlite.text().default('Không'),
@@ -73,10 +73,6 @@ export const students = sqlite.sqliteTable('students', {
 	achievement: sqlite.text().default('Không'),
 	disciplinaryHistory: sqlite.text().default('Không'),
 	phone: sqlite.text().default(''),
-	// A student is either a squad member (classId) or attached directly to
-	// a platoon-or-larger unit, e.g. a company commander (unitId).
-	// Exactly one of the two is set; enforced in the controller, not here.
-	classId: sqlite.integer().references(() => classes.id),
 	unitId: sqlite.integer().references(() => units.id),
 	cpvOfficialAt: sqlite.text(),
 	avatar: sqlite.text(),
@@ -92,10 +88,6 @@ export const students = sqlite.sqliteTable('students', {
 })
 
 export const studentsRelations = relations(students, ({ one }) => ({
-	class: one(classes, {
-		fields: [students.classId],
-		references: [classes.id]
-	}),
 	unit: one(units, {
 		fields: [students.unitId],
 		references: [units.id]
@@ -108,8 +100,7 @@ export const studentsRelations = relations(students, ({ one }) => ({
 
 export type StudentDB = InferSelectModel<typeof students>
 
-export type Student = Omit<StudentDB, 'classId' | 'unitId' | 'positionId'> & {
-	class: Omit<Class, 'studentCount'> | null
+export type Student = Omit<StudentDB, 'unitId' | 'positionId'> & {
 	unit: Unit | null
 	positionRef: PositionDB | null
 }
@@ -136,7 +127,6 @@ export type StudentQuery = {
 	birthdayInMonth?: Month
 	birthdayInQuarter?: Quarter
 	birthdayInWeek?: boolean
-	classIds?: Array<number>
 	unitIds?: Array<number>
 	hasReligion?: boolean
 	ids?: Array<number>
@@ -216,7 +206,7 @@ export type StudentCronEvent =
 
 export type PoliticsQualityRow = {
 	category: string
-	classId: number
+	unitId: number
 	value: string | number
 	count: number
 }

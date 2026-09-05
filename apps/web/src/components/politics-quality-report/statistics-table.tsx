@@ -31,18 +31,13 @@ export function StatisticsTable({ data }: StatisticsTableProps) {
 			// Add to collapsed set if this row can be collapsed
 			if (
 				(depth === 0 || depth === 1) &&
-				((entity.classes && entity.classes.length > 0) ||
-					(entity.children && entity.children.length > 0))
+				entity.children &&
+				entity.children.length > 0
 			) {
 				initialCollapsed.add(rowId)
 			}
 
-			// Recursively check children and classes
-			if (entity.classes) {
-				entity.classes.forEach((cls) =>
-					addCollapsibleRows(cls, depth + 1, entity.name)
-				)
-			}
+			// Recursively check children
 			if (entity.children) {
 				entity.children.forEach((child) =>
 					addCollapsibleRows(child, depth + 1)
@@ -77,8 +72,8 @@ export function StatisticsTable({ data }: StatisticsTableProps) {
 	const canCollapse = (entity: UnitPoliticsQualitySummary, depth: number) => {
 		return (
 			(depth === 0 || depth === 1) &&
-			((entity.classes && entity.classes.length > 0) ||
-				(entity.children && entity.children.length > 0))
+			entity.children &&
+			entity.children.length > 0
 		)
 	}
 
@@ -155,9 +150,7 @@ export function StatisticsTable({ data }: StatisticsTableProps) {
 	}
 
 	const renderEntity = (
-		entity:
-			| UnitPoliticsQualitySummary
-			| UnitPoliticsQualitySummary['classes'][number],
+		entity: UnitPoliticsQualitySummary,
 		depth = 0,
 		entityName?: string
 	): React.ReactNode[] => {
@@ -177,12 +170,6 @@ export function StatisticsTable({ data }: StatisticsTableProps) {
 		)
 
 		if (!isCollapsed) {
-			if (entity.classes) {
-				entity.classes.forEach((cls) =>
-					rows.push(...renderEntity(cls, depth + 1, entity.name))
-				)
-			}
-
 			if (entity.children) {
 				entity.children.forEach((child) =>
 					rows.push(...renderEntity(child, depth + 1))

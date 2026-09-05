@@ -121,3 +121,42 @@ export default function UnitCommanderFields({
 		</>
 	)
 }
+
+interface SingleCommanderFieldProps {
+	idPrefix: string
+	label: string
+	value: string
+	onChange: (value: string) => void
+}
+
+// A standalone "commander" picker for unit levels (platoon, squad) that only
+// track a single leadership role, rather than the full company+ chain of
+// command covered by UnitCommanderFields.
+export function SingleCommanderField({
+	idPrefix,
+	label,
+	value,
+	onChange
+}: SingleCommanderFieldProps) {
+	const { data: users } = useUserData()
+
+	return (
+		<div className='space-y-2'>
+			<Label htmlFor={`${idPrefix}-commanderId`}>{label}</Label>
+			<Select value={value} onValueChange={onChange}>
+				<SelectTrigger id={`${idPrefix}-commanderId`}>
+					<SelectValue placeholder={`Chọn ${label.toLowerCase()}`} />
+				</SelectTrigger>
+				<SelectContent>
+					<SelectItem value={NO_COMMANDER}>Chưa chỉ định</SelectItem>
+					{users?.map((u) => (
+						<SelectItem key={u.id} value={String(u.id)}>
+							{u.displayName}
+							{u.rank ? ` (${u.rank})` : ''}
+						</SelectItem>
+					))}
+				</SelectContent>
+			</Select>
+		</div>
+	)
+}

@@ -5,11 +5,6 @@
  * claim returned from GET /authn/me.
  */
 export const PermissionTag = {
-	CLASSES_CREATE: 'classes:create',
-	CLASSES_READ: 'classes:read',
-	CLASSES_UPDATE: 'classes:update',
-	CLASSES_DELETE: 'classes:delete',
-
 	STUDENTS_CREATE: 'students:create',
 	STUDENTS_READ: 'students:read',
 	STUDENTS_UPDATE: 'students:update',

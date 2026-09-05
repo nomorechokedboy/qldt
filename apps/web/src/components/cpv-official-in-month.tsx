@@ -1,8 +1,8 @@
 import { battalionStudentColumnsWithoutAction } from '@/components/student-table/columns'
 import useStudentData from '@/hooks/useStudents'
-import type { Month, StudentQueryParams } from '@/types'
+import type { Month, Student, StudentQueryParams } from '@/types'
 import dayjs from 'dayjs'
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import {
 	Select,
 	SelectContent,
@@ -69,15 +69,22 @@ const monthOptions = [
 
 export default function CpvOfficialInMonth() {
 	const [selectedUnits, setSelectedUnits] = useState<number[]>([])
-	const filteredClassIds = useFilteredClassIds(selectedUnits)
+	const filteredUnitIds = useFilteredClassIds(selectedUnits)
 	const [month, setMonth] = useState<Month>(dayjs().format('MM') as Month)
 	const studentQueryParams: StudentQueryParams = {
-		cpvOfficialInMonth: month,
-		classIds: filteredClassIds
+		cpvOfficialInMonth: month
 	}
-	const { data: students = [], refetch: refetchStudents } =
-		useStudentData(studentQueryParams)
+	const { data: students = [] } = useStudentData(studentQueryParams)
 	const facetedFilters = useStudentFacetedFilters(students)
+	const filterStudents = useCallback(
+		(all: Student[]) =>
+			selectedUnits.length === 0
+				? all
+				: all.filter(
+						(s) => s.unit && filteredUnitIds?.includes(s.unit.id)
+					),
+		[selectedUnits, filteredUnitIds]
+	)
 	const filename = `danh-sach-chuyen-dang-chinh-thuc-thang-${month}`
 
 	return (
@@ -119,6 +126,7 @@ export default function CpvOfficialInMonth() {
 			</div>
 			<StudentTable
 				params={studentQueryParams}
+				filterStudents={filterStudents}
 				columnVisibility={defaultCpvOfficialColumnVisibility}
 				columns={battalionStudentColumnsWithoutAction}
 				facetedFilters={facetedFilters}

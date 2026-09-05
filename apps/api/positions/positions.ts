@@ -8,6 +8,7 @@ export type PositionBody = {
 	code: string
 	name: string
 	priority: number
+	group?: string | null
 }
 
 export type PositionDB = PositionBody & {

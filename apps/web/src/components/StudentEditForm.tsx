@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import type { Student, ChildrenInfo } from '@/types'
+import type { Student, ChildrenInfo, Unit } from '@/types'
 import usePatchStudentInfo from '@/hooks/usePatchStudentInfo'
 // option cho dân tộc, tôn giáo, trình độ học vấn
 import { EhtnicOptions } from '@/data/ethnicities'
@@ -13,11 +13,9 @@ import { religionOptions } from '@/data/religions'
 import { eduLevelOptions } from '@/data/education-levels'
 import { politicalOptions } from '@/data/political-status'
 import { rankOptions } from '@/data/ranks'
-import { soldierPositionOptions } from '@/data/positions'
-import useClassData from '@/hooks/useClasses'
 import useUnitsData from '@/hooks/useUnitsData'
 import usePositionsData from '@/hooks/usePositionsData'
-import { unitLevelLabels } from '@/data/unit-levels'
+import { unitLevelLabels, unitLevelOrder } from '@/data/unit-levels'
 import { getMediaUri } from '../lib/utils'
 import { useAppForm } from '@/hooks/use-app-form'
 import { toast } from 'sonner'
@@ -40,6 +38,23 @@ interface StudentEditFormProps {
 	onClose?: () => void
 }
 
+function groupConsecutive<T>(
+	items: T[],
+	getGroup: (item: T) => string | undefined
+) {
+	const groups: { key: string | undefined; items: T[] }[] = []
+	for (const item of items) {
+		const key = getGroup(item)
+		const last = groups[groups.length - 1]
+		if (last && last.key === key) {
+			last.items.push(item)
+		} else {
+			groups.push({ key, items: [item] })
+		}
+	}
+	return groups
+}
+
 export default function StudentEditForm({
 	student,
 	onClose
@@ -47,39 +62,45 @@ export default function StudentEditForm({
 	const { handlePatchStudentInfo, isPending } = usePatchStudentInfo(student)
 	const { mutateAsync: uploadFilesMutate } = useUploadFiles()
 
-	const { data: classes = [] } = useClassData()
 	const { data: units = [] } = useUnitsData()
-	// options cho select lớp
-	const classOptions = useMemo(
-		() =>
-			classes.map((c) => ({
-				value: c.id.toString(),
-				label: `${c.name} - ${c.unit.name}`
-			})),
-		[classes]
-	)
 	const unitOptions = useMemo(
 		() =>
-			units
-				.filter((u) => u.level !== 'squad')
-				.map((u) => ({
+			units.flatMap(function flatten(u: Unit): {
+				value: string
+				label: string
+			}[] {
+				const self = {
 					value: u.id.toString(),
 					label: `${u.name} (${unitLevelLabels[u.level]})`
-				})),
+				}
+				return [self, ...(u.children ?? []).flatMap(flatten)]
+			}),
 		[units]
 	)
 	const { data: positions = [] } = usePositionsData()
 	const positionOptions = useMemo(
-		() => [
-			...positions.map((p) => ({ value: p.code, label: p.name })),
-			...soldierPositionOptions
-		],
+		() =>
+			[...positions]
+				.sort((a, b) => {
+					const levelDiff =
+						unitLevelOrder.indexOf(a.level as never) -
+						unitLevelOrder.indexOf(b.level as never)
+					if (levelDiff !== 0) return levelDiff
+
+					const groupDiff = (a.group ?? '').localeCompare(
+						b.group ?? ''
+					)
+					if (groupDiff !== 0) return groupDiff
+
+					return a.priority - b.priority
+				})
+				.map((p) => ({
+					value: String(p.id),
+					label: p.name,
+					group:
+						p.group ?? unitLevelLabels[p.level as never] ?? p.level
+				})),
 		[positions]
-	)
-	const [membershipType, setMembershipType] = useState<'class' | 'unit'>(
-		student.unitId !== undefined && student.unitId !== null
-			? 'unit'
-			: 'class'
 	)
 
 	const form = useAppForm({
@@ -91,13 +112,13 @@ export default function StudentEditForm({
 			avatar: student.avatar || (null as File | null),
 			relatedDocumentations: student.relatedDocumentations || '',
 			studentId: student.studentId || '',
-			classId:
-				student.classId !== undefined && student.classId !== null
-					? Number(student.classId)
-					: undefined,
 			unitId:
 				student.unitId !== undefined && student.unitId !== null
 					? Number(student.unitId)
+					: undefined,
+			positionId:
+				student.positionId !== undefined && student.positionId !== null
+					? Number(student.positionId)
 					: undefined,
 			contactPerson: student.contactPerson || {
 				name: '',
@@ -115,13 +136,13 @@ export default function StudentEditForm({
 					value.avatar = resp.uris[0]
 				}
 
-				value.classId =
-					value.classId !== undefined
-						? Number(value.classId)
-						: undefined
 				value.unitId =
 					value.unitId !== undefined
 						? Number(value.unitId)
+						: undefined
+				value.positionId =
+					value.positionId !== undefined
+						? Number(value.positionId)
 						: undefined
 				value.familySize = Number(value.familySize)
 				await handlePatchStudentInfo({ ...value })
@@ -199,7 +220,7 @@ export default function StudentEditForm({
 		name: K | string
 		label: string
 		type?: string
-		options?: { label: string; value: string }[]
+		options?: { label: string; value: string; group?: string }[]
 	}) => (
 		<form.Field
 			name={name as any}
@@ -217,14 +238,36 @@ export default function StudentEditForm({
 					) : options && options.length > 0 ? (
 						<select
 							className='border rounded px-2 py-1'
-							value={field.state.value as string}
+							value={String(field.state.value ?? '')}
 							onChange={(e) => field.handleChange(e.target.value)}
 						>
-							{options.map((opt) => (
-								<option key={opt.value} value={opt.value}>
-									{opt.label}
-								</option>
-							))}
+							{options.some((opt) => opt.group)
+								? groupConsecutive(
+										options,
+										(opt) => opt.group
+									).map((group, idx) => (
+										<optgroup
+											key={group.key ?? idx}
+											label={group.key ?? label}
+										>
+											{group.items.map((opt) => (
+												<option
+													key={opt.value}
+													value={opt.value}
+												>
+													{opt.label}
+												</option>
+											))}
+										</optgroup>
+									))
+								: options.map((opt) => (
+										<option
+											key={opt.value}
+											value={opt.value}
+										>
+											{opt.label}
+										</option>
+									))}
 						</select>
 					) : (
 						<Input
@@ -278,15 +321,7 @@ export default function StudentEditForm({
 						</p>
 						<p className='text-gray-600'>Cấp bậc: {student.rank}</p>
 						<p className='text-gray-600'>
-							{student.unit
-								? `Đơn vị: ${student.unit.name}`
-								: `Tiểu đội: ${
-										classOptions.find(
-											(c) =>
-												c.value ===
-												student.class?.id.toString()
-										)?.label || 'Chưa có tiểu đội'
-									}`}
+							Đơn vị: {student.unit?.name || 'Chưa có đơn vị'}
 						</p>
 					</div>
 				</CardHeader>
@@ -388,81 +423,26 @@ export default function StudentEditForm({
 											options={rankOptions}
 										/>
 										<Field
-											name='position'
+											name='positionId'
 											label='Chức vụ'
 											options={positionOptions}
 										/>
-										<div className='flex flex-col gap-1'>
-											<Label>Thuộc về</Label>
-											<div className='flex gap-2'>
-												<Button
-													type='button'
-													size='sm'
-													variant={
-														membershipType ===
-														'class'
-															? 'default'
-															: 'outline'
-													}
-													onClick={() => {
-														setMembershipType(
-															'class'
-														)
-														form.setFieldValue(
-															'unitId',
-															undefined
-														)
-													}}
-												>
-													Tiểu đội
-												</Button>
-												<Button
-													type='button'
-													size='sm'
-													variant={
-														membershipType ===
-														'unit'
-															? 'default'
-															: 'outline'
-													}
-													onClick={() => {
-														setMembershipType(
-															'unit'
-														)
-														form.setFieldValue(
-															'classId',
-															undefined
-														)
-													}}
-												>
-													Đơn vị
-												</Button>
-											</div>
-										</div>
-										{membershipType === 'class' ? (
-											<Field
-												name='classId'
-												label='Tiểu đội'
-												options={classOptions}
-											/>
-										) : (
-											<Field
-												name='unitId'
-												label='Đơn vị'
-												options={unitOptions}
-											/>
-										)}
+										<Field
+											name='unitId'
+											label='Đơn vị'
+											options={unitOptions}
+										/>
 										<Field
 											name='enlistmentPeriod'
 											label='Ngày nhập ngũ'
 										/>
 										<Field
 											name='previousUnit'
-											label='Đơn vị trước khi nhập học'
+											label='Đơn vị cũ'
 										/>
 										<Field
 											name='previousPosition'
-											label='Chức vụ trước khi nhập học'
+											label='Chức vụ cũ'
 										/>
 									</div>
 								</div>

@@ -2,7 +2,6 @@ import * as sqlite from 'drizzle-orm/sqlite-core'
 import { baseSchema } from './base'
 import { AppError } from '../errors'
 import { InferInsertModel, InferSelectModel, relations } from 'drizzle-orm'
-import { Class, classes } from './classes'
 import { users } from './users'
 
 export class UnitLevel {
@@ -152,7 +151,6 @@ export const unitsRelations = relations(units, ({ one, many }) => ({
 	children: many(units, {
 		relationName: 'parentChild'
 	}),
-	classes: many(classes),
 	commanders: many(users),
 	commander: one(users, {
 		fields: [units.commanderId],
@@ -182,7 +180,7 @@ export type UnitParams = InferInsertModel<typeof units>
 
 type unit = Omit<UnitDB, 'parentId'>
 
-export type Unit = unit & { parent?: Unit; children: Unit[]; classes: Class[] }
+export type Unit = unit & { parent?: Unit; children: Unit[] }
 
 export type UnitQuery = {
 	level?: UnitLevelName

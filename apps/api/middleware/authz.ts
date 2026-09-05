@@ -9,7 +9,6 @@ import { AppError } from '../errors'
 // Extend the middleware data type
 declare module 'encore.dev/api' {
 	interface MiddlewareData {
-		validClassIds: number[]
 		validUnitIds: number[]
 	}
 }
@@ -18,27 +17,16 @@ async function getValidIdsFromUnit(unitId: number) {
 	const unit = await unitRepo.getOne({ id: unitId })
 
 	if (!unit) {
-		return { classIds: [], unitIds: [] }
+		return { unitIds: [] }
 	}
 
 	const unitIds = await unitStatsRepo.findDescendantUnitIds(unitId)
-	const classIds = await unitStatsRepo.classIdsForUnits(unitIds)
 
-	return { classIds, unitIds }
+	return { unitIds }
 }
 
 async function getAllValidIds() {
 	const units = await unitRepo.findAll()
-
-	const classIds = units.flatMap((u) => {
-		let ids = u.classes?.map((c) => c.id) || []
-		if (u.children) {
-			for (const child of u.children) {
-				ids = ids.concat(child.classes?.map((c) => c.id) || [])
-			}
-		}
-		return ids
-	})
 
 	const unitIds = units.flatMap((u) => {
 		const ids = [u.id]
@@ -48,7 +36,7 @@ async function getAllValidIds() {
 		return ids
 	})
 
-	return { classIds, unitIds }
+	return { unitIds }
 }
 
 export const authzMiddleware = middleware(
@@ -58,21 +46,16 @@ export const authzMiddleware = middleware(
 
 		if (!authData) {
 			log.warn('authzMiddleware: No auth data available')
-			req.data.validClassIds = []
 			req.data.validUnitIds = []
 			return next(req)
 		}
 
-		let classIds: number[] = []
 		let unitIds: number[] = []
 
 		try {
 			if (authData.isSuperAdmin) {
-				// Super admins get access to all units and classes
-				const allIds = await getAllValidIds()
-
-				classIds = allIds.classIds
-				unitIds = allIds.unitIds
+				// Super admins get access to all units
+				unitIds = (await getAllValidIds()).unitIds
 			} else if (authData.userID) {
 				// Regular users: fetch their user record to get current unitId
 				const user = await userRepo.findOne({
@@ -80,27 +63,22 @@ export const authzMiddleware = middleware(
 				})
 
 				if (user?.unitId) {
-					const validIds = await getValidIdsFromUnit(user.unitId)
-					classIds = validIds.classIds
-					unitIds = validIds.unitIds
+					unitIds = (await getValidIdsFromUnit(user.unitId)).unitIds
 				}
 			}
 
 			log.trace('authzMiddleware: Computed valid IDs', {
 				userId: authData.userID,
-				classIds,
 				unitIds
 			})
 
 			// Attach to request for API handlers to use
-			req.data.validClassIds = classIds
 			req.data.validUnitIds = unitIds
 
 			return next(req)
 		} catch (err) {
 			console.error('authzMiddleware error', err)
 			log.error('authzMiddleware: Error computing valid IDs', { err })
-			req.data.validClassIds = []
 			req.data.validUnitIds = []
 			return next(req)
 		}
@@ -110,12 +88,6 @@ export const authzMiddleware = middleware(
 // Define permission mapping based on method and path patterns
 const PERMISSION_MAP: Record<string, string[]> = {
 	'GET:/actions': ['actions:read'],
-
-	'POST:/classes': ['classes:create'],
-	'GET:/classes': ['classes:read'],
-	'GET:/classes/:id': ['classes:read'],
-	'PATCH:/classes': ['classes:update'],
-	'DELETE:/classes': ['classes:delete'],
 
 	'POST:/students': ['students:create'],
 	'GET:/students': ['students:read'],

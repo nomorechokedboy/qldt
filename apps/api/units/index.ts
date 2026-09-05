@@ -21,9 +21,10 @@ export interface Repository {
 	findById(
 		id: number,
 		opts?: {
-			with: { children?: boolean; classes?: boolean; parent?: boolean }
+			with: { children?: boolean; parent?: boolean }
 		}
 	): Promise<UnitDB | undefined>
 	getOne(params: Partial<UnitDB>): Promise<Unit | undefined>
 	findRoot(): Promise<UnitDB | undefined>
+	findAncestorChain(unitId: number): Promise<UnitDB[]>
 }

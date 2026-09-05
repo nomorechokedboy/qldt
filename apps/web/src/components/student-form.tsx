@@ -91,7 +91,7 @@ export default function StudentForm({
 			rank: '',
 			previousUnit: '',
 			previousPosition: '',
-			position: '',
+			positionId: undefined,
 			ethnic: '',
 			religion: '',
 			enlistmentPeriod: '',
@@ -125,7 +125,6 @@ export default function StudentForm({
 			achievement: '',
 			disciplinaryHistory: '',
 			phone: '',
-			classId: undefined,
 			unitId: undefined,
 			cpvOfficialAt: null,
 			avatar: null as File | null,
@@ -144,14 +143,11 @@ export default function StudentForm({
 					return
 				}
 
-				value.classId =
-					value.classId !== undefined
-						? Number(value.classId)
-						: undefined
 				value.unitId =
 					value.unitId !== undefined
 						? Number(value.unitId)
 						: undefined
+				value.positionId = Number(value.positionId)
 
 				const familySize = value.familySize
 				value.familySize = Number(familySize)

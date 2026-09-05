@@ -20,7 +20,6 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as ListUserRouteImport } from './routes/list-user'
 import { Route as KhoiTaoQtvRouteImport } from './routes/khoi-tao-qtv'
 import { Route as KhoiTaoDonViRouteImport } from './routes/khoi-tao-don-vi'
-import { Route as ImportStudentsRouteImport } from './routes/import-students'
 import { Route as HoanCanhKhoKhanRouteImport } from './routes/hoan-canh-kho-khan'
 import { Route as HcyuRouteImport } from './routes/hcyu'
 import { Route as EthnicMinorityRouteImport } from './routes/ethnic-minority'
@@ -35,7 +34,6 @@ import { Route as TrungDoiPlatoonAliasRouteImport } from './routes/trung-doi/$pl
 import { Route as QuanLyVatTuDanhMucRouteImport } from './routes/quan-ly-vat-tu.danh-muc'
 import { Route as DonViAliasRouteImport } from './routes/don-vi/$alias'
 import { Route as DaiDoiCompanyAliasRouteImport } from './routes/dai-doi/$companyAlias'
-import { Route as ClassesClassIdRouteImport } from './routes/classes/$classId'
 
 const VaiTroRoute = VaiTroRouteImport.update({
   id: '/vai-tro',
@@ -90,11 +88,6 @@ const KhoiTaoQtvRoute = KhoiTaoQtvRouteImport.update({
 const KhoiTaoDonViRoute = KhoiTaoDonViRouteImport.update({
   id: '/khoi-tao-don-vi',
   path: '/khoi-tao-don-vi',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ImportStudentsRoute = ImportStudentsRouteImport.update({
-  id: '/import-students',
-  path: '/import-students',
   getParentRoute: () => rootRouteImport,
 } as any)
 const HoanCanhKhoKhanRoute = HoanCanhKhoKhanRouteImport.update({
@@ -167,11 +160,6 @@ const DaiDoiCompanyAliasRoute = DaiDoiCompanyAliasRouteImport.update({
   path: '/dai-doi/$companyAlias',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ClassesClassIdRoute = ClassesClassIdRouteImport.update({
-  id: '/classes/$classId',
-  path: '/classes/$classId',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -184,7 +172,6 @@ export interface FileRoutesByFullPath {
   '/ethnic-minority': typeof EthnicMinorityRoute
   '/hcyu': typeof HcyuRoute
   '/hoan-canh-kho-khan': typeof HoanCanhKhoKhanRoute
-  '/import-students': typeof ImportStudentsRoute
   '/khoi-tao-don-vi': typeof KhoiTaoDonViRoute
   '/khoi-tao-qtv': typeof KhoiTaoQtvRoute
   '/list-user': typeof ListUserRoute
@@ -196,7 +183,6 @@ export interface FileRoutesByFullPath {
   '/thong-ke-chinh-tri': typeof ThongKeChinhTriRoute
   '/thong-ke-doanh-trai': typeof ThongKeDoanhTraiRoute
   '/vai-tro': typeof VaiTroRoute
-  '/classes/$classId': typeof ClassesClassIdRoute
   '/dai-doi/$companyAlias': typeof DaiDoiCompanyAliasRoute
   '/don-vi/$alias': typeof DonViAliasRoute
   '/quan-ly-vat-tu/danh-muc': typeof QuanLyVatTuDanhMucRoute
@@ -213,7 +199,6 @@ export interface FileRoutesByTo {
   '/ethnic-minority': typeof EthnicMinorityRoute
   '/hcyu': typeof HcyuRoute
   '/hoan-canh-kho-khan': typeof HoanCanhKhoKhanRoute
-  '/import-students': typeof ImportStudentsRoute
   '/khoi-tao-don-vi': typeof KhoiTaoDonViRoute
   '/khoi-tao-qtv': typeof KhoiTaoQtvRoute
   '/list-user': typeof ListUserRoute
@@ -225,7 +210,6 @@ export interface FileRoutesByTo {
   '/thong-ke-chinh-tri': typeof ThongKeChinhTriRoute
   '/thong-ke-doanh-trai': typeof ThongKeDoanhTraiRoute
   '/vai-tro': typeof VaiTroRoute
-  '/classes/$classId': typeof ClassesClassIdRoute
   '/dai-doi/$companyAlias': typeof DaiDoiCompanyAliasRoute
   '/don-vi/$alias': typeof DonViAliasRoute
   '/quan-ly-vat-tu/danh-muc': typeof QuanLyVatTuDanhMucRoute
@@ -243,7 +227,6 @@ export interface FileRoutesById {
   '/ethnic-minority': typeof EthnicMinorityRoute
   '/hcyu': typeof HcyuRoute
   '/hoan-canh-kho-khan': typeof HoanCanhKhoKhanRoute
-  '/import-students': typeof ImportStudentsRoute
   '/khoi-tao-don-vi': typeof KhoiTaoDonViRoute
   '/khoi-tao-qtv': typeof KhoiTaoQtvRoute
   '/list-user': typeof ListUserRoute
@@ -255,7 +238,6 @@ export interface FileRoutesById {
   '/thong-ke-chinh-tri': typeof ThongKeChinhTriRoute
   '/thong-ke-doanh-trai': typeof ThongKeDoanhTraiRoute
   '/vai-tro': typeof VaiTroRoute
-  '/classes/$classId': typeof ClassesClassIdRoute
   '/dai-doi/$companyAlias': typeof DaiDoiCompanyAliasRoute
   '/don-vi/$alias': typeof DonViAliasRoute
   '/quan-ly-vat-tu/danh-muc': typeof QuanLyVatTuDanhMucRoute
@@ -274,7 +256,6 @@ export interface FileRouteTypes {
     | '/ethnic-minority'
     | '/hcyu'
     | '/hoan-canh-kho-khan'
-    | '/import-students'
     | '/khoi-tao-don-vi'
     | '/khoi-tao-qtv'
     | '/list-user'
@@ -286,7 +267,6 @@ export interface FileRouteTypes {
     | '/thong-ke-chinh-tri'
     | '/thong-ke-doanh-trai'
     | '/vai-tro'
-    | '/classes/$classId'
     | '/dai-doi/$companyAlias'
     | '/don-vi/$alias'
     | '/quan-ly-vat-tu/danh-muc'
@@ -303,7 +283,6 @@ export interface FileRouteTypes {
     | '/ethnic-minority'
     | '/hcyu'
     | '/hoan-canh-kho-khan'
-    | '/import-students'
     | '/khoi-tao-don-vi'
     | '/khoi-tao-qtv'
     | '/list-user'
@@ -315,7 +294,6 @@ export interface FileRouteTypes {
     | '/thong-ke-chinh-tri'
     | '/thong-ke-doanh-trai'
     | '/vai-tro'
-    | '/classes/$classId'
     | '/dai-doi/$companyAlias'
     | '/don-vi/$alias'
     | '/quan-ly-vat-tu/danh-muc'
@@ -332,7 +310,6 @@ export interface FileRouteTypes {
     | '/ethnic-minority'
     | '/hcyu'
     | '/hoan-canh-kho-khan'
-    | '/import-students'
     | '/khoi-tao-don-vi'
     | '/khoi-tao-qtv'
     | '/list-user'
@@ -344,7 +321,6 @@ export interface FileRouteTypes {
     | '/thong-ke-chinh-tri'
     | '/thong-ke-doanh-trai'
     | '/vai-tro'
-    | '/classes/$classId'
     | '/dai-doi/$companyAlias'
     | '/don-vi/$alias'
     | '/quan-ly-vat-tu/danh-muc'
@@ -362,7 +338,6 @@ export interface RootRouteChildren {
   EthnicMinorityRoute: typeof EthnicMinorityRoute
   HcyuRoute: typeof HcyuRoute
   HoanCanhKhoKhanRoute: typeof HoanCanhKhoKhanRoute
-  ImportStudentsRoute: typeof ImportStudentsRoute
   KhoiTaoDonViRoute: typeof KhoiTaoDonViRoute
   KhoiTaoQtvRoute: typeof KhoiTaoQtvRoute
   ListUserRoute: typeof ListUserRoute
@@ -374,7 +349,6 @@ export interface RootRouteChildren {
   ThongKeChinhTriRoute: typeof ThongKeChinhTriRoute
   ThongKeDoanhTraiRoute: typeof ThongKeDoanhTraiRoute
   VaiTroRoute: typeof VaiTroRoute
-  ClassesClassIdRoute: typeof ClassesClassIdRoute
   DaiDoiCompanyAliasRoute: typeof DaiDoiCompanyAliasRoute
   DonViAliasRoute: typeof DonViAliasRoute
   QuanLyVatTuDanhMucRoute: typeof QuanLyVatTuDanhMucRoute
@@ -458,13 +432,6 @@ declare module '@tanstack/react-router' {
       path: '/khoi-tao-don-vi'
       fullPath: '/khoi-tao-don-vi'
       preLoaderRoute: typeof KhoiTaoDonViRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/import-students': {
-      id: '/import-students'
-      path: '/import-students'
-      fullPath: '/import-students'
-      preLoaderRoute: typeof ImportStudentsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/hoan-canh-kho-khan': {
@@ -565,13 +532,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DaiDoiCompanyAliasRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/classes/$classId': {
-      id: '/classes/$classId'
-      path: '/classes/$classId'
-      fullPath: '/classes/$classId'
-      preLoaderRoute: typeof ClassesClassIdRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -586,7 +546,6 @@ const rootRouteChildren: RootRouteChildren = {
   EthnicMinorityRoute: EthnicMinorityRoute,
   HcyuRoute: HcyuRoute,
   HoanCanhKhoKhanRoute: HoanCanhKhoKhanRoute,
-  ImportStudentsRoute: ImportStudentsRoute,
   KhoiTaoDonViRoute: KhoiTaoDonViRoute,
   KhoiTaoQtvRoute: KhoiTaoQtvRoute,
   ListUserRoute: ListUserRoute,
@@ -598,7 +557,6 @@ const rootRouteChildren: RootRouteChildren = {
   ThongKeChinhTriRoute: ThongKeChinhTriRoute,
   ThongKeDoanhTraiRoute: ThongKeDoanhTraiRoute,
   VaiTroRoute: VaiTroRoute,
-  ClassesClassIdRoute: ClassesClassIdRoute,
   DaiDoiCompanyAliasRoute: DaiDoiCompanyAliasRoute,
   DonViAliasRoute: DonViAliasRoute,
   QuanLyVatTuDanhMucRoute: QuanLyVatTuDanhMucRoute,

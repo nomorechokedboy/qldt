@@ -35,7 +35,6 @@ export default class Client {
 	public readonly actions: actions.ServiceClient
 	public readonly audit_logs: audit_logs.ServiceClient
 	public readonly auth: auth.ServiceClient
-	public readonly classes: classes.ServiceClient
 	public readonly export_templates: export_templates.ServiceClient
 	public readonly facilities: facilities.ServiceClient
 	public readonly healthcheck: healthcheck.ServiceClient
@@ -67,7 +66,6 @@ export default class Client {
 		this.actions = new actions.ServiceClient(base)
 		this.audit_logs = new audit_logs.ServiceClient(base)
 		this.auth = new auth.ServiceClient(base)
-		this.classes = new classes.ServiceClient(base)
 		this.export_templates = new export_templates.ServiceClient(base)
 		this.facilities = new facilities.ServiceClient(base)
 		this.healthcheck = new healthcheck.ServiceClient(base)
@@ -198,10 +196,6 @@ export namespace auth {
 		password: string
 	}
 
-	export interface GetLockedLoginUsernamesResponse {
-		usernames: string[]
-	}
-
 	export interface GetUserInfoResponse {
 		data: users.User
 		permissions: string[]
@@ -255,13 +249,17 @@ export namespace auth {
 			)
 		}
 
-		public async GetLockedLoginUsernames(): Promise<GetLockedLoginUsernamesResponse> {
+		public async GetLockedLoginUsernames(): Promise<{
+			usernames: string[]
+		}> {
 			// Now make the actual call to the API
 			const resp = await this.baseClient.callTypedAPI(
 				'GET',
 				`/authn/locked-users`
 			)
-			return (await resp.json()) as GetLockedLoginUsernamesResponse
+			return (await resp.json()) as {
+				usernames: string[]
+			}
 		}
 
 		public async GetUserInfo(): Promise<GetUserInfoResponse> {
@@ -293,7 +291,7 @@ export namespace auth {
 		}
 
 		public async UnlockLogin(params: UnlockLoginRequest): Promise<{
-			success: boolean
+			success: true
 		}> {
 			// Now make the actual call to the API
 			const resp = await this.baseClient.callTypedAPI(
@@ -302,155 +300,8 @@ export namespace auth {
 				JSON.stringify(params)
 			)
 			return (await resp.json()) as {
-				success: boolean
+				success: true
 			}
-		}
-	}
-}
-
-export namespace classes {
-	export interface BulkClassResponse {
-		data: ClassResponse[]
-	}
-
-	export interface Class {
-		id: number
-		createdAt: string
-		updatedAt: string
-		name: string
-		description: string
-		graduatedAt: string | null
-		status: 'ongoing' | 'graduated'
-		unit: units.UnitDB
-	}
-
-	export interface ClassBody {
-		name: string
-		description?: string
-		graduatedAt?: string
-		unitId: number
-	}
-
-	export interface ClassResponse {
-		id: number
-		createdAt: string
-		updatedAt: string
-		name: string
-		description: string
-		graduatedAt: string | null
-		status: 'ongoing' | 'graduated'
-		unitId: number
-	}
-
-	export interface DeleteClassRequest {
-		ids: number[]
-	}
-
-	export interface DeleteClassResponse {
-		ids: number[]
-	}
-
-	export interface GetClassByIdResponse {
-		data?: Class
-	}
-
-	export interface GetClassesRequest {
-		ids?: number[]
-		unitIds?: number[]
-	}
-
-	export interface GetClassesResponse {
-		data: ClassResponse[]
-	}
-
-	export interface UpdateClassBody {
-		data: UpdatePayload[]
-	}
-
-	export interface UpdatePayload {
-		id: number
-		name?: string
-		description?: string
-		graduatedAt?: string
-		unitId?: number
-	}
-
-	export class ServiceClient {
-		private baseClient: BaseClient
-
-		constructor(baseClient: BaseClient) {
-			this.baseClient = baseClient
-			this.CreateClass = this.CreateClass.bind(this)
-			this.DeleteClasss = this.DeleteClasss.bind(this)
-			this.GetClassById = this.GetClassById.bind(this)
-			this.GetClasses = this.GetClasses.bind(this)
-			this.UpdateClasss = this.UpdateClasss.bind(this)
-		}
-
-		public async CreateClass(
-			params: ClassBody
-		): Promise<BulkClassResponse> {
-			// Now make the actual call to the API
-			const resp = await this.baseClient.callTypedAPI(
-				'POST',
-				`/classes`,
-				JSON.stringify(params)
-			)
-			return (await resp.json()) as BulkClassResponse
-		}
-
-		public async DeleteClasss(
-			params: DeleteClassRequest
-		): Promise<DeleteClassResponse> {
-			// Convert our params into the objects we need for the request
-			const query = makeRecord<string, string | string[]>({
-				ids: params.ids.map((v) => String(v))
-			})
-
-			// Now make the actual call to the API
-			const resp = await this.baseClient.callTypedAPI(
-				'DELETE',
-				`/classes`,
-				undefined,
-				{ query }
-			)
-			return (await resp.json()) as DeleteClassResponse
-		}
-
-		public async GetClassById(id: number): Promise<GetClassByIdResponse> {
-			// Now make the actual call to the API
-			const resp = await this.baseClient.callTypedAPI(
-				'GET',
-				`/classes/${encodeURIComponent(id)}`
-			)
-			return (await resp.json()) as GetClassByIdResponse
-		}
-
-		public async GetClasses(
-			params: GetClassesRequest
-		): Promise<GetClassesResponse> {
-			// Convert our params into the objects we need for the request
-			const query = makeRecord<string, string | string[]>({
-				ids: params.ids?.map((v) => String(v)),
-				unitIds: params.unitIds?.map((v) => String(v))
-			})
-
-			// Now make the actual call to the API
-			const resp = await this.baseClient.callTypedAPI(
-				'GET',
-				`/classes`,
-				undefined,
-				{ query }
-			)
-			return (await resp.json()) as GetClassesResponse
-		}
-
-		public async UpdateClasss(params: UpdateClassBody): Promise<void> {
-			await this.baseClient.callTypedAPI(
-				'PATCH',
-				`/classes`,
-				JSON.stringify(params)
-			)
 		}
 	}
 }
@@ -1336,7 +1187,7 @@ export namespace notifications {
 		id: number
 		createdAt: string
 		updatedAt: string
-		notifiableType: 'classes' | 'students'
+		notifiableType: 'students'
 		notifiableId: number
 		notificationId: string
 	}
@@ -1505,6 +1356,7 @@ export namespace positions {
 		code: string
 		name: string
 		priority: number
+		group?: string | null
 	}
 
 	export interface PositionDB {
@@ -1512,6 +1364,7 @@ export namespace positions {
 		code: string
 		name: string
 		priority: number
+		group?: string | null
 		id: number
 		createdAt: string
 		updatedAt: string
@@ -1527,6 +1380,7 @@ export namespace positions {
 		code?: string
 		name?: string
 		priority?: number
+		group?: string | null
 	}
 
 	export class ServiceClient {
@@ -1745,7 +1599,6 @@ export namespace students {
 		birthdayInMonth?: Month
 		birthdayInQuarter?: Quarter
 		birthdayInWeek?: boolean
-		classId?: number
 		hasReligion?: boolean
 		ids?: number[]
 		isEthnicMinority?: boolean
@@ -1756,7 +1609,6 @@ export namespace students {
 		isCpvOfficialThisWeek?: boolean
 		cpvOfficialInMonth?: Month
 		cpvOfficialInQuarter?: Quarter
-		classIds?: number[]
 		withAdversity?: boolean
 	}
 
@@ -1788,8 +1640,12 @@ export namespace students {
 		rank: string
 		previousUnit: string
 		previousPosition: string
-		position: string
+		/**
+		 * Derived from positionId by students/controller.ts#resolvePositionText -
+		 * callers submit positionId, not this field directly.
+		 */
 		ethnic: string
+
 		religion: string
 		enlistmentPeriod: string
 		politicalOrg: 'hcyu' | 'cpv'
@@ -1830,7 +1686,6 @@ export namespace students {
 		disciplinaryHistory: string
 		childrenInfos: ChildrenInfo[]
 		phone: string
-		classId?: number
 		unitId?: number
 		positionId?: number
 		avatar?: string
@@ -1853,8 +1708,12 @@ export namespace students {
 		rank: string
 		previousUnit: string
 		previousPosition: string
-		position: string
+		/**
+		 * Derived from positionId by students/controller.ts#resolvePositionText -
+		 * callers submit positionId, not this field directly.
+		 */
 		ethnic: string
+
 		religion: string
 		enlistmentPeriod: string
 		politicalOrg: 'hcyu' | 'cpv'
@@ -1895,7 +1754,6 @@ export namespace students {
 		disciplinaryHistory: string
 		childrenInfos: ChildrenInfo[]
 		phone: string
-		classId?: number
 		unitId?: number
 		positionId?: number
 		avatar?: string
@@ -1925,8 +1783,12 @@ export namespace students {
 		rank: string
 		previousUnit: string
 		previousPosition: string
-		position: string
+		/**
+		 * Derived from positionId by students/controller.ts#resolvePositionText -
+		 * callers submit positionId, not this field directly.
+		 */
 		ethnic: string
+
 		religion: string
 		enlistmentPeriod: string
 		politicalOrg: 'hcyu' | 'cpv'
@@ -1967,7 +1829,6 @@ export namespace students {
 		disciplinaryHistory: string
 		childrenInfos: ChildrenInfo[]
 		phone: string
-		classId?: number
 		unitId?: number
 		positionId?: number
 		avatar?: string
@@ -1991,11 +1852,6 @@ export namespace students {
 		| 'cpvOfficialThisQuarter'
 
 	export interface StudentResponse {
-		class: {
-			id: number
-			description: string
-			name: string
-		} | null
 		unit: units.Unit | null
 		positionRef: {
 			id: number
@@ -2014,8 +1870,12 @@ export namespace students {
 		rank: string
 		previousUnit: string
 		previousPosition: string
-		position: string
+		/**
+		 * Derived from positionId by students/controller.ts#resolvePositionText -
+		 * callers submit positionId, not this field directly.
+		 */
 		ethnic: string
+
 		religion: string
 		enlistmentPeriod: string
 		politicalOrg: 'hcyu' | 'cpv'
@@ -2056,7 +1916,6 @@ export namespace students {
 		disciplinaryHistory: string
 		childrenInfos: ChildrenInfo[]
 		phone: string
-		classId?: number
 		unitId?: number
 		positionId?: number
 		avatar?: string
@@ -2080,7 +1939,6 @@ export namespace students {
 		rank?: string
 		previousUnit?: string
 		previousPosition?: string
-		position?: string
 		ethnic?: string
 		religion?: string
 		enlistmentPeriod?: string
@@ -2114,7 +1972,6 @@ export namespace students {
 		disciplinaryHistory?: string
 		childrenInfos?: ChildrenInfo[]
 		phone?: string
-		classId?: number
 		unitId?: number
 		positionId?: number
 		avatar?: string
@@ -2294,11 +2151,6 @@ export namespace students {
 					params.birthdayInWeek === undefined
 						? undefined
 						: String(params.birthdayInWeek),
-				classId:
-					params.classId === undefined
-						? undefined
-						: String(params.classId),
-				classIds: params.classIds?.map((v) => String(v)),
 				cpvOfficialInMonth:
 					params.cpvOfficialInMonth === undefined
 						? undefined
@@ -2791,7 +2643,6 @@ export namespace units {
 		updatedAt: string
 		parent: unit | null
 		children: Unit[]
-		classes: classes.ClassResponse[]
 	}
 
 	export interface UnitBody {
