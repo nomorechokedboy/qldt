@@ -239,7 +239,7 @@ class StudentSqliteRepo implements Repository {
 			.findMany({
 				where: whereCondition,
 				with: {
-					unit: true,
+					unit: { with: { parent: true } },
 					positionRef: true
 				}
 			})
