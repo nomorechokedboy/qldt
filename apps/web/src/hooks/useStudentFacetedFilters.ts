@@ -31,7 +31,13 @@ export function useStudentFacetedFilters(students: Student[]) {
 	}))
 
 	// Class Options
-	const classOptions = units.flatMap((u) => collectSquadOptions(u))
+	const unitOptions = units.flatMap((u) => {
+		let label = u.name
+		if (u.parent?.name !== undefined) {
+			label = `${label} (${u.parent.name})`
+		}
+		return { label, value: u.name }
+	})
 
 	// Previous Unit Options
 	const previousUnitSet = new Set(
@@ -43,7 +49,7 @@ export function useStudentFacetedFilters(students: Student[]) {
 	}))
 
 	return [
-		createFacetedFilter('class.name', 'Tiểu đội', classOptions),
+		createFacetedFilter('unit.name', 'Đơn vị', unitOptions),
 		createFacetedFilter('rank', 'Cấp bậc', militaryRankOptions),
 		createFacetedFilter('previousUnit', 'Đơn vị cũ', previousUnitOptions),
 		createFacetedFilter('ethnic', 'Dân tộc', EhtnicOptions),

@@ -320,14 +320,25 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 					{
 						title: 'Tổng quan',
 						url: `/don-vi/${unit.alias}`,
-						search: { level: unit.level, name: unit.name },
+						search: {
+							level: unit.level,
+							name: unit.name,
+							id: unit.id
+						},
 						icon: Home
 					},
 					...unit.children.map((child) => ({
 						title: child.name,
-						url: getUnitDetailUrl(child.level, child.alias),
+						url: getUnitDetailUrl(
+							child.level,
+							encodeURIComponent(child.alias)
+						),
 						icon: Building2,
-						search: { level: child.level, name: child.name }
+						search: {
+							level: child.level,
+							name: child.name,
+							id: child.id
+						}
 					}))
 				],
 				icon: Building

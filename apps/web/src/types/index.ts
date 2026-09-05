@@ -273,6 +273,25 @@ export interface Unit extends Base {
 	deputyPoliticalCommanderId?: number | null
 }
 
+export class AppUnit implements Unit {
+	constructor(
+		public id: number,
+		public createdAt: string,
+		public updatedAt: string,
+
+		public alias: string,
+		public name: string,
+		public level: UnitLevel,
+		public children: AppUnit[],
+
+		public parent?: AppUnit | null,
+		public commanderId?: number | null,
+		public deputyCommanderId?: number | null,
+		public politicalCommanderId?: number | null,
+		public deputyPoliticalCommanderId?: number | null
+	) {}
+}
+
 export interface GetUnitResponse {
 	data: Unit[]
 }
