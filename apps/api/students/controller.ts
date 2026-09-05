@@ -302,6 +302,19 @@ export class Controller {
 			.catch(AppError.handleAppErr)
 	}
 
+	findUnitTrooper(id: number, validUnitIds: number[]) {
+		const isAuthorized = validUnitIds.includes(id)
+		if (!isAuthorized) {
+			throw AppError.handleAppErr(
+				AppError.unauthorized(
+					"You don't have permission to read this unit troopers"
+				)
+			)
+		}
+
+		return this.repo.find({ unitIds: [id] }).catch(AppError.handleAppErr)
+	}
+
 	async update(
 		params: StudentDB[],
 		validUnitIds: number[]

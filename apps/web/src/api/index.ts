@@ -82,6 +82,12 @@ export function UpdateStudentStatus(studentIds: number[]) {
 		.then((resp) => resp)
 }
 
+export function GetUnitTroopers({ id }: { id: number }): Promise<Student[]> {
+	return requestClient.students
+		.GetUnitTroopers(id)
+		.then((resp) => resp.data.map((s) => ({ ...s }) as unknown as Student))
+}
+
 export function GetNotifications(
 	params?: AppNotificationQuery
 ): Promise<AppNotification[]> {

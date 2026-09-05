@@ -193,6 +193,7 @@ export interface GetStudentsQuery {
 	cpvOfficialInMonth?: Month
 	cpvOfficialInQuarter?: Quarter
 	withAdversity?: boolean
+	unitId?: number
 }
 
 export const GetStudents = api(
@@ -203,6 +204,28 @@ export const GetStudents = api(
 		log.trace('students.GetStudents query params', { params: query })
 		const students = await studentController.find(
 			{ ...query },
+			validUnitIds
+		)
+		const resp = students.map(
+			(s) => ({ ...s }) as unknown as StudentResponse
+		)
+
+		return { data: resp }
+	}
+)
+
+export interface GetUnitTroopersQuery {
+	id: number
+}
+
+export const GetUnitTroopers = api(
+	{ auth: true, expose: true, method: 'GET', path: '/troopers/unit/:id' },
+	async ({ id }: GetUnitTroopersQuery): Promise<GetStudentsResponse> => {
+		const callMeta = currentRequest() as APICallMeta
+		const validUnitIds = callMeta.middlewareData?.validUnitIds || []
+		log.trace('students.GetUnitTroopers query params', { params: id })
+		const students = await studentController.findUnitTrooper(
+			id,
 			validUnitIds
 		)
 		const resp = students.map(
