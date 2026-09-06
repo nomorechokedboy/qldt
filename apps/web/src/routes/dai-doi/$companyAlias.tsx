@@ -1,19 +1,50 @@
+import { createFileRoute } from '@tanstack/react-router'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import CompanyFacilitiesTab from '@/components/company-facilities-tab'
 import CompanyPlatoonTable from '@/components/company-platoon-table'
 import CompanySquadTable from '@/components/company-squad-table'
-import CompanyStudentTable from '@/components/company-student-table'
 import CompanyWeaponsTab from '@/components/company-weapons-tab'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import UnitTroopersTable from '@/components/student-table/unit-trooper-table'
+import z from 'zod'
+import useUnitTroopersData from '@/hooks/useUnitTroopersData'
+import useOnDeleteStudents from '@/hooks/useOnDeleteStudents'
+import useActionColumn from '@/hooks/useActionColumn'
+import TableSkeleton from '@/components/table-skeleton'
+import { defaultBirthdayColumnVisibility } from '@/components/student-table/default-columns-visibility'
+import { battalionStudentColumnsWithoutAction } from '@/components/student-table/columns'
+import useUnitData from '@/hooks/useUnitData'
 import { PermissionTag } from '@/lib/permission-tags'
-import { createFileRoute } from '@tanstack/react-router'
+
+const companyAliasSearchSchema = z.object({ id: z.number().nonoptional() })
 
 export const Route = createFileRoute('/dai-doi/$companyAlias')({
-	component: RouteComponent
+	component: RouteComponent,
+	validateSearch: companyAliasSearchSchema
 })
 
 function RouteComponent() {
 	const { companyAlias } = Route.useParams()
+	const { id } = Route.useSearch()
+	const {
+		data: troopers = [],
+		isLoading: isLoadingStudents,
+		refetch: refetchTroopers
+	} = useUnitTroopersData({ id })
+	const { data: unit } = useUnitData({
+		alias: companyAlias,
+		level: 'company',
+		id
+	})
+	const filename = `danh-sach-quan-nhan-${companyAlias}`
+
+	// const facetedFilters = useUnitFacetedFilters({ troopers, unit })
+	const handleDeleteTroopers = useOnDeleteStudents(refetchTroopers)
+	const actionColumn = useActionColumn(() => refetchTroopers())
+
+	if (isLoadingStudents) {
+		return <TableSkeleton />
+	}
 
 	return (
 		<ProtectedRoute>
@@ -43,9 +74,31 @@ function RouteComponent() {
 						<ProtectedRoute
 							requiredPermission={PermissionTag.STUDENTS_READ}
 						>
-							<CompanyStudentTable
-								alias={companyAlias}
-								level='company'
+							<UnitTroopersTable
+								params={{ id }}
+								columnVisibility={{
+									...defaultBirthdayColumnVisibility,
+									address: false,
+									status: false
+								}}
+								columns={[
+									...battalionStudentColumnsWithoutAction,
+									actionColumn
+								]}
+								// facetedFilters={facetedFilters}
+								placeholder='Chưa có thông tin quân nhân.'
+								exportConfig={{
+									filename,
+									defaultExportValues: {
+										unitName:
+											unit?.parent?.name?.toUpperCase(),
+										underUnitName: unit?.name?.toUpperCase()
+									}
+								}}
+								onDeleteRows={handleDeleteTroopers}
+								onCreateSuccess={refetchTroopers}
+								enableCreation
+								showRefreshButton
 							/>
 						</ProtectedRoute>
 					</TabsContent>
