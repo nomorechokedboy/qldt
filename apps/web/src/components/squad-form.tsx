@@ -143,12 +143,12 @@ export default function SquadForm({
 						</Select>
 					</div>
 
-					<SingleCommanderField
+					{/* <SingleCommanderField
 						idPrefix='squad'
 						label='Tiểu đội trưởng'
 						value={commanderId}
 						onChange={setCommanderId}
-					/>
+					/> */}
 
 					<DialogFooter>
 						<DialogClose asChild>
