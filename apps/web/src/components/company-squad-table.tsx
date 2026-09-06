@@ -2,6 +2,8 @@ import UnitCard from '@/components/unit-table/unit-card'
 import SquadForm from '@/components/squad-form'
 import useUnitData from '@/hooks/useUnitData'
 import type { Unit } from '@/types'
+import { Button } from '@/components/ui/button'
+import { RefreshCw } from 'lucide-react'
 
 type CompanySquadTableProps = {
 	companyAlias: string
@@ -25,10 +27,15 @@ export default function CompanySquadTable({
 				<h2 className='text-2xl font-bold tracking-tight'>
 					Danh sách tiểu đội của {company?.name}
 				</h2>
-				<SquadForm
-					platoonOptions={platoons}
-					onSuccess={() => refetch()}
-				/>
+				<div className='flex items-center gap-2'>
+					<Button onClick={() => refetch()}>
+						<RefreshCw />
+					</Button>
+					<SquadForm
+						platoonOptions={platoons}
+						onSuccess={() => refetch()}
+					/>
+				</div>
 			</div>
 
 			{platoons.length === 0 && (

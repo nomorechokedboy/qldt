@@ -1,6 +1,8 @@
 import UnitCard from '@/components/unit-table/unit-card'
 import PlatoonForm from '@/components/platoon-form'
 import useUnitData from '@/hooks/useUnitData'
+import { Button } from '@/components/ui/button'
+import { RefreshCw } from 'lucide-react'
 
 type CompanyPlatoonTableProps = {
 	companyAlias: string
@@ -20,12 +22,17 @@ export default function CompanyPlatoonTable({
 				<h2 className='text-2xl font-bold tracking-tight'>
 					Danh sách trung đội của {company?.name}
 				</h2>
-				{company?.id !== undefined && (
-					<PlatoonForm
-						companyId={company.id}
-						onSuccess={() => refetch()}
-					/>
-				)}
+				<div className='flex items-center gap-2'>
+					<Button onClick={() => refetch()}>
+						<RefreshCw />
+					</Button>
+					{company?.id !== undefined && (
+						<PlatoonForm
+							companyId={company.id}
+							onSuccess={() => refetch()}
+						/>
+					)}
+				</div>
 			</div>
 
 			<div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4'>
