@@ -85,7 +85,7 @@ export default function BaseStatsDashboard() {
 
 	const groupedUnits: Map<UnitLevel, units.Unit[]> = new Map()
 	units.forEach((u) => {
-		if (u.level === 'platoon' || u.level === 'squad') {
+		if (u.level === 'squad') {
 			return
 		}
 
