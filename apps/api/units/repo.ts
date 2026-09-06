@@ -197,7 +197,7 @@ class repo implements Repository {
 						? conditions[0]
 						: and(...conditions),
 				with: {
-					children: true,
+					children: { with: { children: true } },
 					parent: true
 				}
 			})
