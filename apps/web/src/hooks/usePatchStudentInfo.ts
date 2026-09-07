@@ -6,6 +6,7 @@ import { queryClient } from '@/integrations/tanstack-query/root-provider'
 export default function usePatchStudentInfo(_student: Student) {
 	const handleSuccess = () => {
 		queryClient.invalidateQueries({ queryKey: ['students'] })
+		queryClient.invalidateQueries({ queryKey: ['unitTroopers'] })
 	}
 	const { mutateAsync, isPending } = useUpdateStudent({
 		onSuccess: handleSuccess
