@@ -165,7 +165,6 @@ export default function UserEditForm({
 
 		return result
 	}
-	console.log('flatttenUnit data', flattenUnits(unitsData || []))
 
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>

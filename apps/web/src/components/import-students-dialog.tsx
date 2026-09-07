@@ -18,18 +18,7 @@ import { toIsoDate } from '@/common'
 import type { StudentBody } from '@/types'
 import useUnitsData from '@/hooks/useUnitsData'
 import usePositionsData from '@/hooks/usePositionsData'
-import type { Unit } from '@/types'
 import { unitLevelLabels, unitLevelOrder } from '@/data/unit-levels'
-
-// Mirrors personal-step.tsx's flattenUnitOptions - every unit at every level
-// is a valid assignment target, not just squads.
-function flattenUnitOptions(unit: Unit): { id: number; label: string }[] {
-	const self = {
-		id: unit.id,
-		label: `${unit.name} ${unit.parent?.name !== undefined ? `(${unit.parent.name})` : ''}`
-	}
-	return [self, ...(unit.children ?? []).flatMap(flattenUnitOptions)]
-}
 
 export interface ImportStudentsDialogProps {
 	isOpen: boolean
@@ -52,8 +41,16 @@ export function ImportStudentsDialog({
 		enabled: isOpen
 	})
 
+	// `units` is already a flat list of every unit the caller is
+	// authorized for (each row also carries a shallow `children`
+	// relation), so mapping directly avoids re-adding non-root units
+	// a second time via `.children`.
 	const unitOptions = useMemo(
-		() => units.flatMap(flattenUnitOptions),
+		() =>
+			units.map((u) => ({
+				id: u.id,
+				label: `${u.name} ${u.parent?.name !== undefined ? `(${u.parent.name})` : ''}`
+			})),
 		[units]
 	)
 

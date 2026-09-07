@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import type { Student, ChildrenInfo, Unit } from '@/types'
+import type { Student, ChildrenInfo } from '@/types'
 import usePatchStudentInfo from '@/hooks/usePatchStudentInfo'
 // option cho dân tộc, tôn giáo, trình độ học vấn
 import { EhtnicOptions } from '@/data/ethnicities'
@@ -38,17 +38,25 @@ interface StudentEditFormProps {
 	onClose?: () => void
 }
 
+// True group-by (not consecutive-clustering): merges every item sharing
+// the same group key into one bucket regardless of where it falls in the
+// array, so two same-named groups that aren't adjacent (e.g. the same
+// fallback/explicit label used by two different `level`s) never produce
+// two separate buckets with the same key - which would be a duplicate
+// React key on the rendered <optgroup> below.
 function groupConsecutive<T>(
 	items: T[],
 	getGroup: (item: T) => string | undefined
 ) {
 	const groups: { key: string | undefined; items: T[] }[] = []
+	const bucketByKey = new Map<string | undefined, number>()
 	for (const item of items) {
 		const key = getGroup(item)
-		const last = groups[groups.length - 1]
-		if (last && last.key === key) {
-			last.items.push(item)
+		const bucketIdx = bucketByKey.get(key)
+		if (bucketIdx !== undefined) {
+			groups[bucketIdx].items.push(item)
 		} else {
+			bucketByKey.set(key, groups.length)
 			groups.push({ key, items: [item] })
 		}
 	}
@@ -63,18 +71,18 @@ export default function StudentEditForm({
 	const { mutateAsync: uploadFilesMutate } = useUploadFiles()
 
 	const { data: units = [] } = useUnitsData()
+	// `units` from GetUnits() is already a flat list of every unit the
+	// caller is authorized for - each row also carries a shallow `children`
+	// relation (Drizzle `with: { children: true }`), but those children are
+	// already present as their own top-level entries in this same array.
+	// Recursing into `.children` here re-added every non-root unit a
+	// second time, so map directly instead.
 	const unitOptions = useMemo(
 		() =>
-			units.flatMap(function flatten(u: Unit): {
-				value: string
-				label: string
-			}[] {
-				const self = {
-					value: u.id.toString(),
-					label: `${u.name} (${unitLevelLabels[u.level]})`
-				}
-				return [self, ...(u.children ?? []).flatMap(flatten)]
-			}),
+			units.map((u) => ({
+				value: u.id.toString(),
+				label: `${u.name} (${unitLevelLabels[u.level]})`
+			})),
 		[units]
 	)
 	const { data: positions = [] } = usePositionsData()

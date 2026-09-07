@@ -22,7 +22,6 @@ import {
 	PopoverTrigger
 } from '@/components/ui/popover'
 import {
-	AlertCircle,
 	Check,
 	ChevronsUpDown,
 	FileText,
@@ -137,17 +136,25 @@ export function TextArea({
 	)
 }
 
+// True group-by (not consecutive-clustering): merges every item sharing
+// the same group key into one bucket regardless of where it falls in the
+// array, so two same-named groups that aren't adjacent (e.g. the same
+// fallback/explicit label used by two different `level`s) never produce
+// two separate buckets with the same key - which would be a duplicate
+// React key on the rendered group below.
 function groupByField<T>(
 	items: T[],
 	getGroup: (item: T) => string | undefined
 ) {
 	const groups: { key: string | undefined; items: T[] }[] = []
+	const bucketByKey = new Map<string | undefined, number>()
 	for (const item of items) {
 		const key = getGroup(item)
-		const last = groups[groups.length - 1]
-		if (last && last.key === key) {
-			last.items.push(item)
+		const bucketIdx = bucketByKey.get(key)
+		if (bucketIdx !== undefined) {
+			groups[bucketIdx].items.push(item)
 		} else {
+			bucketByKey.set(key, groups.length)
 			groups.push({ key, items: [item] })
 		}
 	}

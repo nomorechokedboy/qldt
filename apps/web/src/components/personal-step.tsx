@@ -3,22 +3,21 @@ import { religionOptions } from '@/data/religions'
 import { eduLevelOptions } from '@/data/education-levels'
 import useUnitsData from '@/hooks/useUnitsData'
 import { unitLevelLabels } from '@/data/unit-levels'
-import type { Unit } from '@/types'
 import { useMemo } from 'react'
-
-function flattenUnitOptions(unit: Unit): { value: string; label: string }[] {
-	const self = {
-		value: unit.id.toString(),
-		label: `${unit.name} (${unitLevelLabels[unit.level]})`
-	}
-	return [self, ...(unit.children ?? []).flatMap(flattenUnitOptions)]
-}
 
 export default function PersonalStep({ form }: { form: any }) {
 	const { data: units = [] } = useUnitsData()
 
+	// `units` is already a flat list of every unit the caller is
+	// authorized for (each row also carries a shallow `children`
+	// relation), so mapping directly avoids re-adding non-root units
+	// a second time via `.children`.
 	const unitOptions = useMemo(
-		() => units.flatMap(flattenUnitOptions),
+		() =>
+			units.map((u) => ({
+				value: u.id.toString(),
+				label: `${u.name} (${unitLevelLabels[u.level]})`
+			})),
 		[units]
 	)
 
