@@ -81,7 +81,7 @@ export default function StudentEditForm({
 		() =>
 			units.map((u) => ({
 				value: u.id.toString(),
-				label: `${u.name} (${unitLevelLabels[u.level]})`
+				label: `${u.name}${u?.parent?.name !== undefined ? ` (${u?.parent?.name})` : ''}`
 			})),
 		[units]
 	)

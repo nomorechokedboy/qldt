@@ -49,7 +49,7 @@ export function ImportStudentsDialog({
 		() =>
 			units.map((u) => ({
 				id: u.id,
-				label: `${u.name} ${u.parent?.name !== undefined ? `(${u.parent.name})` : ''}`
+				label: `${u.name}${u.parent?.name !== undefined ? ` (${u.parent.name})` : ''}`
 			})),
 		[units]
 	)

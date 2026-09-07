@@ -2,7 +2,6 @@ import { EhtnicOptions } from '@/data/ethnicities'
 import { religionOptions } from '@/data/religions'
 import { eduLevelOptions } from '@/data/education-levels'
 import useUnitsData from '@/hooks/useUnitsData'
-import { unitLevelLabels } from '@/data/unit-levels'
 import { useMemo } from 'react'
 
 export default function PersonalStep({ form }: { form: any }) {
@@ -16,7 +15,7 @@ export default function PersonalStep({ form }: { form: any }) {
 		() =>
 			units.map((u) => ({
 				value: u.id.toString(),
-				label: `${u.name} (${unitLevelLabels[u.level]})`
+				label: `${u.name}${u?.parent?.name !== undefined ? ` (${u?.parent?.name})` : ''}`
 			})),
 		[units]
 	)
