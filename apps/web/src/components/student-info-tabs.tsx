@@ -2,7 +2,12 @@ import { useState } from 'react'
 import * as Tabs from '@radix-ui/react-tabs'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Dialog, DialogContent, DialogTrigger } from '@/components/ui/dialog'
+import {
+	Dialog,
+	DialogContent,
+	DialogTrigger,
+	DialogTitle
+} from '@/components/ui/dialog'
 import StudentEditForm from './StudentEditForm'
 import type { Student } from '@/types'
 import { politicalOptions } from '@/data/political-status'
@@ -55,9 +60,13 @@ export default function StudentInfoTabs({ student }: StudentInfoTabsProps) {
 			})
 			toast.success('Xác nhận quân nhân thành công!')
 			// Invalidate queries to refetch data
-			queryClient.invalidateQueries({ queryKey: ['students'] })
 			queryClient.invalidateQueries({
-				queryKey: ['student', student.id]
+				queryKey: ['students'],
+				type: 'all'
+			})
+			await queryClient.invalidateQueries({
+				queryKey: ['unitTroopers'],
+				type: 'all'
 			})
 		} catch (error) {
 			toast.error('Xác nhận quân nhân thất bại!')
@@ -238,6 +247,9 @@ export default function StudentInfoTabs({ student }: StudentInfoTabsProps) {
 
 						{canEdit && (
 							<Dialog open={open} onOpenChange={setOpen}>
+								<DialogTitle className='sr-only'>
+									Chỉnh sửa thông tin quân nhân
+								</DialogTitle>
 								<DialogTrigger asChild>
 									<Button
 										variant='outline'
