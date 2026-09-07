@@ -95,7 +95,7 @@ const data = {
 					icon: Package
 				},
 				{
-					title: 'Chuyển giao quân số/vật chất',
+					title: 'Bàn giao quân số/vật chất',
 					url: '/chuyen-giao-tai-san',
 					icon: ArrowLeftRight
 				}
@@ -319,7 +319,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 				items: [
 					{
 						title: 'Tổng quan',
-						url: `/don-vi/${unit.alias}`,
+						url: `/${unit.level === 'company' ? 'dai-doi' : 'don-vi'}/${unit.alias}`,
 						search: {
 							level: unit.level,
 							name: unit.name,
