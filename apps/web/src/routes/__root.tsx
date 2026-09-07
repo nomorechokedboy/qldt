@@ -6,6 +6,8 @@ import {
 import useAuth from '@/hooks/useAuth'
 import React, { useEffect, useRef } from 'react'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
+import { TanstackDevtools } from '@tanstack/react-devtools'
+import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
 import Header from '../components/Header'
 import TanStackQueryLayout from '../integrations/tanstack-query/layout'
 import { type QueryClient } from '@tanstack/react-query'
@@ -165,7 +167,18 @@ function RootLayout() {
 					<Outlet />
 				</div>
 			</SidebarProvider>
-			{import.meta.env.PROD !== true && <TanStackRouterDevtools />}
+			{import.meta.env.PROD !== true && (
+				<TanstackDevtools
+					config={{ position: 'bottom-left' }}
+					plugins={[
+						{
+							name: 'Tanstack Router',
+							render: <TanStackRouterDevtools />
+						},
+						TanStackQueryDevtools
+					]}
+				/>
+			)}
 			<TanStackQueryLayout />
 		</>
 	)
