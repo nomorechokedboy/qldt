@@ -12,7 +12,7 @@ import { AppError } from '../errors'
 // Not gated by a shared secret; see note in configs/index.ts if you want
 // to add one later, same as suggested for /students/cron.
 export const CommanderDigestCron = api(
-	{ expose: true, method: 'GET', path: '/commander-digest/cron' },
+	{ expose: false, method: 'GET', path: '/commander-digest/cron' },
 	async (): Promise<{ ok: true }> => {
 		log.info('CommanderDigestCron triggered')
 		await commanderDigestController.runWeeklyDigest()
@@ -28,7 +28,7 @@ export const CommanderDigestCron = api(
 export const ExportCommanderDigest = api.raw(
 	{
 		auth: true,
-		expose: true,
+		expose: false,
 		method: 'GET',
 		path: '/commander-digest/:alias/export'
 	},
