@@ -7,6 +7,7 @@ import { materialAssets, MaterialAssetStatus } from '../schema/material-assets'
 import { materialTypes } from '../schema/material-types'
 import { students } from '../schema/student'
 import { UnitDB, UnitLevelName, units } from '../schema/units'
+import { UnitStatsRepository } from '.'
 
 export interface UnitStatsSummary {
 	totalStudents: number
@@ -21,7 +22,7 @@ export interface UnitStatsSummary {
 	materialAssetSummary: { status: MaterialAssetStatus; count: number }[]
 }
 
-class repo {
+class repo implements UnitStatsRepository {
 	constructor(private readonly db: DrizzleDatabase) {}
 
 	// Returns every unit's id/parentId/level so the caller can walk the

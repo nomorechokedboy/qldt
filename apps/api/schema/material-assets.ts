@@ -124,6 +124,7 @@ export type MaterialAssetQuery = {
 	status?: MaterialAssetStatus
 	assignedTrooperId?: number
 	ids?: number[]
+	condition?: MaterialConditionName
 }
 
 export type UpdateMaterialAssetMap = {

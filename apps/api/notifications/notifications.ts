@@ -26,7 +26,7 @@ interface NotificationResponse {
 	createdAt: string
 	readAt: string
 
-	notificationType: 'birthday' | 'officialCpv'
+	notificationType: 'birthday' | 'officialCpv' | 'commanderDigest'
 	title: string
 	message: string
 

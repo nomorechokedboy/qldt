@@ -13,7 +13,7 @@ export const NotificationTypeEnum = customType<{
 		return 'text'
 	},
 	toDriver(val: string) {
-		if (!['birthday', 'officialCpv'].includes(val)) {
+		if (!['birthday', 'officialCpv', 'commanderDigest'].includes(val)) {
 			throw AppError.invalidArgument(
 				'notification type can only be birthday or officialCpv'
 			)
@@ -30,7 +30,7 @@ export const notifications = sqlite.sqliteTable(
 		readAt: sqlite.text(),
 
 		notificationType: NotificationTypeEnum('notificationType')
-			.$type<'birthday' | 'officialCpv'>()
+			.$type<'birthday' | 'officialCpv', 'commanderDigest'>()
 			.default('birthday')
 			.notNull(),
 		title: sqlite.text().notNull(),
