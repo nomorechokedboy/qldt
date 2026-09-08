@@ -75,7 +75,11 @@ function RouteComponent() {
 							requiredPermission={PermissionTag.STUDENTS_READ}
 						>
 							<UnitTroopersTable
-								params={{ id }}
+								params={{
+									id,
+									unitAlias: companyAlias,
+									unitLevel: 'company'
+								}}
 								columnVisibility={{
 									...defaultBirthdayColumnVisibility,
 									address: false,

@@ -50,6 +50,7 @@ function RouteComponent() {
 				<UnitTabs
 					id={id}
 					alias={alias}
+					level={level}
 					unitName={unit?.name}
 					parentUnitName={unit?.parent?.name}
 					facetedFilters={facetedFilters}

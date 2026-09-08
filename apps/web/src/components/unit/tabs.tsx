@@ -5,12 +5,13 @@ import UnitTroopersTable from '@/components/student-table/unit-trooper-table'
 import CompanyFacilitiesTab from '@/components/company-facilities-tab'
 import CompanyWeaponsTab from '@/components/company-weapons-tab'
 import type { ColumnDef } from '@tanstack/react-table'
-import type { Student as Trooper } from '@/types'
+import type { Student as Trooper, UnitLevel } from '@/types'
 import type useUnitFacetedFilters from '@/hooks/useUnitFacetedFilter'
 
 interface UnitTabsProps {
 	id: number
 	alias: string
+	level: UnitLevel
 	unitName?: string
 	parentUnitName?: string
 	facetedFilters: ReturnType<typeof useUnitFacetedFilters>
@@ -22,6 +23,7 @@ interface UnitTabsProps {
 export default function UnitTabs({
 	id,
 	alias,
+	level,
 	unitName,
 	parentUnitName,
 	facetedFilters,
@@ -41,7 +43,7 @@ export default function UnitTabs({
 
 			<TabsContent value='students'>
 				<UnitTroopersTable
-					params={{ id }}
+					params={{ id, unitAlias: alias, unitLevel: level }}
 					columnVisibility={{
 						...defaultBirthdayColumnVisibility,
 						address: false,
