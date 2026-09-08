@@ -3,7 +3,8 @@ import {
 	type FacetedFilterConfig,
 	type Student,
 	type TemplType,
-	defaultStudentColumnVisibility
+	defaultStudentColumnVisibility,
+	type UnitLevel
 } from '@/types'
 import type { QueryObserverResult } from '@tanstack/react-query'
 import type { ColumnDef, VisibilityState } from '@tanstack/react-table'
@@ -29,7 +30,7 @@ import useUnitTroopersData from '@/hooks/useUnitTroopersData'
 
 interface UnitTroopersTableProps {
 	// Core data params
-	params: { id: number }
+	params: { id: number; unitAlias: string; unitLevel: UnitLevel }
 	// Optional client-side filter applied after fetching (e.g. narrowing by selected unit)
 	filterStudents?: (students: Student[]) => Student[]
 
