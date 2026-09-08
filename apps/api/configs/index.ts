@@ -12,7 +12,9 @@ const AppConfigSchema = v.object({
 	S3_ENDPOINT: v.optional(v.string(), 'http://localhost:9000'),
 	S3_DEFAULT_BUCKET: v.optional(v.string(), 'my-first-bucket'),
 	S3_REGION: v.optional(v.string(), 'us-west-rack-2'),
-	DATABASE_URI: v.optional(v.string(), './data/local.db')
+	DATABASE_URI: v.optional(v.string(), './data/local.db'),
+	LLM_URL: v.optional(v.string()),
+	LLM_MODEL: v.optional(v.string())
 })
 
 export const appConfig = v.parse(AppConfigSchema, process.env)

@@ -28,3 +28,26 @@ export interface Repository {
 	findRoot(): Promise<UnitDB | undefined>
 	findAncestorChain(unitId: number): Promise<UnitDB[]>
 }
+
+export interface UnitStatsRepository {
+	findDescendantUnitIds(rootId: number): Promise<number[]>
+
+	unitCountsByLevel(
+		descendantUnitIds: number[],
+		excludeId: number
+	): Promise<Partial<Record<UnitLevelName, number>>>
+
+	countStudents(unitIds: number[]): Promise<number>
+
+	countBuildings(unitIds: number[]): Promise<number>
+
+	countRooms(unitIds: number[]): Promise<number>
+
+	materialStockSummary(
+		unitIds: number[]
+	): Promise<UnitStatsSummary['materialStockSummary']>
+
+	materialAssetSummary(
+		unitIds: number[]
+	): Promise<UnitStatsSummary['materialAssetSummary']>
+}

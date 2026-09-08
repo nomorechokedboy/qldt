@@ -85,6 +85,10 @@ class repo implements MaterialAssetRepository {
 			)
 		}
 
+		if (query.condition !== undefined) {
+			conditions.push(eq(materialAssets.condition, query.condition))
+		}
+
 		if (query.ids !== undefined && query.ids.length > 0) {
 			conditions.push(inArray(materialAssets.id, query.ids))
 		}
