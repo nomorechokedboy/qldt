@@ -1,11 +1,13 @@
 import { createFileRoute, redirect, useNavigate } from '@tanstack/react-router'
 import { useMemo, useState } from 'react'
+import QrScanner from '@/components/QrScanner'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import useInventorySession from '@/hooks/useInventorySession'
 import { computeDiff } from '@/lib/diff'
 import type { DiffStatus } from '@/lib/diff'
+import { parseMaterialAssetTagPayload } from '@/lib/material-asset-tag'
 import { buildResultsPayload } from '@/lib/payload'
 import type { MaterialConditionName } from '@/lib/payload'
 import { loadSession, saveResultsPayload } from '@/lib/storage'
@@ -52,6 +54,8 @@ function ChecklistPage() {
 	const { session, setSession } = useInventorySession()
 	const [extraSerial, setExtraSerial] = useState('')
 	const [signing, setSigning] = useState(false)
+	const [scanningTag, setScanningTag] = useState(false)
+	const [tagScanError, setTagScanError] = useState<string | null>(null)
 
 	const diff = useMemo(
 		() =>
@@ -90,6 +94,17 @@ function ChecklistPage() {
 		const nextScans = { ...session.scans }
 		delete nextScans[serial]
 		setSession({ ...session, scans: nextScans })
+	}
+
+	function handleTagDecode(text: string) {
+		const tag = parseMaterialAssetTagPayload(text)
+		if (!tag) {
+			setTagScanError('Mã QR không hợp lệ hoặc không phải mã khí tài.')
+			return
+		}
+		setTagScanError(null)
+		recordScan(tag.serial.toUpperCase(), tag.condition)
+		setScanningTag(false)
 	}
 
 	function handleAddExtra(condition: MaterialConditionName) {
@@ -136,6 +151,35 @@ function ChecklistPage() {
 					</Badge>
 				))}
 			</div>
+
+			{scanningTag ? (
+				<div className='flex flex-col gap-2'>
+					<QrScanner onDecode={handleTagDecode} />
+					{tagScanError && (
+						<p className='text-destructive text-sm'>
+							{tagScanError}
+						</p>
+					)}
+					<Button
+						type='button'
+						variant='outline'
+						onClick={() => {
+							setScanningTag(false)
+							setTagScanError(null)
+						}}
+					>
+						Huỷ quét
+					</Button>
+				</div>
+			) : (
+				<Button
+					type='button'
+					variant='outline'
+					onClick={() => setScanningTag(true)}
+				>
+					Quét mã QR khí tài
+				</Button>
+			)}
 
 			<ul className='flex flex-col gap-2'>
 				{session.challenge.expected.map((asset) => {

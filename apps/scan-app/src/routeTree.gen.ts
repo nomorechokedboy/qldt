@@ -14,82 +14,82 @@ import { Route as ChecklistRouteImport } from './routes/checklist'
 import { Route as IndexRouteImport } from './routes/index'
 
 const ResultsRoute = ResultsRouteImport.update({
-	id: '/results',
-	path: '/results',
-	getParentRoute: () => rootRouteImport
+  id: '/results',
+  path: '/results',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ChecklistRoute = ChecklistRouteImport.update({
-	id: '/checklist',
-	path: '/checklist',
-	getParentRoute: () => rootRouteImport
+  id: '/checklist',
+  path: '/checklist',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const IndexRoute = IndexRouteImport.update({
-	id: '/',
-	path: '/',
-	getParentRoute: () => rootRouteImport
+  id: '/',
+  path: '/',
+  getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
-	'/': typeof IndexRoute
-	'/checklist': typeof ChecklistRoute
-	'/results': typeof ResultsRoute
+  '/': typeof IndexRoute
+  '/checklist': typeof ChecklistRoute
+  '/results': typeof ResultsRoute
 }
 export interface FileRoutesByTo {
-	'/': typeof IndexRoute
-	'/checklist': typeof ChecklistRoute
-	'/results': typeof ResultsRoute
+  '/': typeof IndexRoute
+  '/checklist': typeof ChecklistRoute
+  '/results': typeof ResultsRoute
 }
 export interface FileRoutesById {
-	__root__: typeof rootRouteImport
-	'/': typeof IndexRoute
-	'/checklist': typeof ChecklistRoute
-	'/results': typeof ResultsRoute
+  __root__: typeof rootRouteImport
+  '/': typeof IndexRoute
+  '/checklist': typeof ChecklistRoute
+  '/results': typeof ResultsRoute
 }
 export interface FileRouteTypes {
-	fileRoutesByFullPath: FileRoutesByFullPath
-	fullPaths: '/' | '/checklist' | '/results'
-	fileRoutesByTo: FileRoutesByTo
-	to: '/' | '/checklist' | '/results'
-	id: '__root__' | '/' | '/checklist' | '/results'
-	fileRoutesById: FileRoutesById
+  fileRoutesByFullPath: FileRoutesByFullPath
+  fullPaths: '/' | '/checklist' | '/results'
+  fileRoutesByTo: FileRoutesByTo
+  to: '/' | '/checklist' | '/results'
+  id: '__root__' | '/' | '/checklist' | '/results'
+  fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-	IndexRoute: typeof IndexRoute
-	ChecklistRoute: typeof ChecklistRoute
-	ResultsRoute: typeof ResultsRoute
+  IndexRoute: typeof IndexRoute
+  ChecklistRoute: typeof ChecklistRoute
+  ResultsRoute: typeof ResultsRoute
 }
 
 declare module '@tanstack/react-router' {
-	interface FileRoutesByPath {
-		'/results': {
-			id: '/results'
-			path: '/results'
-			fullPath: '/results'
-			preLoaderRoute: typeof ResultsRouteImport
-			parentRoute: typeof rootRouteImport
-		}
-		'/checklist': {
-			id: '/checklist'
-			path: '/checklist'
-			fullPath: '/checklist'
-			preLoaderRoute: typeof ChecklistRouteImport
-			parentRoute: typeof rootRouteImport
-		}
-		'/': {
-			id: '/'
-			path: '/'
-			fullPath: '/'
-			preLoaderRoute: typeof IndexRouteImport
-			parentRoute: typeof rootRouteImport
-		}
-	}
+  interface FileRoutesByPath {
+    '/results': {
+      id: '/results'
+      path: '/results'
+      fullPath: '/results'
+      preLoaderRoute: typeof ResultsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/checklist': {
+      id: '/checklist'
+      path: '/checklist'
+      fullPath: '/checklist'
+      preLoaderRoute: typeof ChecklistRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+  }
 }
 
 const rootRouteChildren: RootRouteChildren = {
-	IndexRoute: IndexRoute,
-	ChecklistRoute: ChecklistRoute,
-	ResultsRoute: ResultsRoute
+  IndexRoute: IndexRoute,
+  ChecklistRoute: ChecklistRoute,
+  ResultsRoute: ResultsRoute,
 }
 export const routeTree = rootRouteImport
-	._addFileChildren(rootRouteChildren)
-	._addFileTypes<FileRouteTypes>()
+  ._addFileChildren(rootRouteChildren)
+  ._addFileTypes<FileRouteTypes>()
