@@ -16,13 +16,14 @@ import {
 	materialAssetStatusOptions,
 	materialConditionOptions
 } from '@/data/material-categories'
-import type { MaterialAsset, MaterialAssetStatus, Student } from '@/types'
+import type { MaterialAsset, MaterialAssetStatus, Room, Student } from '@/types'
 import { getErrorMessage } from '@/lib/utils'
 
 const NONE = 'none'
 
 interface MaterialAssetEditFormProps {
 	data: MaterialAsset
+	roomOptions: Room[]
 	studentOptions: Student[]
 	onUpdate: () => void
 	onClose: () => void
@@ -30,6 +31,7 @@ interface MaterialAssetEditFormProps {
 
 export default function MaterialAssetEditForm({
 	data,
+	roomOptions,
 	studentOptions,
 	onUpdate,
 	onClose
@@ -38,6 +40,11 @@ export default function MaterialAssetEditForm({
 		data.status ?? 'in_service'
 	)
 	const [condition, setCondition] = useState(data.condition ?? '')
+	const [roomId, setRoomId] = useState<string>(
+		data.roomId !== undefined && data.roomId !== null
+			? String(data.roomId)
+			: NONE
+	)
 	const [assignedTrooperId, setAssignedTrooperId] = useState<string>(
 		data.assignedTrooperId !== undefined && data.assignedTrooperId !== null
 			? String(data.assignedTrooperId)
@@ -46,6 +53,8 @@ export default function MaterialAssetEditForm({
 	const [note, setNote] = useState('')
 
 	const updateMutation = useUpdateMaterialAsset()
+
+	const roomsForUnit = roomOptions.filter((r) => r.unitId === data.unitId)
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
@@ -56,6 +65,7 @@ export default function MaterialAssetEditForm({
 					id: data.id,
 					status,
 					condition: condition || undefined,
+					roomId: roomId === NONE ? null : Number(roomId),
 					assignedTrooperId:
 						assignedTrooperId === NONE
 							? null
@@ -123,6 +133,25 @@ export default function MaterialAssetEditForm({
 							{materialConditionOptions.map((opt) => (
 								<SelectItem key={opt.value} value={opt.value}>
 									{opt.label}
+								</SelectItem>
+							))}
+						</SelectContent>
+					</Select>
+				</div>
+
+				<div className='space-y-2'>
+					<Label htmlFor='edit-asset-room'>Phòng</Label>
+					<Select value={roomId} onValueChange={setRoomId}>
+						<SelectTrigger id='edit-asset-room'>
+							<SelectValue placeholder='Chọn phòng (tuỳ chọn)' />
+						</SelectTrigger>
+						<SelectContent>
+							<SelectItem value={NONE}>
+								Không thuộc phòng cụ thể
+							</SelectItem>
+							{roomsForUnit.map((r) => (
+								<SelectItem key={r.id} value={String(r.id)}>
+									{r.name}
 								</SelectItem>
 							))}
 						</SelectContent>

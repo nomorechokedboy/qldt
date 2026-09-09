@@ -22,13 +22,14 @@ import {
 } from '@/components/ui/select'
 import { useCreateMaterialAsset } from '@/hooks/useCreateMaterialAsset'
 import { getErrorMessage } from '@/lib/utils'
-import type { MaterialType, Student, Unit } from '@/types'
+import type { MaterialType, Room, Student, Unit } from '@/types'
 
 const NONE = 'none'
 
 export interface MaterialAssetFormProps {
 	unitOptions: Unit[]
 	defaultUnitId?: number
+	roomOptions: Room[]
 	materialTypeOptions: MaterialType[]
 	studentOptions: Student[]
 	onSuccess?: () => void
@@ -37,6 +38,7 @@ export interface MaterialAssetFormProps {
 export default function MaterialAssetForm({
 	unitOptions,
 	defaultUnitId,
+	roomOptions,
 	materialTypeOptions,
 	studentOptions,
 	onSuccess
@@ -46,6 +48,7 @@ export default function MaterialAssetForm({
 	const [unitId, setUnitId] = useState<string>(
 		defaultUnitId !== undefined ? String(defaultUnitId) : ''
 	)
+	const [roomId, setRoomId] = useState<string>(NONE)
 	const [serialNumber, setSerialNumber] = useState('')
 	const [assignedTrooperId, setAssignedTrooperId] = useState<string>(NONE)
 
@@ -54,9 +57,12 @@ export default function MaterialAssetForm({
 	const resetForm = () => {
 		setMaterialTypeId('')
 		setUnitId(defaultUnitId !== undefined ? String(defaultUnitId) : '')
+		setRoomId(NONE)
 		setSerialNumber('')
 		setAssignedTrooperId(NONE)
 	}
+
+	const roomsForUnit = roomOptions.filter((r) => String(r.unitId) === unitId)
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
@@ -65,6 +71,7 @@ export default function MaterialAssetForm({
 			await createMutation.mutateAsync({
 				materialTypeId: Number(materialTypeId),
 				unitId: Number(unitId),
+				roomId: roomId === NONE ? undefined : Number(roomId),
 				serialNumber,
 				assignedTrooperId:
 					assignedTrooperId === NONE
@@ -133,7 +140,13 @@ export default function MaterialAssetForm({
 
 					<div className='space-y-2'>
 						<Label htmlFor='asset-unit'>Thuộc đơn vị</Label>
-						<Select value={unitId} onValueChange={setUnitId}>
+						<Select
+							value={unitId}
+							onValueChange={(value) => {
+								setUnitId(value)
+								setRoomId(NONE)
+							}}
+						>
 							<SelectTrigger id='asset-unit'>
 								<SelectValue placeholder='Chọn đơn vị' />
 							</SelectTrigger>
@@ -141,6 +154,25 @@ export default function MaterialAssetForm({
 								{unitOptions.map((u) => (
 									<SelectItem key={u.id} value={String(u.id)}>
 										{u.name}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+					</div>
+
+					<div className='space-y-2'>
+						<Label htmlFor='asset-room'>Phòng</Label>
+						<Select value={roomId} onValueChange={setRoomId}>
+							<SelectTrigger id='asset-room'>
+								<SelectValue placeholder='Chọn phòng (tuỳ chọn)' />
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value={NONE}>
+									Không thuộc phòng cụ thể
+								</SelectItem>
+								{roomsForUnit.map((r) => (
+									<SelectItem key={r.id} value={String(r.id)}>
+										{r.name}
 									</SelectItem>
 								))}
 							</SelectContent>
