@@ -662,6 +662,16 @@ export namespace inventory_sessions {
 		sid: number
 		roomId: number
 		expected: InventorySessionChallengeAsset[]
+		/**
+		 * Per-session HMAC key, derived from appConfig.HASH_SECRET (see
+		 * deriveSessionKey below) and included here so the phone - which never
+		 * has HASH_SECRET itself - can sign the results payload it produces.
+		 * This IS "the session secret" the design doc's Integrity section refers
+		 * to as "embedded only in the challenge QR, never transmitted any other
+		 * way".
+		 */
+		key: string
+
 		sig: string
 	}
 

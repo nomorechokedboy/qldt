@@ -19,6 +19,13 @@ export interface InventorySessionChallengePayload {
 	sid: number
 	roomId: number
 	expected: InventorySessionChallengeAsset[]
+	// Per-session HMAC key, derived from appConfig.HASH_SECRET (see
+	// deriveSessionKey below) and included here so the phone - which never
+	// has HASH_SECRET itself - can sign the results payload it produces.
+	// This IS "the session secret" the design doc's Integrity section refers
+	// to as "embedded only in the challenge QR, never transmitted any other
+	// way".
+	key: string
 	sig: string
 }
 
@@ -90,13 +97,18 @@ export function buildChallengePayload(
 		roomId,
 		expected
 	}
-	return { ...unsigned, sig: sign(sessionId, canonicalChallenge(unsigned)) }
+	return {
+		...unsigned,
+		key: deriveSessionKey(sessionId),
+		sig: sign(sessionId, canonicalChallenge(unsigned))
+	}
 }
 
-// Phone-side helper: not called from apps/api, but lives here so the wire
-// format has exactly one implementation to stay in sync with buildChallengePayload/
-// verifyResultsPayload. Also used directly by payload.test.ts to simulate the
-// phone side of the round trip without a real device.
+// Test-only helper simulating the phone side of the round trip via Node's
+// `crypto` + a live HASH_SECRET, neither of which the real phone app has.
+// The real implementation (apps/scan-app, Tauri/browser environment) signs
+// with the `key` field off the scanned challenge payload directly via
+// Web Crypto's HMAC, instead of re-deriving it - see apps/scan-app/src/lib/payload.ts.
 export function buildResultsPayload(
 	sessionId: number,
 	results: InventorySessionResultItem[]
