@@ -38,6 +38,7 @@ export default class Client {
 	public readonly export_templates: export_templates.ServiceClient
 	public readonly facilities: facilities.ServiceClient
 	public readonly healthcheck: healthcheck.ServiceClient
+	public readonly inventory_sessions: inventory_sessions.ServiceClient
 	public readonly materials: materials.ServiceClient
 	public readonly media: media.ServiceClient
 	public readonly notifications: notifications.ServiceClient
@@ -69,6 +70,7 @@ export default class Client {
 		this.export_templates = new export_templates.ServiceClient(base)
 		this.facilities = new facilities.ServiceClient(base)
 		this.healthcheck = new healthcheck.ServiceClient(base)
+		this.inventory_sessions = new inventory_sessions.ServiceClient(base)
 		this.materials = new materials.ServiceClient(base)
 		this.media = new media.ServiceClient(base)
 		this.notifications = new notifications.ServiceClient(base)
@@ -644,6 +646,133 @@ export namespace healthcheck {
 	}
 }
 
+export namespace inventory_sessions {
+	export interface CreateInventorySessionRequest {
+		roomId: number
+	}
+
+	export interface InventorySessionChallengeAsset {
+		serial: string
+		materialTypeName: string
+		condition: schema.MaterialConditionName
+	}
+
+	export interface InventorySessionChallengePayload {
+		v: 1
+		sid: number
+		roomId: number
+		expected: InventorySessionChallengeAsset[]
+		sig: string
+	}
+
+	export interface InventorySessionDiffItem {
+		serial: string
+		status: InventorySessionDiffStatus
+		expectedCondition?: schema.MaterialConditionName
+		observedCondition?: schema.MaterialConditionName | null
+	}
+
+	export type InventorySessionDiffStatus =
+		| 'matched'
+		| 'missing'
+		| 'extra'
+		| 'condition_changed'
+
+	/**
+	 * Hand-rolled response shape, deliberately not `InventorySessionDB`
+	 * (InferSelectModel<typeof inventorySessions>) - Encore's static analyzer
+	 * cannot resolve a Drizzle-inferred type through to a wire schema when it's
+	 * exposed directly from an API handler (see toResponse() in
+	 * transfer-requests/transfer-requests.ts and materials/material-assets.ts's
+	 * own hand-written MaterialAssetDB for the same pattern elsewhere in this
+	 * codebase).
+	 */
+	export interface InventorySessionResp {
+		id: number
+		roomId: number
+		unitId: number
+		startedByUserId: number
+		status: string
+		completedAt: string | null
+		createdAt: string
+		updatedAt: string
+	}
+
+	export interface InventorySessionResultItem {
+		serial: string
+		observedCondition?: schema.MaterialConditionName
+	}
+
+	export interface InventorySessionResultsPayload {
+		v: 1
+		sid: number
+		results: InventorySessionResultItem[]
+		sig: string
+	}
+
+	export interface InventorySessionReview {
+		session: InventorySessionResp
+		diff: InventorySessionDiffItem[]
+	}
+
+	export class ServiceClient {
+		private baseClient: BaseClient
+
+		constructor(baseClient: BaseClient) {
+			this.baseClient = baseClient
+			this.CreateInventorySession = this.CreateInventorySession.bind(this)
+			this.GetInventorySessionReview =
+				this.GetInventorySessionReview.bind(this)
+			this.SubmitInventorySessionResults =
+				this.SubmitInventorySessionResults.bind(this)
+		}
+
+		/**
+		 * PC side: commander opens a session for a room, gets back the payload to
+		 * render as the challenge QR. See docs/superpowers/specs/2026-09-09-scan-reconciliation-design.md.
+		 */
+		public async CreateInventorySession(
+			params: CreateInventorySessionRequest
+		): Promise<InventorySessionChallengePayload> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'POST',
+				`/inventory-sessions`,
+				JSON.stringify(params)
+			)
+			return (await resp.json()) as InventorySessionChallengePayload
+		}
+
+		public async GetInventorySessionReview(
+			id: number
+		): Promise<InventorySessionReview> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'GET',
+				`/inventory-sessions/${encodeURIComponent(id)}/review`
+			)
+			return (await resp.json()) as InventorySessionReview
+		}
+
+		/**
+		 * PC side: after the webcam decodes the results QR from the phone, the
+		 * decoded payload is posted here as-is (still signed) - the server
+		 * re-verifies the signature itself rather than trusting the client decode.
+		 */
+		public async SubmitInventorySessionResults(
+			params: InventorySessionResultsPayload
+		): Promise<InventorySessionReview> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'POST',
+				`/inventory-sessions/results`,
+				JSON.stringify(params)
+			)
+			return (await resp.json()) as InventorySessionReview
+		}
+	}
+}
+
 export namespace materials {
 	export interface AddMaterialStockRequest {
 		data: MaterialStockBody[]
@@ -1196,7 +1325,7 @@ export namespace notifications {
 		id: string
 		createdAt: string
 		readAt: string
-		notificationType: 'birthday' | 'officialCpv'
+		notificationType: 'birthday' | 'officialCpv' | 'commanderDigest'
 		title: string
 		message: string
 		isBatch: boolean
