@@ -36,6 +36,7 @@ import Client, {
 	type auth,
 	type export_templates,
 	type facilities,
+	type inventory_sessions,
 	type materials,
 	type positions,
 	type students,
@@ -408,6 +409,25 @@ export function UpdateRooms(body: facilities.UpdateRoomBody) {
 
 export function DeleteRooms(ids: number[]) {
 	return requestClient.facilities.DeleteRooms({ ids })
+}
+
+// Inventory sessions (scan reconciliation)
+// See docs/superpowers/specs/2026-09-09-scan-reconciliation-design.md
+
+export function CreateInventorySession(roomId: number) {
+	return requestClient.inventory_sessions.CreateInventorySession({ roomId })
+}
+
+export function SubmitInventorySessionResults(
+	params: inventory_sessions.InventorySessionResultsPayload
+) {
+	return requestClient.inventory_sessions.SubmitInventorySessionResults(
+		params
+	)
+}
+
+export function GetInventorySessionReview(id: number) {
+	return requestClient.inventory_sessions.GetInventorySessionReview(id)
 }
 
 // Material types
