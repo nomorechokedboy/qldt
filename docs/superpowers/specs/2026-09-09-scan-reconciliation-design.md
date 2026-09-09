@@ -202,13 +202,58 @@ guarding the rest of the app.
   phone screen → PC webcam, under normal room lighting, to catch anything
   the unit tests can't (glare, screen brightness, camera focus distance).
 
+## Decisions (resolved during review)
+
+- **Tauri app**: the user is building this piece directly; this design and
+  its implementation only need to define the wire format (challenge/results
+  payload shape + signature) it must produce and consume. Not part of the
+  `apps/api`/`apps/web` prototype scope.
+- **Extras never block completion**: a scanned serial with no matching
+  `materialAssets` row is recorded (`assetId: null`) and surfaced in the
+  diff, but does not prevent the session from completing.
+- **Scope for this iteration: `material_assets` only** (serialized items —
+  weapons). `material_stocks` (bulk, non-serialized quantities) is out of
+  scope until this ships.
+
+## Prototype status
+
+A backend-only prototype exists proving the risky part of this design (the
+signed challenge/results round trip and the diff logic) end to end at the
+data layer, in `apps/api/inventory-sessions/`:
+
+- `payload.ts` — challenge/results payload shape, per-session HMAC signing
+  (derived from `appConfig.HASH_SECRET` + session id, never a stored
+  per-session secret) and verification.
+- `diff.ts` — pure `computeInventorySessionDiff` (matched / missing / extra
+  / condition_changed), covered by `payload.test.ts`.
+- `inventory-sessions-repo.ts` / `inventory-sessions-controller.ts` /
+  `inventory-sessions.ts` — wires the above into
+  `CreateInventorySession`, `SubmitInventorySessionResults`, and
+  `GetInventorySessionReview` endpoints, reusing the existing
+  `inventory_sessions` / `inventorySessionExpectedAssets` /
+  `inventorySessionScans` schema.
+- `payload.test.ts` passes (`pnpm vitest run inventory-sessions`), and the
+  full app passes `encore check` with the new service included.
+
+**Root-cause note for future work in this schema area:** exposing a
+Drizzle `InferSelectModel`-derived type (e.g. `InventorySessionDB`)
+directly as an API response breaks Encore's static analyzer ("unsupported
+member on type never" pointing at the `sqlite.sqliteTable(...)` call). The
+existing codebase already avoids this everywhere (`materials/material-assets.ts`
+hand-rolls its own `MaterialAssetDB`; `transfer-requests.ts` has an
+explicit `toResponse()` mapper) — `inventory-sessions-controller.ts` now
+follows the same pattern via `toSessionResp()`. Any new endpoint in this
+area should return a hand-written response type, never a raw
+`InferSelectModel` type.
+
+**Not yet built:** the `apps/web` UI (room picker → challenge QR display,
+webcam → results QR import → review screen) and QR rendering/decoding
+integration (`qrcode` / `@zxing/browser`). The payload math and API
+contract are proven; QR-image round-tripping is a solved library problem,
+not something that needed proving first.
+
 ## Open questions for review
 
 1. Confirm the 8-byte HMAC truncation is enough, or whether a longer
    signature is worth the small QR-capacity cost given how much headroom
    exists.
-2. Confirm `apps/scan-app` as the new package location/name for the Tauri
-   app.
-3. Whether "extra" (a scanned serial not in any `materialAssets` row at all,
-   e.g. a weapon never entered in the system) should block session
-   completion or just flag for later reconciliation — affects the review UI.
