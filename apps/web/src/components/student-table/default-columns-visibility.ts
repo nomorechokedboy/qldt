@@ -24,6 +24,86 @@ export const defaultBirthdayColumnVisibility = {
 	educationLevel: false
 }
 
+export const defaultCompanyTrooperColumnVisibility = {
+	enlistmentPeriod: false,
+	isGraduated: false,
+	major: false,
+	phone: false,
+	policyBeneficiaryGroup: false,
+	politicalOrg: false,
+	politicalOrgOfficialDate: false,
+	cpvId: false,
+	previousPosition: false,
+	previousUnit: false,
+	religion: false,
+	schoolName: false,
+	shortcoming: false,
+	talent: false,
+	fatherName: false,
+	fatherJob: false,
+	fatherPhoneNumber: false,
+	motherName: false,
+	motherJob: false,
+	motherPhoneNumber: false,
+	cpvOfficialAt: false,
+	ethnic: false,
+	educationLevel: false,
+	address: false,
+	status: false
+}
+
+export const defaultHcyuColumnVisibility = {
+	dob: false,
+	enlistmentPeriod: false,
+	isGraduated: false,
+	major: false,
+	phone: false,
+	position: false,
+	policyBeneficiaryGroup: false,
+	cpvId: false,
+	previousPosition: false,
+	religion: false,
+	schoolName: false,
+	shortcoming: false,
+	talent: false,
+	fatherName: false,
+	fatherJob: false,
+	fatherPhoneNumber: false,
+	motherName: false,
+	motherJob: false,
+	motherPhoneNumber: false,
+	address: false,
+	birthPlace: false,
+	cpvOfficialAt: false
+}
+
+export const defaultAdversityColumnVisibility = {
+	dob: false,
+	enlistmentPeriod: false,
+	isGraduated: false,
+	major: false,
+	phone: false,
+	position: false,
+	policyBeneficiaryGroup: false,
+	cpvId: false,
+	previousPosition: false,
+	religion: false,
+	schoolName: false,
+	shortcoming: false,
+	talent: false,
+	fatherName: false,
+	fatherJob: false,
+	fatherPhoneNumber: false,
+	motherName: false,
+	motherJob: false,
+	motherPhoneNumber: false,
+	address: false,
+	birthPlace: false,
+	cpvOfficialAt: false,
+	politicalOrg: false,
+	politicalOrgOfficialDate: false
+}
+
 export const defaultCpvOfficialColumnVisibility = {
 	enlistmentPeriod: false,
 	isGraduated: false,

@@ -5,10 +5,8 @@ import StudentTable from '@/components/student-table/new-student-table'
 import type { StudentQueryParams } from '@/types'
 import useUnitsData from '@/hooks/useUnitsData'
 import ProtectedRoute from '@/components/ProtectedRoute'
-import {
-	hcyuColumnVisibility,
-	hcyuTableColumns
-} from '@/components/student-table/columns'
+import { hcyuTableColumns } from '@/components/student-table/columns'
+import { defaultHcyuColumnVisibility } from '@/components/student-table/default-columns-visibility'
 
 export const Route = createFileRoute('/hcyu')({
 	component: RouteComponent
@@ -180,7 +178,7 @@ function RouteComponent() {
 					<div className='mt-4'>
 						<StudentTable
 							columns={hcyuTableColumns}
-							columnVisibility={hcyuColumnVisibility}
+							columnVisibility={defaultHcyuColumnVisibility}
 							params={studentParams}
 							exportConfig={{
 								filename: 'danh-sach-doan-vien'
