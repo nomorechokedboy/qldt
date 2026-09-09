@@ -14,16 +14,18 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import MaterialAssetEditForm from '@/components/MaterialAssetEditForm'
 import MaterialAssetHistorySheet from './material-asset-history-sheet'
 import { useDeleteMaterialAssets } from '@/hooks/useDeleteMaterialAssets'
-import type { MaterialAsset, Student } from '@/types'
+import type { MaterialAsset, Room, Student } from '@/types'
 
 interface MaterialAssetRowActionsProps {
 	data: MaterialAsset
+	roomOptions: Room[]
 	studentOptions: Student[]
 	onChanged?: () => void
 }
 
 export function MaterialAssetRowActions({
 	data,
+	roomOptions,
 	studentOptions,
 	onChanged
 }: MaterialAssetRowActionsProps) {
@@ -88,6 +90,7 @@ export function MaterialAssetRowActions({
 					</DialogTitle>
 					<MaterialAssetEditForm
 						data={data}
+						roomOptions={roomOptions}
 						studentOptions={studentOptions}
 						onUpdate={() => onChanged?.()}
 						onClose={() => setOpenEdit(false)}

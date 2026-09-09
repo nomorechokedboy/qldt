@@ -6,9 +6,10 @@ import {
 	materialConditionLabels
 } from '@/data/material-categories'
 import { MaterialAssetRowActions } from './material-asset-row-actions'
-import type { MaterialAsset, Student } from '@/types'
+import type { MaterialAsset, Room, Student } from '@/types'
 
 export function buildMaterialAssetColumns(
+	roomOptions: Room[],
 	studentOptions: Student[],
 	onChanged?: () => void
 ): ColumnDef<MaterialAsset>[] {
@@ -50,6 +51,18 @@ export function buildMaterialAssetColumns(
 			cell: ({ row }) => row.original.materialType?.name ?? '—'
 		},
 		{
+			id: 'room',
+			header: 'Phòng',
+			accessorFn: (row) => row.room?.name ?? 'Không thuộc phòng cụ thể',
+			cell: ({ row }) =>
+				row.original.room?.name ?? (
+					<span className='text-muted-foreground'>
+						Không thuộc phòng cụ thể
+					</span>
+				),
+			filterFn: (row, id, value) => value.includes(row.getValue(id))
+		},
+		{
 			id: 'assignedTrooper',
 			header: 'Cấp phát cho',
 			accessorFn: (row) => row.assignedTrooper?.fullName ?? '',
@@ -87,6 +100,7 @@ export function buildMaterialAssetColumns(
 			cell: ({ row }) => (
 				<MaterialAssetRowActions
 					data={row.original}
+					roomOptions={roomOptions}
 					studentOptions={studentOptions}
 					onChanged={onChanged}
 				/>
