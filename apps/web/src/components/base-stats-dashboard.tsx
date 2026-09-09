@@ -46,6 +46,9 @@ function GroupUnits({ unitsMap }: { unitsMap: Map<UnitLevel, Unit[]> }) {
 				{units.map((u) => (
 					<SelectItem key={u.id} value={u.alias}>
 						{u.name}
+						{u?.parent?.name !== undefined
+							? ` (${u?.parent?.name})`
+							: ''}
 					</SelectItem>
 				))}
 			</SelectGroup>
