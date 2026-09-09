@@ -8,7 +8,7 @@ import type { UnitLevel } from '@/types'
 import { defaultCompanyTrooperColumnVisibility } from './student-table/default-columns-visibility'
 import useOnDeleteStudents from '@/hooks/useOnDeleteStudents'
 import TableSkeleton from './table-skeleton'
-import StudentTable from './student-table/new-student-table'
+import StudentTable from './student-table'
 import useUnitData from '@/hooks/useUnitData'
 import useActionColumn from '@/hooks/useActionColumn'
 

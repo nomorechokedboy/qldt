@@ -12,7 +12,7 @@ import {
 	SelectValue
 } from '@/components/ui/select'
 import { defaultCpvOfficialColumnVisibility } from './student-table/default-columns-visibility'
-import StudentTable from './student-table/new-student-table'
+import StudentTable from './student-table'
 import UnitFacetedFilter, { useFilteredClassIds } from './unit-filter'
 import { useStudentFacetedFilters } from '@/hooks/useStudentFacetedFilters'
 

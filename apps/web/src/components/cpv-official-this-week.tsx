@@ -2,7 +2,7 @@ import { battalionStudentColumnsWithoutAction } from '@/components/student-table
 import useStudentData from '@/hooks/useStudents'
 import { defaultCpvOfficialColumnVisibility } from './student-table/default-columns-visibility'
 import { getCurrentWeekNumber } from '@/lib/utils'
-import StudentTable from './student-table/new-student-table'
+import StudentTable from './student-table'
 import { useStudentFacetedFilters } from '@/hooks/useStudentFacetedFilters'
 import UnitFacetedFilter, { useFilteredClassIds } from './unit-filter'
 import { useCallback, useState } from 'react'
