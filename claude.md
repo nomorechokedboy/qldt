@@ -822,10 +822,10 @@ All schema definitions are located in `apps/api/schema/`:
 | `actions.ts`            | `actions` table and types                      |
 | `notifications.ts`      | `notifications` table and types                |
 | `notification-items.ts` | `notification_items` table and types           |
-| `audit-logs.ts`          | `audit_logs` table and types                  |
+| `audit-logs.ts`         | `audit_logs` table and types                   |
 | `index.ts`              | Exports all schemas                            |
 
-Note: this ERD predates the `facilities` (buildings, rooms), `materials` (material_types, material_stocks, material_assets, material_asset_events) and `audit_logs` tables — their schema files live in `apps/api/schema/` following the same base-schema pattern but aren't diagrammed above yet.
+Note: this ERD predates the `facilities` (buildings, rooms), `materials` (material_types, material_stocks, material_assets, material_asset_events), `audit_logs`, and `inventory_sessions` (inventory_sessions, inventory_session_expected_assets, inventory_session_scans) tables — their schema files live in `apps/api/schema/` following the same base-schema pattern but aren't diagrammed above yet.
 
 ---
 
@@ -859,6 +859,30 @@ Note: this ERD predates the `facilities` (buildings, rooms), `materials` (materi
 
 ---
 
+## Inventory Session (Scan-Reconciliation) Feature
+
+**Purpose:** Lets a PC generate a per-room "inventory challenge" QR code (the expected `material_assets` — serialized weapons only, not `material_stocks`) that a phone scans offline, then exports a results QR the PC scans back via webcam to compute a diff. Built for an air-gapped military WAN where phones can reach the public internet but never the WAN, and `apps/api` itself runs on a fully closed machine with no live phone↔backend network path. See `docs/superpowers/specs/2026-09-09-scan-reconciliation-design.md` for the full design: payload-size math, architecture diagram, HMAC integrity scheme, error handling.
+
+**Tables:** `inventory_sessions` (roomId, unitId, startedByUserId, status: `in_progress`\|`completed`\|`reviewed`), `inventory_session_expected_assets` (sessionId, assetId, serialNumber, conditionSnapshot — unique on sessionId+assetId), `inventory_session_scans` (sessionId, serialNumber NOT NULL, assetId nullable — nullable because an unexpected physical asset may not exist in `material_assets`, observedCondition nullable). No `status` column on scans — diff status (`matched`\|`missing`\|`extra`\|`condition_changed`) is always computed by `apps/api/inventory-sessions/diff.ts`, never stored.
+
+**Backend:** `apps/api/inventory-sessions/` — `payload.ts` defines the challenge/results wire payloads and a per-session HMAC signing scheme (session key = `HMAC-SHA256(appConfig.HASH_SECRET, sessionId)`, derived on demand, never stored or transmitted; signature truncated to 16 hex chars) so a phone that never authenticates to `apps/api` can still prove a results QR belongs to a genuine session, with no network round-trip. `diff.ts` is a pure diff function. `inventory-sessions-controller.ts` exposes `createChallenge`/`submitResults`/`getReview` via 3 endpoints in `inventory-sessions.ts`.
+
+**Gotcha (Encore/Drizzle — same class of bug as the audit-log PubSub gotcha above):** exposing a Drizzle `InferSelectModel<...>`-derived type (e.g. the schema's `InventorySessionDB`) directly as an API handler's response type breaks Encore's static analyzer app-wide (`unsupported member on type never` at the `sqlite.sqliteTable(...)` call site). Fix: hand-write a flat response DTO (`InventorySessionResp` in `inventory-sessions-controller.ts`) and map explicitly with `toSessionResp()`, matching the existing `materials/material-assets.ts` (`MaterialAssetDB`) / `transfer-requests.ts` (`toResponse()`) convention of never exposing schema-inferred types on the wire.
+
+**Frontend:** `apps/web/src/components/inventory-session/` — `challenge-qr.tsx` (renders the challenge QR via `qrcode`'s `QRCode.toCanvas`, with a download button that reads the canvas via `canvas.toDataURL('image/png')`), `webcam-qr-scanner.tsx` (`getUserMedia` + `jsqr` polling loop, entirely client-side, no network calls), `inventory-session-dialog.tsx` (4-step orchestrator: start → challenge → scan → review), wired into `facility-table/building-card.tsx`'s per-room actions.
+
+**Scope:** `material_assets` only (serialized weapons/equipment). `material_stocks` (bulk, non-serialized) is explicitly out of scope for this feature. Extra/unexpected scanned items never block session completion (product decision).
+
+**Phone app:** a separate Tauri project, not part of this repo (chosen for cross-platform reach) — it must produce/consume the exact wire format defined in `apps/api/inventory-sessions/payload.ts`.
+
+**Known gap:** the 3 new endpoints have no `PERMISSION_MAP` entries yet (`middleware/authz.ts` defaults unregistered routes to allow-all) and are not yet wired into `AUDIT_MAP` — production hardening not yet done.
+
+---
+
+## Material Assets — Room Assignment
+
+`material_assets.roomId` has existed in the schema/API (`MaterialAssetBody.roomId`) since that resource was built, but the frontend create/edit forms (`material-asset-form.tsx`, `MaterialAssetEditForm.tsx`) never exposed a room selector — unlike the equivalent `material_stocks` forms (`material-stock-form.tsx`, `MaterialStockEditForm.tsx`), which already had one. Fixed by mirroring the stocks pattern: a room `Select` filtered to the selected/owning unit's rooms, with `roomOptions` threaded through `material-asset-table/columns.tsx` → `material-asset-row-actions.tsx`, fetched via `useRoomsData` in each caller (`company-weapons-tab.tsx`, `base-stats-dashboard.tsx`'s read-only column build). A "Phòng" column was also added to the material-assets table for visibility, mirroring the material-stocks table's room column.
+
 ## Generate Migrations
 
 ```bash
@@ -889,6 +913,7 @@ Runs pending migrations against the database.
 2. **Hand-write the SQL** in that generated file (inserts/updates — follow the pattern of existing seed migrations like `0003_seed-materials-authz.sql`).
 3. **Apply migrations**: Run `encore exec -- pnpm migrate` to apply it.
 
+**Important**: Always gather information/inspect code using Codegraph instead of cat/sed command.
 **Important**: Always use generate + migrate workflow (schema-driven or `--custom`). Do not use `pnpm push` for schema changes — `push` is only wired up as `prestart` for local dev bootstrapping and is a known source of local.db drift/index-conflict errors, not part of the real migration flow.
 **Important**: Always discuss before implement code.
 **Important**: Never run `tsc` in this repo, in any form (bare, `npx`, or `encore exec -- pnpm exec tsc --noEmit`) — it can hang/crash the machine and doesn't resolve Encore's generated types anyway. To sanity-check compilation, briefly run `encore exec -- pnpm run start` (apps/api) — a successful "Building Encore application graph done" line means the TS/service graph is valid, regardless of what the subsequent `drizzle-kit push` step against local.db does — or start the Vite dev server (apps/web) and check for compile errors.
