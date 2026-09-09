@@ -18,6 +18,7 @@ import {
 	SheetTitle
 } from '@/components/ui/sheet'
 import BuildingEditForm from '@/components/BuildingEditForm'
+import InventorySessionDialog from '@/components/inventory-session/inventory-session-dialog'
 import RoomEditForm from '@/components/RoomEditForm'
 import RoomForm from '@/components/room-form'
 import { useDeleteBuildings } from '@/hooks/useDeleteBuildings'
@@ -234,6 +235,10 @@ function RoomsPanel({
 							)}
 						</div>
 						<div className='flex gap-1'>
+							<InventorySessionDialog
+								roomId={room.id}
+								roomName={room.name}
+							/>
 							<Button
 								size='icon'
 								variant='ghost'

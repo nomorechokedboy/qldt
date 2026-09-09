@@ -8,6 +8,7 @@ import { materialAssetStatusOptions } from '@/data/material-categories'
 import useDataTableToolbarConfig from '@/hooks/useDataTableToolbarConfig'
 import useMaterialAssetsData from '@/hooks/useMaterialAssetsData'
 import useMaterialTypesData from '@/hooks/useMaterialTypesData'
+import useRoomsData from '@/hooks/useRoomsData'
 import useStudentData from '@/hooks/useStudents'
 import useUnitData from '@/hooks/useUnitData'
 import type { MaterialAsset } from '@/types'
@@ -27,6 +28,10 @@ export default function CompanyWeaponsTab({
 		undefined,
 		{ enabled: true }
 	)
+	const { data: rooms, refetch: refetchRooms } = useRoomsData(
+		{},
+		{ enabled: true }
+	)
 	const { data: materialTypes } = useMaterialTypesData({ enabled: true })
 	const { data: students } = useStudentData({
 		unitAlias,
@@ -39,11 +44,13 @@ export default function CompanyWeaponsTab({
 	const unitIds = unitOptions.map((u) => u.id)
 	const companyAssets =
 		assets?.filter((a) => unitIds.includes(a.unitId)) ?? []
+	const companyRooms = rooms?.filter((r) => unitIds.includes(r.unitId)) ?? []
 	const weaponTypes = materialTypes?.filter((t) => t.isSerialized) ?? []
 
 	const handleChanged = () => {
 		refetchUnit()
 		refetchAssets()
+		refetchRooms()
 	}
 
 	const searchConfig = [
@@ -63,6 +70,7 @@ export default function CompanyWeaponsTab({
 					<MaterialAssetForm
 						unitOptions={unitOptions}
 						defaultUnitId={company.id}
+						roomOptions={companyRooms}
 						materialTypeOptions={weaponTypes}
 						studentOptions={students ?? []}
 						onSuccess={handleChanged}
@@ -73,6 +81,7 @@ export default function CompanyWeaponsTab({
 			<DataTable
 				placeholder='Đơn vị chưa có vũ khí/trang bị nào'
 				columns={buildMaterialAssetColumns(
+					companyRooms,
 					students ?? [],
 					handleChanged
 				)}

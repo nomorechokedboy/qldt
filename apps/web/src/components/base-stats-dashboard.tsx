@@ -33,7 +33,7 @@ import type { units } from '@/api/client'
 const readOnlyMaterialStockColumns = buildMaterialStockColumns([]).filter(
 	(c) => c.id !== 'actions'
 )
-const readOnlyMaterialAssetColumns = buildMaterialAssetColumns([]).filter(
+const readOnlyMaterialAssetColumns = buildMaterialAssetColumns([], []).filter(
 	(c) => c.id !== 'actions'
 )
 
