@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/select'
 import { defaultBirthdayColumnVisibility } from './student-table/default-columns-visibility'
 import { getCurrentQuarter } from '@/lib/utils'
-import StudentTable from './student-table/new-student-table'
+import StudentTable from './student-table'
 import UnitFacetedFilter, { useFilteredClassIds } from './unit-filter'
 import { useStudentFacetedFilters } from '@/hooks/useStudentFacetedFilters'
 

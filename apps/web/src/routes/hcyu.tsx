@@ -1,7 +1,7 @@
 import React from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { SidebarInset } from '@/components/ui/sidebar'
-import StudentTable from '@/components/student-table/new-student-table'
+import StudentTable from '@/components/student-table'
 import type { StudentQueryParams } from '@/types'
 import useUnitsData from '@/hooks/useUnitsData'
 import ProtectedRoute from '@/components/ProtectedRoute'

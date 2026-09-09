@@ -12,7 +12,7 @@ import {
 import { defaultCpvOfficialColumnVisibility } from './student-table/default-columns-visibility'
 import { battalionStudentColumnsWithoutAction } from '@/components/student-table/columns'
 import useStudentData from '@/hooks/useStudents'
-import StudentTable from './student-table/new-student-table'
+import StudentTable from './student-table'
 import UnitFacetedFilter, { useFilteredClassIds } from './unit-filter'
 import { useStudentFacetedFilters } from '@/hooks/useStudentFacetedFilters'
 
