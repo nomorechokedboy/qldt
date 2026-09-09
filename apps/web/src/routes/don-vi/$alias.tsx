@@ -48,11 +48,13 @@ function RouteComponent() {
 			<div className='hidden h-full flex-1 flex-col space-y-8 p-8 md:flex'>
 				<UnitPageHeader title={unit?.name} />
 				<UnitTabs
-					id={id}
 					alias={alias}
 					level={level}
 					unitName={unit?.name}
 					parentUnitName={unit?.parent?.name}
+					data={troopers}
+					isLoading={isLoadingStudents}
+					refetch={refetchStudents}
 					facetedFilters={facetedFilters}
 					actionColumn={actionColumn}
 					onDeleteRows={handleDeleteStudents}

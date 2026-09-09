@@ -14,7 +14,11 @@ export default function BirthdayByWeek() {
 	const studentQueryParams: StudentQueryParams = {
 		birthdayInWeek: true
 	}
-	const { data: students = [] } = useStudentData(studentQueryParams)
+	const {
+		data: students = [],
+		isLoading,
+		refetch
+	} = useStudentData(studentQueryParams)
 	const weekNumber = getCurrentWeekNumber()
 	const facetedFilters = useStudentFacetedFilters(students)
 	const filterStudents = useCallback(
@@ -41,8 +45,9 @@ export default function BirthdayByWeek() {
 				</div>
 			</div>
 			<StudentTable
-				params={studentQueryParams}
-				filterStudents={filterStudents}
+				data={filterStudents(students)}
+				isLoading={isLoading}
+				refetch={refetch}
 				columnVisibility={defaultBirthdayColumnVisibility}
 				columns={battalionStudentColumnsWithoutAction}
 				leftSection={

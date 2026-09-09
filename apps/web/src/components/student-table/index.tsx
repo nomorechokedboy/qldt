@@ -2,12 +2,11 @@ import { EduLevelOptions } from '@/components/data-table/data/data'
 import { EhtnicOptions } from '@/data/ethnicities'
 import useActionColumn from '@/hooks/useActionColumn'
 import useDataTableToolbarConfig from '@/hooks/useDataTableToolbarConfig'
-import useStudentData from '@/hooks/useStudents'
 import {
 	type FacetedFilterConfig,
 	type Student,
-	type StudentQueryParams,
 	type TemplType,
+	type UnitLevel,
 	defaultStudentColumnVisibility
 } from '@/types'
 import type { QueryObserverResult } from '@tanstack/react-query'
@@ -33,10 +32,11 @@ import {
 import { columnsWithoutAction } from './columns'
 
 interface StudentTableProps {
-	// Core data params
-	params: StudentQueryParams
-	// Optional client-side filter applied after fetching (e.g. narrowing by selected unit)
-	filterStudents?: (students: Student[]) => Student[]
+	// Data. The caller owns the fetch (useStudentData, useUnitTroopersData,
+	// etc.) so there is exactly one source of truth for what's on screen.
+	data: Student[]
+	isLoading?: boolean
+	refetch: () => Promise<QueryObserverResult<Student[], unknown>>
 
 	// Columns and filters. Defaults reproduce the plain single-table pages
 	// (rank/previousUnit/ethnic/educationLevel/status facets, no action column).
@@ -48,7 +48,7 @@ interface StudentTableProps {
 	templType?: TemplType
 
 	// Rich export: exportConfig opens the template-manager dropdown with
-	// file export and (when params has a unit) roster export. Takes
+	// file export and (when unitRoster is set) roster export. Takes
 	// precedence over the simple filename/templType export.
 	exportConfig?: {
 		filename: string
@@ -57,6 +57,7 @@ interface StudentTableProps {
 			underUnitName?: string
 			unitName?: string
 		}
+		unitRoster?: { alias: string; level: UnitLevel }
 	}
 
 	// UI configuration
@@ -83,8 +84,9 @@ interface StudentTableProps {
 }
 
 export default function StudentTable({
-	params,
-	filterStudents,
+	data,
+	isLoading = false,
+	refetch,
 	columns,
 	facetedFilters,
 	filename,
@@ -102,41 +104,33 @@ export default function StudentTable({
 	onDeleteRows,
 	onConfirmRows
 }: StudentTableProps) {
-	const {
-		data: fetchedStudents = [],
-		isLoading: isLoadingStudents,
-		refetch: refetchStudent
-	} = useStudentData(params)
-	const students = filterStudents
-		? filterStudents(fetchedStudents)
-		: fetchedStudents
 	const { createFacetedFilter } = useDataTableToolbarConfig()
 	const actionColumn = useActionColumn(handleRefreshStudents)
 	const [exportFileOpen, setExportFileOpen] = useState(false)
 	const [exportRosterOpen, setExportRosterOpen] = useState(false)
 	const [importOpen, setImportOpen] = useState(false)
 
-	if (isLoadingStudents) {
+	if (isLoading) {
 		return <TableSkeleton />
 	}
 
 	const handleFormSuccess = () => {
-		refetchStudent()
+		refetch()
 		onCreateSuccess?.()
 	}
 
 	const handleImportSuccess = () => {
-		refetchStudent()
+		refetch()
 		onCreateSuccess?.()
 	}
 
 	const handleRefresh = () => {
-		refetchStudent()
+		refetch()
 		onRefresh?.()
 	}
 
 	function handleRefreshStudents() {
-		return refetchStudent()
+		return refetch()
 	}
 
 	// Callers that don't need custom columns get the plain data set with no
@@ -154,7 +148,7 @@ export default function StudentTable({
 	let resolvedFacetedFilters = facetedFilters
 	if (resolvedFacetedFilters === undefined) {
 		const militaryRankSet = new Set(
-			students.filter((s) => !!s.rank).map((s) => s.rank as string)
+			data.filter((s) => !!s.rank).map((s) => s.rank as string)
 		)
 		const militaryRankOptions = Array.from(militaryRankSet).map((rank) => ({
 			label: rank,
@@ -162,7 +156,7 @@ export default function StudentTable({
 		}))
 
 		const previousUnitSet = new Set(
-			students
+			data
 				.filter((s) => !!s.previousUnit)
 				.map((s) => s.previousUnit as string)
 		)
@@ -223,7 +217,7 @@ export default function StudentTable({
 				/>
 			)}
 			<DataTable
-				data={students}
+				data={data}
 				columns={finalColumns}
 				defaultColumnVisibility={columnVisibility}
 				placeholder={placeholder}
@@ -293,26 +287,26 @@ export default function StudentTable({
 													exportConfig.defaultExportValues
 												}
 											/>
-											{params.unitAlias !== undefined &&
-												params.unitLevel !==
-													undefined && (
-													<ExportUnitRosterExtractDialog
-														open={exportRosterOpen}
-														onOpenChange={
-															setExportRosterOpen
-														}
-														unitAlias={
-															params.unitAlias
-														}
-														unitLevel={
-															params.unitLevel
-														}
-														defaultFilename={`bien-che-${exportConfig.filename}`}
-														defaultValues={
-															exportConfig.defaultExportValues
-														}
-													/>
-												)}
+											{exportConfig.unitRoster && (
+												<ExportUnitRosterExtractDialog
+													open={exportRosterOpen}
+													onOpenChange={
+														setExportRosterOpen
+													}
+													unitAlias={
+														exportConfig.unitRoster
+															.alias
+													}
+													unitLevel={
+														exportConfig.unitRoster
+															.level
+													}
+													defaultFilename={`bien-che-${exportConfig.filename}`}
+													defaultValues={
+														exportConfig.defaultExportValues
+													}
+												/>
+											)}
 										</>
 									)
 								}

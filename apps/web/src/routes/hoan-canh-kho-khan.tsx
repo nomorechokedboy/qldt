@@ -3,6 +3,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { SidebarInset } from '@/components/ui/sidebar'
 import StudentTable from '@/components/student-table'
 import type { StudentQueryParams } from '@/types'
+import useStudentData from '@/hooks/useStudents'
 import useUnitsData from '@/hooks/useUnitsData'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { adversityTableColumns } from '@/components/student-table/columns'
@@ -16,6 +17,11 @@ function RouteComponent() {
 	// ...existing code...
 	const [studentParams, setStudentParams] =
 		React.useState<StudentQueryParams>({ withAdversity: true })
+	const {
+		data: students = [],
+		isLoading: isLoadingStudents,
+		refetch
+	} = useStudentData(studentParams)
 	const { data: battalions = [], isLoading: isLoadingUnits } = useUnitsData({
 		level: 'battalion'
 	})
@@ -171,9 +177,11 @@ function RouteComponent() {
 					</div>
 					<div className='mt-4'>
 						<StudentTable
+							data={students}
+							isLoading={isLoadingStudents}
+							refetch={refetch}
 							columns={adversityTableColumns}
 							columnVisibility={defaultAdversityColumnVisibility}
-							params={studentParams}
 							exportConfig={{
 								filename:
 									'danh-sach-hoc-vien-co-hoan-canh-kho-khan'

@@ -3,6 +3,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { SidebarInset } from '@/components/ui/sidebar'
 import StudentTable from '@/components/student-table'
 import type { StudentQueryParams } from '@/types'
+import useStudentData from '@/hooks/useStudents'
 import useUnitsData from '@/hooks/useUnitsData'
 import ProtectedRoute from '@/components/ProtectedRoute'
 
@@ -48,6 +49,11 @@ function RouteComponent() {
 		React.useState<StudentQueryParams>({
 			isEthnicMinority: true
 		})
+	const {
+		data: students = [],
+		isLoading: isLoadingStudents,
+		refetch
+	} = useStudentData(studentParams)
 	const { data: battalions = [], isLoading: isLoadingUnits } = useUnitsData({
 		level: 'battalion'
 	})
@@ -157,7 +163,9 @@ function RouteComponent() {
 					</div>
 					<div className='mt-4'>
 						<StudentTable
-							params={studentParams}
+							data={students}
+							isLoading={isLoadingStudents}
+							refetch={refetch}
 							filename='danh-sach-hoc-vien-la-nguoi-dong-bao'
 						/>
 					</div>

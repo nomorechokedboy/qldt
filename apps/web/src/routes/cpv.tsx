@@ -4,6 +4,7 @@ import StudentTable from '@/components/student-table'
 import { SidebarInset } from '@/components/ui/sidebar'
 import type { StudentQueryParams } from '@/types'
 import ProtectedRoute from '@/components/ProtectedRoute'
+import useStudentData from '@/hooks/useStudents'
 import useUnitsData from '@/hooks/useUnitsData'
 export const Route = createFileRoute('/cpv')({
 	component: RouteComponent
@@ -13,6 +14,11 @@ function RouteComponent() {
 	// ...existing code...
 	const [studentParams, setStudentParams] =
 		React.useState<StudentQueryParams>({ politicalOrg: 'cpv' })
+	const {
+		data: students = [],
+		isLoading: isLoadingStudents,
+		refetch
+	} = useStudentData(studentParams)
 	const { data: battalions = [], isLoading: isLoadingUnits } = useUnitsData({
 		level: 'battalion'
 	})
@@ -174,7 +180,9 @@ function RouteComponent() {
 					{/* Student table for selected class */}
 					<div className='mt-4'>
 						<StudentTable
-							params={studentParams}
+							data={students}
+							isLoading={isLoadingStudents}
+							refetch={refetch}
 							filename='danh-sach-dang-vien'
 							templType='CpvTempl'
 						/>

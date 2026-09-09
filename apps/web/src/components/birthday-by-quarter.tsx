@@ -45,7 +45,11 @@ export default function BirthdayByQuarter() {
 		birthdayInQuarter: quarter
 	}
 	const filename = `danh-sach-sinh-nhat-dong-doi-${quarter}`
-	const { data: students = [] } = useStudentData(studentQueryParams)
+	const {
+		data: students = [],
+		isLoading,
+		refetch
+	} = useStudentData(studentQueryParams)
 	const facetedFilters = useStudentFacetedFilters(students)
 	const filterStudents = useCallback(
 		(all: Student[]) =>
@@ -93,8 +97,9 @@ export default function BirthdayByQuarter() {
 				</div>
 			</div>
 			<StudentTable
-				params={studentQueryParams}
-				filterStudents={filterStudents}
+				data={filterStudents(students)}
+				isLoading={isLoading}
+				refetch={refetch}
 				columnVisibility={defaultBirthdayColumnVisibility}
 				columns={battalionStudentColumnsWithoutAction}
 				facetedFilters={facetedFilters}

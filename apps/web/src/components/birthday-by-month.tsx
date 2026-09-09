@@ -74,7 +74,11 @@ export default function BirthdayByMonth() {
 	const studentQueryParams: StudentQueryParams = {
 		birthdayInMonth: month
 	}
-	const { data: students = [] } = useStudentData(studentQueryParams)
+	const {
+		data: students = [],
+		isLoading,
+		refetch
+	} = useStudentData(studentQueryParams)
 	const facetedFilters = useStudentFacetedFilters(students)
 	const filterStudents = useCallback(
 		(all: Student[]) =>
@@ -122,8 +126,9 @@ export default function BirthdayByMonth() {
 				</div>
 			</div>
 			<StudentTable
-				params={studentQueryParams}
-				filterStudents={filterStudents}
+				data={filterStudents(students)}
+				isLoading={isLoading}
+				refetch={refetch}
 				columns={battalionStudentColumnsWithoutAction}
 				leftSection={
 					<UnitFacetedFilter
