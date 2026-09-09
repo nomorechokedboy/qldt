@@ -5,10 +5,8 @@ import StudentTable from '@/components/student-table/new-student-table'
 import type { StudentQueryParams } from '@/types'
 import useUnitsData from '@/hooks/useUnitsData'
 import ProtectedRoute from '@/components/ProtectedRoute'
-import {
-	adversityColumnVisibility,
-	adversityTableColumns
-} from '@/components/student-table/columns'
+import { adversityTableColumns } from '@/components/student-table/columns'
+import { defaultAdversityColumnVisibility } from '@/components/student-table/default-columns-visibility'
 
 export const Route = createFileRoute('/hoan-canh-kho-khan')({
 	component: RouteComponent
@@ -174,7 +172,7 @@ function RouteComponent() {
 					<div className='mt-4'>
 						<StudentTable
 							columns={adversityTableColumns}
-							columnVisibility={adversityColumnVisibility}
+							columnVisibility={defaultAdversityColumnVisibility}
 							params={studentParams}
 							exportConfig={{
 								filename:

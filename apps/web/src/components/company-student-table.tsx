@@ -1,14 +1,11 @@
 import { EduLevelOptions } from '@/components/data-table/data/data'
-import {
-	columns,
-	columnsWithoutAction
-} from '@/components/student-table/columns'
+import { columnsWithoutAction } from '@/components/student-table/columns'
 import { SidebarInset } from '@/components/ui/sidebar'
 import { EhtnicOptions } from '@/data/ethnicities'
 import useDataTableToolbarConfig from '@/hooks/useDataTableToolbarConfig'
 import useStudentData from '@/hooks/useStudents'
 import type { UnitLevel } from '@/types'
-import { defaultBirthdayColumnVisibility } from './student-table/default-columns-visibility'
+import { defaultCompanyTrooperColumnVisibility } from './student-table/default-columns-visibility'
 import useOnDeleteStudents from '@/hooks/useOnDeleteStudents'
 import TableSkeleton from './table-skeleton'
 import StudentTable from './student-table/new-student-table'
@@ -89,11 +86,7 @@ export default function CompanyStudentTable({
 				</div>
 				<StudentTable
 					params={{ unitAlias: alias, unitLevel: level }}
-					columnVisibility={{
-						...defaultBirthdayColumnVisibility,
-						address: false,
-						status: false
-					}}
+					columnVisibility={defaultCompanyTrooperColumnVisibility}
 					columns={[...columnsWithoutAction, actionColumn]}
 					facetedFilters={facetedFilters}
 					placeholder='Chưa có thông tin quân nhân.'
