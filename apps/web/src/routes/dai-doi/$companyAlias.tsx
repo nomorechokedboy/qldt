@@ -5,7 +5,7 @@ import CompanyPlatoonTable from '@/components/company-platoon-table'
 import CompanySquadTable from '@/components/company-squad-table'
 import CompanyWeaponsTab from '@/components/company-weapons-tab'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import UnitTroopersTable from '@/components/student-table/unit-trooper-table'
+import StudentTable from '@/components/student-table'
 import z from 'zod'
 import useUnitTroopersData from '@/hooks/useUnitTroopersData'
 import useOnDeleteStudents from '@/hooks/useOnDeleteStudents'
@@ -74,12 +74,10 @@ function RouteComponent() {
 						<ProtectedRoute
 							requiredPermission={PermissionTag.STUDENTS_READ}
 						>
-							<UnitTroopersTable
-								params={{
-									id,
-									unitAlias: companyAlias,
-									unitLevel: 'company'
-								}}
+							<StudentTable
+								data={troopers}
+								isLoading={isLoadingStudents}
+								refetch={refetchTroopers}
 								columnVisibility={{
 									...defaultBirthdayColumnVisibility,
 									address: false,
@@ -89,7 +87,7 @@ function RouteComponent() {
 									...battalionStudentColumnsWithoutAction,
 									actionColumn
 								]}
-								// facetedFilters={facetedFilters}
+								facetedFilters={[]}
 								placeholder='Chưa có thông tin quân nhân.'
 								exportConfig={{
 									filename,
@@ -97,6 +95,10 @@ function RouteComponent() {
 										unitName:
 											unit?.parent?.name?.toUpperCase(),
 										underUnitName: unit?.name?.toUpperCase()
+									},
+									unitRoster: {
+										alias: companyAlias,
+										level: 'company'
 									}
 								}}
 								onDeleteRows={handleDeleteTroopers}

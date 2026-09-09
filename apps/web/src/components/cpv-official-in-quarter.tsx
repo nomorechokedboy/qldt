@@ -32,7 +32,11 @@ export default function CpvOfficialInQuarter() {
 	const studentQueryParams: StudentQueryParams = {
 		cpvOfficialInQuarter: quarter
 	}
-	const { data: students = [] } = useStudentData(studentQueryParams)
+	const {
+		data: students = [],
+		isLoading,
+		refetch
+	} = useStudentData(studentQueryParams)
 	const facetedFilters = useStudentFacetedFilters(students)
 	const filterStudents = useCallback(
 		(all: Student[]) =>
@@ -83,8 +87,9 @@ export default function CpvOfficialInQuarter() {
 			</div>
 
 			<StudentTable
-				params={studentQueryParams}
-				filterStudents={filterStudents}
+				data={filterStudents(students)}
+				isLoading={isLoading}
+				refetch={refetch}
 				columns={battalionStudentColumnsWithoutAction}
 				facetedFilters={facetedFilters}
 				exportConfig={{

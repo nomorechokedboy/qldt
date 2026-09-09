@@ -85,7 +85,9 @@ export default function CompanyStudentTable({
 					</div>
 				</div>
 				<StudentTable
-					params={{ unitAlias: alias, unitLevel: level }}
+					data={students}
+					isLoading={isLoadingStudents}
+					refetch={refetchStudents}
 					columnVisibility={defaultCompanyTrooperColumnVisibility}
 					columns={[...columnsWithoutAction, actionColumn]}
 					facetedFilters={facetedFilters}
