@@ -246,11 +246,18 @@ follows the same pattern via `toSessionResp()`. Any new endpoint in this
 area should return a hand-written response type, never a raw
 `InferSelectModel` type.
 
-**Not yet built:** the `apps/web` UI (room picker → challenge QR display,
-webcam → results QR import → review screen) and QR rendering/decoding
-integration (`qrcode` / `@zxing/browser`). The payload math and API
-contract are proven; QR-image round-tripping is a solved library problem,
-not something that needed proving first.
+**Update:** the `apps/web` UI and `apps/scan-app` (Tauri phone app) are now
+both built. See the "Phone app" entry under the Inventory Session section of
+the repo-root `claude.md` for the phone app's file structure and the one
+signing gotcha (Node's `createHmac` treats a string key as raw UTF-8 bytes,
+not hex-decoded bytes) caught via a cross-runtime test before it ever
+reached a real device. The `key` field was added to
+`InventorySessionChallengePayload` after the initial prototype - it wasn't
+in the original design draft below, but is required for the phone to sign
+results without ever holding `HASH_SECRET` (see Integrity section). Not yet
+verified on a real device: whether `getUserMedia` resolves in Tauri's
+Android WebView with just the manifest camera permission, or whether it
+needs the native `@tauri-apps/plugin-barcode-scanner` plugin instead.
 
 ## Open questions for review
 
