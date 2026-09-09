@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import MaterialAssetEditForm from '@/components/MaterialAssetEditForm'
+import AssetQrDialog from './asset-qr-dialog'
 import MaterialAssetHistorySheet from './material-asset-history-sheet'
 import { useDeleteMaterialAssets } from '@/hooks/useDeleteMaterialAssets'
 import type { MaterialAsset, Room, Student } from '@/types'
@@ -31,6 +32,7 @@ export function MaterialAssetRowActions({
 }: MaterialAssetRowActionsProps) {
 	const [openEdit, setOpenEdit] = useState(false)
 	const [openHistory, setOpenHistory] = useState(false)
+	const [openQr, setOpenQr] = useState(false)
 	const deleteMutation = useDeleteMaterialAssets()
 
 	async function handleDelete(_: MouseEvent<HTMLDivElement>) {
@@ -73,6 +75,9 @@ export function MaterialAssetRowActions({
 					<DropdownMenuItem onClick={() => setOpenHistory(true)}>
 						Lịch sử
 					</DropdownMenuItem>
+					<DropdownMenuItem onClick={() => setOpenQr(true)}>
+						Tải mã QR
+					</DropdownMenuItem>
 					<DropdownMenuSeparator />
 					<DropdownMenuItem
 						disabled={deleteMutation.isPending}
@@ -103,6 +108,8 @@ export function MaterialAssetRowActions({
 				open={openHistory}
 				onOpenChange={setOpenHistory}
 			/>
+
+			<AssetQrDialog data={data} open={openQr} onOpenChange={setOpenQr} />
 		</>
 	)
 }
