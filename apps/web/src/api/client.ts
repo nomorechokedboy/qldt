@@ -666,10 +666,11 @@ export namespace inventory_sessions {
 	}
 
 	export interface InventorySessionChallengePayload {
-		v: 1
+		v: 2
 		sid: number
 		roomId: number
 		expected: InventorySessionChallengeAsset[]
+		expectedStocks: InventorySessionChallengeStock[]
 		/**
 		 * Per-session HMAC key, derived from appConfig.HASH_SECRET (see
 		 * deriveSessionKey below) and included here so the phone - which never
@@ -681,6 +682,13 @@ export namespace inventory_sessions {
 		key: string
 
 		sig: string
+	}
+
+	export interface InventorySessionChallengeStock {
+		materialTypeId: number
+		materialTypeName: string
+		condition: schema.MaterialConditionName
+		expectedQuantity: number
 	}
 
 	export interface InventorySessionDiffItem {
@@ -722,15 +730,37 @@ export namespace inventory_sessions {
 	}
 
 	export interface InventorySessionResultsPayload {
-		v: 1
+		v: 2
 		sid: number
 		results: InventorySessionResultItem[]
+		stockResults: InventorySessionStockResultItem[]
 		sig: string
 	}
 
 	export interface InventorySessionReview {
 		session: InventorySessionResp
 		diff: InventorySessionDiffItem[]
+		stockDiff: InventorySessionStockDiffItem[]
+	}
+
+	export interface InventorySessionStockDiffItem {
+		materialTypeId: number
+		condition: schema.MaterialConditionName
+		status: InventorySessionStockDiffStatus
+		expectedQuantity?: number
+		observedQuantity: number
+	}
+
+	export type InventorySessionStockDiffStatus =
+		| 'matched'
+		| 'short'
+		| 'over'
+		| 'extra'
+
+	export interface InventorySessionStockResultItem {
+		materialTypeId: number
+		condition: schema.MaterialConditionName
+		observedQuantity: number
 	}
 
 	export class ServiceClient {

@@ -12,6 +12,7 @@ import {
 } from '@/hooks/useInventorySession'
 import ChallengeQr from './challenge-qr'
 import InventorySessionDiffList from './session-diff-list'
+import InventorySessionStockDiffList from './stock-diff-list'
 import WebcamQrScanner from './webcam-qr-scanner'
 
 type Step = 'start' | 'challenge' | 'scan' | 'review'
@@ -196,8 +197,11 @@ export default function InventorySessionDialog({
 
 					{step === 'review' && review && (
 						<div className='flex flex-col gap-4'>
-							<div className='max-h-80 overflow-y-auto'>
+							<div className='max-h-80 overflow-y-auto flex flex-col gap-4'>
 								<InventorySessionDiffList diff={review.diff} />
+								<InventorySessionStockDiffList
+									stockDiff={review.stockDiff}
+								/>
 							</div>
 							{review.session.status === 'reviewed' ? (
 								<p className='text-muted-foreground text-sm text-center'>

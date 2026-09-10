@@ -20,6 +20,7 @@ import {
 } from '@/hooks/useInventorySession'
 import { formatDbTimestamp } from '@/lib/utils'
 import InventorySessionDiffList from './session-diff-list'
+import InventorySessionStockDiffList from './stock-diff-list'
 
 const SESSION_STATUS_LABEL: Record<
 	string,
@@ -51,7 +52,12 @@ function SessionDiffPanel({
 	}
 	if (!review) return null
 
-	return <InventorySessionDiffList diff={review.diff} />
+	return (
+		<div className='flex flex-col gap-4'>
+			<InventorySessionDiffList diff={review.diff} />
+			<InventorySessionStockDiffList stockDiff={review.stockDiff} />
+		</div>
+	)
 }
 
 interface InventorySessionHistorySheetProps {
