@@ -32,6 +32,22 @@ export interface InventorySessionResp {
 	updatedAt: string
 }
 
+// A session left `in_progress` this long (phone never came back, PC tab
+// closed mid-scan) is treated as abandoned rather than "the" open session -
+// otherwise a stale row can outrank the real current one when a room has
+// more than one `in_progress` session sitting in the table.
+const SESSION_EXPIRY_MS = 4 * 60 * 60 * 1000
+
+// `createdAt` is stored via SQLite's `CURRENT_TIMESTAMP` default, which
+// formats as "YYYY-MM-DD HH:MM:SS" (space-separated, UTC, no milliseconds) -
+// not `Date#toISOString()`'s "YYYY-MM-DDTHH:MM:SS.sssZ". Comparing the two
+// formats as strings breaks same-day ordering (' ' sorts before 'T'
+// regardless of the actual time), so the cutoff must be formatted the same
+// way as the column it's compared against.
+function toSqliteTimestamp(d: Date): string {
+	return d.toISOString().slice(0, 19).replace('T', ' ')
+}
+
 function toSessionResp(s: InventorySessionDB): InventorySessionResp {
 	return {
 		id: s.id,
@@ -119,6 +135,11 @@ export class InventorySessionController {
 		roomId: number,
 		validUnitIds: number[]
 	): Promise<InventorySessionChallengePayload | null> {
+		const cutoff = toSqliteTimestamp(
+			new Date(Date.now() - SESSION_EXPIRY_MS)
+		)
+		await this.repo.expireStaleSessions(roomId, cutoff)
+
 		const session = await this.repo.getOpenSessionForRoom(roomId)
 		if (!session) return null
 
@@ -189,6 +210,18 @@ export class InventorySessionController {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(
 					`Session is already ${session.status}, results cannot be submitted again`
+				)
+			)
+		}
+
+		const age =
+			Date.now() -
+			new Date(`${session.createdAt.replace(' ', 'T')}Z`).getTime()
+		if (age > SESSION_EXPIRY_MS) {
+			await this.repo.markExpired(session.id)
+			throw AppError.handleAppErr(
+				AppError.invalidArgument(
+					'Session has expired, please start a new inventory session'
 				)
 			)
 		}

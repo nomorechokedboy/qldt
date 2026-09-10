@@ -32,6 +32,14 @@ export interface InventorySessionRepository {
 	getOne(id: number): Promise<InventorySessionDB | undefined>
 	markCompleted(id: number): Promise<InventorySessionDB>
 	markReviewed(id: number): Promise<InventorySessionDB>
+	markExpired(id: number): Promise<InventorySessionDB>
+
+	// Flips any of a room's `in_progress` sessions older than `olderThanIso`
+	// to `expired` - called opportunistically wherever "is there an open
+	// session" actually matters, rather than on a schedule, since a
+	// session's staleness is only ever relevant at the moment something
+	// tries to act on it.
+	expireStaleSessions(roomId: number, olderThanIso: string): Promise<void>
 
 	// The room's still-open session, if any - lets the PC side resume
 	// instead of starting a duplicate session after a reload/reboot.

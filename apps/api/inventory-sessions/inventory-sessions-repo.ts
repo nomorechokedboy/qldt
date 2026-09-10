@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray } from 'drizzle-orm'
+import { and, desc, eq, inArray, lt } from 'drizzle-orm'
 import {
 	InventorySessionExpectedAssetWithType,
 	InventorySessionRepository,
@@ -62,6 +62,31 @@ class repo implements InventorySessionRepository {
 			.catch(handleDatabaseErr)
 	}
 
+	markExpired(id: number): Promise<InventorySessionDB> {
+		return this.db
+			.update(inventorySessions)
+			.set({ status: 'expired' })
+			.where(eq(inventorySessions.id, id))
+			.returning()
+			.then((rows) => rows[0])
+			.catch(handleDatabaseErr)
+	}
+
+	expireStaleSessions(roomId: number, olderThanIso: string): Promise<void> {
+		return this.db
+			.update(inventorySessions)
+			.set({ status: 'expired' })
+			.where(
+				and(
+					eq(inventorySessions.roomId, roomId),
+					eq(inventorySessions.status, 'in_progress'),
+					lt(inventorySessions.createdAt, olderThanIso)
+				)
+			)
+			.then(() => undefined)
+			.catch(handleDatabaseErr)
+	}
+
 	getOpenSessionForRoom(
 		roomId: number
 	): Promise<InventorySessionDB | undefined> {
@@ -70,7 +95,8 @@ class repo implements InventorySessionRepository {
 				where: and(
 					eq(inventorySessions.roomId, roomId),
 					eq(inventorySessions.status, 'in_progress')
-				)
+				),
+				orderBy: desc(inventorySessions.createdAt)
 			})
 			.catch(handleDatabaseErr)
 	}

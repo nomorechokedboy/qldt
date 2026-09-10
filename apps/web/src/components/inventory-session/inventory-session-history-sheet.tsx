@@ -6,6 +6,7 @@ import {
 	AccordionTrigger
 } from '@/components/ui/accordion'
 import { Badge } from '@/components/ui/badge'
+import { ErrorState } from '@/components/error-state'
 import {
 	Sheet,
 	SheetContent,
@@ -21,11 +22,15 @@ import InventorySessionDiffList from './session-diff-list'
 
 const SESSION_STATUS_LABEL: Record<
 	string,
-	{ label: string; variant: 'default' | 'secondary' | 'outline' }
+	{
+		label: string
+		variant: 'default' | 'secondary' | 'outline' | 'destructive'
+	}
 > = {
 	in_progress: { label: 'Đang kiểm kê', variant: 'secondary' },
 	completed: { label: 'Chờ xác nhận', variant: 'default' },
-	reviewed: { label: 'Đã xác nhận', variant: 'outline' }
+	reviewed: { label: 'Đã xác nhận', variant: 'outline' },
+	expired: { label: 'Đã hết hạn', variant: 'destructive' }
 }
 
 function SessionDiffPanel({
@@ -64,7 +69,9 @@ export default function InventorySessionHistorySheet({
 	open,
 	onOpenChange
 }: InventorySessionHistorySheetProps) {
-	const { data } = useInventorySessionsForRoom(roomId, { enabled: open })
+	const { data, error, refetch } = useInventorySessionsForRoom(roomId, {
+		enabled: open
+	})
 	const [openSessionId, setOpenSessionId] = useState('')
 
 	const sessions = data?.data ?? []
@@ -76,12 +83,18 @@ export default function InventorySessionHistorySheet({
 					<SheetTitle>Lịch sử kiểm kê - {roomName}</SheetTitle>
 				</SheetHeader>
 				<div className='px-4 pb-4'>
-					{sessions.length === 0 && (
+					{error && (
+						<ErrorState
+							error={error as Error}
+							onRetry={() => refetch()}
+						/>
+					)}
+					{!error && sessions.length === 0 && (
 						<p className='text-muted-foreground text-sm'>
 							Phòng này chưa có phiên kiểm kê nào.
 						</p>
 					)}
-					{sessions.length > 0 && (
+					{!error && sessions.length > 0 && (
 						<Accordion
 							type='single'
 							collapsible

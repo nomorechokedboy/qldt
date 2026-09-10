@@ -1,5 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { type ChangeEvent, useEffect, useRef, useState } from 'react'
 import jsQR from 'jsqr'
+import { Upload } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
 interface WebcamQrScannerProps {
 	onDecode: (text: string) => void
@@ -19,7 +21,9 @@ export default function WebcamQrScanner({
 }: WebcamQrScannerProps) {
 	const videoRef = useRef<HTMLVideoElement>(null)
 	const canvasRef = useRef<HTMLCanvasElement>(null)
+	const fileInputRef = useRef<HTMLInputElement>(null)
 	const [error, setError] = useState<string | null>(null)
+	const [fileError, setFileError] = useState<string | null>(null)
 
 	// The scan loop below only starts once (see the empty deps array further
 	// down) so the camera stream doesn't restart - and flicker - every time
@@ -122,20 +126,99 @@ export default function WebcamQrScanner({
 		}
 	}, [])
 
-	if (error) {
-		return <p className='text-destructive text-sm'>{error}</p>
+	// Decodes a single still image (as opposed to `tick`'s continuous webcam
+	// frames) - the fallback for when the camera is unavailable/denied, or
+	// the results QR was saved as a screenshot rather than shown live.
+	async function handleFileChange(e: ChangeEvent<HTMLInputElement>) {
+		const file = e.target.files?.[0]
+		e.target.value = ''
+		if (!file) return
+
+		setFileError(null)
+		const objectUrl = URL.createObjectURL(file)
+		try {
+			const img = new Image()
+			await new Promise<void>((resolve, reject) => {
+				img.onload = () => resolve()
+				img.onerror = () => reject(new Error('invalid image'))
+				img.src = objectUrl
+			})
+
+			const canvas = document.createElement('canvas')
+			canvas.width = img.naturalWidth
+			canvas.height = img.naturalHeight
+			const ctx = canvas.getContext('2d')
+			if (!ctx) throw new Error('no canvas context')
+			ctx.drawImage(img, 0, 0)
+			const imageData = ctx.getImageData(
+				0,
+				0,
+				canvas.width,
+				canvas.height
+			)
+			const result = jsQR(
+				imageData.data,
+				imageData.width,
+				imageData.height
+			)
+
+			if (result?.data) {
+				onDecodeRef.current(result.data)
+			} else {
+				setFileError(
+					'Không tìm thấy mã QR trong ảnh, vui lòng thử ảnh khác.'
+				)
+			}
+		} catch {
+			setFileError('Không đọc được ảnh này, vui lòng thử ảnh khác.')
+		} finally {
+			URL.revokeObjectURL(objectUrl)
+		}
 	}
 
 	return (
-		<div className='relative overflow-hidden rounded-md border'>
-			{/* biome-ignore lint/a11y/useMediaCaption: live camera feed, not a media file */}
-			<video
-				ref={videoRef}
-				className='w-full aspect-square object-cover'
-				muted
-				playsInline
-			/>
-			<canvas ref={canvasRef} className='hidden' />
+		<div className='flex flex-col gap-3'>
+			{error ? (
+				<p className='text-destructive text-sm'>{error}</p>
+			) : (
+				<div className='relative overflow-hidden rounded-md border'>
+					{/* biome-ignore lint/a11y/useMediaCaption: live camera feed, not a media file */}
+					<video
+						ref={videoRef}
+						className='w-full aspect-square object-cover'
+						muted
+						playsInline
+					/>
+					<canvas ref={canvasRef} className='hidden' />
+				</div>
+			)}
+
+			<div className='flex flex-col items-center gap-2'>
+				<p className='text-muted-foreground text-xs'>
+					{error
+						? 'Bạn có thể tải lên ảnh chụp mã QR thay thế.'
+						: 'Hoặc tải lên ảnh chụp mã QR nếu không dùng được camera.'}
+				</p>
+				<Button
+					type='button'
+					variant='outline'
+					size='sm'
+					onClick={() => fileInputRef.current?.click()}
+				>
+					<Upload />
+					Tải ảnh lên
+				</Button>
+				<input
+					ref={fileInputRef}
+					type='file'
+					accept='image/*'
+					className='hidden'
+					onChange={handleFileChange}
+				/>
+				{fileError && (
+					<p className='text-destructive text-sm'>{fileError}</p>
+				)}
+			</div>
 		</div>
 	)
 }
