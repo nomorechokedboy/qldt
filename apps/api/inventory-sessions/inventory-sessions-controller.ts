@@ -2,13 +2,20 @@ import log from 'encore.dev/log'
 import { InventorySessionRepository } from '.'
 import { AppError } from '../errors'
 import { InventorySessionExpectedAssetParams } from '../schema/inventory-session-inspected-assets'
+import { InventorySessionExpectedStockParams } from '../schema/inventory-session-expected-stocks'
 import { InventorySessionScanParams } from '../schema/inventory-session-scans'
+import { InventorySessionStockCountParams } from '../schema/inventory-session-stock-counts'
 import { InventorySessionDB } from '../schema/inventory-sessions'
 import { computeInventorySessionDiff, InventorySessionDiffItem } from './diff'
+import {
+	computeInventorySessionStockDiff,
+	InventorySessionStockDiffItem
+} from './stock-diff'
 import inventorySessionRepo from './inventory-sessions-repo'
 import {
 	buildChallengePayload,
 	InventorySessionChallengeAsset,
+	InventorySessionChallengeStock,
 	InventorySessionChallengePayload,
 	InventorySessionResultsPayload,
 	verifyResultsPayload
@@ -64,6 +71,7 @@ function toSessionResp(s: InventorySessionDB): InventorySessionResp {
 export interface InventorySessionReview {
 	session: InventorySessionResp
 	diff: InventorySessionDiffItem[]
+	stockDiff: InventorySessionStockDiffItem[]
 }
 
 export class InventorySessionController {
@@ -74,20 +82,23 @@ export class InventorySessionController {
 		startedByUserId: number
 		validUnitIds: number[]
 	}): Promise<InventorySessionChallengePayload> {
-		const assets = await this.repo.getRoomMaterialAssets(params.roomId)
-		if (assets.length === 0) {
+		const [assets, stocks] = await Promise.all([
+			this.repo.getRoomMaterialAssets(params.roomId),
+			this.repo.getRoomMaterialStocks(params.roomId)
+		])
+		if (assets.length === 0 && stocks.length === 0) {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(
-					'Room has no serialized material assets to reconcile'
+					'Room has no serialized material assets or bulk stock to reconcile'
 				)
 			)
 		}
 
-		// material_assets in the same room share a unit; use it both as the
-		// session's unit and as the permission check, rather than trusting a
-		// caller-supplied unitId.
-		const unitId = assets[0].unitId
-		if (!params.validUnitIds.includes(unitId)) {
+		// material_assets/material_stocks in the same room share a unit; use
+		// it both as the session's unit and as the permission check, rather
+		// than trusting a caller-supplied unitId.
+		const unitId = assets[0]?.unitId ?? stocks[0]?.unitId
+		if (unitId === undefined || !params.validUnitIds.includes(unitId)) {
 			throw AppError.handleAppErr(
 				AppError.unauthorized(
 					"You don't have permission to start an inventory session for this room"
@@ -109,27 +120,51 @@ export class InventorySessionController {
 				serialNumber: a.serialNumber,
 				conditionSnapshot: a.condition ?? 'good'
 			}))
-		await this.repo.snapshotExpectedAssets(expectedParams)
+		const expectedStockParams: InventorySessionExpectedStockParams[] =
+			stocks.map((s) => ({
+				sessionId: session.id,
+				materialTypeId: s.materialTypeId,
+				condition: s.condition ?? 'good',
+				expectedQuantity: s.quantity
+			}))
+		await Promise.all([
+			this.repo.snapshotExpectedAssets(expectedParams),
+			this.repo.snapshotExpectedStocks(expectedStockParams)
+		])
 
 		const expected: InventorySessionChallengeAsset[] = assets.map((a) => ({
 			serial: a.serialNumber,
 			materialTypeName: a.materialTypeName,
 			condition: a.condition ?? 'good'
 		}))
+		const expectedStocks: InventorySessionChallengeStock[] = stocks.map(
+			(s) => ({
+				materialTypeId: s.materialTypeId,
+				materialTypeName: s.materialTypeName,
+				condition: s.condition ?? 'good',
+				expectedQuantity: s.quantity
+			})
+		)
 
 		log.info('InventorySessionController.createChallenge', {
 			sessionId: session.id,
 			roomId: params.roomId,
-			assetCount: assets.length
+			assetCount: assets.length,
+			stockLineCount: stocks.length
 		})
 
-		return buildChallengePayload(session.id, params.roomId, expected)
+		return buildChallengePayload(
+			session.id,
+			params.roomId,
+			expected,
+			expectedStocks
+		)
 	}
 
 	// Rebuilds the challenge payload for a room's still-open session, if any
 	// - deterministic from sessionId + the already-snapshotted expected
-	// assets, so it reproduces the exact same QR (same key/sig) the PC
-	// originally showed. Lets the PC side resume after a reload/reboot
+	// assets/stocks, so it reproduces the exact same QR (same key/sig) the
+	// PC originally showed. Lets the PC side resume after a reload/reboot
 	// instead of losing track of a session the phone may still be scanning.
 	async getOpenChallenge(
 		roomId: number,
@@ -151,9 +186,10 @@ export class InventorySessionController {
 			)
 		}
 
-		const expectedAssets = await this.repo.getExpectedAssetsWithType(
-			session.id
-		)
+		const [expectedAssets, expectedStocks] = await Promise.all([
+			this.repo.getExpectedAssetsWithType(session.id),
+			this.repo.getExpectedStocksWithType(session.id)
+		])
 		const expected: InventorySessionChallengeAsset[] = expectedAssets.map(
 			(a) => ({
 				serial: a.serialNumber,
@@ -161,8 +197,16 @@ export class InventorySessionController {
 				condition: a.conditionSnapshot
 			})
 		)
+		const stocks: InventorySessionChallengeStock[] = expectedStocks.map(
+			(s) => ({
+				materialTypeId: s.materialTypeId,
+				materialTypeName: s.materialTypeName,
+				condition: s.condition,
+				expectedQuantity: s.expectedQuantity
+			})
+		)
 
-		return buildChallengePayload(session.id, roomId, expected)
+		return buildChallengePayload(session.id, roomId, expected, stocks)
 	}
 
 	// Backs the room's "Lịch sử kiểm kê" history sheet - lightweight session
@@ -243,13 +287,24 @@ export class InventorySessionController {
 				observedCondition: r.observedCondition ?? null
 			})
 		)
-		await this.repo.insertScans(scanParams)
+		const stockCountParams: InventorySessionStockCountParams[] =
+			payload.stockResults.map((r) => ({
+				sessionId: payload.sid,
+				materialTypeId: r.materialTypeId,
+				condition: r.condition,
+				observedQuantity: r.observedQuantity
+			}))
+		await Promise.all([
+			this.repo.insertScans(scanParams),
+			this.repo.insertStockCounts(stockCountParams)
+		])
 
 		const completed = await this.repo.markCompleted(payload.sid)
 
 		log.info('InventorySessionController.submitResults', {
 			sessionId: payload.sid,
-			scanCount: scanParams.length
+			scanCount: scanParams.length,
+			stockCountLineCount: stockCountParams.length
 		})
 
 		return this.buildReview(completed)
@@ -307,13 +362,20 @@ export class InventorySessionController {
 	private async buildReview(
 		session: InventorySessionDB
 	): Promise<InventorySessionReview> {
-		const [expected, scans] = await Promise.all([
-			this.repo.getExpectedAssets(session.id),
-			this.repo.getScans(session.id)
-		])
+		const [expected, scans, expectedStocks, stockCounts] =
+			await Promise.all([
+				this.repo.getExpectedAssets(session.id),
+				this.repo.getScans(session.id),
+				this.repo.getExpectedStocks(session.id),
+				this.repo.getStockCounts(session.id)
+			])
 		return {
 			session: toSessionResp(session),
-			diff: computeInventorySessionDiff(expected, scans)
+			diff: computeInventorySessionDiff(expected, scans),
+			stockDiff: computeInventorySessionStockDiff(
+				expectedStocks,
+				stockCounts
+			)
 		}
 	}
 }

@@ -7,13 +7,28 @@ import {
 	InventorySessionExpectedAssetParams
 } from '../schema/inventory-session-inspected-assets'
 import {
+	InventorySessionExpectedStockDB,
+	InventorySessionExpectedStockParams
+} from '../schema/inventory-session-expected-stocks'
+import {
 	InventorySessionScanDB,
 	InventorySessionScanParams
 } from '../schema/inventory-session-scans'
+import {
+	InventorySessionStockCountDB,
+	InventorySessionStockCountParams
+} from '../schema/inventory-session-stock-counts'
 import { MaterialAssetDB } from '../schema/material-assets'
-import { MaterialConditionName } from '../schema/material-stocks'
+import {
+	MaterialConditionName,
+	MaterialStockDB
+} from '../schema/material-stocks'
 
 export interface RoomMaterialAsset extends MaterialAssetDB {
+	materialTypeName: string
+}
+
+export interface RoomMaterialStock extends MaterialStockDB {
 	materialTypeName: string
 }
 
@@ -25,6 +40,15 @@ export interface InventorySessionExpectedAssetWithType {
 	serialNumber: string
 	conditionSnapshot: MaterialConditionName
 	materialTypeName: string
+}
+
+// Same idea as InventorySessionExpectedAssetWithType, for a session's
+// already-snapshotted expected stock lines.
+export interface InventorySessionExpectedStockWithType {
+	materialTypeId: number
+	materialTypeName: string
+	condition: MaterialConditionName
+	expectedQuantity: number
 }
 
 export interface InventorySessionRepository {
@@ -52,9 +76,7 @@ export interface InventorySessionRepository {
 	listSessionsForRoom(roomId: number): Promise<InventorySessionDB[]>
 
 	// Serialized material_assets currently in a room - the pool a session's
-	// "expected" snapshot is built from. Scoped to material_assets only for
-	// this iteration (materials with a serial); material_stocks (bulk,
-	// non-serialized) is out of scope.
+	// "expected" snapshot is built from.
 	getRoomMaterialAssets(roomId: number): Promise<RoomMaterialAsset[]>
 
 	snapshotExpectedAssets(
@@ -73,4 +95,24 @@ export interface InventorySessionRepository {
 	getScans(sessionId: number): Promise<InventorySessionScanDB[]>
 
 	findAssetsBySerials(serials: string[]): Promise<MaterialAssetDB[]>
+
+	// Room-scoped material_stocks rows - the pool a session's "expected"
+	// stock snapshot is built from. Excludes unit-level stock (roomId: null)
+	// automatically, since the query filters on an exact roomId match.
+	getRoomMaterialStocks(roomId: number): Promise<RoomMaterialStock[]>
+
+	snapshotExpectedStocks(
+		params: InventorySessionExpectedStockParams[]
+	): Promise<InventorySessionExpectedStockDB[]>
+	getExpectedStocks(
+		sessionId: number
+	): Promise<InventorySessionExpectedStockDB[]>
+	getExpectedStocksWithType(
+		sessionId: number
+	): Promise<InventorySessionExpectedStockWithType[]>
+
+	insertStockCounts(
+		params: InventorySessionStockCountParams[]
+	): Promise<InventorySessionStockCountDB[]>
+	getStockCounts(sessionId: number): Promise<InventorySessionStockCountDB[]>
 }

@@ -3,7 +3,8 @@ import {
 	buildChallengePayload,
 	buildResultsPayload,
 	verifyResultsPayload,
-	InventorySessionChallengeAsset
+	InventorySessionChallengeAsset,
+	InventorySessionChallengeStock
 } from './payload'
 import { computeInventorySessionDiff } from './diff'
 import { InventorySessionExpectedAssetDB } from '../schema/inventory-session-inspected-assets'
@@ -21,12 +22,26 @@ describe('inventory session challenge/results round trip', () => {
 		{ serial: 'KZ08029', materialTypeName: 'AK', condition: 'good' },
 		{ serial: 'A081420', materialTypeName: 'M79', condition: 'fair' }
 	]
+	const expectedStocks: InventorySessionChallengeStock[] = [
+		{
+			materialTypeId: 1,
+			materialTypeName: 'Đạn AK',
+			condition: 'good',
+			expectedQuantity: 500
+		}
+	]
 
 	it('signs a challenge payload that stays under a single QR code budget', () => {
-		const challenge = buildChallengePayload(1, 42, expectedAssets)
+		const challenge = buildChallengePayload(
+			1,
+			42,
+			expectedAssets,
+			expectedStocks
+		)
 
 		expect(challenge.sig).toHaveLength(16)
 		expect(challenge.expected).toHaveLength(3)
+		expect(challenge.expectedStocks).toHaveLength(1)
 
 		const bytes = Buffer.byteLength(JSON.stringify(challenge), 'utf8')
 		// Comfortably under single-QR byte-mode capacity (~1700-2900 bytes) -
@@ -34,24 +49,41 @@ describe('inventory session challenge/results round trip', () => {
 		expect(bytes).toBeLessThan(1000)
 	})
 
-	it('accepts a genuine results payload signed for the same session', () => {
-		const challenge = buildChallengePayload(1, 42, expectedAssets)
+	it('signs and verifies a session with no stock lines (a room with no material_stocks rows)', () => {
+		const challenge = buildChallengePayload(1, 42, expectedAssets, [])
 
-		const results = buildResultsPayload(challenge.sid, [
-			{ serial: 'A808834', observedCondition: 'good' }, // matched
-			{ serial: 'A081420', observedCondition: 'damaged' }, // condition changed
-			{ serial: 'ZZ99999', observedCondition: 'good' } // extra, unrecognized
-			// KZ08029 never scanned -> missing
-		])
+		expect(challenge.expectedStocks).toEqual([])
+		expect(verifyResultsPayload(buildResultsPayload(1, [], []))).toBe(true)
+	})
+
+	it('accepts a genuine results payload signed for the same session', () => {
+		const challenge = buildChallengePayload(
+			1,
+			42,
+			expectedAssets,
+			expectedStocks
+		)
+
+		const results = buildResultsPayload(
+			challenge.sid,
+			[
+				{ serial: 'A808834', observedCondition: 'good' }, // matched
+				{ serial: 'A081420', observedCondition: 'damaged' }, // condition changed
+				{ serial: 'ZZ99999', observedCondition: 'good' } // extra, unrecognized
+				// KZ08029 never scanned -> missing
+			],
+			[{ materialTypeId: 1, condition: 'good', observedQuantity: 480 }]
+		)
 
 		expect(verifyResultsPayload(results)).toBe(true)
 	})
 
 	it('rejects a results payload tampered with after signing', () => {
-		const challenge = buildChallengePayload(1, 42, expectedAssets)
-		const results = buildResultsPayload(challenge.sid, [
-			{ serial: 'A808834', observedCondition: 'good' }
-		])
+		const results = buildResultsPayload(
+			1,
+			[{ serial: 'A808834', observedCondition: 'good' }],
+			[]
+		)
 
 		const tampered = {
 			...results,
@@ -63,10 +95,33 @@ describe('inventory session challenge/results round trip', () => {
 		expect(verifyResultsPayload(tampered)).toBe(false)
 	})
 
+	it('rejects a results payload whose stockResults were tampered with after signing', () => {
+		const results = buildResultsPayload(
+			1,
+			[],
+			[{ materialTypeId: 1, condition: 'good', observedQuantity: 480 }]
+		)
+
+		const tampered = {
+			...results,
+			stockResults: [
+				{
+					materialTypeId: 1,
+					condition: 'good' as const,
+					observedQuantity: 999
+				}
+			]
+		}
+
+		expect(verifyResultsPayload(tampered)).toBe(false)
+	})
+
 	it('rejects a genuine signature replayed under a forged session id', () => {
-		const results = buildResultsPayload(1, [
-			{ serial: 'A808834', observedCondition: 'good' }
-		])
+		const results = buildResultsPayload(
+			1,
+			[{ serial: 'A808834', observedCondition: 'good' }],
+			[]
+		)
 
 		// Attacker takes a validly-signed payload and relabels it as belonging
 		// to a different (e.g. still-open) session, keeping the original sig.

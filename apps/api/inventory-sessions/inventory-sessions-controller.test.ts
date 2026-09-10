@@ -1,6 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
-import { InventorySessionRepository, RoomMaterialAsset } from '.'
+import {
+	InventorySessionRepository,
+	RoomMaterialAsset,
+	RoomMaterialStock
+} from '.'
 import { InventorySessionExpectedAssetDB } from '../schema/inventory-session-inspected-assets'
+import { InventorySessionExpectedStockDB } from '../schema/inventory-session-expected-stocks'
 import { InventorySessionScanDB } from '../schema/inventory-session-scans'
 import { InventorySessionDB } from '../schema/inventory-sessions'
 import { InventorySessionController } from './inventory-sessions-controller'
@@ -8,7 +13,8 @@ import { buildResultsPayload } from './payload'
 
 // Controller tests exercise the authorization and status-transition guards
 // called out in docs/superpowers/specs/2026-09-09-scan-reconciliation-design.md's
-// testing plan. The repo is a hand-rolled fake rather than a real DB - these
+// and docs/superpowers/specs/2026-09-10-inventory-session-stock-counts-design.md's
+// testing plans. The repo is a hand-rolled fake rather than a real DB - these
 // guards live entirely in the controller, so a fake that returns canned rows
 // is enough to prove them without spinning up Postgres.
 
@@ -40,13 +46,19 @@ function makeFakeRepo(
 		expireStaleSessions: vi.fn().mockResolvedValue(undefined),
 		getOpenSessionForRoom: vi.fn(),
 		listSessionsForRoom: vi.fn().mockResolvedValue([]),
-		getRoomMaterialAssets: vi.fn(),
+		getRoomMaterialAssets: vi.fn().mockResolvedValue([]),
 		snapshotExpectedAssets: vi.fn(),
 		getExpectedAssets: vi.fn().mockResolvedValue([]),
 		getExpectedAssetsWithType: vi.fn(),
 		insertScans: vi.fn(),
 		getScans: vi.fn().mockResolvedValue([]),
 		findAssetsBySerials: vi.fn().mockResolvedValue([]),
+		getRoomMaterialStocks: vi.fn().mockResolvedValue([]),
+		snapshotExpectedStocks: vi.fn(),
+		getExpectedStocks: vi.fn().mockResolvedValue([]),
+		getExpectedStocksWithType: vi.fn(),
+		insertStockCounts: vi.fn(),
+		getStockCounts: vi.fn().mockResolvedValue([]),
 		...overrides
 	}
 }
@@ -84,9 +96,10 @@ describe('InventorySessionController.createChallenge', () => {
 		expect(repo.create).not.toHaveBeenCalled()
 	})
 
-	it('rejects a room with no serialized assets to reconcile', async () => {
+	it('rejects a room with no serialized assets and no bulk stock to reconcile', async () => {
 		const repo = makeFakeRepo({
-			getRoomMaterialAssets: vi.fn().mockResolvedValue([])
+			getRoomMaterialAssets: vi.fn().mockResolvedValue([]),
+			getRoomMaterialStocks: vi.fn().mockResolvedValue([])
 		})
 		const controller = new InventorySessionController(repo)
 
@@ -97,6 +110,57 @@ describe('InventorySessionController.createChallenge', () => {
 				validUnitIds: [100]
 			})
 		).rejects.toThrow()
+	})
+
+	it('creates a session for a room with only bulk stock and no serialized assets', async () => {
+		const stocks: RoomMaterialStock[] = [
+			{
+				id: 1,
+				materialTypeId: 5,
+				unitId: 100,
+				roomId: 10,
+				quantity: 200,
+				condition: 'good',
+				createdAt: '',
+				updatedAt: '',
+				materialTypeName: 'Đạn AK'
+			}
+		]
+		const repo = makeFakeRepo({
+			getRoomMaterialAssets: vi.fn().mockResolvedValue([]),
+			getRoomMaterialStocks: vi.fn().mockResolvedValue(stocks),
+			create: vi
+				.fn()
+				.mockResolvedValue(makeSession({ id: 5, unitId: 100 }))
+		})
+		const controller = new InventorySessionController(repo)
+
+		const payload = await controller.createChallenge({
+			roomId: 10,
+			startedByUserId: 1,
+			validUnitIds: [100]
+		})
+
+		expect(payload.expected).toEqual([])
+		expect(payload.expectedStocks).toEqual([
+			{
+				materialTypeId: 5,
+				materialTypeName: 'Đạn AK',
+				condition: 'good',
+				expectedQuantity: 200
+			}
+		])
+		expect(repo.create).toHaveBeenCalledWith(
+			expect.objectContaining({ roomId: 10, unitId: 100 })
+		)
+		expect(repo.snapshotExpectedStocks).toHaveBeenCalledWith([
+			{
+				sessionId: 5,
+				materialTypeId: 5,
+				condition: 'good',
+				expectedQuantity: 200
+			}
+		])
 	})
 })
 
@@ -195,9 +259,11 @@ describe('InventorySessionController.submitResults', () => {
 		const repo = makeFakeRepo()
 		const controller = new InventorySessionController(repo)
 
-		const results = buildResultsPayload(1, [
-			{ serial: 'A1', observedCondition: 'good' }
-		])
+		const results = buildResultsPayload(
+			1,
+			[{ serial: 'A1', observedCondition: 'good' }],
+			[]
+		)
 		const tampered = {
 			...results,
 			results: [{ serial: 'A1', observedCondition: 'damaged' as const }]
@@ -215,9 +281,11 @@ describe('InventorySessionController.submitResults', () => {
 		})
 		const controller = new InventorySessionController(repo)
 
-		const results = buildResultsPayload(1, [
-			{ serial: 'A1', observedCondition: 'good' }
-		])
+		const results = buildResultsPayload(
+			1,
+			[{ serial: 'A1', observedCondition: 'good' }],
+			[]
+		)
 
 		await expect(controller.submitResults(results)).rejects.toThrow(
 			/already completed/
@@ -234,9 +302,11 @@ describe('InventorySessionController.submitResults', () => {
 		})
 		const controller = new InventorySessionController(repo)
 
-		const results = buildResultsPayload(1, [
-			{ serial: 'A1', observedCondition: 'good' }
-		])
+		const results = buildResultsPayload(
+			1,
+			[{ serial: 'A1', observedCondition: 'good' }],
+			[]
+		)
 
 		await expect(controller.submitResults(results)).rejects.toThrow(
 			/already reviewed/
@@ -258,9 +328,11 @@ describe('InventorySessionController.submitResults', () => {
 		})
 		const controller = new InventorySessionController(repo)
 
-		const results = buildResultsPayload(1, [
-			{ serial: 'A1', observedCondition: 'good' }
-		])
+		const results = buildResultsPayload(
+			1,
+			[{ serial: 'A1', observedCondition: 'good' }],
+			[]
+		)
 
 		await expect(controller.submitResults(results)).rejects.toThrow(
 			/expired/
@@ -281,15 +353,79 @@ describe('InventorySessionController.submitResults', () => {
 		})
 		const controller = new InventorySessionController(repo)
 
-		const results = buildResultsPayload(1, [
-			{ serial: 'A1', observedCondition: 'good' }
-		])
+		const results = buildResultsPayload(
+			1,
+			[{ serial: 'A1', observedCondition: 'good' }],
+			[]
+		)
 
 		const review = await controller.submitResults(results)
 
 		expect(review.session.status).toBe('completed')
 		expect(repo.insertScans).toHaveBeenCalledTimes(1)
 		expect(repo.markCompleted).toHaveBeenCalledWith(1)
+		expect(review.stockDiff).toEqual([])
+	})
+
+	it('writes stock counts and includes them in the returned stock diff', async () => {
+		const expectedStocks: InventorySessionExpectedStockDB[] = [
+			{
+				id: 1,
+				sessionId: 1,
+				materialTypeId: 5,
+				condition: 'good',
+				expectedQuantity: 200,
+				createdAt: '',
+				updatedAt: ''
+			}
+		]
+		const repo = makeFakeRepo({
+			getOne: vi
+				.fn()
+				.mockResolvedValue(makeSession({ status: 'in_progress' })),
+			markCompleted: vi
+				.fn()
+				.mockResolvedValue(makeSession({ status: 'completed' })),
+			getExpectedStocks: vi.fn().mockResolvedValue(expectedStocks),
+			getStockCounts: vi.fn().mockResolvedValue([
+				{
+					id: 1,
+					sessionId: 1,
+					materialTypeId: 5,
+					condition: 'good',
+					observedQuantity: 195,
+					createdAt: '',
+					updatedAt: ''
+				}
+			])
+		})
+		const controller = new InventorySessionController(repo)
+
+		const results = buildResultsPayload(
+			1,
+			[],
+			[{ materialTypeId: 5, condition: 'good', observedQuantity: 195 }]
+		)
+
+		const review = await controller.submitResults(results)
+
+		expect(repo.insertStockCounts).toHaveBeenCalledWith([
+			{
+				sessionId: 1,
+				materialTypeId: 5,
+				condition: 'good',
+				observedQuantity: 195
+			}
+		])
+		expect(review.stockDiff).toEqual([
+			{
+				materialTypeId: 5,
+				condition: 'good',
+				status: 'short',
+				expectedQuantity: 200,
+				observedQuantity: 195
+			}
+		])
 	})
 })
 
