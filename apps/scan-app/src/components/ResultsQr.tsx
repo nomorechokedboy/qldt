@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { BaseDirectory, writeFile } from '@tauri-apps/plugin-fs'
 import { Download } from 'lucide-react'
 import QRCode from 'qrcode'
 import { Button } from '@/components/ui/button'
@@ -18,6 +19,9 @@ export default function ResultsQr({
 }: ResultsQrProps) {
 	const canvasRef = useRef<HTMLCanvasElement>(null)
 	const [error, setError] = useState<string | null>(null)
+	const [downloadStatus, setDownloadStatus] = useState<
+		'idle' | 'saved' | 'failed'
+	>('idle')
 
 	useEffect(() => {
 		if (!canvasRef.current) return
@@ -31,18 +35,31 @@ export default function ResultsQr({
 		})
 	}, [value])
 
-	const handleDownload = () => {
+	// A plain `<a download>` click does nothing in Tauri's WebView - there's
+	// no browser download manager to catch it, especially on Android/iOS -
+	// so the PNG has to be written to disk directly via plugin-fs instead.
+	const handleDownload = async () => {
 		const canvas = canvasRef.current
 		if (!canvas) return
 
-		const link = document.createElement('a')
-		link.href = canvas.toDataURL('image/png')
-		link.download = `${downloadFilename}.png`
+		setDownloadStatus('idle')
+		const blob = await new Promise<Blob | null>((resolve) =>
+			canvas.toBlob(resolve, 'image/png')
+		)
+		if (!blob) {
+			setDownloadStatus('failed')
+			return
+		}
 
-		document.body.appendChild(link)
-		link.click()
-
-		document.body.removeChild(link)
+		try {
+			const bytes = new Uint8Array(await blob.arrayBuffer())
+			await writeFile(`${downloadFilename}.png`, bytes, {
+				baseDir: BaseDirectory.Download
+			})
+			setDownloadStatus('saved')
+		} catch {
+			setDownloadStatus('failed')
+		}
 	}
 
 	if (error) {
@@ -60,6 +77,14 @@ export default function ResultsQr({
 				<Download className='w-4 h-4 mr-2' />
 				Tải xuống mã QR
 			</Button>
+			{downloadStatus === 'saved' && (
+				<p className='text-muted-foreground text-sm'>
+					Đã lưu vào thư mục Download.
+				</p>
+			)}
+			{downloadStatus === 'failed' && (
+				<p className='text-destructive text-sm'>Không thể lưu mã QR.</p>
+			)}
 		</div>
 	)
 }

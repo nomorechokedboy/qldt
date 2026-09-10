@@ -54,7 +54,11 @@ function ChecklistPage() {
 	const { session, setSession } = useInventorySession()
 	const [extraSerial, setExtraSerial] = useState('')
 	const [signing, setSigning] = useState(false)
-	const [scanningTag, setScanningTag] = useState(false)
+	// Scanning the printed asset QR tags is the default, fastest way to work
+	// through a room's checklist - manual entry (tapping a condition per row,
+	// or typing in an unexpected serial) is a fallback for assets that were
+	// never tagged, or a tag that won't scan.
+	const [mode, setMode] = useState<'scan' | 'manual'>('scan')
 	const [tagScanError, setTagScanError] = useState<string | null>(null)
 
 	const diff = useMemo(
@@ -104,7 +108,6 @@ function ChecklistPage() {
 		}
 		setTagScanError(null)
 		recordScan(tag.serial.toUpperCase(), tag.condition)
-		setScanningTag(false)
 	}
 
 	function handleAddExtra(condition: MaterialConditionName) {
@@ -152,7 +155,29 @@ function ChecklistPage() {
 				))}
 			</div>
 
-			{scanningTag ? (
+			<div className='flex gap-2'>
+				<Button
+					type='button'
+					variant={mode === 'scan' ? 'default' : 'outline'}
+					className='flex-1'
+					onClick={() => {
+						setMode('scan')
+						setTagScanError(null)
+					}}
+				>
+					Quét mã QR
+				</Button>
+				<Button
+					type='button'
+					variant={mode === 'manual' ? 'default' : 'outline'}
+					className='flex-1'
+					onClick={() => setMode('manual')}
+				>
+					Nhập thủ công
+				</Button>
+			</div>
+
+			{mode === 'scan' && (
 				<div className='flex flex-col gap-2'>
 					<QrScanner onDecode={handleTagDecode} />
 					{tagScanError && (
@@ -160,25 +185,7 @@ function ChecklistPage() {
 							{tagScanError}
 						</p>
 					)}
-					<Button
-						type='button'
-						variant='outline'
-						onClick={() => {
-							setScanningTag(false)
-							setTagScanError(null)
-						}}
-					>
-						Huỷ quét
-					</Button>
 				</div>
-			) : (
-				<Button
-					type='button'
-					variant='outline'
-					onClick={() => setScanningTag(true)}
-				>
-					Quét mã QR khí tài
-				</Button>
 			)}
 
 			<ul className='flex flex-col gap-2'>
@@ -197,27 +204,53 @@ function ChecklistPage() {
 									{asset.materialTypeName} - Dự kiến:{' '}
 									{CONDITION_LABELS[asset.condition]}
 								</span>
-							</div>
-							<div className='flex flex-wrap gap-1.5'>
-								{CONDITIONS.map((c) => (
-									<Button
-										key={c}
-										type='button'
-										variant={
-											scan?.observedCondition === c
-												? 'default'
-												: 'outline'
-										}
-										size='sm'
-										className='min-w-[5.5rem] flex-1'
-										onClick={() =>
-											recordScan(asset.serial, c)
-										}
-									>
-										{CONDITION_LABELS[c]}
-									</Button>
-								))}
 								{scan && (
+									<span className='text-xs font-medium'>
+										Đã ghi nhận:{' '}
+										{
+											CONDITION_LABELS[
+												scan.observedCondition
+											]
+										}
+									</span>
+								)}
+							</div>
+							{mode === 'manual' ? (
+								<div className='flex flex-wrap gap-1.5'>
+									{CONDITIONS.map((c) => (
+										<Button
+											key={c}
+											type='button'
+											variant={
+												scan?.observedCondition === c
+													? 'default'
+													: 'outline'
+											}
+											size='sm'
+											className='min-w-[5.5rem] flex-1'
+											onClick={() =>
+												recordScan(asset.serial, c)
+											}
+										>
+											{CONDITION_LABELS[c]}
+										</Button>
+									))}
+									{scan && (
+										<Button
+											type='button'
+											variant='link'
+											size='sm'
+											className='text-destructive h-auto self-start px-0'
+											onClick={() =>
+												unmarkScan(asset.serial)
+											}
+										>
+											Bỏ đánh dấu
+										</Button>
+									)}
+								</div>
+							) : (
+								scan && (
 									<Button
 										type='button'
 										variant='link'
@@ -227,39 +260,42 @@ function ChecklistPage() {
 									>
 										Bỏ đánh dấu
 									</Button>
-								)}
-							</div>
+								)
+							)}
 						</li>
 					)
 				})}
 			</ul>
 
-			<div className='border-border flex flex-col gap-2 rounded-lg border border-dashed p-3'>
-				<p className='text-muted-foreground text-sm'>
-					Thêm số hiệu phát sinh (không có trong danh sách dự kiến)
-				</p>
-				<Input
-					value={extraSerial}
-					onChange={(e) => setExtraSerial(e.currentTarget.value)}
-					placeholder='Số hiệu (VD: A808834)'
-					className='font-mono uppercase'
-				/>
-				<div className='flex flex-wrap gap-1.5'>
-					{CONDITIONS.map((c) => (
-						<Button
-							key={c}
-							type='button'
-							variant='outline'
-							size='sm'
-							className='min-w-[5.5rem] flex-1'
-							onClick={() => handleAddExtra(c)}
-							disabled={!extraSerial.trim()}
-						>
-							{CONDITION_LABELS[c]}
-						</Button>
-					))}
+			{mode === 'manual' && (
+				<div className='border-border flex flex-col gap-2 rounded-lg border border-dashed p-3'>
+					<p className='text-muted-foreground text-sm'>
+						Thêm số hiệu phát sinh (không có trong danh sách dự
+						kiến)
+					</p>
+					<Input
+						value={extraSerial}
+						onChange={(e) => setExtraSerial(e.currentTarget.value)}
+						placeholder='Số hiệu (VD: A808834)'
+						className='font-mono uppercase'
+					/>
+					<div className='flex flex-wrap gap-1.5'>
+						{CONDITIONS.map((c) => (
+							<Button
+								key={c}
+								type='button'
+								variant='outline'
+								size='sm'
+								className='min-w-[5.5rem] flex-1'
+								onClick={() => handleAddExtra(c)}
+								disabled={!extraSerial.trim()}
+							>
+								{CONDITION_LABELS[c]}
+							</Button>
+						))}
+					</div>
 				</div>
-			</div>
+			)}
 
 			{diff
 				.filter((d) => d.status === 'extra')

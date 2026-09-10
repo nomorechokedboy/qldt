@@ -1,3 +1,4 @@
+import { isValidChallengePayload } from './payload'
 import type { ChallengePayload, ResultsPayload } from './payload'
 import type { ScanEntry } from './diff'
 
@@ -17,7 +18,16 @@ export function loadSession(): SessionState | null {
 	try {
 		const raw = localStorage.getItem(STORAGE_KEY)
 		if (!raw) return null
-		return JSON.parse(raw) as SessionState
+		const parsed = JSON.parse(raw) as SessionState
+		// A session persisted by an older build of this app (e.g. from before
+		// the challenge payload's `key` field existed) must not be silently
+		// resumed - it would sign results with a broken key and the backend
+		// would reject them with a confusing "invalid signature" error.
+		if (!isValidChallengePayload(parsed?.challenge)) {
+			localStorage.removeItem(STORAGE_KEY)
+			return null
+		}
+		return parsed
 	} catch {
 		return null
 	}
