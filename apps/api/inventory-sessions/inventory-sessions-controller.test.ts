@@ -36,6 +36,8 @@ function makeFakeRepo(
 		getOne: vi.fn(),
 		markCompleted: vi.fn(),
 		markReviewed: vi.fn(),
+		markExpired: vi.fn(),
+		expireStaleSessions: vi.fn().mockResolvedValue(undefined),
 		getOpenSessionForRoom: vi.fn(),
 		listSessionsForRoom: vi.fn().mockResolvedValue([]),
 		getRoomMaterialAssets: vi.fn(),
@@ -119,6 +121,28 @@ describe('InventorySessionController.getOpenChallenge', () => {
 		const controller = new InventorySessionController(repo)
 
 		await expect(controller.getOpenChallenge(10, [100])).resolves.toBeNull()
+	})
+
+	it('sweeps stale sessions for the room before checking for an open one', async () => {
+		const callOrder: string[] = []
+		const repo = makeFakeRepo({
+			expireStaleSessions: vi.fn().mockImplementation(async () => {
+				callOrder.push('expire')
+			}),
+			getOpenSessionForRoom: vi.fn().mockImplementation(async () => {
+				callOrder.push('getOpen')
+				return undefined
+			})
+		})
+		const controller = new InventorySessionController(repo)
+
+		await controller.getOpenChallenge(10, [100])
+
+		expect(repo.expireStaleSessions).toHaveBeenCalledWith(
+			10,
+			expect.any(String)
+		)
+		expect(callOrder).toEqual(['expire', 'getOpen'])
 	})
 })
 
@@ -217,6 +241,33 @@ describe('InventorySessionController.submitResults', () => {
 		await expect(controller.submitResults(results)).rejects.toThrow(
 			/already reviewed/
 		)
+	})
+
+	it('rejects and expires an in_progress session older than 4 hours', async () => {
+		const fiveHoursAgo = new Date(Date.now() - 5 * 60 * 60 * 1000)
+		const createdAt = fiveHoursAgo
+			.toISOString()
+			.slice(0, 19)
+			.replace('T', ' ')
+		const repo = makeFakeRepo({
+			getOne: vi
+				.fn()
+				.mockResolvedValue(
+					makeSession({ status: 'in_progress', createdAt })
+				)
+		})
+		const controller = new InventorySessionController(repo)
+
+		const results = buildResultsPayload(1, [
+			{ serial: 'A1', observedCondition: 'good' }
+		])
+
+		await expect(controller.submitResults(results)).rejects.toThrow(
+			/expired/
+		)
+		expect(repo.markExpired).toHaveBeenCalledWith(1)
+		expect(repo.insertScans).not.toHaveBeenCalled()
+		expect(repo.markCompleted).not.toHaveBeenCalled()
 	})
 
 	it('accepts a genuine payload against an in_progress session', async () => {

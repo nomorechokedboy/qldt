@@ -7,7 +7,11 @@ import { users } from './users'
 import { inventorySessionExpectedAssets } from './inventory-session-inspected-assets'
 import { inventorySessionScans } from './inventory-session-scans'
 
-export type InventorySessionStatus = 'in_progress' | 'completed' | 'reviewed'
+export type InventorySessionStatus =
+	| 'in_progress'
+	| 'completed'
+	| 'reviewed'
+	| 'expired'
 
 const InventorySessionStatusEnum = sqlite.customType<{
 	data: string
@@ -17,9 +21,11 @@ const InventorySessionStatusEnum = sqlite.customType<{
 		return 'text'
 	},
 	toDriver(val: string) {
-		if (!['in_progress', 'completed', 'reviewed'].includes(val)) {
+		if (
+			!['in_progress', 'completed', 'reviewed', 'expired'].includes(val)
+		) {
 			throw new Error(
-				`status must be one of in_progress, completed, reviewed`
+				`status must be one of in_progress, completed, reviewed, expired`
 			)
 		}
 		return val
