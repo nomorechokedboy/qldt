@@ -5,8 +5,10 @@ import { MaterialConditionName } from '../schema/material-stocks'
 // See docs/superpowers/specs/2026-09-09-scan-reconciliation-design.md for
 // why a single static QR (no multi-frame reassembly) is sufficient at
 // platoon-armory scale, and why an HMAC signature is enough integrity
-// protection given the phone never authenticates to apps/api.
-export const INVENTORY_SESSION_PAYLOAD_VERSION = 1 as const
+// protection given the phone never authenticates to apps/api. v2 adds bulk
+// stock counting alongside serialized assets - see
+// docs/superpowers/specs/2026-09-10-inventory-session-stock-counts-design.md.
+export const INVENTORY_SESSION_PAYLOAD_VERSION = 2 as const
 
 export interface InventorySessionChallengeAsset {
 	serial: string
@@ -14,11 +16,19 @@ export interface InventorySessionChallengeAsset {
 	condition: MaterialConditionName
 }
 
+export interface InventorySessionChallengeStock {
+	materialTypeId: number
+	materialTypeName: string
+	condition: MaterialConditionName
+	expectedQuantity: number
+}
+
 export interface InventorySessionChallengePayload {
 	v: typeof INVENTORY_SESSION_PAYLOAD_VERSION
 	sid: number
 	roomId: number
 	expected: InventorySessionChallengeAsset[]
+	expectedStocks: InventorySessionChallengeStock[]
 	// Per-session HMAC key, derived from appConfig.HASH_SECRET (see
 	// deriveSessionKey below) and included here so the phone - which never
 	// has HASH_SECRET itself - can sign the results payload it produces.
@@ -34,10 +44,17 @@ export interface InventorySessionResultItem {
 	observedCondition?: MaterialConditionName
 }
 
+export interface InventorySessionStockResultItem {
+	materialTypeId: number
+	condition: MaterialConditionName
+	observedQuantity: number
+}
+
 export interface InventorySessionResultsPayload {
 	v: typeof INVENTORY_SESSION_PAYLOAD_VERSION
 	sid: number
 	results: InventorySessionResultItem[]
+	stockResults: InventorySessionStockResultItem[]
 	sig: string
 }
 
@@ -72,7 +89,8 @@ function canonicalChallenge(
 		v: payload.v,
 		sid: payload.sid,
 		roomId: payload.roomId,
-		expected: payload.expected
+		expected: payload.expected,
+		expectedStocks: payload.expectedStocks
 	})
 }
 
@@ -83,17 +101,21 @@ function canonicalResults(
 		v: payload.v,
 		sid: payload.sid,
 		// Rebuild each item with an explicit key order rather than passing
-		// `payload.results` straight through - Encore's request-body parsing
-		// reconstructs incoming JSON objects with alphabetized keys
-		// (observedCondition before serial), not the wire order the phone
-		// actually signed with. Passing the reordered objects to
-		// JSON.stringify silently produces a different canonical string (and
-		// thus signature) than the phone computed, even when every value
-		// matches. Caught by comparing a live device's signed `results`
-		// field against the backend's canonicalized string side by side.
+		// `payload.results`/`payload.stockResults` straight through -
+		// Encore's request-body parsing reconstructs incoming JSON objects
+		// with alphabetized keys, not the wire order the phone actually
+		// signed with. Passing the reordered objects to JSON.stringify
+		// silently produces a different canonical string (and thus
+		// signature) than the phone computed, even when every value
+		// matches.
 		results: payload.results.map((r) => ({
 			serial: r.serial,
 			observedCondition: r.observedCondition
+		})),
+		stockResults: payload.stockResults.map((r) => ({
+			materialTypeId: r.materialTypeId,
+			condition: r.condition,
+			observedQuantity: r.observedQuantity
 		}))
 	})
 }
@@ -101,13 +123,15 @@ function canonicalResults(
 export function buildChallengePayload(
 	sessionId: number,
 	roomId: number,
-	expected: InventorySessionChallengeAsset[]
+	expected: InventorySessionChallengeAsset[],
+	expectedStocks: InventorySessionChallengeStock[]
 ): InventorySessionChallengePayload {
 	const unsigned = {
 		v: INVENTORY_SESSION_PAYLOAD_VERSION,
 		sid: sessionId,
 		roomId,
-		expected
+		expected,
+		expectedStocks
 	}
 	return {
 		...unsigned,
@@ -123,12 +147,14 @@ export function buildChallengePayload(
 // Web Crypto's HMAC, instead of re-deriving it - see apps/scan-app/src/lib/payload.ts.
 export function buildResultsPayload(
 	sessionId: number,
-	results: InventorySessionResultItem[]
+	results: InventorySessionResultItem[],
+	stockResults: InventorySessionStockResultItem[]
 ): InventorySessionResultsPayload {
 	const unsigned = {
 		v: INVENTORY_SESSION_PAYLOAD_VERSION,
 		sid: sessionId,
-		results
+		results,
+		stockResults
 	}
 	return { ...unsigned, sig: sign(sessionId, canonicalResults(unsigned)) }
 }

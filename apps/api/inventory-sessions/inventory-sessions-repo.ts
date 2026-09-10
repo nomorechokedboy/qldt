@@ -1,8 +1,10 @@
 import { and, desc, eq, inArray, lt } from 'drizzle-orm'
 import {
+	InventorySessionExpectedStockWithType,
 	InventorySessionExpectedAssetWithType,
 	InventorySessionRepository,
-	RoomMaterialAsset
+	RoomMaterialAsset,
+	RoomMaterialStock
 } from '.'
 import orm, { DrizzleDatabase } from '../database'
 import {
@@ -16,11 +18,22 @@ import {
 	InventorySessionExpectedAssetParams
 } from '../schema/inventory-session-inspected-assets'
 import {
+	inventorySessionExpectedStocks,
+	InventorySessionExpectedStockDB,
+	InventorySessionExpectedStockParams
+} from '../schema/inventory-session-expected-stocks'
+import {
 	inventorySessionScans,
 	InventorySessionScanDB,
 	InventorySessionScanParams
 } from '../schema/inventory-session-scans'
+import {
+	inventorySessionStockCounts,
+	InventorySessionStockCountDB,
+	InventorySessionStockCountParams
+} from '../schema/inventory-session-stock-counts'
 import { materialAssets, MaterialAssetDB } from '../schema/material-assets'
+import { materialStocks } from '../schema/material-stocks'
 import { materialTypes } from '../schema/material-types'
 import { handleDatabaseErr } from '../utils'
 
@@ -201,6 +214,93 @@ class repo implements InventorySessionRepository {
 		if (serials.length === 0) return Promise.resolve([])
 		return this.db.query.materialAssets
 			.findMany({ where: inArray(materialAssets.serialNumber, serials) })
+			.catch(handleDatabaseErr)
+	}
+
+	getRoomMaterialStocks(roomId: number): Promise<RoomMaterialStock[]> {
+		return this.db
+			.select({
+				id: materialStocks.id,
+				materialTypeId: materialStocks.materialTypeId,
+				unitId: materialStocks.unitId,
+				roomId: materialStocks.roomId,
+				quantity: materialStocks.quantity,
+				condition: materialStocks.condition,
+				createdAt: materialStocks.createdAt,
+				updatedAt: materialStocks.updatedAt,
+				materialTypeName: materialTypes.name
+			})
+			.from(materialStocks)
+			.innerJoin(
+				materialTypes,
+				eq(materialStocks.materialTypeId, materialTypes.id)
+			)
+			.where(eq(materialStocks.roomId, roomId))
+			.catch(handleDatabaseErr) as unknown as Promise<RoomMaterialStock[]>
+	}
+
+	snapshotExpectedStocks(
+		params: InventorySessionExpectedStockParams[]
+	): Promise<InventorySessionExpectedStockDB[]> {
+		if (params.length === 0) return Promise.resolve([])
+		return this.db
+			.insert(inventorySessionExpectedStocks)
+			.values(params)
+			.returning()
+			.catch(handleDatabaseErr)
+	}
+
+	getExpectedStocks(
+		sessionId: number
+	): Promise<InventorySessionExpectedStockDB[]> {
+		return this.db.query.inventorySessionExpectedStocks
+			.findMany({
+				where: eq(inventorySessionExpectedStocks.sessionId, sessionId)
+			})
+			.catch(handleDatabaseErr)
+	}
+
+	getExpectedStocksWithType(
+		sessionId: number
+	): Promise<InventorySessionExpectedStockWithType[]> {
+		return this.db
+			.select({
+				materialTypeId: inventorySessionExpectedStocks.materialTypeId,
+				condition: inventorySessionExpectedStocks.condition,
+				expectedQuantity:
+					inventorySessionExpectedStocks.expectedQuantity,
+				materialTypeName: materialTypes.name
+			})
+			.from(inventorySessionExpectedStocks)
+			.innerJoin(
+				materialTypes,
+				eq(
+					inventorySessionExpectedStocks.materialTypeId,
+					materialTypes.id
+				)
+			)
+			.where(eq(inventorySessionExpectedStocks.sessionId, sessionId))
+			.catch(handleDatabaseErr) as unknown as Promise<
+			InventorySessionExpectedStockWithType[]
+		>
+	}
+
+	insertStockCounts(
+		params: InventorySessionStockCountParams[]
+	): Promise<InventorySessionStockCountDB[]> {
+		if (params.length === 0) return Promise.resolve([])
+		return this.db
+			.insert(inventorySessionStockCounts)
+			.values(params)
+			.returning()
+			.catch(handleDatabaseErr)
+	}
+
+	getStockCounts(sessionId: number): Promise<InventorySessionStockCountDB[]> {
+		return this.db.query.inventorySessionStockCounts
+			.findMany({
+				where: eq(inventorySessionStockCounts.sessionId, sessionId)
+			})
 			.catch(handleDatabaseErr)
 	}
 }
