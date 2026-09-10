@@ -1,5 +1,9 @@
-import { eq, inArray } from 'drizzle-orm'
-import { InventorySessionRepository, RoomMaterialAsset } from '.'
+import { and, desc, eq, inArray } from 'drizzle-orm'
+import {
+	InventorySessionExpectedAssetWithType,
+	InventorySessionRepository,
+	RoomMaterialAsset
+} from '.'
 import orm, { DrizzleDatabase } from '../database'
 import {
 	inventorySessions,
@@ -48,6 +52,38 @@ class repo implements InventorySessionRepository {
 			.catch(handleDatabaseErr)
 	}
 
+	markReviewed(id: number): Promise<InventorySessionDB> {
+		return this.db
+			.update(inventorySessions)
+			.set({ status: 'reviewed' })
+			.where(eq(inventorySessions.id, id))
+			.returning()
+			.then((rows) => rows[0])
+			.catch(handleDatabaseErr)
+	}
+
+	getOpenSessionForRoom(
+		roomId: number
+	): Promise<InventorySessionDB | undefined> {
+		return this.db.query.inventorySessions
+			.findFirst({
+				where: and(
+					eq(inventorySessions.roomId, roomId),
+					eq(inventorySessions.status, 'in_progress')
+				)
+			})
+			.catch(handleDatabaseErr)
+	}
+
+	listSessionsForRoom(roomId: number): Promise<InventorySessionDB[]> {
+		return this.db.query.inventorySessions
+			.findMany({
+				where: eq(inventorySessions.roomId, roomId),
+				orderBy: desc(inventorySessions.createdAt)
+			})
+			.catch(handleDatabaseErr)
+	}
+
 	getRoomMaterialAssets(roomId: number): Promise<RoomMaterialAsset[]> {
 		return this.db
 			.select({
@@ -91,6 +127,31 @@ class repo implements InventorySessionRepository {
 				where: eq(inventorySessionExpectedAssets.sessionId, sessionId)
 			})
 			.catch(handleDatabaseErr)
+	}
+
+	getExpectedAssetsWithType(
+		sessionId: number
+	): Promise<InventorySessionExpectedAssetWithType[]> {
+		return this.db
+			.select({
+				serialNumber: inventorySessionExpectedAssets.serialNumber,
+				conditionSnapshot:
+					inventorySessionExpectedAssets.conditionSnapshot,
+				materialTypeName: materialTypes.name
+			})
+			.from(inventorySessionExpectedAssets)
+			.innerJoin(
+				materialAssets,
+				eq(inventorySessionExpectedAssets.assetId, materialAssets.id)
+			)
+			.innerJoin(
+				materialTypes,
+				eq(materialAssets.materialTypeId, materialTypes.id)
+			)
+			.where(eq(inventorySessionExpectedAssets.sessionId, sessionId))
+			.catch(handleDatabaseErr) as unknown as Promise<
+			InventorySessionExpectedAssetWithType[]
+		>
 	}
 
 	insertScans(

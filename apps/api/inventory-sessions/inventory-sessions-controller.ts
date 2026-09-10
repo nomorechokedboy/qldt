@@ -50,7 +50,7 @@ export interface InventorySessionReview {
 	diff: InventorySessionDiffItem[]
 }
 
-class controller {
+export class InventorySessionController {
 	constructor(private readonly repo: InventorySessionRepository) {}
 
 	async createChallenge(params: {
@@ -110,6 +110,64 @@ class controller {
 		return buildChallengePayload(session.id, params.roomId, expected)
 	}
 
+	// Rebuilds the challenge payload for a room's still-open session, if any
+	// - deterministic from sessionId + the already-snapshotted expected
+	// assets, so it reproduces the exact same QR (same key/sig) the PC
+	// originally showed. Lets the PC side resume after a reload/reboot
+	// instead of losing track of a session the phone may still be scanning.
+	async getOpenChallenge(
+		roomId: number,
+		validUnitIds: number[]
+	): Promise<InventorySessionChallengePayload | null> {
+		const session = await this.repo.getOpenSessionForRoom(roomId)
+		if (!session) return null
+
+		if (!validUnitIds.includes(session.unitId)) {
+			throw AppError.handleAppErr(
+				AppError.unauthorized(
+					"You don't have permission to view this room's inventory session"
+				)
+			)
+		}
+
+		const expectedAssets = await this.repo.getExpectedAssetsWithType(
+			session.id
+		)
+		const expected: InventorySessionChallengeAsset[] = expectedAssets.map(
+			(a) => ({
+				serial: a.serialNumber,
+				materialTypeName: a.materialTypeName,
+				condition: a.conditionSnapshot
+			})
+		)
+
+		return buildChallengePayload(session.id, roomId, expected)
+	}
+
+	// Backs the room's "Lịch sử kiểm kê" history sheet - lightweight session
+	// summaries only (no diff), so the diff for a given session is only
+	// computed on demand via getReview when a reviewer actually opens it.
+	async listSessionsForRoom(
+		roomId: number,
+		validUnitIds: number[]
+	): Promise<InventorySessionResp[]> {
+		const sessions = await this.repo.listSessionsForRoom(roomId)
+		if (sessions.length === 0) return []
+
+		// A room's unit can't realistically change between sessions in this
+		// product - same check as createChallenge/getOpenChallenge, applied
+		// once for the whole list rather than per session.
+		if (!validUnitIds.includes(sessions[0].unitId)) {
+			throw AppError.handleAppErr(
+				AppError.unauthorized(
+					"You don't have permission to view this room's inventory session history"
+				)
+			)
+		}
+
+		return sessions.map(toSessionResp)
+	}
+
 	async submitResults(
 		payload: InventorySessionResultsPayload
 	): Promise<InventorySessionReview> {
@@ -164,6 +222,45 @@ class controller {
 		return this.buildReview(completed)
 	}
 
+	// The final step of the flow: a reviewer looks at the diff (via
+	// getReview) and, once satisfied, marks the session reviewed. This is
+	// deliberately a separate step from submitResults - completing the scan
+	// and reviewing its outcome are different responsibilities (the trooper
+	// who imports the results QR isn't necessarily the one who signs off on
+	// the diff). Does not touch `material_assets` - reconciling the diff
+	// into the asset registry is a manual follow-up action, not automatic.
+	async markReviewed(
+		sessionId: number,
+		validUnitIds: number[]
+	): Promise<InventorySessionReview> {
+		const session = await this.repo.getOne(sessionId)
+		if (!session) {
+			throw AppError.handleAppErr(
+				AppError.notFound('Inventory session not found')
+			)
+		}
+		if (!validUnitIds.includes(session.unitId)) {
+			throw AppError.handleAppErr(
+				AppError.unauthorized(
+					"You don't have permission to review this inventory session"
+				)
+			)
+		}
+		if (session.status !== 'completed') {
+			throw AppError.handleAppErr(
+				AppError.invalidArgument(
+					`Session must be completed before it can be reviewed (current status: ${session.status})`
+				)
+			)
+		}
+
+		const reviewed = await this.repo.markReviewed(sessionId)
+
+		log.info('InventorySessionController.markReviewed', { sessionId })
+
+		return this.buildReview(reviewed)
+	}
+
 	async getReview(sessionId: number): Promise<InventorySessionReview> {
 		const session = await this.repo.getOne(sessionId)
 		if (!session) {
@@ -188,6 +285,8 @@ class controller {
 	}
 }
 
-const inventorySessionController = new controller(inventorySessionRepo)
+const inventorySessionController = new InventorySessionController(
+	inventorySessionRepo
+)
 
 export default inventorySessionController
