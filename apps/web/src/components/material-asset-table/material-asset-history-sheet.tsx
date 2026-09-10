@@ -10,6 +10,7 @@ import {
 	materialAssetStatusLabels,
 	materialConditionLabels
 } from '@/data/material-categories'
+import { formatDbTimestamp } from '@/lib/utils'
 import type { MaterialAssetEvent, MaterialAssetEventType } from '@/types'
 
 const eventTypeLabels: Record<MaterialAssetEventType, string> = {
@@ -150,9 +151,7 @@ export default function MaterialAssetHistorySheet({
 									{eventTypeLabels[ev.eventType]}
 								</Badge>
 								<span className='text-xs text-muted-foreground'>
-									{new Date(ev.createdAt).toLocaleString(
-										'vi-VN'
-									)}
+									{formatDbTimestamp(ev.createdAt)}
 								</span>
 							</div>
 							<EventDetail event={ev} />

@@ -24,8 +24,25 @@ export function cn(...inputs: ClassValue[]) {
 	return twMerge(clsx(inputs))
 }
 
+// apps/api stores timestamps as naive UTC strings (SQLite's CURRENT_TIMESTAMP,
+// "YYYY-MM-DD HH:MM:SS" with no offset/'Z'). Passing that straight to
+// `dayjs()`/`new Date()` gets parsed as browser-local time instead of UTC,
+// so every displayed timestamp is off by the Vietnam UTC+7 offset. Always
+// anchor with `dayjs.utc(...)` first so the instant is correct, then convert
+// to Asia/Ho_Chi_Minh for display.
 export function formatTimestamp(timestamp: string) {
-	return dayjs(timestamp).fromNow()
+	return dayjs.utc(timestamp).tz('Asia/Ho_Chi_Minh').fromNow()
+}
+
+// Shared formatter for any DB timestamp (createdAt/updatedAt/etc.) shown in
+// the UI - see the comment on formatTimestamp above for why the UTC anchor
+// matters. Default format matches the vi-VN locale string most call sites
+// used to build by hand via `new Date(x).toLocaleString('vi-VN')`.
+export function formatDbTimestamp(
+	timestamp: string,
+	fmt = 'DD/MM/YYYY HH:mm:ss'
+) {
+	return dayjs.utc(timestamp).tz('Asia/Ho_Chi_Minh').format(fmt)
 }
 
 export function getCurrentWeekNumber() {
@@ -37,7 +54,7 @@ export function getCurrentQuarter() {
 }
 
 export function toVNTz(utcTimestamp: string) {
-	return dayjs.utc(utcTimestamp).format('DD-MM-YYYY')
+	return dayjs.utc(utcTimestamp).tz('Asia/Ho_Chi_Minh').format('DD-MM-YYYY')
 }
 
 export function transformPoliticsQualityData(

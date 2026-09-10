@@ -25,6 +25,7 @@ import {
 	TableRow
 } from '@/components/ui/table'
 import useAuditLogs from '@/hooks/useAuditLogs'
+import { formatDbTimestamp } from '@/lib/utils'
 import type { audit_logs } from '@/api/client'
 
 const PAGE_SIZE = 20
@@ -170,9 +171,7 @@ export default function AuditLogTab() {
 							data?.data.map((log) => (
 								<TableRow key={log.id}>
 									<TableCell className='whitespace-nowrap text-sm'>
-										{new Date(log.createdAt).toLocaleString(
-											'vi-VN'
-										)}
+										{formatDbTimestamp(log.createdAt)}
 									</TableCell>
 									<TableCell>
 										{log.actor?.displayName ?? '—'}
@@ -272,9 +271,7 @@ export default function AuditLogTab() {
 									Thời gian
 								</span>
 								<span>
-									{new Date(
-										selectedLog.createdAt
-									).toLocaleString('vi-VN')}
+									{formatDbTimestamp(selectedLog.createdAt)}
 								</span>
 							</div>
 

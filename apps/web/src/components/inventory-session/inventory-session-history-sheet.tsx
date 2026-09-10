@@ -18,6 +18,7 @@ import {
 	useInventorySessionReview,
 	useInventorySessionsForRoom
 } from '@/hooks/useInventorySession'
+import { formatDbTimestamp } from '@/lib/utils'
 import InventorySessionDiffList from './session-diff-list'
 
 const SESSION_STATUS_LABEL: Record<
@@ -119,10 +120,8 @@ export default function InventorySessionHistorySheet({
 											<AccordionTrigger>
 												<span className='flex items-center gap-3'>
 													<span>
-														{new Date(
+														{formatDbTimestamp(
 															session.createdAt
-														).toLocaleString(
-															'vi-VN'
 														)}
 													</span>
 													<Badge
