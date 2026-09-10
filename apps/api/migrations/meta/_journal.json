@@ -141,6 +141,13 @@
 			"when": 1788913861204,
 			"tag": "0019_chief_metal_master",
 			"breakpoints": true
+		},
+		{
+			"idx": 20,
+			"version": "6",
+			"when": 1788998505942,
+			"tag": "0020_seed-inventory-sessions-authz",
+			"breakpoints": true
 		}
 	]
 }
