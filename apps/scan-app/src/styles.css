@@ -1,61 +1,85 @@
 @import 'tailwindcss';
 @plugin "tailwindcss-animate";
 
+/* Self-hosted (not Google Fonts CDN) - this app runs offline in the field,
+   so text must not depend on a network fetch to render. Same pairing as
+   apps/web (Inter body, Noto Serif headings) so the phone companion app
+   and the PC dashboard read as one product. */
+@import '@fontsource/inter/400.css';
+@import '@fontsource/inter/500.css';
+@import '@fontsource/inter/600.css';
+@import '@fontsource/inter/700.css';
+@import '@fontsource/noto-serif/600.css';
+@import '@fontsource/noto-serif/700.css';
+
 @custom-variant dark (&:is(.dark *));
 
 body {
 	@apply m-0 font-sans bg-background text-foreground;
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
+	background-image: var(--paper-texture);
 }
 
-/* shadcn/ui "new-york" style, zinc base color - same tokens as apps/web's
-   selectable `.zinc` theme variant, used here as the only theme since this
+h1,
+h2,
+h3 {
+	@apply font-serif tracking-tight;
+}
+
+/* Same palette as apps/web's default theme: warm parchment, oxblood-red
+   primary, gold/olive accents - reused verbatim (not a new competing
+   palette) so the scan companion app and the PC dashboard match. --slate
+   is scan-app's one addition, for the "extra" (unexpected serial) diff
+   status apps/web's token set has no equivalent for. No dark theme - this
    app has no theme switcher. */
 :root {
 	--radius: 0.625rem;
-	--background: oklch(1 0 0);
-	--foreground: oklch(0.141 0.005 285.823);
-	--card: oklch(1 0 0);
-	--card-foreground: oklch(0.141 0.005 285.823);
-	--popover: oklch(1 0 0);
-	--popover-foreground: oklch(0.141 0.005 285.823);
-	--primary: oklch(0.21 0.006 285.885);
-	--primary-foreground: oklch(0.985 0 0);
-	--secondary: oklch(0.967 0.001 286.375);
-	--secondary-foreground: oklch(0.21 0.006 285.885);
-	--muted: oklch(0.967 0.001 286.375);
-	--muted-foreground: oklch(0.552 0.016 285.938);
-	--accent: oklch(0.967 0.001 286.375);
-	--accent-foreground: oklch(0.21 0.006 285.885);
-	--destructive: oklch(0.577 0.245 27.325);
-	--border: oklch(0.92 0.004 286.32);
-	--input: oklch(0.92 0.004 286.32);
-	--ring: oklch(0.705 0.015 286.067);
-}
+	--background: oklch(0.95 0.016 75);
+	--foreground: oklch(0.2 0.014 40);
+	--card: oklch(0.99 0.004 75);
+	--card-foreground: oklch(0.2 0.014 40);
+	--popover: oklch(0.99 0.004 75);
+	--popover-foreground: oklch(0.2 0.014 40);
+	--primary: oklch(0.4 0.15 26);
+	--primary-foreground: oklch(0.98 0.008 75);
+	--secondary: oklch(0.93 0.012 75);
+	--secondary-foreground: oklch(0.26 0.02 40);
+	--muted: oklch(0.94 0.01 70);
+	--muted-foreground: oklch(0.48 0.02 55);
+	--accent: oklch(0.9 0.045 85);
+	--accent-foreground: oklch(0.28 0.035 70);
+	--destructive: oklch(0.55 0.22 32);
+	--destructive-foreground: oklch(0.98 0.008 75);
+	--border: oklch(0.86 0.018 65);
+	--input: oklch(0.86 0.018 65);
+	--ring: oklch(0.5 0.15 26);
+	--gold: oklch(0.72 0.13 82);
+	--gold-foreground: oklch(0.24 0.03 70);
+	--olive: oklch(0.47 0.075 130);
+	--olive-foreground: oklch(0.98 0.01 130);
+	--slate: oklch(0.45 0.09 250);
+	--slate-foreground: oklch(0.98 0.01 250);
+	--paper-texture: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='120' height='120' filter='url(%23n)' opacity='0.07'/%3E%3C/svg%3E");
 
-.dark {
-	--background: oklch(0.141 0.005 285.823);
-	--foreground: oklch(0.985 0 0);
-	--card: oklch(0.21 0.006 285.885);
-	--card-foreground: oklch(0.985 0 0);
-	--popover: oklch(0.21 0.006 285.885);
-	--popover-foreground: oklch(0.985 0 0);
-	--primary: oklch(0.92 0.004 286.32);
-	--primary-foreground: oklch(0.21 0.006 285.885);
-	--secondary: oklch(0.274 0.006 286.033);
-	--secondary-foreground: oklch(0.985 0 0);
-	--muted: oklch(0.274 0.006 286.033);
-	--muted-foreground: oklch(0.705 0.015 286.067);
-	--accent: oklch(0.274 0.006 286.033);
-	--accent-foreground: oklch(0.985 0 0);
-	--destructive: oklch(0.704 0.191 22.216);
-	--border: oklch(1 0 0 / 10%);
-	--input: oklch(1 0 0 / 15%);
-	--ring: oklch(0.552 0.016 285.938);
+	/* Inventory-diff status colors - each aliases one of the palette
+	   colors above so badges/row markers stay part of the same system
+	   instead of introducing unrelated hues. */
+	--matched: var(--olive);
+	--matched-foreground: var(--olive-foreground);
+	--missing: var(--destructive);
+	--missing-foreground: var(--destructive-foreground);
+	--changed: var(--gold);
+	--changed-foreground: var(--gold-foreground);
+	--extra: var(--slate);
+	--extra-foreground: var(--slate-foreground);
 }
 
 @theme inline {
+	--font-sans:
+		'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
+		'Helvetica Neue', sans-serif;
+	--font-serif: 'Noto Serif', Georgia, 'Times New Roman', serif;
 	--color-background: var(--background);
 	--color-foreground: var(--foreground);
 	--color-card: var(--card);
@@ -71,9 +95,24 @@ body {
 	--color-accent: var(--accent);
 	--color-accent-foreground: var(--accent-foreground);
 	--color-destructive: var(--destructive);
+	--color-destructive-foreground: var(--destructive-foreground);
 	--color-border: var(--border);
 	--color-input: var(--input);
 	--color-ring: var(--ring);
+	--color-gold: var(--gold);
+	--color-gold-foreground: var(--gold-foreground);
+	--color-olive: var(--olive);
+	--color-olive-foreground: var(--olive-foreground);
+	--color-slate: var(--slate);
+	--color-slate-foreground: var(--slate-foreground);
+	--color-matched: var(--matched);
+	--color-matched-foreground: var(--matched-foreground);
+	--color-missing: var(--missing);
+	--color-missing-foreground: var(--missing-foreground);
+	--color-changed: var(--changed);
+	--color-changed-foreground: var(--changed-foreground);
+	--color-extra: var(--extra);
+	--color-extra-foreground: var(--extra-foreground);
 	--radius-sm: calc(var(--radius) - 4px);
 	--radius-md: calc(var(--radius) - 2px);
 	--radius-lg: var(--radius);
