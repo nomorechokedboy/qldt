@@ -1,31 +1,20 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { ScanLine } from 'lucide-react'
 import { toast } from 'sonner'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import type { inventory_sessions } from '@/api/client'
 import {
 	useCreateInventorySession,
+	useMarkInventorySessionReviewed,
+	useOpenInventorySession,
 	useSubmitInventorySessionResults
 } from '@/hooks/useInventorySession'
 import ChallengeQr from './challenge-qr'
+import InventorySessionDiffList from './session-diff-list'
 import WebcamQrScanner from './webcam-qr-scanner'
 
 type Step = 'start' | 'challenge' | 'scan' | 'review'
-
-const STATUS_LABEL: Record<
-	inventory_sessions.InventorySessionDiffStatus,
-	{
-		label: string
-		variant: 'default' | 'destructive' | 'secondary' | 'outline'
-	}
-> = {
-	matched: { label: 'Khớp', variant: 'secondary' },
-	missing: { label: 'Thiếu', variant: 'destructive' },
-	extra: { label: 'Phát sinh', variant: 'outline' },
-	condition_changed: { label: 'Đổi tình trạng', variant: 'default' }
-}
 
 interface InventorySessionDialogProps {
 	roomId: number
@@ -51,6 +40,12 @@ export default function InventorySessionDialog({
 
 	const createSession = useCreateInventorySession()
 	const submitResults = useSubmitInventorySessionResults()
+	const markReviewed = useMarkInventorySessionReviewed()
+	// Checked on every open - if a session for this room is still
+	// in_progress (the PC's tab was closed, or the machine was restarted,
+	// while the phone was mid-scan), resume it instead of starting a
+	// duplicate. See docs/superpowers/specs/2026-09-09-scan-reconciliation-design.md.
+	const openSession = useOpenInventorySession(roomId, { enabled: open })
 
 	const reset = () => {
 		setStep('start')
@@ -62,6 +57,12 @@ export default function InventorySessionDialog({
 		setOpen(next)
 		if (!next) reset()
 	}
+
+	useEffect(() => {
+		if (step !== 'start' || !openSession.data?.session) return
+		setChallenge(openSession.data.session)
+		setStep('challenge')
+	}, [step, openSession.data])
 
 	const handleStart = async () => {
 		try {
@@ -108,6 +109,21 @@ export default function InventorySessionDialog({
 		}
 	}
 
+	const handleMarkReviewed = async () => {
+		if (!review) return
+		try {
+			const result = await markReviewed.mutateAsync(review.session.id)
+			setReview(result)
+			toast.success('Đã xác nhận kiểm tra kết quả kiểm kê')
+		} catch (err) {
+			toast.error(
+				err instanceof Error
+					? err.message
+					: 'Không thể xác nhận kết quả kiểm kê'
+			)
+		}
+	}
+
 	return (
 		<>
 			<Button
@@ -132,11 +148,16 @@ export default function InventorySessionDialog({
 							</p>
 							<Button
 								onClick={handleStart}
-								disabled={createSession.isPending}
+								disabled={
+									createSession.isPending ||
+									openSession.isPending
+								}
 							>
-								{createSession.isPending
-									? 'Đang tạo...'
-									: 'Tạo mã QR kiểm kê'}
+								{openSession.isPending
+									? 'Đang kiểm tra phiên...'
+									: createSession.isPending
+										? 'Đang tạo...'
+										: 'Tạo mã QR kiểm kê'}
 							</Button>
 						</div>
 					)}
@@ -175,32 +196,27 @@ export default function InventorySessionDialog({
 
 					{step === 'review' && review && (
 						<div className='flex flex-col gap-4'>
-							<div className='max-h-80 overflow-y-auto space-y-2'>
-								{review.diff.map((item) => (
-									<div
-										key={item.serial}
-										className='flex items-center justify-between rounded-md border p-2 text-sm'
-									>
-										<span className='font-mono'>
-											{item.serial}
-										</span>
-										<Badge
-											variant={
-												STATUS_LABEL[item.status]
-													.variant
-											}
-										>
-											{STATUS_LABEL[item.status].label}
-										</Badge>
-									</div>
-								))}
-								{review.diff.length === 0 && (
-									<p className='text-muted-foreground text-sm text-center'>
-										Không có dữ liệu chênh lệch.
-									</p>
-								)}
+							<div className='max-h-80 overflow-y-auto'>
+								<InventorySessionDiffList diff={review.diff} />
 							</div>
-							<Button onClick={() => handleOpenChange(false)}>
+							{review.session.status === 'reviewed' ? (
+								<p className='text-muted-foreground text-sm text-center'>
+									Đã xác nhận kiểm tra kết quả này.
+								</p>
+							) : (
+								<Button
+									onClick={handleMarkReviewed}
+									disabled={markReviewed.isPending}
+								>
+									{markReviewed.isPending
+										? 'Đang xác nhận...'
+										: 'Xác nhận đã kiểm tra'}
+								</Button>
+							)}
+							<Button
+								variant='outline'
+								onClick={() => handleOpenChange(false)}
+							>
 								Xong
 							</Button>
 						</div>

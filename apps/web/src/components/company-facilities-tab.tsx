@@ -66,8 +66,8 @@ export default function CompanyFacilitiesTab({
 
 	const roomOptions = [
 		{
-			label: 'Không thuộc phòng cụ thể',
-			value: 'Không thuộc phòng cụ thể'
+			label: 'Chưa có vị trí cụ thể',
+			value: 'Chưa có vị trí cụ thể'
 		},
 		...companyRooms.map((r) => ({ label: r.name, value: r.name }))
 	]
@@ -77,7 +77,7 @@ export default function CompanyFacilitiesTab({
 			'Tình trạng',
 			materialConditionOptions
 		),
-		createFacetedFilter('room', 'Phòng', roomOptions)
+		createFacetedFilter('room', 'Vị trí', roomOptions)
 	]
 
 	return (

@@ -41,7 +41,8 @@ const RESOURCE_LABELS: Record<string, string> = {
 	permissions: 'Quyền',
 	users: 'Người dùng',
 	user_roles: 'Phân quyền người dùng',
-	transfer_requests: 'Yêu cầu chuyển giao'
+	transfer_requests: 'Yêu cầu bàn giao',
+	inventory_sessions: 'Phiên kiểm kê'
 }
 
 const ACTION_LABELS: Record<string, string> = {

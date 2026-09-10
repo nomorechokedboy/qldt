@@ -21,6 +21,21 @@ export default function WebcamQrScanner({
 	const canvasRef = useRef<HTMLCanvasElement>(null)
 	const [error, setError] = useState<string | null>(null)
 
+	// The scan loop below only starts once (see the empty deps array further
+	// down) so the camera stream doesn't restart - and flicker - every time
+	// `paused` or `onDecode` change identity. It reads these through refs
+	// instead of closing over the props directly, so it always sees the
+	// current values rather than the ones captured at mount.
+	const onDecodeRef = useRef(onDecode)
+	const pausedRef = useRef(paused)
+	// Last decoded QR text still visible in frame - see the coalescing
+	// comment in `tick` below.
+	const lastDecodedRef = useRef<string | null>(null)
+	useEffect(() => {
+		onDecodeRef.current = onDecode
+		pausedRef.current = paused
+	}, [onDecode, paused])
+
 	useEffect(() => {
 		let stream: MediaStream | undefined
 		let frameId: number | undefined
@@ -52,7 +67,7 @@ export default function WebcamQrScanner({
 
 		function tick() {
 			frameId = requestAnimationFrame(tick)
-			if (paused) return
+			if (pausedRef.current) return
 
 			const video = videoRef.current
 			const canvas = canvasRef.current
@@ -80,8 +95,21 @@ export default function WebcamQrScanner({
 				imageData.width,
 				imageData.height
 			)
+			// Coalesce: a still-visible QR code decodes on every single frame
+			// (tens of times a second). Without this, a failed submit (e.g.
+			// the session was already completed) re-fires on the very next
+			// frame since `pausedRef` only guards the in-flight window, not
+			// the frame right after it clears - flooding the server with
+			// identical requests. Only fire once per physical showing of a
+			// code; the code must actually leave the frame before the same
+			// text can trigger onDecode again.
 			if (result?.data) {
-				onDecode(result.data)
+				if (result.data !== lastDecodedRef.current) {
+					lastDecodedRef.current = result.data
+					onDecodeRef.current(result.data)
+				}
+			} else {
+				lastDecodedRef.current = null
 			}
 		}
 
