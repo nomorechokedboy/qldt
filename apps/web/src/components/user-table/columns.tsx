@@ -1,19 +1,17 @@
 import type { ColumnDef } from '@tanstack/react-table'
 import type { User } from '@/types'
 import { Badge } from '@/components/ui/badge'
+import { formatDbTimestamp } from '@/lib/utils'
 import { DataTableColumnHeader } from '../data-table/data-table-column-header'
 import { DataTableRowActions } from './data-user-table-row-actions'
 import UserLockIndicator from './user-lock-indicator'
 import { Shield, Award, Briefcase } from 'lucide-react'
 
-// Helper function to format ISO date to DD/MM/YYYY
+// Helper function to format a DB timestamp to DD/MM/YYYY, converted from the
+// stored UTC value to Vietnam time (see formatDbTimestamp in lib/utils.ts).
 function formatDate(isoDate: string): string {
 	if (!isoDate) return 'N/A'
-	const date = new Date(isoDate)
-	const day = date.getDate().toString().padStart(2, '0')
-	const month = (date.getMonth() + 1).toString().padStart(2, '0')
-	const year = date.getFullYear()
-	return `${day}/${month}/${year}`
+	return formatDbTimestamp(isoDate, 'DD/MM/YYYY')
 }
 
 // Helper component for empty data cells

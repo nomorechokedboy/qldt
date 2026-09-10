@@ -32,7 +32,7 @@ import {
 	useCancelTransferRequest,
 	useExportTransferRequestHandover
 } from '@/hooks/useTransferRequestActions'
-import { getErrorMessage } from '@/lib/utils'
+import { formatDbTimestamp, getErrorMessage } from '@/lib/utils'
 import type { transfer_requests } from '@/api/client'
 import CreateTransferRequestForm from './create-transfer-request-form'
 import RejectDialog from './reject-dialog'
@@ -199,9 +199,7 @@ export default function TransferRequestsTab() {
 								return (
 									<TableRow key={row.id}>
 										<TableCell className='whitespace-nowrap text-sm'>
-											{new Date(
-												row.createdAt
-											).toLocaleString('vi-VN')}
+											{formatDbTimestamp(row.createdAt)}
 										</TableCell>
 										<TableCell>
 											{row.sourceUnit?.name ?? '—'}
