@@ -430,6 +430,18 @@ export function GetInventorySessionReview(id: number) {
 	return requestClient.inventory_sessions.GetInventorySessionReview(id)
 }
 
+export function GetOpenInventorySession(roomId: number) {
+	return requestClient.inventory_sessions.GetOpenInventorySession(roomId)
+}
+
+export function MarkInventorySessionReviewed(id: number) {
+	return requestClient.inventory_sessions.MarkInventorySessionReviewed(id)
+}
+
+export function GetInventorySessionsForRoom(roomId: number) {
+	return requestClient.inventory_sessions.GetInventorySessionsForRoom(roomId)
+}
+
 // Material types
 
 export function GetMaterialTypes() {

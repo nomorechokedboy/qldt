@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Pencil, Trash, DoorOpen } from 'lucide-react'
+import { History, Pencil, Trash, DoorOpen } from 'lucide-react'
 import { toast } from 'sonner'
 import {
 	Card,
@@ -19,6 +19,7 @@ import {
 } from '@/components/ui/sheet'
 import BuildingEditForm from '@/components/BuildingEditForm'
 import InventorySessionDialog from '@/components/inventory-session/inventory-session-dialog'
+import InventorySessionHistorySheet from '@/components/inventory-session/inventory-session-history-sheet'
 import RoomEditForm from '@/components/RoomEditForm'
 import RoomForm from '@/components/room-form'
 import { useDeleteBuildings } from '@/hooks/useDeleteBuildings'
@@ -184,6 +185,7 @@ function RoomsPanel({
 }) {
 	const { data: rooms, refetch } = useRoomsData({ buildingId }, { enabled })
 	const [editingRoomId, setEditingRoomId] = useState<number | null>(null)
+	const [historyRoomId, setHistoryRoomId] = useState<number | null>(null)
 	const deleteRoomMutation = useDeleteRooms()
 
 	const handleChanged = () => {
@@ -242,6 +244,14 @@ function RoomsPanel({
 							<Button
 								size='icon'
 								variant='ghost'
+								title='Lịch sử kiểm kê'
+								onClick={() => setHistoryRoomId(room.id)}
+							>
+								<History size={16} />
+							</Button>
+							<Button
+								size='icon'
+								variant='ghost'
 								onClick={() => setEditingRoomId(room.id)}
 							>
 								<Pencil size={16} />
@@ -278,6 +288,15 @@ function RoomsPanel({
 					)}
 				</DialogContent>
 			</Dialog>
+
+			<InventorySessionHistorySheet
+				roomId={historyRoomId ?? undefined}
+				roomName={
+					rooms?.find((r) => r.id === historyRoomId)?.name ?? ''
+				}
+				open={historyRoomId !== null}
+				onOpenChange={(next) => !next && setHistoryRoomId(null)}
+			/>
 		</div>
 	)
 }

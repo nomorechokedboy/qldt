@@ -651,6 +651,14 @@ export namespace inventory_sessions {
 		roomId: number
 	}
 
+	export interface GetInventorySessionsForRoomResponse {
+		data: InventorySessionResp[]
+	}
+
+	export interface GetOpenInventorySessionResponse {
+		session: InventorySessionChallengePayload | null
+	}
+
 	export interface InventorySessionChallengeAsset {
 		serial: string
 		materialTypeName: string
@@ -733,6 +741,12 @@ export namespace inventory_sessions {
 			this.CreateInventorySession = this.CreateInventorySession.bind(this)
 			this.GetInventorySessionReview =
 				this.GetInventorySessionReview.bind(this)
+			this.GetInventorySessionsForRoom =
+				this.GetInventorySessionsForRoom.bind(this)
+			this.GetOpenInventorySession =
+				this.GetOpenInventorySession.bind(this)
+			this.MarkInventorySessionReviewed =
+				this.MarkInventorySessionReviewed.bind(this)
 			this.SubmitInventorySessionResults =
 				this.SubmitInventorySessionResults.bind(this)
 		}
@@ -759,6 +773,55 @@ export namespace inventory_sessions {
 			// Now make the actual call to the API
 			const resp = await this.baseClient.callTypedAPI(
 				'GET',
+				`/inventory-sessions/${encodeURIComponent(id)}/review`
+			)
+			return (await resp.json()) as InventorySessionReview
+		}
+
+		/**
+		 * PC side: backs the "Lịch sử kiểm kê" history sheet on a room - every
+		 * session for the room regardless of status, newest first.
+		 */
+		public async GetInventorySessionsForRoom(
+			roomId: number
+		): Promise<GetInventorySessionsForRoomResponse> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'GET',
+				`/inventory-sessions/room/${encodeURIComponent(roomId)}/history`
+			)
+			return (await resp.json()) as GetInventorySessionsForRoomResponse
+		}
+
+		/**
+		 * PC side: called when opening a room's inventory dialog to check whether a
+		 * session is already in progress (e.g. the tab was closed or the PC was
+		 * restarted while the phone was still scanning) - lets the UI resume instead
+		 * of starting a duplicate session.
+		 */
+		public async GetOpenInventorySession(
+			roomId: number
+		): Promise<GetOpenInventorySessionResponse> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'GET',
+				`/inventory-sessions/room/${encodeURIComponent(roomId)}/open`
+			)
+			return (await resp.json()) as GetOpenInventorySessionResponse
+		}
+
+		/**
+		 * PC side: a reviewer has looked at the diff (via GetInventorySessionReview)
+		 * and signs off on it. Terminal step of the flow - does not itself change
+		 * `material_assets`; reconciling the diff into the asset registry is a
+		 * separate, manual action.
+		 */
+		public async MarkInventorySessionReviewed(
+			id: number
+		): Promise<InventorySessionReview> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'POST',
 				`/inventory-sessions/${encodeURIComponent(id)}/review`
 			)
 			return (await resp.json()) as InventorySessionReview
