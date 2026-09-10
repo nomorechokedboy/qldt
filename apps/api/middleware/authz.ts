@@ -172,7 +172,14 @@ const PERMISSION_MAP: Record<string, string[]> = {
 	'GET:/transfer-requests/:id/export-handover': ['transfer_requests:read'],
 	'POST:/transfer-requests/:id/approve': ['transfer_requests:approve'],
 	'POST:/transfer-requests/:id/reject': ['transfer_requests:reject'],
-	'POST:/transfer-requests/:id/cancel': ['transfer_requests:update']
+	'POST:/transfer-requests/:id/cancel': ['transfer_requests:update'],
+
+	'POST:/inventory-sessions': ['inventory_sessions:create'],
+	'POST:/inventory-sessions/results': ['inventory_sessions:update'],
+	'GET:/inventory-sessions/room/:roomId/open': ['inventory_sessions:read'],
+	'GET:/inventory-sessions/room/:roomId/history': ['inventory_sessions:read'],
+	'GET:/inventory-sessions/:id/review': ['inventory_sessions:read'],
+	'POST:/inventory-sessions/:id/review': ['inventory_sessions:update']
 }
 
 function getPermissionsForRequest(method: string, path: string): string[] {

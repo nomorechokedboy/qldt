@@ -84,6 +84,19 @@ const AUDIT_MAP: Record<string, AuditRouteConfig> = {
 	'POST:/transfer-requests/:id/cancel': {
 		resource: 'transfer_requests',
 		action: 'update'
+	},
+
+	'POST:/inventory-sessions': {
+		resource: 'inventory_sessions',
+		action: 'create'
+	},
+	'POST:/inventory-sessions/results': {
+		resource: 'inventory_sessions',
+		action: 'update'
+	},
+	'POST:/inventory-sessions/:id/review': {
+		resource: 'inventory_sessions',
+		action: 'update'
 	}
 }
 

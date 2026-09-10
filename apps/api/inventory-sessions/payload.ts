@@ -82,7 +82,19 @@ function canonicalResults(
 	return JSON.stringify({
 		v: payload.v,
 		sid: payload.sid,
-		results: payload.results
+		// Rebuild each item with an explicit key order rather than passing
+		// `payload.results` straight through - Encore's request-body parsing
+		// reconstructs incoming JSON objects with alphabetized keys
+		// (observedCondition before serial), not the wire order the phone
+		// actually signed with. Passing the reordered objects to
+		// JSON.stringify silently produces a different canonical string (and
+		// thus signature) than the phone computed, even when every value
+		// matches. Caught by comparing a live device's signed `results`
+		// field against the backend's canonicalized string side by side.
+		results: payload.results.map((r) => ({
+			serial: r.serial,
+			observedCondition: r.observedCondition
+		}))
 	})
 }
 
