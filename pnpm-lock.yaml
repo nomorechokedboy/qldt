@@ -132,6 +132,9 @@ importers:
             '@tauri-apps/plugin-barcode-scanner':
                 specifier: ~2.4.6
                 version: 2.4.6
+            '@tauri-apps/plugin-fs':
+                specifier: ^2.5.2
+                version: 2.5.2
             '@tauri-apps/plugin-opener':
                 specifier: ^2
                 version: 2.5.5
@@ -4711,6 +4714,12 @@ packages:
         resolution:
             {
                 integrity: sha512-9B2u+Sma002p1MzH5kGYFg8dPVNVbIHpyye6PY1A9AOeR7IOUAXS02VaUpnyXqJkUUnF/s2g7MgaB7wY9Ko6cg==
+            }
+
+    '@tauri-apps/plugin-fs@2.5.2':
+        resolution:
+            {
+                integrity: sha512-XXvMSnFiob+G1H+YHCDf+bzWVumseQuEIhzpbOJzevUfL4k0U+sTApZWJHpoLiamggnVPJm5dJ5sDsniRyWxlg==
             }
 
     '@tauri-apps/plugin-opener@2.5.5':
@@ -12602,6 +12611,10 @@ snapshots:
             '@tauri-apps/cli-win32-x64-msvc': 2.11.4
 
     '@tauri-apps/plugin-barcode-scanner@2.4.6':
+        dependencies:
+            '@tauri-apps/api': 2.11.1
+
+    '@tauri-apps/plugin-fs@2.5.2':
         dependencies:
             '@tauri-apps/api': 2.11.1
 
