@@ -30,7 +30,7 @@ function ScanPage() {
 			return
 		}
 		setScanError(null)
-		const next: SessionState = { challenge, scans: {} }
+		const next: SessionState = { challenge, scans: {}, stockCounts: {} }
 		saveSession(next)
 		navigate({ to: '/checklist' })
 	}

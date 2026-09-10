@@ -7,9 +7,10 @@ import { Input } from '@/components/ui/input'
 import useInventorySession from '@/hooks/useInventorySession'
 import { computeDiff } from '@/lib/diff'
 import type { DiffStatus } from '@/lib/diff'
+import { computeStockDiff, stockKey } from '@/lib/stock-diff'
 import { parseMaterialAssetTagPayload } from '@/lib/material-asset-tag'
 import { buildResultsPayload } from '@/lib/payload'
-import type { MaterialConditionName } from '@/lib/payload'
+import type { MaterialConditionName, StockResultItem } from '@/lib/payload'
 import { loadSession, saveResultsPayload } from '@/lib/storage'
 import { cn } from '@/lib/utils'
 
@@ -96,6 +97,33 @@ function ChecklistPage() {
 		[diff]
 	)
 
+	const stockDiff = useMemo(
+		() =>
+			session
+				? computeStockDiff(
+						session.challenge.expectedStocks,
+						session.stockCounts
+					)
+				: [],
+		[session]
+	)
+
+	const stockMaterialTypes = useMemo(() => {
+		if (!session) return []
+		const seen = new Map<number, string>()
+		for (const s of session.challenge.expectedStocks) {
+			seen.set(s.materialTypeId, s.materialTypeName)
+		}
+		return Array.from(seen, ([materialTypeId, materialTypeName]) => ({
+			materialTypeId,
+			materialTypeName
+		}))
+	}, [session])
+
+	const [extraStockMaterialTypeId, setExtraStockMaterialTypeId] = useState<
+		number | null
+	>(null)
+
 	if (!session) return null
 
 	function recordScan(serial: string, condition: MaterialConditionName) {
@@ -114,6 +142,37 @@ function ChecklistPage() {
 		const nextScans = { ...session.scans }
 		delete nextScans[serial]
 		setSession({ ...session, scans: nextScans })
+	}
+
+	function recordStockCount(
+		materialTypeId: number,
+		condition: MaterialConditionName,
+		quantity: number
+	) {
+		if (!session) return
+		setSession({
+			...session,
+			stockCounts: {
+				...session.stockCounts,
+				[stockKey(materialTypeId, condition)]: quantity
+			}
+		})
+	}
+
+	function unmarkStockCount(
+		materialTypeId: number,
+		condition: MaterialConditionName
+	) {
+		if (!session) return
+		const key = stockKey(materialTypeId, condition)
+		const next = { ...session.stockCounts }
+		delete next[key]
+		setSession({ ...session, stockCounts: next })
+	}
+
+	function handleAddExtraStock(condition: MaterialConditionName) {
+		if (extraStockMaterialTypeId === null) return
+		recordStockCount(extraStockMaterialTypeId, condition, 0)
 	}
 
 	function handleTagDecode(text: string) {
@@ -138,10 +197,43 @@ function ChecklistPage() {
 		setSigning(true)
 		try {
 			const results = Object.values(session.scans)
+
+			// Every expected stock line, uncounted ones treated as
+			// observedQuantity: 0 - see the design doc's "Confirm & export"
+			// step for why this (rather than a distinct "not counted" status)
+			// is accepted for v1.
+			const stockResults: StockResultItem[] =
+				session.challenge.expectedStocks.map((s) => ({
+					materialTypeId: s.materialTypeId,
+					condition: s.condition,
+					observedQuantity:
+						session.stockCounts[
+							stockKey(s.materialTypeId, s.condition)
+						] ?? 0
+				}))
+			// Extra stock lines (a materialType/condition the trooper counted
+			// that wasn't in expectedStocks) live only in stockCounts, not
+			// expectedStocks - included separately so they aren't dropped.
+			const expectedStockKeys = new Set(
+				session.challenge.expectedStocks.map((s) =>
+					stockKey(s.materialTypeId, s.condition)
+				)
+			)
+			for (const key of Object.keys(session.stockCounts)) {
+				if (expectedStockKeys.has(key)) continue
+				const [materialTypeIdStr, condition] = key.split(':')
+				stockResults.push({
+					materialTypeId: Number(materialTypeIdStr),
+					condition: condition as MaterialConditionName,
+					observedQuantity: session.stockCounts[key]
+				})
+			}
+
 			const payload = await buildResultsPayload(
 				session.challenge.key,
 				session.challenge.sid,
-				results
+				results,
+				stockResults
 			)
 			saveResultsPayload(payload)
 			navigate({ to: '/results' })
@@ -323,6 +415,126 @@ function ChecklistPage() {
 				})}
 			</ul>
 
+			{session.challenge.expectedStocks.length > 0 && (
+				<div className='flex flex-col gap-2'>
+					<h2 className='text-sm font-semibold'>Kiểm đếm vật tư</h2>
+					<ul className='flex flex-col gap-2'>
+						{session.challenge.expectedStocks.map((stock) => {
+							const key = stockKey(
+								stock.materialTypeId,
+								stock.condition
+							)
+							const status =
+								stockDiff.find(
+									(d) =>
+										d.materialTypeId ===
+											stock.materialTypeId &&
+										d.condition === stock.condition
+								)?.status ?? 'short'
+							// Reuses the asset checklist's row-status color
+							// language (red = deficit, gold = variance,
+							// olive = ok) rather than inventing a second
+							// palette for the same three concepts.
+							const barClass =
+								status === 'matched'
+									? ROW_STATUS_BAR.matched
+									: status === 'short'
+										? ROW_STATUS_BAR.missing
+										: ROW_STATUS_BAR.condition_changed
+							const value = session.stockCounts[key]
+							return (
+								<li
+									key={key}
+									className={cn(
+										'bg-card flex items-center justify-between gap-3 rounded-md border border-l-4 p-3',
+										barClass
+									)}
+								>
+									<div className='flex flex-col'>
+										<span className='text-sm font-semibold'>
+											{stock.materialTypeName}
+										</span>
+										<span className='text-muted-foreground text-xs'>
+											{CONDITION_LABELS[stock.condition]}{' '}
+											- Dự kiến: {stock.expectedQuantity}
+										</span>
+									</div>
+									<Input
+										type='number'
+										inputMode='numeric'
+										min={0}
+										value={value ?? ''}
+										placeholder='0'
+										onChange={(e) => {
+											const raw = e.currentTarget.value
+											if (raw === '') {
+												unmarkStockCount(
+													stock.materialTypeId,
+													stock.condition
+												)
+												return
+											}
+											const n = Number(raw)
+											if (Number.isNaN(n) || n < 0) return
+											recordStockCount(
+												stock.materialTypeId,
+												stock.condition,
+												n
+											)
+										}}
+										className='w-20 text-right font-mono'
+									/>
+								</li>
+							)
+						})}
+					</ul>
+				</div>
+			)}
+
+			{stockMaterialTypes.length > 0 && (
+				<div className='border-border flex flex-col gap-2 rounded-lg border border-dashed p-3'>
+					<p className='text-muted-foreground text-sm'>
+						Thêm dòng vật tư phát sinh (tình trạng khác với dự kiến)
+					</p>
+					<select
+						className='border-input bg-background text-foreground rounded-md border px-3 py-2 text-sm'
+						value={extraStockMaterialTypeId ?? ''}
+						onChange={(e) =>
+							setExtraStockMaterialTypeId(
+								e.currentTarget.value
+									? Number(e.currentTarget.value)
+									: null
+							)
+						}
+					>
+						<option value=''>Chọn loại vật tư...</option>
+						{stockMaterialTypes.map((m) => (
+							<option
+								key={m.materialTypeId}
+								value={m.materialTypeId}
+							>
+								{m.materialTypeName}
+							</option>
+						))}
+					</select>
+					<div className='flex flex-wrap gap-1.5'>
+						{CONDITIONS.map((c) => (
+							<Button
+								key={c}
+								type='button'
+								variant='outline'
+								size='sm'
+								className='min-w-[5.5rem] flex-1'
+								onClick={() => handleAddExtraStock(c)}
+								disabled={extraStockMaterialTypeId === null}
+							>
+								{CONDITION_LABELS[c]}
+							</Button>
+						))}
+					</div>
+				</div>
+			)}
+
 			{mode === 'manual' && (
 				<div className='border-border flex flex-col gap-2 rounded-lg border border-dashed p-3'>
 					<p className='text-muted-foreground text-sm'>
@@ -382,6 +594,68 @@ function ChecklistPage() {
 						</Button>
 					</div>
 				))}
+
+			{stockDiff
+				.filter((d) => d.status === 'extra')
+				.map((d) => {
+					const key = stockKey(d.materialTypeId, d.condition)
+					const materialTypeName = stockMaterialTypes.find(
+						(m) => m.materialTypeId === d.materialTypeId
+					)?.materialTypeName
+					return (
+						<div
+							key={key}
+							className='bg-card border-l-extra flex items-center justify-between gap-3 rounded-md border border-l-4 p-3'
+						>
+							<div className='flex flex-col'>
+								<span className='text-sm font-semibold'>
+									{materialTypeName ?? `#${d.materialTypeId}`}
+								</span>
+								<span className='text-muted-foreground text-xs'>
+									Phát sinh - {CONDITION_LABELS[d.condition]}
+								</span>
+							</div>
+							<div className='flex items-center gap-2'>
+								<Input
+									type='number'
+									inputMode='numeric'
+									min={0}
+									value={session.stockCounts[key] ?? ''}
+									onChange={(e) => {
+										const raw = e.currentTarget.value
+										const n = Number(raw)
+										if (
+											raw === '' ||
+											Number.isNaN(n) ||
+											n < 0
+										)
+											return
+										recordStockCount(
+											d.materialTypeId,
+											d.condition,
+											n
+										)
+									}}
+									className='w-20 text-right font-mono'
+								/>
+								<Button
+									type='button'
+									variant='link'
+									size='sm'
+									className='text-destructive h-auto px-0'
+									onClick={() =>
+										unmarkStockCount(
+											d.materialTypeId,
+											d.condition
+										)
+									}
+								>
+									Xoá
+								</Button>
+							</div>
+						</div>
+					)
+				})}
 
 			<Button
 				type='button'
