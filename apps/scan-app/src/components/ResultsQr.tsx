@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { BaseDirectory, writeFile } from '@tauri-apps/plugin-fs'
+import { save } from '@tauri-apps/plugin-dialog'
+import { writeFile } from '@tauri-apps/plugin-fs'
 import { Download } from 'lucide-react'
 import QRCode from 'qrcode'
 import { Button } from '@/components/ui/button'
@@ -37,7 +38,13 @@ export default function ResultsQr({
 
 	// A plain `<a download>` click does nothing in Tauri's WebView - there's
 	// no browser download manager to catch it, especially on Android/iOS -
-	// so the PNG has to be written to disk directly via plugin-fs instead.
+	// so the PNG has to be written to disk directly instead. Writing straight
+	// to `BaseDirectory.Download` (tried first) silently lands in the app's
+	// own private storage on Android - scoped storage blocks direct writes
+	// to the real shared Downloads folder. Going through the native "Save As"
+	// picker (Storage Access Framework) is what actually puts the file where
+	// the user - and their file manager - can see it; plugin-fs's writeFile
+	// accepts the content:// URI the picker returns on Android directly.
 	const handleDownload = async () => {
 		const canvas = canvasRef.current
 		if (!canvas) return
@@ -52,10 +59,15 @@ export default function ResultsQr({
 		}
 
 		try {
-			const bytes = new Uint8Array(await blob.arrayBuffer())
-			await writeFile(`${downloadFilename}.png`, bytes, {
-				baseDir: BaseDirectory.Download
+			const path = await save({
+				defaultPath: `${downloadFilename}.png`,
+				filters: [{ name: 'PNG Image', extensions: ['png'] }]
 			})
+			// User cancelled the picker - not a failure, just no-op back to idle.
+			if (!path) return
+
+			const bytes = new Uint8Array(await blob.arrayBuffer())
+			await writeFile(path, bytes)
 			setDownloadStatus('saved')
 		} catch {
 			setDownloadStatus('failed')
@@ -78,9 +90,7 @@ export default function ResultsQr({
 				Tải xuống mã QR
 			</Button>
 			{downloadStatus === 'saved' && (
-				<p className='text-muted-foreground text-sm'>
-					Đã lưu vào thư mục Download.
-				</p>
+				<p className='text-muted-foreground text-sm'>Đã lưu mã QR.</p>
 			)}
 			{downloadStatus === 'failed' && (
 				<p className='text-destructive text-sm'>Không thể lưu mã QR.</p>
