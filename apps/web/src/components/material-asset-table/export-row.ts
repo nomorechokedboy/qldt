@@ -28,7 +28,7 @@ export const materialAssetExportFields: MaterialAssetExportField[] = [
 	},
 	{
 		key: 'room',
-		label: 'Phòng',
+		label: 'Vị trí',
 		getValue: (asset) => asset.room?.name ?? ''
 	},
 	{

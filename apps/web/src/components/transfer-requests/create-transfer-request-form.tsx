@@ -200,7 +200,7 @@ export default function CreateTransferRequestForm({
 		e.preventDefault()
 
 		if (totalSelected === 0) {
-			toast.error('Vui lòng chọn ít nhất một nguồn lực để chuyển giao')
+			toast.error('Vui lòng chọn ít nhất một nguồn lực để bàn giao')
 			return
 		}
 
@@ -226,14 +226,12 @@ export default function CreateTransferRequestForm({
 
 		try {
 			await createMutation.mutateAsync(body)
-			toast.success('Tạo yêu cầu chuyển giao thành công')
+			toast.success('Tạo yêu cầu bàn giao thành công')
 			onSuccess?.()
 			resetForm()
 			setOpen(false)
 		} catch (err) {
-			toast.error(
-				getErrorMessage(err, 'Tạo yêu cầu chuyển giao thất bại!')
-			)
+			toast.error(getErrorMessage(err, 'Tạo yêu cầu bàn giao thất bại!'))
 		}
 	}
 
@@ -248,12 +246,12 @@ export default function CreateTransferRequestForm({
 			<SheetTrigger asChild>
 				<Button>
 					<Plus className='mr-2 h-4 w-4' />
-					Tạo yêu cầu chuyển giao
+					Tạo yêu cầu bàn giao
 				</Button>
 			</SheetTrigger>
 			<SheetContent className='w-full overflow-y-auto sm:max-w-2xl'>
 				<SheetHeader>
-					<SheetTitle>Yêu cầu chuyển giao nguồn lực</SheetTitle>
+					<SheetTitle>Yêu cầu bàn giao nguồn lực</SheetTitle>
 				</SheetHeader>
 				<form
 					id='create-transfer-request-form'
@@ -322,13 +320,13 @@ export default function CreateTransferRequestForm({
 
 					<div className='grid grid-cols-2 gap-4'>
 						<div className='space-y-2'>
-							<Label>Phòng đích (tuỳ chọn)</Label>
+							<Label>Vị trí đích (tuỳ chọn)</Label>
 							<Select
 								value={destinationRoomId}
 								onValueChange={setDestinationRoomId}
 							>
 								<SelectTrigger>
-									<SelectValue placeholder='Chọn phòng' />
+									<SelectValue placeholder='Chọn vị trí' />
 								</SelectTrigger>
 								<SelectContent>
 									<SelectItem value={NONE}>

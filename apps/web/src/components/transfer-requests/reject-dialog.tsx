@@ -36,7 +36,7 @@ export default function RejectDialog({
 		}
 		try {
 			await rejectMutation.mutateAsync({ id, reason })
-			toast.success('Đã từ chối yêu cầu chuyển giao')
+			toast.success('Đã từ chối yêu cầu bàn giao')
 			setReason('')
 			onOpenChange(false)
 			onSuccess?.()
@@ -49,7 +49,7 @@ export default function RejectDialog({
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent className='sm:max-w-md'>
 				<DialogHeader>
-					<DialogTitle>Từ chối yêu cầu chuyển giao</DialogTitle>
+					<DialogTitle>Từ chối yêu cầu bàn giao</DialogTitle>
 				</DialogHeader>
 				<form className='space-y-4' onSubmit={handleSubmit}>
 					<div className='space-y-2'>

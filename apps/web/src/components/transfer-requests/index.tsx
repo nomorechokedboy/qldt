@@ -92,10 +92,10 @@ export default function TransferRequestsTab() {
 	const canReject = hasPermission('transfer_requests:reject')
 
 	const handleApprove = async (id: number) => {
-		if (!confirm('Bạn có chắc muốn duyệt yêu cầu chuyển giao này?')) return
+		if (!confirm('Bạn có chắc muốn duyệt yêu cầu bàn giao này?')) return
 		try {
 			await approveMutation.mutateAsync(id)
-			toast.success('Đã duyệt yêu cầu chuyển giao')
+			toast.success('Đã duyệt yêu cầu bàn giao')
 		} catch (err) {
 			toast.error(getErrorMessage(err, 'Duyệt yêu cầu thất bại!'))
 		}
@@ -112,10 +112,10 @@ export default function TransferRequestsTab() {
 	}
 
 	const handleCancel = async (id: number) => {
-		if (!confirm('Bạn có chắc muốn hủy yêu cầu chuyển giao này?')) return
+		if (!confirm('Bạn có chắc muốn hủy yêu cầu bàn giao này?')) return
 		try {
 			await cancelMutation.mutateAsync(id)
-			toast.success('Đã hủy yêu cầu chuyển giao')
+			toast.success('Đã hủy yêu cầu bàn giao')
 		} catch (err) {
 			toast.error(getErrorMessage(err, 'Hủy yêu cầu thất bại!'))
 		}
@@ -182,7 +182,7 @@ export default function TransferRequestsTab() {
 									colSpan={8}
 									className='py-10 text-center text-muted-foreground'
 								>
-									Không có yêu cầu chuyển giao nào
+									Không có yêu cầu bàn giao nào
 								</TableCell>
 							</TableRow>
 						)}
@@ -321,7 +321,7 @@ export default function TransferRequestsTab() {
 			>
 				<SheetContent className='w-full overflow-y-auto sm:max-w-xl'>
 					<SheetHeader>
-						<SheetTitle>Chi tiết yêu cầu chuyển giao</SheetTitle>
+						<SheetTitle>Chi tiết yêu cầu bàn giao</SheetTitle>
 					</SheetHeader>
 					{selected && (
 						<div className='space-y-4 px-4 pb-4'>
@@ -337,7 +337,7 @@ export default function TransferRequestsTab() {
 									{selected.destinationUnit?.name ?? '—'}
 								</span>
 								<span className='text-muted-foreground'>
-									Phòng đích
+									Vị trí đích
 								</span>
 								<span>
 									{selected.destinationRoom?.name ?? '—'}

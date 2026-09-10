@@ -161,14 +161,14 @@ export default function MaterialAssetForm({
 					</div>
 
 					<div className='space-y-2'>
-						<Label htmlFor='asset-room'>Phòng</Label>
+						<Label htmlFor='asset-room'>Vị trí</Label>
 						<Select value={roomId} onValueChange={setRoomId}>
 							<SelectTrigger id='asset-room'>
 								<SelectValue placeholder='Chọn phòng (tuỳ chọn)' />
 							</SelectTrigger>
 							<SelectContent>
 								<SelectItem value={NONE}>
-									Không thuộc phòng cụ thể
+									Chưa có vị trí cụ thể
 								</SelectItem>
 								{roomsForUnit.map((r) => (
 									<SelectItem key={r.id} value={String(r.id)}>
