@@ -37,9 +37,11 @@ function ScanPage() {
 
 	return (
 		<div className='flex flex-col gap-4'>
-			<p className='text-muted-foreground text-sm'>
-				Quét mã QR phiên kiểm kê hiển thị trên màn hình máy tính.
-			</p>
+			<div className='bg-card border-border rounded-md border p-4 text-center'>
+				<p className='text-muted-foreground text-sm'>
+					Quét mã QR phiên kiểm kê hiển thị trên màn hình máy tính.
+				</p>
+			</div>
 			<QrScanner onDecode={handleDecode} />
 			{scanError && (
 				<p className='text-destructive text-sm'>{scanError}</p>

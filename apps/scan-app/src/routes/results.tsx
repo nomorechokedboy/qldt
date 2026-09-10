@@ -29,9 +29,12 @@ function ResultsPage() {
 
 	return (
 		<div className='flex flex-col items-center gap-4 text-center'>
-			<p className='text-muted-foreground text-sm'>
-				Đưa mã QR này vào camera trên máy tính để nhập kết quả kiểm kê.
-			</p>
+			<div className='bg-card border-border rounded-md border p-4'>
+				<p className='text-muted-foreground text-sm'>
+					Đưa mã QR này vào camera trên máy tính để nhập kết quả kiểm
+					kê.
+				</p>
+			</div>
 			<ResultsQr
 				value={JSON.stringify(payload)}
 				downloadFilename={`ket-qua-kiem-ke-${payload.sid}`}

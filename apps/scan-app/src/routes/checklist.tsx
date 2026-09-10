@@ -11,6 +11,7 @@ import { parseMaterialAssetTagPayload } from '@/lib/material-asset-tag'
 import { buildResultsPayload } from '@/lib/payload'
 import type { MaterialConditionName } from '@/lib/payload'
 import { loadSession, saveResultsPayload } from '@/lib/storage'
+import { cn } from '@/lib/utils'
 
 const CONDITIONS: MaterialConditionName[] = [
 	'good',
@@ -27,10 +28,10 @@ const CONDITION_LABELS: Record<MaterialConditionName, string> = {
 }
 
 const COUNT_BADGE_CLASSES: Record<DiffStatus, string> = {
-	matched: 'border-transparent bg-green-100 text-green-800',
-	missing: 'border-transparent bg-red-100 text-red-800',
-	condition_changed: 'border-transparent bg-yellow-100 text-yellow-800',
-	extra: 'border-transparent bg-indigo-100 text-indigo-800'
+	matched: 'border-matched/40 bg-matched/10 text-matched',
+	missing: 'border-missing/40 bg-missing/10 text-missing',
+	condition_changed: 'border-changed/40 bg-changed/10 text-changed',
+	extra: 'border-extra/40 bg-extra/10 text-extra'
 }
 
 const COUNT_LABELS: Record<DiffStatus, string> = {
@@ -38,6 +39,16 @@ const COUNT_LABELS: Record<DiffStatus, string> = {
 	missing: 'Thiếu',
 	condition_changed: 'Đổi t.trạng',
 	extra: 'Phát sinh'
+}
+
+// Left-edge marker on each checklist row, using the same fixed status
+// colors as the count badges above - lets the list be scanned by color,
+// not just by reading the "Đã ghi nhận" line.
+const ROW_STATUS_BAR: Record<DiffStatus, string> = {
+	matched: 'border-l-matched',
+	missing: 'border-l-missing',
+	condition_changed: 'border-l-changed',
+	extra: 'border-l-extra'
 }
 
 export const Route = createFileRoute('/checklist')({
@@ -79,6 +90,11 @@ function ChecklistPage() {
 		for (const item of diff) c[item.status]++
 		return c
 	}, [diff])
+
+	const diffBySerial = useMemo(
+		() => new Map(diff.map((d) => [d.serial, d])),
+		[diff]
+	)
 
 	if (!session) return null
 
@@ -141,15 +157,43 @@ function ChecklistPage() {
 
 	return (
 		<div className='flex flex-col gap-4'>
-			<p className='text-muted-foreground text-sm'>
-				Phòng #{session.challenge.roomId} - Phiên #
-				{session.challenge.sid} - {session.challenge.expected.length}{' '}
-				vật tư cần kiểm kê
-			</p>
+			<div className='bg-card border-border flex items-stretch justify-between rounded-md border'>
+				<div className='flex flex-1 flex-col gap-0.5 border-r p-2.5'>
+					<span className='text-muted-foreground text-[11px]'>
+						Phòng
+					</span>
+					<span className='font-mono text-sm font-semibold'>
+						{session.challenge.roomId}
+					</span>
+				</div>
+				<div className='flex flex-1 flex-col gap-0.5 border-r p-2.5'>
+					<span className='text-muted-foreground text-[11px]'>
+						Phiên
+					</span>
+					<span className='font-mono text-sm font-semibold'>
+						#{session.challenge.sid}
+					</span>
+				</div>
+				<div className='flex flex-1 flex-col gap-0.5 p-2.5'>
+					<span className='text-muted-foreground text-[11px]'>
+						Vật tư
+					</span>
+					<span className='font-mono text-sm font-semibold'>
+						{session.challenge.expected.length}
+					</span>
+				</div>
+			</div>
 
 			<div className='flex flex-wrap gap-2'>
 				{(Object.keys(counts) as DiffStatus[]).map((status) => (
-					<Badge key={status} className={COUNT_BADGE_CLASSES[status]}>
+					<Badge
+						key={status}
+						variant='outline'
+						className={cn(
+							'rounded-sm',
+							COUNT_BADGE_CLASSES[status]
+						)}
+					>
 						{COUNT_LABELS[status]}: {counts[status]}
 					</Badge>
 				))}
@@ -191,10 +235,15 @@ function ChecklistPage() {
 			<ul className='flex flex-col gap-2'>
 				{session.challenge.expected.map((asset) => {
 					const scan = session.scans[asset.serial]
+					const rowStatus =
+						diffBySerial.get(asset.serial)?.status ?? 'missing'
 					return (
 						<li
 							key={asset.serial}
-							className='bg-card flex flex-col gap-2 rounded-lg border p-3'
+							className={cn(
+								'bg-card flex flex-col gap-2 rounded-md border border-l-4 p-3',
+								ROW_STATUS_BAR[rowStatus]
+							)}
 						>
 							<div className='flex flex-col'>
 								<span className='font-mono text-base font-semibold'>
@@ -205,7 +254,14 @@ function ChecklistPage() {
 									{CONDITION_LABELS[asset.condition]}
 								</span>
 								{scan && (
-									<span className='text-xs font-medium'>
+									<span
+										className={cn(
+											'text-xs font-medium',
+											rowStatus === 'condition_changed'
+												? 'text-changed'
+												: 'text-matched'
+										)}
+									>
 										Đã ghi nhận:{' '}
 										{
 											CONDITION_LABELS[
@@ -302,7 +358,7 @@ function ChecklistPage() {
 				.map((d) => (
 					<div
 						key={d.serial}
-						className='bg-card flex items-center justify-between rounded-lg border p-3'
+						className='bg-card border-l-extra flex items-center justify-between rounded-md border border-l-4 p-3'
 					>
 						<div className='flex flex-col'>
 							<span className='font-mono text-base font-semibold'>

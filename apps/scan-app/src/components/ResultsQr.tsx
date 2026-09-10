@@ -80,11 +80,9 @@ export default function ResultsQr({
 
 	return (
 		<div className='flex flex-col items-center gap-3'>
-			<canvas
-				ref={canvasRef}
-				className='rounded-lg border bg-white'
-				aria-label='Mã QR kết quả kiểm kê'
-			/>
+			<div className='border-border rounded-md border-2 bg-white p-3'>
+				<canvas ref={canvasRef} aria-label='Mã QR kết quả kiểm kê' />
+			</div>
 			<Button type='button' variant='outline' onClick={handleDownload}>
 				<Download className='w-4 h-4 mr-2' />
 				Tải xuống mã QR
