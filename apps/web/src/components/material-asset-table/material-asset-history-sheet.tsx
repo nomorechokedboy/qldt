@@ -17,7 +17,7 @@ const eventTypeLabels: Record<MaterialAssetEventType, string> = {
 	unassigned: 'Thu hồi',
 	condition_changed: 'Đổi tình trạng',
 	status_changed: 'Đổi trạng thái',
-	transferred: 'Chuyển đơn vị/phòng'
+	transferred: 'Chuyển đơn vị/vị trí'
 }
 
 const trooperLabel = (value?: Record<string, unknown> | null): string => {
@@ -35,7 +35,7 @@ const unitRoomLabel = (value?: Record<string, unknown> | null): string => {
 	const roomPart =
 		typeof roomName === 'string' && roomName.length > 0
 			? roomName
-			: 'Không có phòng'
+			: 'Chưa có vị trí'
 	return `${unitPart} / ${roomPart}`
 }
 

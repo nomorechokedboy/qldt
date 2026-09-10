@@ -52,12 +52,12 @@ export function buildMaterialAssetColumns(
 		},
 		{
 			id: 'room',
-			header: 'Phòng',
-			accessorFn: (row) => row.room?.name ?? 'Không thuộc phòng cụ thể',
+			header: 'Vị trí',
+			accessorFn: (row) => row.room?.name ?? 'Chưa có vị trí cụ thể',
 			cell: ({ row }) =>
 				row.original.room?.name ?? (
 					<span className='text-muted-foreground'>
-						Không thuộc phòng cụ thể
+						Chưa có vị trí cụ thể
 					</span>
 				),
 			filterFn: (row, id, value) => value.includes(row.getValue(id))

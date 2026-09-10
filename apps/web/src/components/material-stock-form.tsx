@@ -145,14 +145,14 @@ export default function MaterialStockForm({
 					</div>
 
 					<div className='space-y-2'>
-						<Label htmlFor='stock-room'>Phòng</Label>
+						<Label htmlFor='stock-room'>Vị trí</Label>
 						<Select value={roomId} onValueChange={setRoomId}>
 							<SelectTrigger id='stock-room'>
-								<SelectValue placeholder='Chọn phòng (tuỳ chọn)' />
+								<SelectValue placeholder='Chọn vị trí (tuỳ chọn)' />
 							</SelectTrigger>
 							<SelectContent>
 								<SelectItem value={NONE}>
-									Không thuộc phòng cụ thể
+									Chưa có vị trí cụ thể
 								</SelectItem>
 								{roomsForUnit.map((r) => (
 									<SelectItem key={r.id} value={String(r.id)}>
