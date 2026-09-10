@@ -2,9 +2,11 @@
 // apps/api/inventory-sessions/payload.ts byte-for-byte (same field names,
 // same JSON key order in the signed canonical string) since the two sides
 // never share code - this app runs in a Tauri webview (Web Crypto), the
-// backend runs in Node (`crypto`). See
-// docs/superpowers/specs/2026-09-09-scan-reconciliation-design.md.
-export const INVENTORY_SESSION_PAYLOAD_VERSION = 1 as const
+// backend runs in Node (`crypto`). v2 adds bulk stock counting alongside
+// serialized assets. See
+// docs/superpowers/specs/2026-09-09-scan-reconciliation-design.md and
+// docs/superpowers/specs/2026-09-10-inventory-session-stock-counts-design.md.
+export const INVENTORY_SESSION_PAYLOAD_VERSION = 2 as const
 
 export type MaterialConditionName =
 	| 'good'
@@ -18,11 +20,19 @@ export interface ChallengeAsset {
 	condition: MaterialConditionName
 }
 
+export interface ChallengeStock {
+	materialTypeId: number
+	materialTypeName: string
+	condition: MaterialConditionName
+	expectedQuantity: number
+}
+
 export interface ChallengePayload {
 	v: typeof INVENTORY_SESSION_PAYLOAD_VERSION
 	sid: number
 	roomId: number
 	expected: ChallengeAsset[]
+	expectedStocks: ChallengeStock[]
 	// Per-session HMAC key, embedded by the PC in the challenge QR. This app
 	// never talks to apps/api and never sees HASH_SECRET - this key is the
 	// only thing that lets it sign a results payload the server will accept.
@@ -35,10 +45,17 @@ export interface ResultItem {
 	observedCondition?: MaterialConditionName
 }
 
+export interface StockResultItem {
+	materialTypeId: number
+	condition: MaterialConditionName
+	observedQuantity: number
+}
+
 export interface ResultsPayload {
 	v: typeof INVENTORY_SESSION_PAYLOAD_VERSION
 	sid: number
 	results: ResultItem[]
+	stockResults: StockResultItem[]
 	sig: string
 }
 
@@ -48,13 +65,23 @@ function bytesToHex(bytes: Uint8Array): string {
 		.join('')
 }
 
-// Same canonicalization as canonicalResults() in apps/api/inventory-sessions/payload.ts -
-// key order matters, it's part of what gets hashed.
-function canonicalResults(sid: number, results: ResultItem[]): string {
+// Same canonicalization as canonicalResults() in
+// apps/api/inventory-sessions/payload.ts - key order matters, it's part of
+// what gets hashed. Unlike the server side, this doesn't need to rebuild
+// each item with an explicit key order: these objects are constructed by
+// this app right before signing (never round-tripped through Encore's
+// alphabetizing request parser), so JSON.stringify's insertion-order
+// behavior is already exactly the order these interfaces declare.
+function canonicalResults(
+	sid: number,
+	results: ResultItem[],
+	stockResults: StockResultItem[]
+): string {
 	return JSON.stringify({
 		v: INVENTORY_SESSION_PAYLOAD_VERSION,
 		sid,
-		results
+		results,
+		stockResults
 	})
 }
 
@@ -71,7 +98,8 @@ function canonicalResults(sid: number, results: ResultItem[]): string {
 async function signResults(
 	key: string,
 	sid: number,
-	results: ResultItem[]
+	results: ResultItem[],
+	stockResults: StockResultItem[]
 ): Promise<string> {
 	const cryptoKey = await crypto.subtle.importKey(
 		'raw',
@@ -83,7 +111,7 @@ async function signResults(
 	const sigBuffer = await crypto.subtle.sign(
 		'HMAC',
 		cryptoKey,
-		new TextEncoder().encode(canonicalResults(sid, results))
+		new TextEncoder().encode(canonicalResults(sid, results, stockResults))
 	)
 	return bytesToHex(new Uint8Array(sigBuffer)).slice(0, 16)
 }
@@ -91,19 +119,27 @@ async function signResults(
 export async function buildResultsPayload(
 	key: string,
 	sid: number,
-	results: ResultItem[]
+	results: ResultItem[],
+	stockResults: StockResultItem[]
 ): Promise<ResultsPayload> {
-	const sig = await signResults(key, sid, results)
-	return { v: INVENTORY_SESSION_PAYLOAD_VERSION, sid, results, sig }
+	const sig = await signResults(key, sid, results, stockResults)
+	return {
+		v: INVENTORY_SESSION_PAYLOAD_VERSION,
+		sid,
+		results,
+		stockResults,
+		sig
+	}
 }
 
 // Shared by parseChallengePayload (a freshly scanned QR) and
 // storage.ts's loadSession (a session resumed from localStorage after an
 // app kill) - a resumed session is just as untrustworthy as a scanned QR
 // until checked. Without this, a session persisted by an older build (e.g.
-// from before the `key` field existed) gets silently resumed with
-// `key: undefined`, producing a results signature the backend correctly
-// rejects - the bug this was added to catch.
+// a v1 session, from before `expectedStocks`/`key` existed) gets silently
+// resumed with a broken/missing shape, producing a results signature the
+// backend correctly rejects - the bug this was added to catch. The `v`
+// check alone already rejects any pre-stock-counts (v1) session.
 export function isValidChallengePayload(obj: unknown): obj is ChallengePayload {
 	if (typeof obj !== 'object' || obj === null) return false
 	const o = obj as Record<string, unknown>
@@ -113,7 +149,8 @@ export function isValidChallengePayload(obj: unknown): obj is ChallengePayload {
 		typeof o.roomId === 'number' &&
 		typeof o.key === 'string' &&
 		typeof o.sig === 'string' &&
-		Array.isArray(o.expected)
+		Array.isArray(o.expected) &&
+		Array.isArray(o.expectedStocks)
 	)
 }
 

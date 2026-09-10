@@ -8,6 +8,7 @@ const RESULTS_KEY = 'inventory-session:results'
 export interface SessionState {
 	challenge: ChallengePayload
 	scans: Record<string, ScanEntry>
+	stockCounts: Record<string, number>
 }
 
 // Persisted via the webview's localStorage, not a Tauri plugin - this app
