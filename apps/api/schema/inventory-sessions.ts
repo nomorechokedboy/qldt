@@ -6,6 +6,8 @@ import { units } from './units'
 import { users } from './users'
 import { inventorySessionExpectedAssets } from './inventory-session-inspected-assets'
 import { inventorySessionScans } from './inventory-session-scans'
+import { inventorySessionExpectedStocks } from './inventory-session-expected-stocks'
+import { inventorySessionStockCounts } from './inventory-session-stock-counts'
 
 export type InventorySessionStatus =
 	| 'in_progress'
@@ -87,7 +89,9 @@ export const inventorySessionsRelations = relations(
 		}),
 
 		expectedAssets: many(inventorySessionExpectedAssets),
-		scans: many(inventorySessionScans)
+		scans: many(inventorySessionScans),
+		expectedStocks: many(inventorySessionExpectedStocks),
+		stockCounts: many(inventorySessionStockCounts)
 	})
 )
 
