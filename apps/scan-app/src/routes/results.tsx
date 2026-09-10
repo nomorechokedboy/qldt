@@ -36,6 +36,7 @@ function ResultsPage() {
 				value={JSON.stringify(payload)}
 				downloadFilename={`ket-qua-kiem-ke-${payload.sid}`}
 			/>
+
 			<Button type='button' className='w-full' onClick={startNewSession}>
 				Xong, quét phiên mới
 			</Button>

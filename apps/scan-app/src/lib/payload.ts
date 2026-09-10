@@ -97,22 +97,32 @@ export async function buildResultsPayload(
 	return { v: INVENTORY_SESSION_PAYLOAD_VERSION, sid, results, sig }
 }
 
+// Shared by parseChallengePayload (a freshly scanned QR) and
+// storage.ts's loadSession (a session resumed from localStorage after an
+// app kill) - a resumed session is just as untrustworthy as a scanned QR
+// until checked. Without this, a session persisted by an older build (e.g.
+// from before the `key` field existed) gets silently resumed with
+// `key: undefined`, producing a results signature the backend correctly
+// rejects - the bug this was added to catch.
+export function isValidChallengePayload(obj: unknown): obj is ChallengePayload {
+	if (typeof obj !== 'object' || obj === null) return false
+	const o = obj as Record<string, unknown>
+	return (
+		o.v === INVENTORY_SESSION_PAYLOAD_VERSION &&
+		typeof o.sid === 'number' &&
+		typeof o.roomId === 'number' &&
+		typeof o.key === 'string' &&
+		typeof o.sig === 'string' &&
+		Array.isArray(o.expected)
+	)
+}
+
 // Best-effort validation of a scanned challenge QR - malformed/foreign QR
 // codes should re-prompt "couldn't read that", not crash the app.
 export function parseChallengePayload(text: string): ChallengePayload | null {
 	try {
 		const obj = JSON.parse(text)
-		if (
-			obj?.v !== INVENTORY_SESSION_PAYLOAD_VERSION ||
-			typeof obj?.sid !== 'number' ||
-			typeof obj?.roomId !== 'number' ||
-			typeof obj?.key !== 'string' ||
-			typeof obj?.sig !== 'string' ||
-			!Array.isArray(obj?.expected)
-		) {
-			return null
-		}
-		return obj as ChallengePayload
+		return isValidChallengePayload(obj) ? obj : null
 	} catch {
 		return null
 	}
