@@ -30,7 +30,7 @@ export default function ResultsQr({
 		QRCode.toCanvas(canvasRef.current, value, {
 			width: 320,
 			margin: 2,
-			errorCorrectionLevel: 'M'
+			errorCorrectionLevel: 'L'
 		}).catch(() => {
 			setError('Không thể tạo mã QR - dữ liệu quá lớn cho một mã QR.')
 		})

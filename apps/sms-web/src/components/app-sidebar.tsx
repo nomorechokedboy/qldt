@@ -21,12 +21,12 @@ import {
 	AppSidebar as GenericSidebar
 } from '@repo/ui/components/app-sidebar/index'
 import {
-	useSidebar,
 	Sidebar,
 	SidebarMenuSub,
 	SidebarMenuSubItem,
 	SidebarMenuSubButton
 } from '@repo/ui/components/ui/sidebar'
+import { useSidebar } from '@repo/ui/components/ui/use-sidebar'
 import { useQuery } from '@tanstack/react-query'
 import { CategoryApi } from '@/api'
 import useAuth from '@/hooks/useAuth'

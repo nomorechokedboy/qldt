@@ -124,3 +124,17 @@ h3 {
 		@apply border-border outline-ring/50;
 	}
 }
+
+@layer utilities {
+	.pb-safe {
+		padding-bottom: env(safe-area-inset-bottom);
+	}
+
+	.mb-safe {
+		margin-bottom: env(safe-area-inset-bottom);
+	}
+
+	.h-safe-bottom {
+		height: calc(100% + env(safe-area-inset-bottom));
+	}
+}
