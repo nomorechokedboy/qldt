@@ -40,6 +40,12 @@ export interface ChallengePayload {
 	sig: string
 }
 
+// ResultItem/StockResultItem must not gain new fields without updating
+// canonicalResults() here AND apps/api/inventory-sessions/payload.ts's
+// canonicalResults() in lockstep - the server's explicit key-order rebuild
+// silently drops any field it doesn't list, while this pass-through
+// silently keeps it, so an unmatched field addition produces a signature
+// mismatch instead of an obvious error.
 export interface ResultItem {
 	serial: string
 	observedCondition?: MaterialConditionName

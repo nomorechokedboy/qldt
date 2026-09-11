@@ -123,6 +123,12 @@ function ChecklistPage() {
 	const [extraStockMaterialTypeId, setExtraStockMaterialTypeId] = useState<
 		number | null
 	>(null)
+	// Feedback for handleAddExtraStock's no-op case below - a plain inline
+	// message rather than a toast library, since nothing else in this screen
+	// uses one.
+	const [extraStockMessage, setExtraStockMessage] = useState<string | null>(
+		null
+	)
 
 	if (!session) return null
 
@@ -171,7 +177,23 @@ function ChecklistPage() {
 	}
 
 	function handleAddExtraStock(condition: MaterialConditionName) {
-		if (extraStockMaterialTypeId === null) return
+		if (!session || extraStockMaterialTypeId === null) return
+		// A (materialTypeId, condition) combo already present in
+		// expectedStocks already has its own row (and possibly an
+		// already-entered count) above - writing 0 here would silently
+		// clobber it instead of adding a genuinely new/extra line.
+		const alreadyExpected = session.challenge.expectedStocks.some(
+			(s) =>
+				s.materialTypeId === extraStockMaterialTypeId &&
+				s.condition === condition
+		)
+		if (alreadyExpected) {
+			setExtraStockMessage(
+				'Dòng này đã có trong danh sách dự kiến ở trên.'
+			)
+			return
+		}
+		setExtraStockMessage(null)
 		recordStockCount(extraStockMaterialTypeId, condition, 0)
 	}
 
@@ -248,7 +270,7 @@ function ChecklistPage() {
 	}
 
 	return (
-		<div className='flex flex-col gap-4'>
+		<div className='flex min-h-0 flex-1 flex-col gap-4'>
 			<div className='bg-card border-border flex items-stretch justify-between rounded-md border'>
 				<div className='flex flex-1 flex-col gap-0.5 border-r p-2.5'>
 					<span className='text-muted-foreground text-[11px]'>
@@ -272,6 +294,9 @@ function ChecklistPage() {
 					</span>
 					<span className='font-mono text-sm font-semibold'>
 						{session.challenge.expected.length}
+						{session.challenge.expectedStocks.length > 0
+							? ` + ${session.challenge.expectedStocks.length} dòng SL`
+							: ''}
 					</span>
 				</div>
 			</div>
@@ -324,66 +349,89 @@ function ChecklistPage() {
 				</div>
 			)}
 
-			<ul className='flex flex-col gap-2'>
-				{session.challenge.expected.map((asset) => {
-					const scan = session.scans[asset.serial]
-					const rowStatus =
-						diffBySerial.get(asset.serial)?.status ?? 'missing'
-					return (
-						<li
-							key={asset.serial}
-							className={cn(
-								'bg-card flex flex-col gap-2 rounded-md border border-l-4 p-3',
-								ROW_STATUS_BAR[rowStatus]
-							)}
-						>
-							<div className='flex flex-col'>
-								<span className='font-mono text-base font-semibold'>
-									{asset.serial}
-								</span>
-								<span className='text-muted-foreground text-xs'>
-									{asset.materialTypeName} - Dự kiến:{' '}
-									{CONDITION_LABELS[asset.condition]}
-								</span>
-								{scan && (
-									<span
-										className={cn(
-											'text-xs font-medium',
-											rowStatus === 'condition_changed'
-												? 'text-changed'
-												: 'text-matched'
-										)}
-									>
-										Đã ghi nhận:{' '}
-										{
-											CONDITION_LABELS[
-												scan.observedCondition
-											]
-										}
-									</span>
+			{/* Everything below scrolls independently of the room/session
+			summary, status counts, mode toggle and scanner above - those stay
+			put so a trooper can keep scanning without losing their place, and
+			the finish/cancel buttons below stay pinned at the bottom instead
+			of being pushed off-screen by a long checklist. */}
+			<div className='flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto'>
+				<ul className='flex flex-col gap-2'>
+					{session.challenge.expected.map((asset) => {
+						const scan = session.scans[asset.serial]
+						const rowStatus =
+							diffBySerial.get(asset.serial)?.status ?? 'missing'
+						return (
+							<li
+								key={asset.serial}
+								className={cn(
+									'bg-card flex flex-col gap-2 rounded-md border border-l-4 p-3',
+									ROW_STATUS_BAR[rowStatus]
 								)}
-							</div>
-							{mode === 'manual' ? (
-								<div className='flex flex-wrap gap-1.5'>
-									{CONDITIONS.map((c) => (
-										<Button
-											key={c}
-											type='button'
-											variant={
-												scan?.observedCondition === c
-													? 'default'
-													: 'outline'
-											}
-											size='sm'
-											className='min-w-[5.5rem] flex-1'
-											onClick={() =>
-												recordScan(asset.serial, c)
-											}
-										>
-											{CONDITION_LABELS[c]}
-										</Button>
-									))}
+							>
+								<div className='flex flex-col'>
+									<span className='font-mono text-base font-semibold'>
+										{asset.serial}
+									</span>
+									<span className='text-muted-foreground text-xs'>
+										{asset.materialTypeName} - Dự kiến:{' '}
+										{CONDITION_LABELS[asset.condition]}
+									</span>
 									{scan && (
+										<span
+											className={cn(
+												'text-xs font-medium',
+												rowStatus ===
+													'condition_changed'
+													? 'text-changed'
+													: 'text-matched'
+											)}
+										>
+											Đã ghi nhận:{' '}
+											{
+												CONDITION_LABELS[
+													scan.observedCondition
+												]
+											}
+										</span>
+									)}
+								</div>
+								{mode === 'manual' ? (
+									<div className='flex flex-wrap gap-1.5'>
+										{CONDITIONS.map((c) => (
+											<Button
+												key={c}
+												type='button'
+												variant={
+													scan?.observedCondition ===
+													c
+														? 'default'
+														: 'outline'
+												}
+												size='sm'
+												className='min-w-[5.5rem] flex-1'
+												onClick={() =>
+													recordScan(asset.serial, c)
+												}
+											>
+												{CONDITION_LABELS[c]}
+											</Button>
+										))}
+										{scan && (
+											<Button
+												type='button'
+												variant='link'
+												size='sm'
+												className='text-destructive h-auto self-start px-0'
+												onClick={() =>
+													unmarkScan(asset.serial)
+												}
+											>
+												Bỏ đánh dấu
+											</Button>
+										)}
+									</div>
+								) : (
+									scan && (
 										<Button
 											type='button'
 											variant='link'
@@ -395,279 +443,289 @@ function ChecklistPage() {
 										>
 											Bỏ đánh dấu
 										</Button>
-									)}
-								</div>
-							) : (
-								scan && (
-									<Button
-										type='button'
-										variant='link'
-										size='sm'
-										className='text-destructive h-auto self-start px-0'
-										onClick={() => unmarkScan(asset.serial)}
-									>
-										Bỏ đánh dấu
-									</Button>
-								)
-							)}
-						</li>
-					)
-				})}
-			</ul>
+									)
+								)}
+							</li>
+						)
+					})}
+				</ul>
 
-			{session.challenge.expectedStocks.length > 0 && (
-				<div className='flex flex-col gap-2'>
-					<h2 className='text-sm font-semibold'>Kiểm đếm vật tư</h2>
-					<ul className='flex flex-col gap-2'>
-						{session.challenge.expectedStocks.map((stock) => {
-							const key = stockKey(
-								stock.materialTypeId,
-								stock.condition
-							)
-							const status =
-								stockDiff.find(
-									(d) =>
-										d.materialTypeId ===
-											stock.materialTypeId &&
-										d.condition === stock.condition
-								)?.status ?? 'short'
-							// Reuses the asset checklist's row-status color
-							// language (red = deficit, gold = variance,
-							// olive = ok) rather than inventing a second
-							// palette for the same three concepts.
-							const barClass =
-								status === 'matched'
-									? ROW_STATUS_BAR.matched
-									: status === 'short'
-										? ROW_STATUS_BAR.missing
-										: ROW_STATUS_BAR.condition_changed
-							const value = session.stockCounts[key]
-							return (
-								<li
-									key={key}
-									className={cn(
-										'bg-card flex items-center justify-between gap-3 rounded-md border border-l-4 p-3',
-										barClass
-									)}
+				{session.challenge.expectedStocks.length > 0 && (
+					<div className='flex flex-col gap-2'>
+						<h2 className='text-sm font-semibold'>
+							Kiểm đếm vật tư
+						</h2>
+						<ul className='flex flex-col gap-2'>
+							{session.challenge.expectedStocks.map((stock) => {
+								const key = stockKey(
+									stock.materialTypeId,
+									stock.condition
+								)
+								const status =
+									stockDiff.find(
+										(d) =>
+											d.materialTypeId ===
+												stock.materialTypeId &&
+											d.condition === stock.condition
+									)?.status ?? 'short'
+								// Reuses the asset checklist's row-status color
+								// language (red = deficit, gold = variance,
+								// olive = ok) rather than inventing a second
+								// palette for the same three concepts.
+								const barClass =
+									status === 'matched'
+										? ROW_STATUS_BAR.matched
+										: status === 'short'
+											? ROW_STATUS_BAR.missing
+											: ROW_STATUS_BAR.condition_changed
+								const value = session.stockCounts[key]
+								return (
+									<li
+										key={key}
+										className={cn(
+											'bg-card flex items-center justify-between gap-3 rounded-md border border-l-4 p-3',
+											barClass
+										)}
+									>
+										<div className='flex flex-col'>
+											<span className='text-sm font-semibold'>
+												{stock.materialTypeName}
+											</span>
+											<span className='text-muted-foreground text-xs'>
+												{
+													CONDITION_LABELS[
+														stock.condition
+													]
+												}{' '}
+												- Dự kiến:{' '}
+												{stock.expectedQuantity}
+											</span>
+										</div>
+										<Input
+											type='number'
+											inputMode='numeric'
+											min={0}
+											value={value ?? ''}
+											placeholder='0'
+											onChange={(e) => {
+												const raw =
+													e.currentTarget.value
+												if (raw === '') {
+													unmarkStockCount(
+														stock.materialTypeId,
+														stock.condition
+													)
+													return
+												}
+												const n = Number(raw)
+												if (Number.isNaN(n) || n < 0)
+													return
+												recordStockCount(
+													stock.materialTypeId,
+													stock.condition,
+													n
+												)
+											}}
+											className='w-20 text-right font-mono'
+										/>
+									</li>
+								)
+							})}
+						</ul>
+					</div>
+				)}
+
+				{stockMaterialTypes.length > 0 && (
+					<div className='border-border flex flex-col gap-2 rounded-lg border border-dashed p-3'>
+						<p className='text-muted-foreground text-sm'>
+							Thêm dòng vật tư phát sinh (tình trạng khác với dự
+							kiến)
+						</p>
+						<select
+							className='border-input bg-background text-foreground rounded-md border px-3 py-2 text-sm'
+							value={extraStockMaterialTypeId ?? ''}
+							onChange={(e) => {
+								setExtraStockMaterialTypeId(
+									e.currentTarget.value
+										? Number(e.currentTarget.value)
+										: null
+								)
+								setExtraStockMessage(null)
+							}}
+						>
+							<option value=''>Chọn loại vật tư...</option>
+							{stockMaterialTypes.map((m) => (
+								<option
+									key={m.materialTypeId}
+									value={m.materialTypeId}
 								>
-									<div className='flex flex-col'>
-										<span className='text-sm font-semibold'>
-											{stock.materialTypeName}
-										</span>
-										<span className='text-muted-foreground text-xs'>
-											{CONDITION_LABELS[stock.condition]}{' '}
-											- Dự kiến: {stock.expectedQuantity}
-										</span>
-									</div>
+									{m.materialTypeName}
+								</option>
+							))}
+						</select>
+						<div className='flex flex-wrap gap-1.5'>
+							{CONDITIONS.map((c) => (
+								<Button
+									key={c}
+									type='button'
+									variant='outline'
+									size='sm'
+									className='min-w-[5.5rem] flex-1'
+									onClick={() => handleAddExtraStock(c)}
+									disabled={extraStockMaterialTypeId === null}
+								>
+									{CONDITION_LABELS[c]}
+								</Button>
+							))}
+						</div>
+						{extraStockMessage && (
+							<p className='text-muted-foreground text-xs'>
+								{extraStockMessage}
+							</p>
+						)}
+					</div>
+				)}
+
+				{mode === 'manual' && (
+					<div className='border-border flex flex-col gap-2 rounded-lg border border-dashed p-3'>
+						<p className='text-muted-foreground text-sm'>
+							Thêm số hiệu phát sinh (không có trong danh sách dự
+							kiến)
+						</p>
+						<Input
+							value={extraSerial}
+							onChange={(e) =>
+								setExtraSerial(e.currentTarget.value)
+							}
+							placeholder='Số hiệu (VD: A808834)'
+							className='font-mono uppercase'
+						/>
+						<div className='flex flex-wrap gap-1.5'>
+							{CONDITIONS.map((c) => (
+								<Button
+									key={c}
+									type='button'
+									variant='outline'
+									size='sm'
+									className='min-w-[5.5rem] flex-1'
+									onClick={() => handleAddExtra(c)}
+									disabled={!extraSerial.trim()}
+								>
+									{CONDITION_LABELS[c]}
+								</Button>
+							))}
+						</div>
+					</div>
+				)}
+
+				{diff
+					.filter((d) => d.status === 'extra')
+					.map((d) => (
+						<div
+							key={d.serial}
+							className='bg-card border-l-extra flex items-center justify-between rounded-md border border-l-4 p-3'
+						>
+							<div className='flex flex-col'>
+								<span className='font-mono text-base font-semibold'>
+									{d.serial}
+								</span>
+								<span className='text-muted-foreground text-xs'>
+									Phát sinh -{' '}
+									{d.observedCondition
+										? CONDITION_LABELS[d.observedCondition]
+										: ''}
+								</span>
+							</div>
+							<Button
+								type='button'
+								variant='link'
+								size='sm'
+								className='text-destructive h-auto px-0'
+								onClick={() => unmarkScan(d.serial)}
+							>
+								Xoá
+							</Button>
+						</div>
+					))}
+
+				{stockDiff
+					.filter((d) => d.status === 'extra')
+					.map((d) => {
+						const key = stockKey(d.materialTypeId, d.condition)
+						const materialTypeName = stockMaterialTypes.find(
+							(m) => m.materialTypeId === d.materialTypeId
+						)?.materialTypeName
+						return (
+							<div
+								key={key}
+								className='bg-card border-l-extra flex items-center justify-between gap-3 rounded-md border border-l-4 p-3'
+							>
+								<div className='flex flex-col'>
+									<span className='text-sm font-semibold'>
+										{materialTypeName ??
+											`#${d.materialTypeId}`}
+									</span>
+									<span className='text-muted-foreground text-xs'>
+										Phát sinh -{' '}
+										{CONDITION_LABELS[d.condition]}
+									</span>
+								</div>
+								<div className='flex items-center gap-2'>
 									<Input
 										type='number'
 										inputMode='numeric'
 										min={0}
-										value={value ?? ''}
-										placeholder='0'
+										value={session.stockCounts[key] ?? ''}
 										onChange={(e) => {
 											const raw = e.currentTarget.value
-											if (raw === '') {
-												unmarkStockCount(
-													stock.materialTypeId,
-													stock.condition
-												)
-												return
-											}
 											const n = Number(raw)
-											if (Number.isNaN(n) || n < 0) return
+											if (
+												raw === '' ||
+												Number.isNaN(n) ||
+												n < 0
+											)
+												return
 											recordStockCount(
-												stock.materialTypeId,
-												stock.condition,
+												d.materialTypeId,
+												d.condition,
 												n
 											)
 										}}
 										className='w-20 text-right font-mono'
 									/>
-								</li>
-							)
-						})}
-					</ul>
-				</div>
-			)}
-
-			{stockMaterialTypes.length > 0 && (
-				<div className='border-border flex flex-col gap-2 rounded-lg border border-dashed p-3'>
-					<p className='text-muted-foreground text-sm'>
-						Thêm dòng vật tư phát sinh (tình trạng khác với dự kiến)
-					</p>
-					<select
-						className='border-input bg-background text-foreground rounded-md border px-3 py-2 text-sm'
-						value={extraStockMaterialTypeId ?? ''}
-						onChange={(e) =>
-							setExtraStockMaterialTypeId(
-								e.currentTarget.value
-									? Number(e.currentTarget.value)
-									: null
-							)
-						}
-					>
-						<option value=''>Chọn loại vật tư...</option>
-						{stockMaterialTypes.map((m) => (
-							<option
-								key={m.materialTypeId}
-								value={m.materialTypeId}
-							>
-								{m.materialTypeName}
-							</option>
-						))}
-					</select>
-					<div className='flex flex-wrap gap-1.5'>
-						{CONDITIONS.map((c) => (
-							<Button
-								key={c}
-								type='button'
-								variant='outline'
-								size='sm'
-								className='min-w-[5.5rem] flex-1'
-								onClick={() => handleAddExtraStock(c)}
-								disabled={extraStockMaterialTypeId === null}
-							>
-								{CONDITION_LABELS[c]}
-							</Button>
-						))}
-					</div>
-				</div>
-			)}
-
-			{mode === 'manual' && (
-				<div className='border-border flex flex-col gap-2 rounded-lg border border-dashed p-3'>
-					<p className='text-muted-foreground text-sm'>
-						Thêm số hiệu phát sinh (không có trong danh sách dự
-						kiến)
-					</p>
-					<Input
-						value={extraSerial}
-						onChange={(e) => setExtraSerial(e.currentTarget.value)}
-						placeholder='Số hiệu (VD: A808834)'
-						className='font-mono uppercase'
-					/>
-					<div className='flex flex-wrap gap-1.5'>
-						{CONDITIONS.map((c) => (
-							<Button
-								key={c}
-								type='button'
-								variant='outline'
-								size='sm'
-								className='min-w-[5.5rem] flex-1'
-								onClick={() => handleAddExtra(c)}
-								disabled={!extraSerial.trim()}
-							>
-								{CONDITION_LABELS[c]}
-							</Button>
-						))}
-					</div>
-				</div>
-			)}
-
-			{diff
-				.filter((d) => d.status === 'extra')
-				.map((d) => (
-					<div
-						key={d.serial}
-						className='bg-card border-l-extra flex items-center justify-between rounded-md border border-l-4 p-3'
-					>
-						<div className='flex flex-col'>
-							<span className='font-mono text-base font-semibold'>
-								{d.serial}
-							</span>
-							<span className='text-muted-foreground text-xs'>
-								Phát sinh -{' '}
-								{d.observedCondition
-									? CONDITION_LABELS[d.observedCondition]
-									: ''}
-							</span>
-						</div>
-						<Button
-							type='button'
-							variant='link'
-							size='sm'
-							className='text-destructive h-auto px-0'
-							onClick={() => unmarkScan(d.serial)}
-						>
-							Xoá
-						</Button>
-					</div>
-				))}
-
-			{stockDiff
-				.filter((d) => d.status === 'extra')
-				.map((d) => {
-					const key = stockKey(d.materialTypeId, d.condition)
-					const materialTypeName = stockMaterialTypes.find(
-						(m) => m.materialTypeId === d.materialTypeId
-					)?.materialTypeName
-					return (
-						<div
-							key={key}
-							className='bg-card border-l-extra flex items-center justify-between gap-3 rounded-md border border-l-4 p-3'
-						>
-							<div className='flex flex-col'>
-								<span className='text-sm font-semibold'>
-									{materialTypeName ?? `#${d.materialTypeId}`}
-								</span>
-								<span className='text-muted-foreground text-xs'>
-									Phát sinh - {CONDITION_LABELS[d.condition]}
-								</span>
+									<Button
+										type='button'
+										variant='link'
+										size='sm'
+										className='text-destructive h-auto px-0'
+										onClick={() =>
+											unmarkStockCount(
+												d.materialTypeId,
+												d.condition
+											)
+										}
+									>
+										Xoá
+									</Button>
+								</div>
 							</div>
-							<div className='flex items-center gap-2'>
-								<Input
-									type='number'
-									inputMode='numeric'
-									min={0}
-									value={session.stockCounts[key] ?? ''}
-									onChange={(e) => {
-										const raw = e.currentTarget.value
-										const n = Number(raw)
-										if (
-											raw === '' ||
-											Number.isNaN(n) ||
-											n < 0
-										)
-											return
-										recordStockCount(
-											d.materialTypeId,
-											d.condition,
-											n
-										)
-									}}
-									className='w-20 text-right font-mono'
-								/>
-								<Button
-									type='button'
-									variant='link'
-									size='sm'
-									className='text-destructive h-auto px-0'
-									onClick={() =>
-										unmarkStockCount(
-											d.materialTypeId,
-											d.condition
-										)
-									}
-								>
-									Xoá
-								</Button>
-							</div>
-						</div>
-					)
-				})}
+						)
+					})}
+			</div>
 
-			<Button
-				type='button'
-				size='lg'
-				onClick={handleFinish}
-				disabled={signing}
-			>
-				{signing ? 'Đang tạo mã QR...' : 'Hoàn tất kiểm kê'}
-			</Button>
-			<Button type='button' variant='outline' onClick={cancelSession}>
-				Huỷ, quét phiên khác
-			</Button>
+			<nav className='flex flex-col gap-2'>
+				<Button
+					type='button'
+					size='lg'
+					onClick={handleFinish}
+					disabled={signing}
+				>
+					{signing ? 'Đang tạo mã QR...' : 'Hoàn tất kiểm kê'}
+				</Button>
+				<Button type='button' variant='outline' onClick={cancelSession}>
+					Huỷ, quét phiên khác
+				</Button>
+			</nav>
 		</div>
 	)
 }

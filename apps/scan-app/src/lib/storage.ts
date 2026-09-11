@@ -28,7 +28,11 @@ export function loadSession(): SessionState | null {
 			localStorage.removeItem(STORAGE_KEY)
 			return null
 		}
-		return parsed
+		// A session persisted before stock counting existed (or with an empty
+		// object omitted by some serializer) has no `stockCounts` at all -
+		// default it to `{}` rather than resuming with `undefined`, which
+		// would throw in computeStockDiff's `Object.keys(counts)` call.
+		return { ...parsed, stockCounts: parsed.stockCounts ?? {} }
 	} catch {
 		return null
 	}
