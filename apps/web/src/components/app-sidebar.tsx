@@ -1,4 +1,5 @@
-import { SidebarFooter, useSidebar } from '@/components/ui/sidebar'
+import { SidebarFooter } from '@/components/ui/sidebar'
+import { useSidebar } from '@/components/ui/use-sidebar'
 import * as React from 'react'
 import {
 	Calendar,

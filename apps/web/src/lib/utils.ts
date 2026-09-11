@@ -53,6 +53,16 @@ export function getCurrentQuarter() {
 	return dayjs().quarter()
 }
 
+// Local (not UTC) yyyy-mm-dd - callers filtering an API by date generally
+// compare against a plain date column, and Date#toISOString() would shift
+// the date by the viewer's UTC offset and can land on the wrong calendar day.
+export function toIsoDateString(date: Date): string {
+	const year = date.getFullYear().toString().padStart(4, '0')
+	const month = (date.getMonth() + 1).toString().padStart(2, '0')
+	const day = date.getDate().toString().padStart(2, '0')
+	return `${year}-${month}-${day}`
+}
+
 export function toVNTz(utcTimestamp: string) {
 	return dayjs.utc(utcTimestamp).tz('Asia/Ho_Chi_Minh').format('DD-MM-YYYY')
 }
@@ -157,4 +167,9 @@ export const isSuperAdmin = (): boolean => {
 	} catch {
 		return false
 	}
+}
+
+export function IsExceedApplyTime(completedAt: string) {
+	const limitDate = dayjs(completedAt).add(1, 'week')
+	return dayjs().isAfter(limitDate)
 }

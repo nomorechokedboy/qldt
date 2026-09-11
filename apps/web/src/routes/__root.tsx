@@ -4,7 +4,7 @@ import {
 	useNavigate
 } from '@tanstack/react-router'
 import useAuth from '@/hooks/useAuth'
-import React, { useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { TanStackRouterDevtools } from '@tanstack/react-router-devtools'
 import { TanstackDevtools } from '@tanstack/react-devtools'
 import TanStackQueryDevtools from '../integrations/tanstack-query/devtools'
@@ -28,8 +28,6 @@ import { useLocation } from '@tanstack/react-router'
 interface MyRouterContext {
 	queryClient: QueryClient
 }
-
-export const NavbarContext = React.createContext(true)
 
 function RootLayout() {
 	const navigate = useNavigate()

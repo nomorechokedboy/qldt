@@ -1,18 +1,12 @@
 import { Badge } from '@/components/ui/badge'
 import type { inventory_sessions } from '@/api/client'
-
-export const STOCK_DIFF_STATUS_LABEL: Record<
-	inventory_sessions.InventorySessionStockDiffStatus,
-	{
-		label: string
-		variant: 'default' | 'destructive' | 'secondary' | 'outline'
-	}
-> = {
-	matched: { label: 'Khớp', variant: 'secondary' },
-	short: { label: 'Thiếu', variant: 'destructive' },
-	over: { label: 'Dư', variant: 'default' },
-	extra: { label: 'Phát sinh', variant: 'outline' }
-}
+import {
+	materialConditionColors,
+	materialConditionLabels
+} from '@/data/material-categories'
+import { StockDiffColor, StockDiffStatusIcon } from './diff-status'
+import { STOCK_DIFF_STATUS_LABEL } from './diff-status-labels'
+import { cn } from '@/lib/utils'
 
 interface InventorySessionStockDiffListProps {
 	stockDiff: inventory_sessions.InventorySessionStockDiffItem[]
@@ -20,9 +14,10 @@ interface InventorySessionStockDiffListProps {
 
 // Sibling to InventorySessionDiffList (session-diff-list.tsx) for the
 // bulk-stock half of a session's review - quantity variance instead of
-// per-serial identity. Displays raw materialTypeId rather than a resolved
-// name, matching InventorySessionDiffList's own fidelity (it shows a raw
-// `serial`, not a resolved asset description, either). See
+// per-serial identity. Shows the resolved material type name where
+// available; an `extra` line (a materialTypeId/condition combo present only
+// in the phone's counts) has no name to join against, so it falls back to
+// the raw id. See
 // docs/superpowers/specs/2026-09-10-inventory-session-stock-counts-design.md.
 export default function InventorySessionStockDiffList({
 	stockDiff
@@ -44,17 +39,27 @@ export default function InventorySessionStockDiffList({
 				>
 					<div className='flex flex-col'>
 						<span className='font-mono'>
-							#{item.materialTypeId}
+							{item.materialTypeName ?? `#${item.materialTypeId}`}{' '}
+							<Badge
+								className={cn(
+									materialConditionColors[item.condition],
+									'inline'
+								)}
+							>
+								{materialConditionLabels[item.condition]}
+							</Badge>
 						</span>
 						<span className='text-muted-foreground text-xs'>
-							Dự kiến: {item.expectedQuantity ?? '-'} - Thực tế:{' '}
+							Dự kiến: {item.expectedQuantity ?? '0'} - Thực tế:{' '}
 							{item.observedQuantity}
 						</span>
 					</div>
 					<Badge
+						className={StockDiffColor(item.status)}
 						variant={STOCK_DIFF_STATUS_LABEL[item.status].variant}
 					>
 						{STOCK_DIFF_STATUS_LABEL[item.status].label}
+						<StockDiffStatusIcon status={item.status} />
 					</Badge>
 				</div>
 			))}

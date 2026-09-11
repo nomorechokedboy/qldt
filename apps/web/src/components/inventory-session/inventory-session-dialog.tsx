@@ -11,6 +11,7 @@ import {
 	useSubmitInventorySessionResults
 } from '@/hooks/useInventorySession'
 import ChallengeQr from './challenge-qr'
+import InventorySessionApplyPanel from './inventory-session-apply-panel'
 import InventorySessionDiffList from './session-diff-list'
 import InventorySessionStockDiffList from './stock-diff-list'
 import WebcamQrScanner from './webcam-qr-scanner'
@@ -38,6 +39,14 @@ export default function InventorySessionDialog({
 		)
 	const [review, setReview] =
 		useState<inventory_sessions.InventorySessionReview | null>(null)
+	// Set on any decode/submit failure - halts the scanner (see the `paused`
+	// prop below) until the trooper explicitly retries. Without this, a QR
+	// that fails server-side (already-completed session, tampered
+	// signature...) but flickers in and out of the camera's decode on
+	// consecutive frames - normal hand tremor is enough - would resubmit to
+	// the server dozens of times a second with no way to stop it short of
+	// closing the dialog.
+	const [scanError, setScanError] = useState<string | null>(null)
 
 	const createSession = useCreateInventorySession()
 	const submitResults = useSubmitInventorySessionResults()
@@ -52,6 +61,7 @@ export default function InventorySessionDialog({
 		setStep('start')
 		setChallenge(null)
 		setReview(null)
+		setScanError(null)
 	}
 
 	const handleOpenChange = (next: boolean) => {
@@ -80,20 +90,26 @@ export default function InventorySessionDialog({
 	}
 
 	const handleDecode = async (text: string) => {
-		if (submitResults.isPending) return
+		// `scanError` halts the scanner via `paused` below, but that guard
+		// lags a render behind the ref the scan loop actually reads - this
+		// closes that window so an in-flight frame can't sneak one more
+		// decode through before the pause takes effect.
+		if (submitResults.isPending || scanError !== null) return
 
 		let payload: inventory_sessions.InventorySessionResultsPayload
 		try {
 			payload = JSON.parse(text)
 		} catch {
-			toast.error('Mã QR không hợp lệ, vui lòng thử lại')
+			setScanError('Mã QR không hợp lệ, vui lòng thử lại')
 			return
 		}
 		if (
+			payload?.v !== 2 ||
 			typeof payload?.sid !== 'number' ||
-			!Array.isArray(payload?.results)
+			!Array.isArray(payload?.results) ||
+			!Array.isArray(payload?.stockResults)
 		) {
-			toast.error('Mã QR không đúng định dạng kết quả kiểm kê')
+			setScanError('Mã QR không đúng định dạng kết quả kiểm kê')
 			return
 		}
 
@@ -102,7 +118,7 @@ export default function InventorySessionDialog({
 			setReview(result)
 			setStep('review')
 		} catch (err) {
-			toast.error(
+			setScanError(
 				err instanceof Error
 					? err.message
 					: 'Không thể ghi nhận kết quả kiểm kê - mã QR có thể đã bị thay đổi hoặc phiên đã đóng'
@@ -170,10 +186,11 @@ export default function InventorySessionDialog({
 								downloadFilename={`kiem-ke-${roomName}-${challenge.sid}`}
 							/>
 							<p className='text-muted-foreground text-sm text-center'>
-								{challenge.expected.length} vật tư cần kiểm kê.
-								Quét mã này bằng ứng dụng trên điện thoại, sau
-								khi hoàn tất kiểm kê hãy bấm nút bên dưới để
-								quét lại kết quả.
+								{challenge.expected.length} vật tư cần kiểm kê,{' '}
+								{challenge.expectedStocks.length} dòng vật tư
+								theo số lượng cần kiểm đếm. Quét mã này bằng ứng
+								dụng trên điện thoại, sau khi hoàn tất kiểm kê
+								hãy bấm nút bên dưới để quét lại kết quả.
 							</p>
 							<Button onClick={() => setStep('scan')}>
 								Quét kết quả từ điện thoại
@@ -185,13 +202,30 @@ export default function InventorySessionDialog({
 						<div className='flex flex-col gap-4'>
 							<WebcamQrScanner
 								onDecode={handleDecode}
-								paused={submitResults.isPending}
+								paused={
+									submitResults.isPending ||
+									scanError !== null
+								}
 							/>
-							<p className='text-muted-foreground text-sm text-center'>
-								{submitResults.isPending
-									? 'Đang ghi nhận kết quả...'
-									: 'Đưa mã QR kết quả trên điện thoại vào khung hình.'}
-							</p>
+							{scanError ? (
+								<div className='flex flex-col items-center gap-2'>
+									<p className='text-destructive text-sm text-center'>
+										{scanError}
+									</p>
+									<Button
+										variant='outline'
+										onClick={() => setScanError(null)}
+									>
+										Quét lại
+									</Button>
+								</div>
+							) : (
+								<p className='text-muted-foreground text-sm text-center'>
+									{submitResults.isPending
+										? 'Đang ghi nhận kết quả...'
+										: 'Đưa mã QR kết quả trên điện thoại vào khung hình.'}
+								</p>
+							)}
 						</div>
 					)}
 
@@ -216,6 +250,14 @@ export default function InventorySessionDialog({
 										? 'Đang xác nhận...'
 										: 'Xác nhận đã kiểm tra'}
 								</Button>
+							)}
+							{review.session.status === 'reviewed' && (
+								<InventorySessionApplyPanel
+									session={review.session}
+									diff={review.diff}
+									stockDiff={review.stockDiff}
+									onApplied={setReview}
+								/>
 							)}
 							<Button
 								variant='outline'

@@ -438,8 +438,24 @@ export function MarkInventorySessionReviewed(id: number) {
 	return requestClient.inventory_sessions.MarkInventorySessionReviewed(id)
 }
 
-export function GetInventorySessionsForRoom(roomId: number) {
-	return requestClient.inventory_sessions.GetInventorySessionsForRoom(roomId)
+export function GetInventorySessionsForRoom(
+	roomId: number,
+	params: inventory_sessions.GetInventorySessionsForRoomParams = {}
+) {
+	return requestClient.inventory_sessions.GetInventorySessionsForRoom(
+		roomId,
+		params
+	)
+}
+
+export function ApplyInventorySessionResults(
+	id: number,
+	params: inventory_sessions.ApplyInventorySessionResultsParams = {}
+) {
+	return requestClient.inventory_sessions.ApplyInventorySessionResults(
+		id,
+		params
+	)
 }
 
 // Material types

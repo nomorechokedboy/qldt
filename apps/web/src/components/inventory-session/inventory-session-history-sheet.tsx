@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
+import type { DateRange } from 'react-day-picker'
 import {
 	Accordion,
 	AccordionContent,
@@ -6,7 +7,17 @@ import {
 	AccordionTrigger
 } from '@/components/ui/accordion'
 import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import DateRangePicker from '@/components/date-range-picker'
 import { ErrorState } from '@/components/error-state'
+import InventorySessionApplyPanel from './inventory-session-apply-panel'
+import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue
+} from '@/components/ui/select'
 import {
 	Sheet,
 	SheetContent,
@@ -18,9 +29,17 @@ import {
 	useInventorySessionReview,
 	useInventorySessionsForRoom
 } from '@/hooks/useInventorySession'
-import { formatDbTimestamp } from '@/lib/utils'
+import {
+	formatDbTimestamp,
+	IsExceedApplyTime,
+	toIsoDateString
+} from '@/lib/utils'
 import InventorySessionDiffList from './session-diff-list'
 import InventorySessionStockDiffList from './stock-diff-list'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Label } from '../ui/label'
+
+const HISTORY_PAGE_SIZE = 10
 
 const SESSION_STATUS_LABEL: Record<
 	string,
@@ -37,12 +56,20 @@ const SESSION_STATUS_LABEL: Record<
 
 function SessionDiffPanel({
 	sessionId,
-	enabled
+	enabled,
+	enabledApply,
+	completedAt
 }: {
 	sessionId: number
 	enabled: boolean
+	enabledApply: boolean
+	completedAt: string | null
 }) {
-	const { data: review, isLoading } = useInventorySessionReview(sessionId, {
+	const {
+		data: review,
+		isLoading,
+		refetch
+	} = useInventorySessionReview(sessionId, {
 		enabled
 	})
 
@@ -54,8 +81,26 @@ function SessionDiffPanel({
 
 	return (
 		<div className='flex flex-col gap-4'>
+			<div className='flex items-center gap-2'>
+				<Badge className='bg-sky-50 text-sky-700'>
+					Hoàn thành lúc:{' '}
+				</Badge>
+				<span className='font-mono'>
+					{completedAt !== null
+						? formatDbTimestamp(completedAt)
+						: 'Chưa hoàn thành'}
+				</span>
+			</div>
 			<InventorySessionDiffList diff={review.diff} />
 			<InventorySessionStockDiffList stockDiff={review.stockDiff} />
+			{enabledApply && (
+				<InventorySessionApplyPanel
+					session={review.session}
+					diff={review.diff}
+					stockDiff={review.stockDiff}
+					onApplied={() => refetch()}
+				/>
+			)}
 		</div>
 	)
 }
@@ -76,12 +121,51 @@ export default function InventorySessionHistorySheet({
 	open,
 	onOpenChange
 }: InventorySessionHistorySheetProps) {
-	const { data, error, refetch } = useInventorySessionsForRoom(roomId, {
-		enabled: open
-	})
 	const [openSessionId, setOpenSessionId] = useState('')
+	const [status, setStatus] = useState('')
+	const [dateRange, setDateRange] = useState<DateRange | undefined>()
+	const [page, setPage] = useState(1)
+	const [sessions, setSessions] = useState<
+		inventory_sessions.InventorySessionResp[]
+	>([])
 
-	const sessions = data?.data ?? []
+	const from = dateRange?.from ? toIsoDateString(dateRange.from) : undefined
+	const to = dateRange?.to ? toIsoDateString(dateRange.to) : undefined
+
+	// Any filter change (or the sheet reopening) starts a fresh accumulated
+	// list at page 1 - stale pages from a previous filter must not linger
+	// ahead of the "load more" button.
+	useEffect(() => {
+		setPage(1)
+		setSessions([])
+	}, [open, roomId, status, from, to])
+
+	const { data, error, refetch, isFetching } = useInventorySessionsForRoom(
+		roomId,
+		{
+			status: (status || undefined) as
+				| inventory_sessions.InventorySessionStatus
+				| undefined,
+			from,
+			to,
+			page,
+			pageSize: HISTORY_PAGE_SIZE
+		},
+		{ enabled: open }
+	)
+
+	useEffect(() => {
+		if (!data) return
+		setSessions((prev) =>
+			page === 1 ? data.data : [...prev, ...data.data]
+		)
+	}, [data, page])
+
+	const total = data?.total ?? 0
+	const hasMore = sessions.length < total
+
+	const handleFilterChange = (setter: (v: string) => void) => (v: string) =>
+		setter(v === 'all' ? '' : v)
 
 	return (
 		<Sheet open={open} onOpenChange={onOpenChange}>
@@ -89,14 +173,52 @@ export default function InventorySessionHistorySheet({
 				<SheetHeader>
 					<SheetTitle>Lịch sử kiểm kê - {roomName}</SheetTitle>
 				</SheetHeader>
-				<div className='px-4 pb-4'>
+				<ScrollArea className='px-4 pb-4 h-screen'>
+					<div className='flex flex-wrap items-center gap-2 pb-3'>
+						<div className='flex flex-col gap-2'>
+							<Label className='font-bold'>
+								Trạng thái của phiên
+							</Label>
+							<Select
+								value={status || 'all'}
+								onValueChange={handleFilterChange(setStatus)}
+							>
+								<SelectTrigger className='h-8 w-[160px]'>
+									<SelectValue placeholder='Trạng thái' />
+								</SelectTrigger>
+								<SelectContent>
+									<SelectItem value='all'>
+										Tất cả trạng thái
+									</SelectItem>
+									{Object.entries(SESSION_STATUS_LABEL).map(
+										([value, { label }]) => (
+											<SelectItem
+												key={value}
+												value={value}
+											>
+												{label}
+											</SelectItem>
+										)
+									)}
+								</SelectContent>
+							</Select>
+						</div>
+						<div className='flex flex-col gap-2'>
+							<Label className='font-bold'>Khoảng ngày</Label>
+							<DateRangePicker
+								value={dateRange}
+								onChange={setDateRange}
+							/>
+						</div>
+					</div>
+
 					{error && (
 						<ErrorState
 							error={error as Error}
 							onRetry={() => refetch()}
 						/>
 					)}
-					{!error && sessions.length === 0 && (
+					{!error && !isFetching && sessions.length === 0 && (
 						<p className='text-muted-foreground text-sm'>
 							Phòng này chưa có phiên kiểm kê nào.
 						</p>
@@ -118,17 +240,26 @@ export default function InventorySessionHistorySheet({
 										label: session.status,
 										variant: 'outline' as const
 									}
+									const enabledApply = session.completedAt
+										? !IsExceedApplyTime(
+												session.completedAt
+											)
+										: false
+
 									return (
 										<AccordionItem
 											key={session.id}
 											value={String(session.id)}
 										>
 											<AccordionTrigger>
-												<span className='flex items-center gap-3'>
-													<span>
-														{formatDbTimestamp(
-															session.createdAt
-														)}
+												<div className='flex items-center justify-between w-full'>
+													<span className='font-mono'>
+														Tạo lúc:{' '}
+														<span>
+															{formatDbTimestamp(
+																session.createdAt
+															)}
+														</span>
 													</span>
 													<Badge
 														variant={
@@ -137,15 +268,19 @@ export default function InventorySessionHistorySheet({
 													>
 														{statusLabel.label}
 													</Badge>
-												</span>
+												</div>
 											</AccordionTrigger>
 											<AccordionContent>
 												<SessionDiffPanel
+													completedAt={
+														session.completedAt
+													}
 													sessionId={session.id}
 													enabled={
 														openSessionId ===
 														String(session.id)
 													}
+													enabledApply={enabledApply}
 												/>
 											</AccordionContent>
 										</AccordionItem>
@@ -154,7 +289,20 @@ export default function InventorySessionHistorySheet({
 							)}
 						</Accordion>
 					)}
-				</div>
+
+					{!error && hasMore && (
+						<div className='flex justify-center pt-3'>
+							<Button
+								variant='outline'
+								size='sm'
+								disabled={isFetching}
+								onClick={() => setPage((p) => p + 1)}
+							>
+								{isFetching ? 'Đang tải...' : 'Tải thêm'}
+							</Button>
+						</div>
+					)}
+				</ScrollArea>
 			</SheetContent>
 		</Sheet>
 	)
