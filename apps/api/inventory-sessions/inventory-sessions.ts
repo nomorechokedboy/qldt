@@ -1,11 +1,15 @@
 import { APICallMeta, currentRequest } from 'encore.dev'
-import { api } from 'encore.dev/api'
+import { api, Query } from 'encore.dev/api'
 import { getAuthData } from '~encore/auth'
 import { AppError } from '../errors'
 import { setAuditContext } from '../middleware/audit'
+import { InventorySessionStatus } from '../schema/inventory-sessions'
 import inventorySessionController, {
+	ApplyInventorySessionResult,
+	InventorySessionAssetResolution,
 	InventorySessionResp,
-	InventorySessionReview
+	InventorySessionReview,
+	InventorySessionStockResolution
 } from './inventory-sessions-controller'
 import {
 	InventorySessionChallengePayload,
@@ -113,14 +117,20 @@ export const GetOpenInventorySession = api(
 
 interface GetInventorySessionsForRoomParams {
 	roomId: number
+	status?: Query<InventorySessionStatus>
+	from?: Query<string>
+	to?: Query<string>
+	page?: Query<number>
+	pageSize?: Query<number>
 }
 
 interface GetInventorySessionsForRoomResponse {
 	data: InventorySessionResp[]
+	total: number
 }
 
-// PC side: backs the "Lịch sử kiểm kê" history sheet on a room - every
-// session for the room regardless of status, newest first.
+// PC side: backs the "Lịch sử kiểm kê" history sheet on a room - filtered
+// (status, date range) and paginated, newest first.
 export const GetInventorySessionsForRoom = api(
 	{
 		auth: true,
@@ -129,16 +139,21 @@ export const GetInventorySessionsForRoom = api(
 		path: '/inventory-sessions/room/:roomId/history'
 	},
 	async ({
-		roomId
+		roomId,
+		status,
+		from,
+		to,
+		page,
+		pageSize
 	}: GetInventorySessionsForRoomParams): Promise<GetInventorySessionsForRoomResponse> => {
 		const callMeta = currentRequest() as APICallMeta
 		const validUnitIds = callMeta.middlewareData?.validUnitIds || []
 
-		const data = await inventorySessionController.listSessionsForRoom(
+		return inventorySessionController.listSessionsForRoom(
 			roomId,
-			validUnitIds
+			validUnitIds,
+			{ status, from, to, page, pageSize }
 		)
-		return { data }
 	}
 )
 
@@ -192,5 +207,60 @@ export const MarkInventorySessionReviewed = api(
 		})
 
 		return review
+	}
+)
+
+interface ApplyInventorySessionResultsParams {
+	id: number
+	assetResolutions?: InventorySessionAssetResolution[]
+	stockResolutions?: InventorySessionStockResolution[]
+}
+
+interface ApplyInventorySessionResultsResponse {
+	data: ApplyInventorySessionResult
+}
+
+// PC side: a separate, explicit step after review - syncs the reviewed diff
+// into material_assets/material_stocks (missing -> lost, condition changes
+// applied automatically; extra assets/stock lines only for lines the
+// reviewer explicitly resolved with action: 'apply'). One-shot per session.
+export const ApplyInventorySessionResults = api(
+	{
+		auth: true,
+		expose: true,
+		method: 'POST',
+		path: '/inventory-sessions/:id/apply'
+	},
+	async ({
+		id,
+		assetResolutions,
+		stockResolutions
+	}: ApplyInventorySessionResultsParams): Promise<ApplyInventorySessionResultsResponse> => {
+		const authData = getAuthData()
+		const callMeta = currentRequest() as APICallMeta
+		const validUnitIds = callMeta.middlewareData?.validUnitIds || []
+
+		const actorUserId = authData?.userID
+			? Number(authData.userID)
+			: undefined
+		if (actorUserId === undefined) {
+			throw AppError.handleAppErr(
+				AppError.unauthenticated('Authentication required')
+			)
+		}
+
+		const result = await inventorySessionController.applyToInventory(
+			id,
+			validUnitIds,
+			actorUserId,
+			{ assetResolutions, stockResolutions }
+		)
+
+		setAuditContext({
+			resourceIds: [id],
+			newValue: result
+		})
+
+		return { data: result }
 	}
 )

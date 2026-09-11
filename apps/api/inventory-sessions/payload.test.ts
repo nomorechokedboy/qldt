@@ -49,6 +49,88 @@ describe('inventory session challenge/results round trip', () => {
 		expect(bytes).toBeLessThan(1000)
 	})
 
+	// The fixture above is tiny (3 assets, 1 stock line, 2-char type names) -
+	// it proves the wire shape round-trips but says nothing about whether a
+	// real, near-full room's payload actually fits in one QR code. This test
+	// builds a worst-case-realistic room instead: ~40 assets (the scale the
+	// design doc's payload-size math assumes) and 10 stock lines, all with
+	// real-length Vietnamese material type names, and checks both the
+	// challenge and results payload stay under level-L byte-mode capacity
+	// (2,953 bytes) - the threshold that matters now that ResultsQr.tsx and
+	// qr-code-canvas.tsx render at errorCorrectionLevel 'L'.
+	const QR_LEVEL_L_BYTE_CAPACITY = 2953
+
+	const REALISTIC_MATERIAL_NAMES = [
+		'Súng tiểu liên AK-47 cải tiến',
+		'Súng trường tiến công M79 phóng lựu',
+		'Súng máy hạng nhẹ RPD cỡ nòng 7.62mm',
+		'Súng ngắn ổ quay K59 quân dụng',
+		'Đạn súng bộ binh cỡ nòng 7.62x39mm',
+		'Đạn súng ngắn cỡ nòng 9x19mm Parabellum',
+		'Lựu đạn cầm tay phòng ngự F1',
+		'Mặt nạ phòng độc cá nhân M17',
+		'Áo giáp chống đạn cấp độ IIIA',
+		'Ống nhòm quân sự đo xa laser'
+	]
+
+	function buildRealisticRoom() {
+		const expectedAssets: InventorySessionChallengeAsset[] = Array.from(
+			{ length: 40 },
+			(_, i) => ({
+				serial: `A${String(100000 + i).padStart(7, '0')}`,
+				materialTypeName:
+					REALISTIC_MATERIAL_NAMES[
+						i % REALISTIC_MATERIAL_NAMES.length
+					],
+				condition: 'good' as const
+			})
+		)
+		const expectedStocks: InventorySessionChallengeStock[] = Array.from(
+			{ length: 10 },
+			(_, i) => ({
+				materialTypeId: i + 1,
+				materialTypeName:
+					REALISTIC_MATERIAL_NAMES[
+						i % REALISTIC_MATERIAL_NAMES.length
+					],
+				condition: 'good' as const,
+				expectedQuantity: 500 + i
+			})
+		)
+		return { expectedAssets, expectedStocks }
+	}
+
+	it('keeps a realistic ~40-asset/10-stock-line challenge payload under the level-L QR byte budget', () => {
+		const { expectedAssets, expectedStocks } = buildRealisticRoom()
+		const challenge = buildChallengePayload(
+			1,
+			42,
+			expectedAssets,
+			expectedStocks
+		)
+
+		const bytes = Buffer.byteLength(JSON.stringify(challenge), 'utf8')
+		expect(bytes).toBeLessThan(QR_LEVEL_L_BYTE_CAPACITY)
+	})
+
+	it('keeps a realistic ~40-asset/10-stock-line results payload under the level-L QR byte budget', () => {
+		const { expectedAssets, expectedStocks } = buildRealisticRoom()
+
+		const results = expectedAssets.map((a) => ({
+			serial: a.serial,
+			observedCondition: 'good' as const
+		}))
+		const stockResults = expectedStocks.map((s) => ({
+			materialTypeId: s.materialTypeId,
+			condition: s.condition,
+			observedQuantity: s.expectedQuantity
+		}))
+
+		const payload = buildResultsPayload(1, results, stockResults)
+		const bytes = Buffer.byteLength(JSON.stringify(payload), 'utf8')
+		expect(bytes).toBeLessThan(QR_LEVEL_L_BYTE_CAPACITY)
+	})
+
 	it('signs and verifies a session with no stock lines (a room with no material_stocks rows)', () => {
 		const challenge = buildChallengePayload(1, 42, expectedAssets, [])
 

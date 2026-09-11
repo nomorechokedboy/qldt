@@ -97,6 +97,10 @@ const AUDIT_MAP: Record<string, AuditRouteConfig> = {
 	'POST:/inventory-sessions/:id/review': {
 		resource: 'inventory_sessions',
 		action: 'update'
+	},
+	'POST:/inventory-sessions/:id/apply': {
+		resource: 'inventory_sessions',
+		action: 'update'
 	}
 }
 

@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 import {
+	InventorySessionExpectedStockWithType,
 	InventorySessionRepository,
 	RoomMaterialAsset,
 	RoomMaterialStock
 } from '.'
 import { InventorySessionExpectedAssetDB } from '../schema/inventory-session-inspected-assets'
-import { InventorySessionExpectedStockDB } from '../schema/inventory-session-expected-stocks'
 import { InventorySessionScanDB } from '../schema/inventory-session-scans'
 import { InventorySessionDB } from '../schema/inventory-sessions'
 import { InventorySessionController } from './inventory-sessions-controller'
@@ -28,6 +28,7 @@ function makeSession(
 		startedByUserId: 1,
 		status: 'in_progress',
 		completedAt: null,
+		appliedAt: null,
 		createdAt: '',
 		updatedAt: '',
 		...overrides
@@ -43,9 +44,12 @@ function makeFakeRepo(
 		markCompleted: vi.fn(),
 		markReviewed: vi.fn(),
 		markExpired: vi.fn(),
+		markApplied: vi.fn(),
 		expireStaleSessions: vi.fn().mockResolvedValue(undefined),
 		getOpenSessionForRoom: vi.fn(),
-		listSessionsForRoom: vi.fn().mockResolvedValue([]),
+		listSessionsForRoom: vi.fn().mockResolvedValue({ data: [], total: 0 }),
+		getRoomUnitId: vi.fn().mockResolvedValue(100),
+		getMaterialTypeNamesByIds: vi.fn().mockResolvedValue(new Map()),
 		getRoomMaterialAssets: vi.fn().mockResolvedValue([]),
 		snapshotExpectedAssets: vi.fn(),
 		getExpectedAssets: vi.fn().mockResolvedValue([]),
@@ -56,7 +60,7 @@ function makeFakeRepo(
 		getRoomMaterialStocks: vi.fn().mockResolvedValue([]),
 		snapshotExpectedStocks: vi.fn(),
 		getExpectedStocks: vi.fn().mockResolvedValue([]),
-		getExpectedStocksWithType: vi.fn(),
+		getExpectedStocksWithType: vi.fn().mockResolvedValue([]),
 		insertStockCounts: vi.fn(),
 		getStockCounts: vi.fn().mockResolvedValue([]),
 		...overrides
@@ -211,46 +215,63 @@ describe('InventorySessionController.getOpenChallenge', () => {
 })
 
 describe('InventorySessionController.listSessionsForRoom', () => {
-	it('returns an empty list without an authorization check when the room has no sessions', async () => {
+	it('rejects a room whose unit is outside validUnitIds even when a filtered page is empty', async () => {
 		const repo = makeFakeRepo({
-			listSessionsForRoom: vi.fn().mockResolvedValue([])
-		})
-		const controller = new InventorySessionController(repo)
-
-		await expect(controller.listSessionsForRoom(10, [])).resolves.toEqual(
-			[]
-		)
-	})
-
-	it('rejects a room whose sessions belong to a unit outside validUnitIds', async () => {
-		const repo = makeFakeRepo({
+			getRoomUnitId: vi.fn().mockResolvedValue(999),
 			listSessionsForRoom: vi
 				.fn()
-				.mockResolvedValue([makeSession({ unitId: 999 })])
+				.mockResolvedValue({ data: [], total: 0 })
 		})
 		const controller = new InventorySessionController(repo)
 
 		await expect(
-			controller.listSessionsForRoom(10, [1, 2, 3])
+			controller.listSessionsForRoom(10, [1, 2, 3], {})
 		).rejects.toThrow()
+		expect(repo.listSessionsForRoom).not.toHaveBeenCalled()
 	})
 
-	it('returns session summaries for an authorized room', async () => {
+	it('rejects a room that does not exist', async () => {
 		const repo = makeFakeRepo({
-			listSessionsForRoom: vi
-				.fn()
-				.mockResolvedValue([
-					makeSession({ id: 2, unitId: 100, status: 'reviewed' }),
-					makeSession({ id: 1, unitId: 100, status: 'in_progress' })
-				])
+			getRoomUnitId: vi.fn().mockResolvedValue(undefined)
 		})
 		const controller = new InventorySessionController(repo)
 
-		const result = await controller.listSessionsForRoom(10, [100])
+		await expect(
+			controller.listSessionsForRoom(10, [100], {})
+		).rejects.toThrow()
+	})
 
-		expect(result).toHaveLength(2)
-		expect(result[0]).toMatchObject({ id: 2, status: 'reviewed' })
-		expect(result[1]).toMatchObject({ id: 1, status: 'in_progress' })
+	it('returns session summaries and total for an authorized room', async () => {
+		const repo = makeFakeRepo({
+			getRoomUnitId: vi.fn().mockResolvedValue(100),
+			listSessionsForRoom: vi.fn().mockResolvedValue({
+				data: [
+					makeSession({ id: 2, unitId: 100, status: 'reviewed' }),
+					makeSession({ id: 1, unitId: 100, status: 'in_progress' })
+				],
+				total: 2
+			})
+		})
+		const controller = new InventorySessionController(repo)
+
+		const result = await controller.listSessionsForRoom(10, [100], {})
+
+		expect(result.total).toBe(2)
+		expect(result.data).toHaveLength(2)
+		expect(result.data[0]).toMatchObject({ id: 2, status: 'reviewed' })
+		expect(result.data[1]).toMatchObject({ id: 1, status: 'in_progress' })
+	})
+
+	it('passes the query filters through to the repo', async () => {
+		const repo = makeFakeRepo({
+			getRoomUnitId: vi.fn().mockResolvedValue(100)
+		})
+		const controller = new InventorySessionController(repo)
+		const query = { status: 'reviewed' as const, page: 2, pageSize: 10 }
+
+		await controller.listSessionsForRoom(10, [100], query)
+
+		expect(repo.listSessionsForRoom).toHaveBeenCalledWith(10, query)
 	})
 })
 
@@ -368,15 +389,12 @@ describe('InventorySessionController.submitResults', () => {
 	})
 
 	it('writes stock counts and includes them in the returned stock diff', async () => {
-		const expectedStocks: InventorySessionExpectedStockDB[] = [
+		const expectedStocks: InventorySessionExpectedStockWithType[] = [
 			{
-				id: 1,
-				sessionId: 1,
 				materialTypeId: 5,
+				materialTypeName: 'Đạn AK',
 				condition: 'good',
-				expectedQuantity: 200,
-				createdAt: '',
-				updatedAt: ''
+				expectedQuantity: 200
 			}
 		]
 		const repo = makeFakeRepo({
@@ -386,7 +404,9 @@ describe('InventorySessionController.submitResults', () => {
 			markCompleted: vi
 				.fn()
 				.mockResolvedValue(makeSession({ status: 'completed' })),
-			getExpectedStocks: vi.fn().mockResolvedValue(expectedStocks),
+			getExpectedStocksWithType: vi
+				.fn()
+				.mockResolvedValue(expectedStocks),
 			getStockCounts: vi.fn().mockResolvedValue([
 				{
 					id: 1,
@@ -423,9 +443,37 @@ describe('InventorySessionController.submitResults', () => {
 				condition: 'good',
 				status: 'short',
 				expectedQuantity: 200,
-				observedQuantity: 195
+				observedQuantity: 195,
+				materialTypeName: 'Đạn AK'
 			}
 		])
+	})
+
+	it('rejects a v1-shaped payload (missing stockResults / wrong v) before touching the repo', async () => {
+		const repo = makeFakeRepo()
+		const controller = new InventorySessionController(repo)
+
+		const results = buildResultsPayload(
+			1,
+			[{ serial: 'A1', observedCondition: 'good' }],
+			[]
+		)
+		// Simulate a v1 client: no `stockResults` field and the old version
+		// number, with `sig` left as-is (a real v1 client's sig would also be
+		// computed differently, but the version/shape guard must reject this
+		// before the payload ever reaches verifyResultsPayload's signature
+		// check or canonicalResults' `.map()` over `stockResults`).
+		const v1Shaped = {
+			v: 1,
+			sid: results.sid,
+			results: results.results,
+			sig: results.sig
+		} as unknown as Parameters<typeof controller.submitResults>[0]
+
+		await expect(controller.submitResults(v1Shaped)).rejects.toThrow(
+			/incompatible app version/
+		)
+		expect(repo.getOne).not.toHaveBeenCalled()
 	})
 })
 
