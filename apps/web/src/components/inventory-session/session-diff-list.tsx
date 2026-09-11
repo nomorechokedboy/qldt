@@ -1,18 +1,12 @@
 import { Badge } from '@/components/ui/badge'
 import type { inventory_sessions } from '@/api/client'
-
-export const DIFF_STATUS_LABEL: Record<
-	inventory_sessions.InventorySessionDiffStatus,
-	{
-		label: string
-		variant: 'default' | 'destructive' | 'secondary' | 'outline'
-	}
-> = {
-	matched: { label: 'Khớp', variant: 'secondary' },
-	missing: { label: 'Thiếu', variant: 'destructive' },
-	extra: { label: 'Phát sinh', variant: 'outline' },
-	condition_changed: { label: 'Đổi tình trạng', variant: 'default' }
-}
+import { AssetDiffColor, AssetDiffStatusIcon } from './diff-status'
+import { DIFF_STATUS_LABEL } from './diff-status-labels'
+import {
+	materialConditionColors,
+	materialConditionLabels
+} from '@/data/material-categories'
+import { cn } from '@/lib/utils'
 
 interface InventorySessionDiffListProps {
 	diff: inventory_sessions.InventorySessionDiffItem[]
@@ -39,9 +33,53 @@ export default function InventorySessionDiffList({
 					key={item.serial}
 					className='flex items-center justify-between rounded-md border p-2 text-sm'
 				>
-					<span className='font-mono'>{item.serial}</span>
-					<Badge variant={DIFF_STATUS_LABEL[item.status].variant}>
+					<div className='flex flex-col gap-2'>
+						<span className='font-mono'>{item.serial}</span>
+						<span className='font-mono'>
+							Tình trạng dự kiến:{' '}
+							<Badge
+								className={cn(
+									item.expectedCondition
+										? materialConditionColors[
+												item.expectedCondition
+											]
+										: '',
+									'inline'
+								)}
+							>
+								{item.expectedCondition
+									? materialConditionLabels[
+											item.expectedCondition
+										]
+									: 'Không có'}
+							</Badge>
+						</span>
+						<span className='font-mono'>
+							Tình trạng thực tế:{' '}
+							<Badge
+								className={cn(
+									item.observedCondition
+										? materialConditionColors[
+												item.observedCondition
+											]
+										: '',
+									'inline'
+								)}
+							>
+								{item.observedCondition
+									? materialConditionLabels[
+											item.observedCondition
+										]
+									: 'Không có'}
+							</Badge>
+						</span>
+					</div>
+					<Badge
+						className={AssetDiffColor(item.status)}
+						variant={DIFF_STATUS_LABEL[item.status].variant}
+					>
 						{DIFF_STATUS_LABEL[item.status].label}
+						<AssetDiffStatusIcon status={item.status} />
 					</Badge>
 				</div>
 			))}

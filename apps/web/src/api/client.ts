@@ -647,16 +647,56 @@ export namespace healthcheck {
 }
 
 export namespace inventory_sessions {
+	export interface ApplyInventorySessionResult {
+		session: InventorySessionResp
+		missingApplied: number
+		conditionChangedApplied: number
+		extraAssetsApplied: number
+		extraAssetsFlagged: number
+		stockShortOverApplied: number
+		stockExtraApplied: number
+	}
+
+	export interface ApplyInventorySessionResultsParams {
+		assetResolutions?: InventorySessionAssetResolution[]
+		stockResolutions?: InventorySessionStockResolution[]
+	}
+
+	export interface ApplyInventorySessionResultsResponse {
+		data: ApplyInventorySessionResult
+	}
+
 	export interface CreateInventorySessionRequest {
 		roomId: number
 	}
 
+	export interface GetInventorySessionsForRoomParams {
+		status?: schema.InventorySessionStatus
+		from?: string
+		to?: string
+		page?: number
+		pageSize?: number
+	}
+
 	export interface GetInventorySessionsForRoomResponse {
 		data: InventorySessionResp[]
+		total: number
 	}
 
 	export interface GetOpenInventorySessionResponse {
 		session: InventorySessionChallengePayload | null
+	}
+
+	/**
+	 * A reviewer's explicit per-line decision for an unmatched (extra) asset
+	 * serial or stock line - "apply" reassigns/credits it into the room's
+	 * inventory, "ignore" leaves it flagged in the diff only. Missing and
+	 * condition_changed asset lines are never resolved this way - they always
+	 * auto-apply (see applyToInventory).
+	 */
+	export interface InventorySessionAssetResolution {
+		serial: string
+		action: 'apply' | 'ignore'
 	}
 
 	export interface InventorySessionChallengeAsset {
@@ -720,10 +760,19 @@ export namespace inventory_sessions {
 		startedByUserId: number
 		status: string
 		completedAt: string | null
+		appliedAt: string | null
 		createdAt: string
 		updatedAt: string
 	}
 
+	/**
+	 * InventorySessionResultItem/InventorySessionStockResultItem must not gain
+	 * new fields without updating canonicalResults() below AND
+	 * apps/scan-app/src/lib/payload.ts's hand-mirrored canonicalResults() in
+	 * lockstep - this function's explicit key-order rebuild silently drops any
+	 * field not listed here, while the phone's pass-through silently keeps it,
+	 * producing a signature mismatch instead of an obvious error.
+	 */
 	export interface InventorySessionResultItem {
 		serial: string
 		observedCondition?: schema.MaterialConditionName
@@ -749,6 +798,13 @@ export namespace inventory_sessions {
 		status: InventorySessionStockDiffStatus
 		expectedQuantity?: number
 		observedQuantity: number
+		/**
+		 * Undefined for an `extra` line (a materialTypeId/condition combo present
+		 * only in the phone's counts, not in expectedStocks) - there's no name to
+		 * join against in that case, same as the asset side tolerates an
+		 * unmatched extra serial having no known material type.
+		 */
+		materialTypeName?: string
 	}
 
 	export type InventorySessionStockDiffStatus =
@@ -756,6 +812,12 @@ export namespace inventory_sessions {
 		| 'short'
 		| 'over'
 		| 'extra'
+
+	export interface InventorySessionStockResolution {
+		materialTypeId: number
+		condition: string
+		action: 'apply' | 'ignore'
+	}
 
 	export interface InventorySessionStockResultItem {
 		materialTypeId: number
@@ -768,6 +830,8 @@ export namespace inventory_sessions {
 
 		constructor(baseClient: BaseClient) {
 			this.baseClient = baseClient
+			this.ApplyInventorySessionResults =
+				this.ApplyInventorySessionResults.bind(this)
 			this.CreateInventorySession = this.CreateInventorySession.bind(this)
 			this.GetInventorySessionReview =
 				this.GetInventorySessionReview.bind(this)
@@ -779,6 +843,25 @@ export namespace inventory_sessions {
 				this.MarkInventorySessionReviewed.bind(this)
 			this.SubmitInventorySessionResults =
 				this.SubmitInventorySessionResults.bind(this)
+		}
+
+		/**
+		 * PC side: a separate, explicit step after review - syncs the reviewed diff
+		 * into material_assets/material_stocks (missing -> lost, condition changes
+		 * applied automatically; extra assets/stock lines only for lines the
+		 * reviewer explicitly resolved with action: 'apply'). One-shot per session.
+		 */
+		public async ApplyInventorySessionResults(
+			id: number,
+			params: ApplyInventorySessionResultsParams
+		): Promise<ApplyInventorySessionResultsResponse> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'POST',
+				`/inventory-sessions/${encodeURIComponent(id)}/apply`,
+				JSON.stringify(params)
+			)
+			return (await resp.json()) as ApplyInventorySessionResultsResponse
 		}
 
 		/**
@@ -809,16 +892,35 @@ export namespace inventory_sessions {
 		}
 
 		/**
-		 * PC side: backs the "Lịch sử kiểm kê" history sheet on a room - every
-		 * session for the room regardless of status, newest first.
+		 * PC side: backs the "Lịch sử kiểm kê" history sheet on a room - filtered
+		 * (status, date range) and paginated, newest first.
 		 */
 		public async GetInventorySessionsForRoom(
-			roomId: number
+			roomId: number,
+			params: GetInventorySessionsForRoomParams
 		): Promise<GetInventorySessionsForRoomResponse> {
+			// Convert our params into the objects we need for the request
+			const query = makeRecord<string, string | string[]>({
+				from: params.from,
+				page:
+					params.page === undefined ? undefined : String(params.page),
+				pageSize:
+					params.pageSize === undefined
+						? undefined
+						: String(params.pageSize),
+				status:
+					params.status === undefined
+						? undefined
+						: String(params.status),
+				to: params.to
+			})
+
 			// Now make the actual call to the API
 			const resp = await this.baseClient.callTypedAPI(
 				'GET',
-				`/inventory-sessions/room/${encodeURIComponent(roomId)}/history`
+				`/inventory-sessions/room/${encodeURIComponent(roomId)}/history`,
+				undefined,
+				{ query }
 			)
 			return (await resp.json()) as GetInventorySessionsForRoomResponse
 		}
@@ -3432,6 +3534,12 @@ export namespace schema {
 		| 'material_assets'
 		| 'students'
 		| 'material_stocks'
+
+	export type InventorySessionStatus =
+		| 'in_progress'
+		| 'completed'
+		| 'reviewed'
+		| 'expired'
 
 	export type MaterialAssetEventType =
 		| 'assigned'
