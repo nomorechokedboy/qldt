@@ -8,6 +8,7 @@ import useInventorySession from '@/hooks/useInventorySession'
 import { computeDiff } from '@/lib/diff'
 import type { DiffStatus } from '@/lib/diff'
 import { computeStockDiff, stockKey } from '@/lib/stock-diff'
+import type { StockDiffStatus } from '@/lib/stock-diff'
 import { parseMaterialAssetTagPayload } from '@/lib/material-asset-tag'
 import { buildResultsPayload } from '@/lib/payload'
 import type { MaterialConditionName, StockResultItem } from '@/lib/payload'
@@ -39,6 +40,23 @@ const COUNT_LABELS: Record<DiffStatus, string> = {
 	matched: 'Khớp',
 	missing: 'Thiếu',
 	condition_changed: 'Đổi t.trạng',
+	extra: 'Phát sinh'
+}
+
+// Same color language as the asset status badges above (COUNT_BADGE_CLASSES)
+// - short reuses "missing" (deficit), over reuses "condition_changed"
+// (variance), so the two badge rows read as one consistent palette.
+const STOCK_COUNT_BADGE_CLASSES: Record<StockDiffStatus, string> = {
+	matched: 'border-matched/40 bg-matched/10 text-matched',
+	short: 'border-missing/40 bg-missing/10 text-missing',
+	over: 'border-changed/40 bg-changed/10 text-changed',
+	extra: 'border-extra/40 bg-extra/10 text-extra'
+}
+
+const STOCK_COUNT_LABELS: Record<StockDiffStatus, string> = {
+	matched: 'Khớp',
+	short: 'Thiếu',
+	over: 'Dư',
 	extra: 'Phát sinh'
 }
 
@@ -107,6 +125,20 @@ function ChecklistPage() {
 				: [],
 		[session]
 	)
+
+	// Mirrors `counts` above but for stock lines - without this, adding an
+	// extra stock line (or any stock variance) never showed up anywhere in
+	// the header, since `counts` only ever summarized asset status.
+	const stockCounts = useMemo(() => {
+		const c: Record<StockDiffStatus, number> = {
+			matched: 0,
+			short: 0,
+			over: 0,
+			extra: 0
+		}
+		for (const item of stockDiff) c[item.status]++
+		return c
+	}, [stockDiff])
 
 	const stockMaterialTypes = useMemo(() => {
 		if (!session) return []
@@ -315,6 +347,29 @@ function ChecklistPage() {
 					</Badge>
 				))}
 			</div>
+
+			{session.challenge.expectedStocks.length > 0 && (
+				<div className='flex flex-wrap gap-2'>
+					<span className='text-muted-foreground self-center text-[11px]'>
+						SL:
+					</span>
+					{(Object.keys(stockCounts) as StockDiffStatus[]).map(
+						(status) => (
+							<Badge
+								key={status}
+								variant='outline'
+								className={cn(
+									'rounded-sm',
+									STOCK_COUNT_BADGE_CLASSES[status]
+								)}
+							>
+								{STOCK_COUNT_LABELS[status]}:{' '}
+								{stockCounts[status]}
+							</Badge>
+						)
+					)}
+				</div>
+			)}
 
 			<div className='flex gap-2'>
 				<Button
