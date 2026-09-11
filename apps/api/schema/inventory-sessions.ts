@@ -59,7 +59,13 @@ export const inventorySessions = sqlite.sqliteTable(
 			.default('in_progress')
 			.notNull(),
 
-		completedAt: sqlite.text()
+		completedAt: sqlite.text(),
+
+		// Set once the reviewed diff has been synced into
+		// material_assets/material_stocks via applyToInventory - a one-shot
+		// guard so the same review can't be applied twice (e.g. a retried
+		// request double-marking assets lost or double-crediting stock).
+		appliedAt: sqlite.text()
 	},
 	(t) => [
 		sqlite.index('inventory_sessions_room_id_idx').on(t.roomId),

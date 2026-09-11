@@ -1,6 +1,6 @@
-import { InventorySessionExpectedStockDB } from '../schema/inventory-session-expected-stocks'
 import { InventorySessionStockCountDB } from '../schema/inventory-session-stock-counts'
 import { MaterialConditionName } from '../schema/material-stocks'
+import { InventorySessionExpectedStockWithType } from '.'
 
 export type InventorySessionStockDiffStatus =
 	| 'matched'
@@ -14,6 +14,11 @@ export interface InventorySessionStockDiffItem {
 	status: InventorySessionStockDiffStatus
 	expectedQuantity?: number
 	observedQuantity: number
+	// Undefined for an `extra` line (a materialTypeId/condition combo present
+	// only in the phone's counts, not in expectedStocks) - there's no name to
+	// join against in that case, same as the asset side tolerates an
+	// unmatched extra serial having no known material type.
+	materialTypeName?: string
 }
 
 function stockKey(materialTypeId: number, condition: string): string {
@@ -27,7 +32,7 @@ function stockKey(materialTypeId: number, condition: string): string {
 // constraint preventing this - see the design doc) is summed before
 // comparing, so a duplicate insert can't silently understate a count.
 export function computeInventorySessionStockDiff(
-	expected: InventorySessionExpectedStockDB[],
+	expected: InventorySessionExpectedStockWithType[],
 	counts: InventorySessionStockCountDB[]
 ): InventorySessionStockDiffItem[] {
 	const observedByKey = new Map<string, number>()
@@ -52,7 +57,8 @@ export function computeInventorySessionStockDiff(
 				condition: e.condition,
 				status: 'matched',
 				expectedQuantity: e.expectedQuantity,
-				observedQuantity
+				observedQuantity,
+				materialTypeName: e.materialTypeName
 			}
 		}
 		return {
@@ -60,7 +66,8 @@ export function computeInventorySessionStockDiff(
 			condition: e.condition,
 			status: observedQuantity < e.expectedQuantity ? 'short' : 'over',
 			expectedQuantity: e.expectedQuantity,
-			observedQuantity
+			observedQuantity,
+			materialTypeName: e.materialTypeName
 		}
 	})
 

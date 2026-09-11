@@ -1,6 +1,9 @@
 import log from 'encore.dev/log'
-import { InventorySessionRepository } from '.'
+import { InventorySessionListQuery, InventorySessionRepository } from '.'
 import { AppError } from '../errors'
+import materialAssetRepo from '../materials/material-assets-repo'
+import materialAssetEventRepo from '../materials/material-asset-events-repo'
+import materialStockRepo from '../materials/material-stocks-repo'
 import { InventorySessionExpectedAssetParams } from '../schema/inventory-session-inspected-assets'
 import { InventorySessionExpectedStockParams } from '../schema/inventory-session-expected-stocks'
 import { InventorySessionScanParams } from '../schema/inventory-session-scans'
@@ -14,6 +17,7 @@ import {
 import inventorySessionRepo from './inventory-sessions-repo'
 import {
 	buildChallengePayload,
+	INVENTORY_SESSION_PAYLOAD_VERSION,
 	InventorySessionChallengeAsset,
 	InventorySessionChallengeStock,
 	InventorySessionChallengePayload,
@@ -35,6 +39,7 @@ export interface InventorySessionResp {
 	startedByUserId: number
 	status: string
 	completedAt: string | null
+	appliedAt: string | null
 	createdAt: string
 	updatedAt: string
 }
@@ -63,6 +68,7 @@ function toSessionResp(s: InventorySessionDB): InventorySessionResp {
 		startedByUserId: s.startedByUserId,
 		status: s.status,
 		completedAt: s.completedAt,
+		appliedAt: s.appliedAt,
 		createdAt: s.createdAt,
 		updatedAt: s.updatedAt
 	}
@@ -72,6 +78,32 @@ export interface InventorySessionReview {
 	session: InventorySessionResp
 	diff: InventorySessionDiffItem[]
 	stockDiff: InventorySessionStockDiffItem[]
+}
+
+// A reviewer's explicit per-line decision for an unmatched (extra) asset
+// serial or stock line - "apply" reassigns/credits it into the room's
+// inventory, "ignore" leaves it flagged in the diff only. Missing and
+// condition_changed asset lines are never resolved this way - they always
+// auto-apply (see applyToInventory).
+export interface InventorySessionAssetResolution {
+	serial: string
+	action: 'apply' | 'ignore'
+}
+
+export interface InventorySessionStockResolution {
+	materialTypeId: number
+	condition: string
+	action: 'apply' | 'ignore'
+}
+
+export interface ApplyInventorySessionResult {
+	session: InventorySessionResp
+	missingApplied: number
+	conditionChangedApplied: number
+	extraAssetsApplied: number
+	extraAssetsFlagged: number
+	stockShortOverApplied: number
+	stockExtraApplied: number
 }
 
 export class InventorySessionController {
@@ -214,15 +246,15 @@ export class InventorySessionController {
 	// computed on demand via getReview when a reviewer actually opens it.
 	async listSessionsForRoom(
 		roomId: number,
-		validUnitIds: number[]
-	): Promise<InventorySessionResp[]> {
-		const sessions = await this.repo.listSessionsForRoom(roomId)
-		if (sessions.length === 0) return []
-
-		// A room's unit can't realistically change between sessions in this
-		// product - same check as createChallenge/getOpenChallenge, applied
-		// once for the whole list rather than per session.
-		if (!validUnitIds.includes(sessions[0].unitId)) {
+		validUnitIds: number[],
+		query: InventorySessionListQuery
+	): Promise<{ data: InventorySessionResp[]; total: number }> {
+		// Checked via a dedicated lookup, not sessions[0].unitId - a filtered
+		// query (status/date range) can legitimately return zero rows for a
+		// room that has sessions overall, so the permission check must not
+		// depend on the result set being non-empty.
+		const unitId = await this.repo.getRoomUnitId(roomId)
+		if (unitId === undefined || !validUnitIds.includes(unitId)) {
 			throw AppError.handleAppErr(
 				AppError.unauthorized(
 					"You don't have permission to view this room's inventory session history"
@@ -230,12 +262,30 @@ export class InventorySessionController {
 			)
 		}
 
-		return sessions.map(toSessionResp)
+		const { data, total } = await this.repo.listSessionsForRoom(
+			roomId,
+			query
+		)
+		return { data: data.map(toSessionResp), total }
 	}
 
 	async submitResults(
 		payload: InventorySessionResultsPayload
 	): Promise<InventorySessionReview> {
+		// A v1-shaped payload (no `stockResults`, or an old `v`) must be
+		// rejected here, before verifyResultsPayload/canonicalResults ever
+		// touches `payload.stockResults` - otherwise a v1 payload crashes with
+		// a TypeError from `.map()` on `undefined` instead of failing cleanly.
+		if (
+			payload.v !== INVENTORY_SESSION_PAYLOAD_VERSION ||
+			!Array.isArray(payload.stockResults)
+		) {
+			throw AppError.handleAppErr(
+				AppError.invalidArgument(
+					'Results payload is from an incompatible app version - please update the scanning app and start a new session'
+				)
+			)
+		}
 		if (!verifyResultsPayload(payload)) {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(
@@ -349,6 +399,236 @@ export class InventorySessionController {
 		return this.buildReview(reviewed)
 	}
 
+	// Syncs a reviewed session's diff into material_assets/material_stocks -
+	// a deliberate separate step from markReviewed, so a reviewer can look at
+	// the diff before committing it. Missing/condition_changed asset lines
+	// always auto-apply (a missing asset is marked lost, a condition change is
+	// recorded) since there's nothing for a human to decide there; extra
+	// asset serials and short/over/extra stock lines only apply when the
+	// caller explicitly resolved that line with action: 'apply' - anything
+	// else (unresolved, or an extra serial matching no existing
+	// material_assets row) is left flagged in the diff for a human to handle
+	// later, never silently written. One-shot: `appliedAt` blocks a second
+	// apply on the same session (see `markApplied`).
+	async applyToInventory(
+		sessionId: number,
+		validUnitIds: number[],
+		actorUserId: number,
+		resolutions: {
+			assetResolutions?: InventorySessionAssetResolution[]
+			stockResolutions?: InventorySessionStockResolution[]
+		}
+	): Promise<ApplyInventorySessionResult> {
+		const session = await this.repo.getOne(sessionId)
+		if (!session) {
+			throw AppError.handleAppErr(
+				AppError.notFound('Inventory session not found')
+			)
+		}
+		if (!validUnitIds.includes(session.unitId)) {
+			throw AppError.handleAppErr(
+				AppError.unauthorized(
+					"You don't have permission to apply this inventory session's results to inventory"
+				)
+			)
+		}
+		if (session.status !== 'reviewed') {
+			throw AppError.handleAppErr(
+				AppError.invalidArgument(
+					`Session must be reviewed before it can be applied to inventory (current status: ${session.status})`
+				)
+			)
+		}
+		if (session.appliedAt !== null) {
+			throw AppError.handleAppErr(
+				AppError.invalidArgument(
+					'This inventory session has already been applied to inventory'
+				)
+			)
+		}
+
+		// Recomputed server-side from the session's own stored scans/counts,
+		// never trusted from the client - a stale or tampered client-side diff
+		// must not be able to drive what gets written to material_assets/
+		// material_stocks.
+		const [expected, scans, expectedStocks, stockCounts] =
+			await Promise.all([
+				this.repo.getExpectedAssets(session.id),
+				this.repo.getScans(session.id),
+				this.repo.getExpectedStocksWithType(session.id),
+				this.repo.getStockCounts(session.id)
+			])
+		const diff = computeInventorySessionDiff(expected, scans)
+		const stockDiff = computeInventorySessionStockDiff(
+			expectedStocks,
+			stockCounts
+		)
+
+		const assetActionBySerial = new Map(
+			(resolutions.assetResolutions ?? []).map((r) => [
+				r.serial,
+				r.action
+			])
+		)
+		const stockActionByKey = new Map(
+			(resolutions.stockResolutions ?? []).map((r) => [
+				`${r.materialTypeId}:${r.condition}`,
+				r.action
+			])
+		)
+
+		const relevantSerials = diff
+			.filter((d) => d.status !== 'matched')
+			.map((d) => d.serial)
+		const assetsBySerial = new Map(
+			(await this.repo.findAssetsBySerials(relevantSerials)).map((a) => [
+				a.serialNumber,
+				a
+			])
+		)
+
+		let missingApplied = 0
+		let conditionChangedApplied = 0
+		let extraAssetsApplied = 0
+		let extraAssetsFlagged = 0
+
+		for (const item of diff) {
+			if (item.status === 'missing') {
+				const asset = assetsBySerial.get(item.serial)
+				if (!asset) continue
+				await materialAssetRepo.update([
+					{ id: asset.id, updatePayload: { status: 'lost' } }
+				])
+				await materialAssetEventRepo.create([
+					{
+						assetId: asset.id,
+						eventType: 'status_changed',
+						previousValue: { status: asset.status },
+						newValue: { status: 'lost' },
+						actorUserId
+					}
+				])
+				missingApplied++
+			} else if (item.status === 'condition_changed') {
+				const asset = assetsBySerial.get(item.serial)
+				if (!asset || !item.observedCondition) continue
+				await materialAssetRepo.update([
+					{
+						id: asset.id,
+						updatePayload: { condition: item.observedCondition }
+					}
+				])
+				await materialAssetEventRepo.create([
+					{
+						assetId: asset.id,
+						eventType: 'condition_changed',
+						previousValue: { condition: asset.condition },
+						newValue: { condition: item.observedCondition },
+						actorUserId
+					}
+				])
+				conditionChangedApplied++
+			} else if (item.status === 'extra') {
+				if (assetActionBySerial.get(item.serial) !== 'apply') continue
+				const asset = assetsBySerial.get(item.serial)
+				if (!asset) {
+					// A serial with no matching material_assets row can never be
+					// applied, regardless of what the client requested - there is
+					// nothing to reassign, so it stays flagged for a human.
+					extraAssetsFlagged++
+					continue
+				}
+				const previousRoomId = asset.roomId
+				const previousUnitId = asset.unitId
+				await materialAssetRepo.update([
+					{
+						id: asset.id,
+						updatePayload: {
+							roomId: session.roomId,
+							unitId: session.unitId,
+							condition: item.observedCondition ?? asset.condition
+						}
+					}
+				])
+				await materialAssetEventRepo.create([
+					{
+						assetId: asset.id,
+						eventType: 'transferred',
+						previousValue: {
+							roomId: previousRoomId,
+							unitId: previousUnitId
+						},
+						newValue: {
+							roomId: session.roomId,
+							unitId: session.unitId
+						},
+						actorUserId
+					}
+				])
+				extraAssetsApplied++
+			}
+		}
+
+		let stockShortOverApplied = 0
+		let stockExtraApplied = 0
+
+		for (const item of stockDiff) {
+			if (item.status === 'matched') continue
+			const key = `${item.materialTypeId}:${item.condition}`
+			if (stockActionByKey.get(key) !== 'apply') continue
+
+			if (item.status === 'short' || item.status === 'over') {
+				const existing = await materialStockRepo.getOne({
+					materialTypeId: item.materialTypeId,
+					unitId: session.unitId,
+					roomId: session.roomId,
+					condition: item.condition
+				})
+				if (!existing) continue
+				await materialStockRepo.update([
+					{
+						id: existing.id,
+						updatePayload: { quantity: item.observedQuantity }
+					}
+				])
+				stockShortOverApplied++
+			} else if (item.status === 'extra') {
+				await materialStockRepo.create([
+					{
+						materialTypeId: item.materialTypeId,
+						unitId: session.unitId,
+						roomId: session.roomId,
+						condition: item.condition,
+						quantity: item.observedQuantity
+					}
+				])
+				stockExtraApplied++
+			}
+		}
+
+		const applied = await this.repo.markApplied(sessionId)
+
+		log.info('InventorySessionController.applyToInventory', {
+			sessionId,
+			missingApplied,
+			conditionChangedApplied,
+			extraAssetsApplied,
+			extraAssetsFlagged,
+			stockShortOverApplied,
+			stockExtraApplied
+		})
+
+		return {
+			session: toSessionResp(applied),
+			missingApplied,
+			conditionChangedApplied,
+			extraAssetsApplied,
+			extraAssetsFlagged,
+			stockShortOverApplied,
+			stockExtraApplied
+		}
+	}
+
 	async getReview(sessionId: number): Promise<InventorySessionReview> {
 		const session = await this.repo.getOne(sessionId)
 		if (!session) {
@@ -366,16 +646,39 @@ export class InventorySessionController {
 			await Promise.all([
 				this.repo.getExpectedAssets(session.id),
 				this.repo.getScans(session.id),
-				this.repo.getExpectedStocks(session.id),
+				this.repo.getExpectedStocksWithType(session.id),
 				this.repo.getStockCounts(session.id)
 			])
+		const stockDiff = computeInventorySessionStockDiff(
+			expectedStocks,
+			stockCounts
+		)
+
+		// `extra` lines (a materialTypeId/condition combo counted by the
+		// trooper but absent from expectedStocks) have no join available in
+		// computeInventorySessionStockDiff, so their name is resolved here
+		// against the current material_types table instead.
+		const extraTypeIds = [
+			...new Set(
+				stockDiff
+					.filter((s) => s.status === 'extra')
+					.map((s) => s.materialTypeId)
+			)
+		]
+		if (extraTypeIds.length > 0) {
+			const namesById =
+				await this.repo.getMaterialTypeNamesByIds(extraTypeIds)
+			for (const item of stockDiff) {
+				if (item.status === 'extra') {
+					item.materialTypeName = namesById.get(item.materialTypeId)
+				}
+			}
+		}
+
 		return {
 			session: toSessionResp(session),
 			diff: computeInventorySessionDiff(expected, scans),
-			stockDiff: computeInventorySessionStockDiff(
-				expectedStocks,
-				stockCounts
-			)
+			stockDiff
 		}
 	}
 }

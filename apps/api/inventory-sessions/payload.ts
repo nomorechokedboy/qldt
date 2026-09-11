@@ -39,6 +39,12 @@ export interface InventorySessionChallengePayload {
 	sig: string
 }
 
+// InventorySessionResultItem/InventorySessionStockResultItem must not gain
+// new fields without updating canonicalResults() below AND
+// apps/scan-app/src/lib/payload.ts's hand-mirrored canonicalResults() in
+// lockstep - this function's explicit key-order rebuild silently drops any
+// field not listed here, while the phone's pass-through silently keeps it,
+// producing a signature mismatch instead of an obvious error.
 export interface InventorySessionResultItem {
 	serial: string
 	observedCondition?: MaterialConditionName

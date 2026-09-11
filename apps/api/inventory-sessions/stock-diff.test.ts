@@ -1,19 +1,16 @@
 import { describe, expect, it } from 'vitest'
 import { computeInventorySessionStockDiff } from './stock-diff'
-import { InventorySessionExpectedStockDB } from '../schema/inventory-session-expected-stocks'
+import { InventorySessionExpectedStockWithType } from '.'
 import { InventorySessionStockCountDB } from '../schema/inventory-session-stock-counts'
 
 function makeExpected(
-	overrides: Partial<InventorySessionExpectedStockDB> = {}
-): InventorySessionExpectedStockDB {
+	overrides: Partial<InventorySessionExpectedStockWithType> = {}
+): InventorySessionExpectedStockWithType {
 	return {
-		id: 1,
-		sessionId: 1,
 		materialTypeId: 10,
+		materialTypeName: 'Đạn AK',
 		condition: 'good',
 		expectedQuantity: 0,
-		createdAt: '',
-		updatedAt: '',
 		...overrides
 	}
 }
@@ -58,7 +55,8 @@ describe('computeInventorySessionStockDiff', () => {
 				condition: 'good',
 				status: 'matched',
 				expectedQuantity: 12,
-				observedQuantity: 12
+				observedQuantity: 12,
+				materialTypeName: 'Đạn AK'
 			}
 		])
 	})
@@ -87,7 +85,8 @@ describe('computeInventorySessionStockDiff', () => {
 				condition: 'good',
 				status: 'short',
 				expectedQuantity: 50,
-				observedQuantity: 45
+				observedQuantity: 45,
+				materialTypeName: 'Đạn AK'
 			}
 		])
 	})
@@ -116,7 +115,8 @@ describe('computeInventorySessionStockDiff', () => {
 				condition: 'good',
 				status: 'over',
 				expectedQuantity: 50,
-				observedQuantity: 53
+				observedQuantity: 53,
+				materialTypeName: 'Đạn AK'
 			}
 		])
 	})
@@ -138,7 +138,8 @@ describe('computeInventorySessionStockDiff', () => {
 				condition: 'good',
 				status: 'short',
 				expectedQuantity: 50,
-				observedQuantity: 0
+				observedQuantity: 0,
+				materialTypeName: 'Đạn AK'
 			}
 		])
 	})
@@ -198,7 +199,8 @@ describe('computeInventorySessionStockDiff', () => {
 				condition: 'good',
 				status: 'short',
 				expectedQuantity: 50,
-				observedQuantity: 45
+				observedQuantity: 45,
+				materialTypeName: 'Đạn AK'
 			},
 			{
 				materialTypeId: 10,
@@ -240,7 +242,8 @@ describe('computeInventorySessionStockDiff', () => {
 				condition: 'good',
 				status: 'matched',
 				expectedQuantity: 50,
-				observedQuantity: 50
+				observedQuantity: 50,
+				materialTypeName: 'Đạn AK'
 			}
 		])
 	})

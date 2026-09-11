@@ -1,7 +1,8 @@
-import { and, desc, eq, inArray, lt } from 'drizzle-orm'
+import { and, count, desc, eq, gte, inArray, lt, lte, SQL } from 'drizzle-orm'
 import {
 	InventorySessionExpectedStockWithType,
 	InventorySessionExpectedAssetWithType,
+	InventorySessionListQuery,
 	InventorySessionRepository,
 	RoomMaterialAsset,
 	RoomMaterialStock
@@ -12,6 +13,7 @@ import {
 	InventorySessionDB,
 	InventorySessionParams
 } from '../schema/inventory-sessions'
+import { rooms } from '../schema/rooms'
 import {
 	inventorySessionExpectedAssets,
 	InventorySessionExpectedAssetDB,
@@ -36,6 +38,8 @@ import { materialAssets, MaterialAssetDB } from '../schema/material-assets'
 import { materialStocks } from '../schema/material-stocks'
 import { materialTypes } from '../schema/material-types'
 import { handleDatabaseErr } from '../utils'
+
+const DEFAULT_HISTORY_PAGE_SIZE = 10
 
 class repo implements InventorySessionRepository {
 	constructor(private readonly db: DrizzleDatabase) {}
@@ -85,6 +89,16 @@ class repo implements InventorySessionRepository {
 			.catch(handleDatabaseErr)
 	}
 
+	markApplied(id: number): Promise<InventorySessionDB> {
+		return this.db
+			.update(inventorySessions)
+			.set({ appliedAt: new Date().toISOString() })
+			.where(eq(inventorySessions.id, id))
+			.returning()
+			.then((rows) => rows[0])
+			.catch(handleDatabaseErr)
+	}
+
 	expireStaleSessions(roomId: number, olderThanIso: string): Promise<void> {
 		return this.db
 			.update(inventorySessions)
@@ -114,12 +128,61 @@ class repo implements InventorySessionRepository {
 			.catch(handleDatabaseErr)
 	}
 
-	listSessionsForRoom(roomId: number): Promise<InventorySessionDB[]> {
-		return this.db.query.inventorySessions
-			.findMany({
-				where: eq(inventorySessions.roomId, roomId),
-				orderBy: desc(inventorySessions.createdAt)
-			})
+	listSessionsForRoom(
+		roomId: number,
+		query: InventorySessionListQuery
+	): Promise<{ data: InventorySessionDB[]; total: number }> {
+		const conditions: SQL[] = [eq(inventorySessions.roomId, roomId)]
+		if (query.status !== undefined) {
+			conditions.push(eq(inventorySessions.status, query.status))
+		}
+		if (query.from !== undefined) {
+			conditions.push(gte(inventorySessions.createdAt, query.from))
+		}
+		if (query.to !== undefined) {
+			conditions.push(lte(inventorySessions.createdAt, query.to))
+		}
+		const where = and(...conditions)
+
+		const page = query.page && query.page > 0 ? query.page : 1
+		const pageSize =
+			query.pageSize && query.pageSize > 0
+				? query.pageSize
+				: DEFAULT_HISTORY_PAGE_SIZE
+
+		return Promise.all([
+			this.db.query.inventorySessions.findMany({
+				where,
+				orderBy: desc(inventorySessions.createdAt),
+				limit: pageSize,
+				offset: (page - 1) * pageSize
+			}),
+			this.db
+				.select({ total: count() })
+				.from(inventorySessions)
+				.where(where)
+		])
+			.then(([data, totalResult]) => ({
+				data,
+				total: totalResult[0]?.total ?? 0
+			}))
+			.catch(handleDatabaseErr)
+	}
+
+	getRoomUnitId(roomId: number): Promise<number | undefined> {
+		return this.db.query.rooms
+			.findFirst({ where: eq(rooms.id, roomId) })
+			.then((room) => room?.unitId)
+			.catch(handleDatabaseErr)
+	}
+
+	getMaterialTypeNamesByIds(ids: number[]): Promise<Map<number, string>> {
+		if (ids.length === 0) return Promise.resolve(new Map())
+		return this.db
+			.select({ id: materialTypes.id, name: materialTypes.name })
+			.from(materialTypes)
+			.where(inArray(materialTypes.id, ids))
+			.then((rows) => new Map(rows.map((r) => [r.id, r.name])))
 			.catch(handleDatabaseErr)
 	}
 

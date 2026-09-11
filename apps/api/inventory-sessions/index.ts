@@ -1,6 +1,7 @@
 import {
 	InventorySessionDB,
-	InventorySessionParams
+	InventorySessionParams,
+	InventorySessionStatus
 } from '../schema/inventory-sessions'
 import {
 	InventorySessionExpectedAssetDB,
@@ -51,12 +52,26 @@ export interface InventorySessionExpectedStockWithType {
 	expectedQuantity: number
 }
 
+// Filters/pagination for the "Lịch sử kiểm kê" history sheet - `page` is
+// 1-indexed, matching the convention `audit-logs/repo.ts` already uses.
+export interface InventorySessionListQuery {
+	status?: InventorySessionStatus
+	from?: string
+	to?: string
+	page?: number
+	pageSize?: number
+}
+
 export interface InventorySessionRepository {
 	create(params: InventorySessionParams): Promise<InventorySessionDB>
 	getOne(id: number): Promise<InventorySessionDB | undefined>
 	markCompleted(id: number): Promise<InventorySessionDB>
 	markReviewed(id: number): Promise<InventorySessionDB>
 	markExpired(id: number): Promise<InventorySessionDB>
+
+	// Set once a reviewed session's diff has been synced into
+	// material_assets/material_stocks - see InventorySessionController.applyToInventory.
+	markApplied(id: number): Promise<InventorySessionDB>
 
 	// Flips any of a room's `in_progress` sessions older than `olderThanIso`
 	// to `expired` - called opportunistically wherever "is there an open
@@ -71,9 +86,18 @@ export interface InventorySessionRepository {
 		roomId: number
 	): Promise<InventorySessionDB | undefined>
 
-	// All of a room's sessions (any status), newest first - backs the
-	// "Lịch sử kiểm kê" history sheet.
-	listSessionsForRoom(roomId: number): Promise<InventorySessionDB[]>
+	// A room's sessions matching `query`, newest first, paginated - backs
+	// the "Lịch sử kiểm kê" history sheet.
+	listSessionsForRoom(
+		roomId: number,
+		query: InventorySessionListQuery
+	): Promise<{ data: InventorySessionDB[]; total: number }>
+
+	// The room's unitId, independent of whether it has any sessions - used
+	// to authorize listSessionsForRoom even when a filtered/paginated query
+	// returns zero rows for a room that does have sessions overall. Returns
+	// undefined if the room doesn't exist.
+	getRoomUnitId(roomId: number): Promise<number | undefined>
 
 	// Serialized material_assets currently in a room - the pool a session's
 	// "expected" snapshot is built from.
