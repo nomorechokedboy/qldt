@@ -13,8 +13,6 @@ jobs:
             api: ${{ steps.filter.outputs.api }}
             web: ${{ steps.filter.outputs.web }}
             cron: ${{ steps.filter.outputs.cron }}
-            sms-api: ${{ steps.filter.outputs.sms-api }}
-            sms-web: ${{ steps.filter.outputs.sms-web }}
         steps:
             - name: Checkout repository
               uses: actions/checkout@v4
@@ -30,19 +28,6 @@ jobs:
                         - 'pnpm-lock.yaml'
                       web:
                         - 'apps/web/**'
-                        - 'packages/eslint-config/**'
-                        - 'package.json'
-                        - 'pnpm-lock.yaml'
-                      sms-api:
-                        - 'apps/sms-api/**'
-                        - 'packages/coursegrades/**'
-                        - 'packages/teachercourses/**'
-                        - 'packages/userinfo/**'
-                        - 'package.json'
-                        - 'pnpm-lock.yaml'
-                      sms-web:
-                        - 'apps/sms-web/**'
-                        - 'packages/ui/**'
                         - 'packages/eslint-config/**'
                         - 'package.json'
                         - 'pnpm-lock.yaml'
@@ -88,7 +73,7 @@ jobs:
               id: meta
               uses: docker/metadata-action@v5
               with:
-                  images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/qlhv-api
+                  images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/qldt-api
                   tags: |
                       type=raw,value=latest
                       type=sha,prefix={{branch}}-
@@ -134,7 +119,7 @@ jobs:
               id: meta
               uses: docker/metadata-action@v5
               with:
-                  images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/qlhv-web
+                  images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/qldt-web
                   tags: |
                       type=raw,value=latest
                       type=sha,prefix={{branch}}-
@@ -149,93 +134,4 @@ jobs:
                   tags: ${{ steps.meta.outputs.tags }}
                   labels: ${{ steps.meta.outputs.labels }}
                   build-args: |
-                      VITE_API_URL=${{ secrets.WEB_VITE_API_URL }}
-    build-sms-api:
-        needs: detect-changes
-        if: needs.detect-changes.outputs.sms-api == 'true'
-        runs-on: ubuntu-latest
-        permissions:
-            contents: read
-            packages: write
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v4
-            - name: Log in to GitHub Container Registry
-              uses: docker/login-action@v3
-              with:
-                  registry: ${{ env.REGISTRY }}
-                  username: ${{ github.actor }}
-                  password: ${{ secrets.GITHUB_TOKEN }}
-            - name: Set up Docker Buildx
-              uses: docker/setup-buildx-action@v3
-            - name: Install Encore
-              run: |
-                  curl -L https://encore.dev/install.sh | bash
-                  echo "$HOME/.encore/bin" >> $GITHUB_PATH
-            - name: Extract metadata
-              id: meta
-              uses: docker/metadata-action@v5
-              with:
-                  images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/sms-api
-                  tags: |
-                      type=raw,value=latest
-                      type=sha,prefix={{branch}}-
-            - name: Build Encore Docker image
-              working-directory: apps/sms-api
-              run: |
-                  encore build docker temp-sms-api:build
-            - name: Tag and push SMS API image
-              run: |
-                  # Tag with all GHCR tags
-                  for tag in $(echo "${{ steps.meta.outputs.tags }}" | tr '\n' ' '); do
-                    docker tag temp-sms-api:build "$tag"
-                    docker push "$tag"
-                  done
-            - name: Image digest
-              run: echo "SMS API image pushed successfully"
-    build-sms-web:
-        needs: detect-changes
-        if: needs.detect-changes.outputs.sms-web == 'true'
-        runs-on: ubuntu-latest
-        strategy:
-            matrix:
-                env: [wan, lan] # two builds
-        environment: ${{ matrix.env }}
-        permissions:
-            contents: read
-            packages: write
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v4
-            - name: Log in to GitHub Container Registry
-              uses: docker/login-action@v3
-              with:
-                  registry: ${{ env.REGISTRY }}
-                  username: ${{ github.actor }}
-                  password: ${{ secrets.GITHUB_TOKEN }}
-            - name: Set up Docker Buildx
-              uses: docker/setup-buildx-action@v3
-            - name: Extract metadata
-              id: meta
-              uses: docker/metadata-action@v5
-              with:
-                  images: ${{ env.REGISTRY }}/${{ env.IMAGE_PREFIX }}/sms-web
-                  tags: |
-                      type=raw,value=${{ matrix.env }}-latest
-                      type=sha,prefix=${{ matrix.env }}-
-            - name: Build and push SMS Web image
-              uses: docker/build-push-action@v6
-              with:
-                  context: .
-                  file: apps/sms-web/Dockerfile
-                  cache-from: type=gha,scope=sms-web-${{ matrix.env }}
-                  cache-to: type=gha,mode=max,scope=sms-web-${{ matrix.env }}
-                  push: true
-                  tags: ${{ steps.meta.outputs.tags }}
-                  labels: ${{ steps.meta.outputs.labels }}
-                  build-args: |
-                      VITE_CLIENT_ID=${{ vars.VITE_CLIENT_ID }}
-                      VITE_OAUTH2_URL=${{ vars.VITE_OAUTH2_URL }}
-                      VITE_API_URL=${{ vars.VITE_API_URL }}
-                      VITE_TOKEN_URI=${{ secrets.VITE_TOKEN_URI }}
-                      VITE_REDIRECT_URI=${{ secrets.VITE_REDIRECT_URI }}
+                      VITE_API_URL=${{ vars.WEB_VITE_API_URL }}
