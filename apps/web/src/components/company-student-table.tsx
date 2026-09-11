@@ -3,7 +3,6 @@ import { columnsWithoutAction } from '@/components/student-table/columns'
 import { SidebarInset } from '@/components/ui/sidebar'
 import { EhtnicOptions } from '@/data/ethnicities'
 import useDataTableToolbarConfig from '@/hooks/useDataTableToolbarConfig'
-import useStudentData from '@/hooks/useStudents'
 import type { UnitLevel } from '@/types'
 import { defaultCompanyTrooperColumnVisibility } from './student-table/default-columns-visibility'
 import useOnDeleteStudents from '@/hooks/useOnDeleteStudents'
@@ -11,6 +10,7 @@ import TableSkeleton from './table-skeleton'
 import StudentTable from './student-table'
 import useUnitData from '@/hooks/useUnitData'
 import useActionColumn from '@/hooks/useActionColumn'
+import useUnitTroopersData from '@/hooks/useUnitTroopersData'
 
 type CompanyStudentTableProps = { alias: string; level: UnitLevel; id: number }
 
@@ -24,7 +24,7 @@ export default function CompanyStudentTable({
 		data: students = [],
 		isLoading: isLoadingStudents,
 		refetch: refetchStudents
-	} = useStudentData({ unitAlias: alias, unitLevel: level })
+	} = useUnitTroopersData({ id })
 	const handleFormSuccess = () => {
 		refetchStudents()
 	}
