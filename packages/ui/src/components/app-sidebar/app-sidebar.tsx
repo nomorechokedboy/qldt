@@ -6,9 +6,9 @@ import {
 	SidebarGroupContent,
 	SidebarGroupLabel,
 	SidebarHeader,
-	SidebarRail,
-	useSidebar
+	SidebarRail
 } from '../ui/sidebar'
+import { useSidebar } from '../ui/use-sidebar'
 import { SidebarConfig, SidebarData, SidebarRenderProps } from './types'
 import {
 	Collapsible,
