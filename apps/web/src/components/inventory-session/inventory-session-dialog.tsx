@@ -200,13 +200,18 @@ export default function InventorySessionDialog({
 
 					{step === 'scan' && (
 						<div className='flex flex-col gap-4'>
-							<WebcamQrScanner
-								onDecode={handleDecode}
-								paused={
-									submitResults.isPending ||
-									scanError !== null
-								}
-							/>
+							{/* Hidden (not just paused) once an error shows - the
+							camera preview sitting right above the retry button
+							otherwise draws all the attention and the button
+							goes unnoticed. Unmounting also releases the
+							camera stream while the trooper reads the error;
+							it restarts fresh on retry. */}
+							{scanError === null && (
+								<WebcamQrScanner
+									onDecode={handleDecode}
+									paused={submitResults.isPending}
+								/>
+							)}
 							{scanError ? (
 								<div className='flex flex-col items-center gap-2'>
 									<p className='text-destructive text-sm text-center'>
