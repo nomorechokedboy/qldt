@@ -3,9 +3,9 @@ import {
 	SidebarMenuButton,
 	SidebarMenuItem,
 	SidebarMenuSubButton,
-	SidebarMenuSubItem,
-	useSidebar
+	SidebarMenuSubItem
 } from '../ui/sidebar'
+import { useSidebar } from '../ui/use-sidebar'
 import {
 	Collapsible,
 	CollapsibleContent,
