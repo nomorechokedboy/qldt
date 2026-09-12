@@ -5,6 +5,18 @@ import { MaterialAssetStatus } from '../schema/material-assets'
 import unitStatsController from './stats-controller'
 import { Unit } from './units'
 
+// Mirrors export/roster-utils.ts's RosterSummary shape, redeclared locally
+// instead of imported: Encore's client generator names an imported type's
+// module after its containing directory, and "export" collides with the
+// reserved word, producing invalid generated code (`export.RosterSummary`).
+interface TroopSummary {
+	total: number
+	sq: number
+	qncn: number
+	hsq: number
+	bs: number
+}
+
 interface GetUnitStatsResponse {
 	unit: Unit
 	totalStudents: number
@@ -17,6 +29,7 @@ interface GetUnitStatsResponse {
 		totalQuantity: number
 	}[]
 	materialAssetSummary: { status: MaterialAssetStatus; count: number }[]
+	troopSummary: TroopSummary
 }
 
 export const GetUnitStats = api(

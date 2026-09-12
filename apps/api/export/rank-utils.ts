@@ -1,4 +1,4 @@
-export type RankCategory = 'SQ' | 'QNCN' | 'HSQ' | 'BS'
+export type RankCategory = 'SQ' | 'QNCN'
 
 // Full-text rank label -> abbreviated code used on printed roster reports
 // (matches the "Cấp bậc" column format of the source military template).
@@ -36,9 +36,11 @@ export function formatRankAbbrev(rank: string): string {
 }
 
 /**
- * Classifies a full-text rank into the four headcount buckets used on
- * roster summary lines. "chuyên nghiệp" must be checked before "úy"/"tá"
- * since QNCN rank labels (e.g. "Thiếu úy chuyên nghiệp") contain both.
+ * Classifies a full-text rank into SQ (officer) or QNCN (professional
+ * soldier). "chuyên nghiệp" must be checked before "úy"/"tá" since QNCN rank
+ * labels (e.g. "Thiếu úy chuyên nghiệp") contain both. Everyone else (HSQ vs
+ * CS/BS) is NOT derivable from rank text alone — that distinction depends on
+ * duty position, see `classifyTrooper` in roster-utils.ts.
  */
 export function classifyRank(rank: string): RankCategory | undefined {
 	const value = rank.trim().toLowerCase()
@@ -51,12 +53,6 @@ export function classifyRank(rank: string): RankCategory | undefined {
 	}
 	if (value.includes('úy') || value.includes('tá')) {
 		return 'SQ'
-	}
-	if (['hạ sĩ', 'trung sĩ', 'thượng sĩ'].includes(value)) {
-		return 'HSQ'
-	}
-	if (['binh nhất', 'binh nhì'].includes(value)) {
-		return 'BS'
 	}
 
 	return undefined

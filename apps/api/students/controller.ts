@@ -42,7 +42,7 @@ import exportTemplateController from '../export-templates/controller'
 import unitRepo from '../units/repo'
 import unitStatsRepo from '../units/stats-repo'
 import positionRepo from '../positions/repo'
-import { UnitLevelName } from '../schema/units'
+import { Unit, UnitDB, UnitLevelName } from '../schema/units'
 import log from 'encore.dev/log'
 import dayjs from 'dayjs'
 import quarterOfYear from 'dayjs/plugin/quarterOfYear.js'
@@ -471,24 +471,43 @@ export class Controller {
 			)
 		}
 
-		const units = await this.unitRepo.find({
-			ids: unitIds
-		})
-		if (units.length === 0) {
-			throw AppError.handleAppErr(
-				AppError.invalidArgument('Invalid unitIds')
-			)
-		}
-
 		const descendantIdsPerUnit = await Promise.all(
-			units.map((u) => unitStatsRepo.findDescendantUnitIds(u.id))
+			unitIds.map((id) => unitStatsRepo.findDescendantUnitIds(id))
 		)
 		const descendantUnits = await this.unitRepo.findByIds(
 			Array.from(new Set(descendantIdsPerUnit.flat()))
 		)
-		const squadIds = descendantUnits
-			.filter((u) => u.level === 'squad')
-			.map((u) => u.id)
+		if (descendantUnits.length === 0) {
+			throw AppError.handleAppErr(
+				AppError.invalidArgument('Invalid unitIds')
+			)
+		}
+		// Students can be attached directly to a unit at any level (not just
+		// squads - e.g. battalion/company/platoon staff roles), so query counts
+		// across every descendant unit rather than squads only, or students
+		// assigned above squad level are silently dropped from the totals.
+		const descendantUnitIds = descendantUnits.map((u) => u.id)
+
+		// unitRepo.find()/findOne() only hydrate one level of `.children`, which
+		// isn't enough for the frontend's recursive tree-merge (it needs every
+		// descendant down to squad level). Build the full nested tree here from
+		// the already-fetched flat descendantUnits instead.
+		const unitNodeById = new Map<number, Unit>(
+			descendantUnits.map((u) => {
+				const { parentId, ...rest } = u
+				return [u.id, { ...rest, children: [] } as Unit]
+			})
+		)
+		for (const u of descendantUnits) {
+			if (u.parentId !== null) {
+				unitNodeById
+					.get(u.parentId)
+					?.children.push(unitNodeById.get(u.id) as Unit)
+			}
+		}
+		const units = unitIds
+			.map((id) => unitNodeById.get(id))
+			.filter((u): u is Unit => u !== undefined)
 
 		const educationLevelMap = {
 			'7/12': 'Cấp II',
@@ -503,7 +522,7 @@ export class Controller {
 			'Sau đại học': 'Sau ĐH'
 		}
 		const data: Record<number, Record<string, any>> = {}
-		const rows = await this.repo.politicsQualityReport(squadIds)
+		const rows = await this.repo.politicsQualityReport(descendantUnitIds)
 		for (const { count, value, unitId, category } of rows) {
 			if (!data[unitId]) {
 				data[unitId] = {}
@@ -809,21 +828,24 @@ export class Controller {
 			const rosterPositions: RosterPosition[] = positionRows.map((p) => ({
 				level: p.level,
 				code: p.code,
-				priority: p.priority
+				priority: p.priority,
+				category: p.group
 			}))
 
+			const rosterRootUnit = {
+				id: rootUnit.id,
+				name: rootUnit.name,
+				parentId: undefined,
+				level: rootUnit.level
+			}
+
 			const rows = buildRosterRows(
-				{
-					id: rootUnit.id,
-					name: rootUnit.name,
-					parentId: undefined,
-					level: rootUnit.level
-				},
+				rosterRootUnit,
 				rosterUnits,
 				rosterStudents,
 				rosterPositions
 			)
-			const summary = buildRosterSummary(rosterStudents)
+			const summary = buildRosterSummary(rosterStudents, rosterPositions)
 
 			const dateObj = dayjs(date)
 			const day = dateObj.format('DD')

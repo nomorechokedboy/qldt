@@ -6,6 +6,7 @@ import {
 	UnitQuery,
 	UpdateUnitMap
 } from '../schema/units'
+import { UnitStatsSummary } from './stats-repo'
 
 export interface Repository {
 	create(params: UnitParams[]): Promise<UnitDB[]>
@@ -50,4 +51,6 @@ export interface UnitStatsRepository {
 	materialAssetSummary(
 		unitIds: number[]
 	): Promise<UnitStatsSummary['materialAssetSummary']>
+
+	troopSummary(unitIds: number[]): Promise<UnitStatsSummary['troopSummary']>
 }
