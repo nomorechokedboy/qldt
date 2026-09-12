@@ -47,6 +47,7 @@ import useUnitStatsMaterialStocks from '@/hooks/useUnitStatsMaterialStocks'
 import useUnitStatsMaterialAssets from '@/hooks/useUnitStatsMaterialAssets'
 import { battalionStudentColumnsWithoutAction } from '@/components/student-table/columns'
 import { defaultBirthdayColumnVisibility } from '@/components/student-table/default-columns-visibility'
+import { useStudentFacetedFilters } from '@/hooks/useStudentFacetedFilters'
 import { buildMaterialStockColumns } from '@/components/material-stock-table/columns'
 import { buildMaterialAssetColumns } from '@/components/material-asset-table/columns'
 import {
@@ -120,6 +121,7 @@ export default function BaseStatsDashboard() {
 		useUnitStatsMaterialStocks(showRollupTabs ? selectedAlias : undefined)
 	const { data: rollupAssets, isLoading: isLoadingRollupAssets } =
 		useUnitStatsMaterialAssets(showRollupTabs ? selectedAlias : undefined)
+	const studentFacetedFilters = useStudentFacetedFilters(rollupStudents ?? [])
 
 	if (isLoadingUnits) {
 		return <TableSkeleton />
@@ -223,6 +225,353 @@ export default function BaseStatsDashboard() {
 		educationData.length > 0 ||
 		politicalOrgData.length > 0
 
+	const overviewContent = stats !== undefined && (
+		<div className='space-y-6'>
+			<div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+				{kpiCards.map(
+					({ label, value, icon: Icon, color, valueColor }) => (
+						<Card key={label}>
+							<CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
+								<CardTitle className='text-sm font-medium'>
+									{label}
+								</CardTitle>
+								<Icon className={`h-5 w-5 ${color}`} />
+							</CardHeader>
+							<CardContent>
+								<div
+									className={`text-2xl font-bold ${valueColor}`}
+								>
+									{value}
+								</div>
+								<p className='text-xs text-muted-foreground'>
+									{stats.unit.name}
+									{' và đơn vị trực thuộc'}
+								</p>
+							</CardContent>
+						</Card>
+					)
+				)}
+			</div>
+
+			<Card>
+				<CardHeader>
+					<CardTitle className='flex items-center gap-2'>
+						<Shield className='h-5 w-5' />
+						Cơ cấu đơn vị trực thuộc
+					</CardTitle>
+				</CardHeader>
+				<CardContent>
+					{unitCountChartData.length === 0 ? (
+						<p className='text-muted-foreground'>
+							Đơn vị này không có đơn vị trực thuộc nào.
+						</p>
+					) : (
+						<div className='grid grid-cols-1 md:grid-cols-2 gap-4 items-center'>
+							<ChartContainer
+								config={{
+									value: { label: 'Số lượng' }
+								}}
+								className='h-[260px] w-full'
+							>
+								<ResponsiveContainer width='100%' height='100%'>
+									<BarChart data={unitCountChartData}>
+										<CartesianGrid strokeDasharray='3 3' />
+										<XAxis
+											dataKey='label'
+											interval={0}
+											tick={{ fontSize: 11 }}
+											angle={
+												unitCountChartData.length > 4
+													? -30
+													: 0
+											}
+											textAnchor={
+												unitCountChartData.length > 4
+													? 'end'
+													: 'middle'
+											}
+											height={
+												unitCountChartData.length > 4
+													? 50
+													: 30
+											}
+										/>
+										<YAxis
+											allowDecimals={false}
+											width={32}
+										/>
+										<ChartTooltip
+											content={<ChartTooltipContent />}
+										/>
+										<Bar
+											dataKey='value'
+											radius={[4, 4, 0, 0]}
+										>
+											{unitCountChartData.map((entry) => (
+												<Cell
+													key={entry.level}
+													fill={entry.color}
+												/>
+											))}
+										</Bar>
+									</BarChart>
+								</ResponsiveContainer>
+							</ChartContainer>
+
+							<div className='grid grid-cols-2 gap-3 content-start max-h-[260px] overflow-y-auto pr-1'>
+								{unitCountChartData.map(
+									({ level, label, value, color }) => (
+										<div
+											key={level}
+											className='rounded-lg border p-3 text-center'
+										>
+											<div
+												className='text-xl font-bold'
+												style={{ color }}
+											>
+												{value}
+											</div>
+											<div className='text-xs text-muted-foreground'>
+												{label}
+											</div>
+										</div>
+									)
+								)}
+							</div>
+						</div>
+					)}
+				</CardContent>
+			</Card>
+
+			<Card>
+				<CardHeader>
+					<CardTitle className='flex items-center gap-2'>
+						<Users className='h-5 w-5' />
+						Cơ cấu quân số
+					</CardTitle>
+				</CardHeader>
+				<CardContent>
+					{troopChartData.length === 0 ? (
+						<p className='text-muted-foreground'>
+							Chưa có dữ liệu quân số.
+						</p>
+					) : (
+						<div className='grid grid-cols-1 md:grid-cols-2 gap-4 items-center'>
+							<ChartContainer
+								config={{
+									value: { label: 'Số lượng' }
+								}}
+								className='h-[260px] w-full'
+							>
+								<ResponsiveContainer width='100%' height='100%'>
+									<PieChart>
+										<Pie
+											data={troopChartData}
+											cx='50%'
+											cy='50%'
+											labelLine={false}
+											label={({ name, percent }) =>
+												`${name} ${(percent * 100).toFixed(0)}%`
+											}
+											outerRadius={80}
+											dataKey='value'
+											nameKey='label'
+										>
+											{troopChartData.map((entry) => (
+												<Cell
+													key={entry.label}
+													fill={entry.color}
+												/>
+											))}
+										</Pie>
+										<ChartTooltip
+											content={<ChartTooltipContent />}
+										/>
+									</PieChart>
+								</ResponsiveContainer>
+							</ChartContainer>
+
+							<div className='grid grid-cols-2 gap-4'>
+								{troopSummaryCards.map(
+									({ label, value, color }) => (
+										<div
+											key={label}
+											className='rounded-lg border p-4 text-center'
+										>
+											<div
+												className='text-2xl font-bold'
+												style={{ color }}
+											>
+												{value}
+											</div>
+											<div className='text-xs text-muted-foreground'>
+												{label}
+											</div>
+										</div>
+									)
+								)}
+							</div>
+						</div>
+					)}
+				</CardContent>
+			</Card>
+
+			<Card>
+				<CardHeader>
+					<CardTitle className='flex items-center gap-2'>
+						<Target className='h-5 w-5' />
+						Thống kê quân số
+					</CardTitle>
+				</CardHeader>
+				<CardContent>
+					{isLoadingPoliticsQuality ? (
+						<TableSkeleton />
+					) : !hasPoliticsData ? (
+						<p className='text-muted-foreground'>
+							Chưa có dữ liệu thống kê quân số.
+						</p>
+					) : (
+						<div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
+							<PieChartCard
+								data={educationData}
+								title='Trình độ văn hóa'
+							/>
+							<PieChartCard data={ethnicData} title='Dân tộc' />
+							<PieChartCard
+								data={religionData}
+								title='Tôn giáo'
+							/>
+							<PieChartCard
+								data={politicalOrgData}
+								title='Đoàn/Đảng'
+							/>
+						</div>
+					)}
+				</CardContent>
+			</Card>
+
+			<div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
+				<Card>
+					<CardHeader>
+						<CardTitle className='flex items-center gap-2'>
+							<Package className='h-5 w-5' />
+							Vật tư sinh hoạt
+						</CardTitle>
+					</CardHeader>
+					<CardContent>
+						{stats.materialStockSummary.length === 0 ? (
+							<p className='text-muted-foreground'>
+								Chưa có vật tư sinh hoạt nào.
+							</p>
+						) : (
+							<ul className='space-y-2'>
+								{stats.materialStockSummary.map((item) => (
+									<li
+										key={item.materialTypeId}
+										className='flex items-center justify-between border-b pb-2 last:border-0'
+									>
+										<span>{item.materialTypeName}</span>
+										<span className='font-semibold'>
+											{item.totalQuantity}
+										</span>
+									</li>
+								))}
+							</ul>
+						)}
+					</CardContent>
+				</Card>
+
+				<Card>
+					<CardHeader>
+						<CardTitle className='flex items-center gap-2'>
+							<Shield className='h-5 w-5' />
+							Vũ khí/trang bị
+						</CardTitle>
+					</CardHeader>
+					<CardContent>
+						{stats.materialAssetSummary.length === 0 ? (
+							<p className='text-muted-foreground'>
+								Chưa có vũ khí/trang bị nào.
+							</p>
+						) : (
+							<ul className='space-y-2'>
+								{stats.materialAssetSummary.map((item) => (
+									<li
+										key={item.status}
+										className='flex items-center justify-between border-b pb-2 last:border-0'
+									>
+										<span>
+											{materialAssetStatusLabels[
+												item.status
+											] ?? item.status}
+										</span>
+										<span className='font-semibold'>
+											{item.count}
+										</span>
+									</li>
+								))}
+							</ul>
+						)}
+					</CardContent>
+				</Card>
+			</div>
+		</div>
+	)
+
+	const detailsContent = showRollupTabs && (
+		<Tabs defaultValue='students'>
+			<TabsList>
+				<TabsTrigger value='students'>Quân nhân</TabsTrigger>
+				<TabsTrigger value='material-stocks'>
+					Cơ sở vật chất
+				</TabsTrigger>
+				<TabsTrigger value='material-assets'>
+					Vũ khí/trang bị
+				</TabsTrigger>
+			</TabsList>
+
+			<TabsContent value='students'>
+				{isLoadingRollupStudents ? (
+					<TableSkeleton />
+				) : (
+					<DataTable
+						placeholder='Không có quân nhân nào'
+						columns={battalionStudentColumnsWithoutAction}
+						data={rollupStudents ?? []}
+						defaultColumnVisibility={
+							defaultBirthdayColumnVisibility
+						}
+						facetedFilters={studentFacetedFilters}
+					/>
+				)}
+			</TabsContent>
+
+			<TabsContent value='material-stocks'>
+				{isLoadingRollupStocks ? (
+					<TableSkeleton />
+				) : (
+					<DataTable
+						placeholder='Không có vật tư sinh hoạt nào'
+						columns={readOnlyMaterialStockColumns}
+						data={rollupStocks ?? []}
+					/>
+				)}
+			</TabsContent>
+
+			<TabsContent value='material-assets'>
+				{isLoadingRollupAssets ? (
+					<TableSkeleton />
+				) : (
+					<DataTable
+						placeholder='Không có vũ khí/trang bị nào'
+						columns={readOnlyMaterialAssetColumns}
+						data={rollupAssets ?? []}
+					/>
+				)}
+			</TabsContent>
+		</Tabs>
+	)
+
 	return (
 		<div className='container mx-auto p-6 space-y-6'>
 			<div className='flex flex-col gap-4 md:flex-row md:items-center md:justify-between'>
@@ -254,407 +603,27 @@ export default function BaseStatsDashboard() {
 
 			{selectedAlias !== undefined && isLoadingStats && <TableSkeleton />}
 
-			{stats !== undefined && (
-				<>
-					<div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-						{kpiCards.map(
-							({
-								label,
-								value,
-								icon: Icon,
-								color,
-								valueColor
-							}) => (
-								<Card key={label}>
-									<CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
-										<CardTitle className='text-sm font-medium'>
-											{label}
-										</CardTitle>
-										<Icon className={`h-5 w-5 ${color}`} />
-									</CardHeader>
-									<CardContent>
-										<div
-											className={`text-2xl font-bold ${valueColor}`}
-										>
-											{value}
-										</div>
-										<p className='text-xs text-muted-foreground'>
-											{stats.unit.name}
-											{' và đơn vị trực thuộc'}
-										</p>
-									</CardContent>
-								</Card>
-							)
-						)}
-					</div>
+			{stats !== undefined &&
+				(showRollupTabs ? (
+					<Tabs defaultValue='overview'>
+						<TabsList>
+							<TabsTrigger value='overview'>
+								Tổng quan
+							</TabsTrigger>
+							<TabsTrigger value='details'>Chi tiết</TabsTrigger>
+						</TabsList>
 
-					<Card>
-						<CardHeader>
-							<CardTitle className='flex items-center gap-2'>
-								<Shield className='h-5 w-5' />
-								Cơ cấu đơn vị trực thuộc
-							</CardTitle>
-						</CardHeader>
-						<CardContent>
-							{unitCountChartData.length === 0 ? (
-								<p className='text-muted-foreground'>
-									Đơn vị này không có đơn vị trực thuộc nào.
-								</p>
-							) : (
-								<div className='grid grid-cols-1 md:grid-cols-2 gap-4 items-center'>
-									<ChartContainer
-										config={{
-											value: { label: 'Số lượng' }
-										}}
-										className='h-[260px] w-full'
-									>
-										<ResponsiveContainer
-											width='100%'
-											height='100%'
-										>
-											<BarChart data={unitCountChartData}>
-												<CartesianGrid strokeDasharray='3 3' />
-												<XAxis
-													dataKey='label'
-													interval={0}
-													tick={{ fontSize: 11 }}
-													angle={
-														unitCountChartData.length >
-														4
-															? -30
-															: 0
-													}
-													textAnchor={
-														unitCountChartData.length >
-														4
-															? 'end'
-															: 'middle'
-													}
-													height={
-														unitCountChartData.length >
-														4
-															? 50
-															: 30
-													}
-												/>
-												<YAxis
-													allowDecimals={false}
-													width={32}
-												/>
-												<ChartTooltip
-													content={
-														<ChartTooltipContent />
-													}
-												/>
-												<Bar
-													dataKey='value'
-													radius={[4, 4, 0, 0]}
-												>
-													{unitCountChartData.map(
-														(entry) => (
-															<Cell
-																key={
-																	entry.level
-																}
-																fill={
-																	entry.color
-																}
-															/>
-														)
-													)}
-												</Bar>
-											</BarChart>
-										</ResponsiveContainer>
-									</ChartContainer>
+						<TabsContent value='overview'>
+							{overviewContent}
+						</TabsContent>
 
-									<div className='grid grid-cols-2 gap-3 content-start max-h-[260px] overflow-y-auto pr-1'>
-										{unitCountChartData.map(
-											({
-												level,
-												label,
-												value,
-												color
-											}) => (
-												<div
-													key={level}
-													className='rounded-lg border p-3 text-center'
-												>
-													<div
-														className='text-xl font-bold'
-														style={{
-															color
-														}}
-													>
-														{value}
-													</div>
-													<div className='text-xs text-muted-foreground'>
-														{label}
-													</div>
-												</div>
-											)
-										)}
-									</div>
-								</div>
-							)}
-						</CardContent>
-					</Card>
-
-					<Card>
-						<CardHeader>
-							<CardTitle className='flex items-center gap-2'>
-								<Users className='h-5 w-5' />
-								Cơ cấu quân số
-							</CardTitle>
-						</CardHeader>
-						<CardContent>
-							{troopChartData.length === 0 ? (
-								<p className='text-muted-foreground'>
-									Chưa có dữ liệu quân số.
-								</p>
-							) : (
-								<div className='grid grid-cols-1 md:grid-cols-2 gap-4 items-center'>
-									<ChartContainer
-										config={{
-											value: { label: 'Số lượng' }
-										}}
-										className='h-[260px] w-full'
-									>
-										<ResponsiveContainer
-											width='100%'
-											height='100%'
-										>
-											<PieChart>
-												<Pie
-													data={troopChartData}
-													cx='50%'
-													cy='50%'
-													labelLine={false}
-													label={({
-														name,
-														percent
-													}) =>
-														`${name} ${(percent * 100).toFixed(0)}%`
-													}
-													outerRadius={80}
-													dataKey='value'
-													nameKey='label'
-												>
-													{troopChartData.map(
-														(entry) => (
-															<Cell
-																key={
-																	entry.label
-																}
-																fill={
-																	entry.color
-																}
-															/>
-														)
-													)}
-												</Pie>
-												<ChartTooltip
-													content={
-														<ChartTooltipContent />
-													}
-												/>
-											</PieChart>
-										</ResponsiveContainer>
-									</ChartContainer>
-
-									<div className='grid grid-cols-2 gap-4'>
-										{troopSummaryCards.map(
-											({ label, value, color }) => (
-												<div
-													key={label}
-													className='rounded-lg border p-4 text-center'
-												>
-													<div
-														className='text-2xl font-bold'
-														style={{
-															color
-														}}
-													>
-														{value}
-													</div>
-													<div className='text-xs text-muted-foreground'>
-														{label}
-													</div>
-												</div>
-											)
-										)}
-									</div>
-								</div>
-							)}
-						</CardContent>
-					</Card>
-
-					<Card>
-						<CardHeader>
-							<CardTitle className='flex items-center gap-2'>
-								<Target className='h-5 w-5' />
-								Thống kê quân số
-							</CardTitle>
-						</CardHeader>
-						<CardContent>
-							{isLoadingPoliticsQuality ? (
-								<TableSkeleton />
-							) : !hasPoliticsData ? (
-								<p className='text-muted-foreground'>
-									Chưa có dữ liệu thống kê quân số.
-								</p>
-							) : (
-								<div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
-									<PieChartCard
-										data={educationData}
-										title='Trình độ văn hóa'
-									/>
-									<PieChartCard
-										data={ethnicData}
-										title='Dân tộc'
-									/>
-									<PieChartCard
-										data={religionData}
-										title='Tôn giáo'
-									/>
-									<PieChartCard
-										data={politicalOrgData}
-										title='Đoàn/Đảng'
-									/>
-								</div>
-							)}
-						</CardContent>
-					</Card>
-
-					<div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
-						<Card>
-							<CardHeader>
-								<CardTitle className='flex items-center gap-2'>
-									<Package className='h-5 w-5' />
-									Vật tư sinh hoạt
-								</CardTitle>
-							</CardHeader>
-							<CardContent>
-								{stats.materialStockSummary.length === 0 ? (
-									<p className='text-muted-foreground'>
-										Chưa có vật tư sinh hoạt nào.
-									</p>
-								) : (
-									<ul className='space-y-2'>
-										{stats.materialStockSummary.map(
-											(item) => (
-												<li
-													key={item.materialTypeId}
-													className='flex items-center justify-between border-b pb-2 last:border-0'
-												>
-													<span>
-														{item.materialTypeName}
-													</span>
-													<span className='font-semibold'>
-														{item.totalQuantity}
-													</span>
-												</li>
-											)
-										)}
-									</ul>
-								)}
-							</CardContent>
-						</Card>
-
-						<Card>
-							<CardHeader>
-								<CardTitle className='flex items-center gap-2'>
-									<Shield className='h-5 w-5' />
-									Vũ khí/trang bị
-								</CardTitle>
-							</CardHeader>
-							<CardContent>
-								{stats.materialAssetSummary.length === 0 ? (
-									<p className='text-muted-foreground'>
-										Chưa có vũ khí/trang bị nào.
-									</p>
-								) : (
-									<ul className='space-y-2'>
-										{stats.materialAssetSummary.map(
-											(item) => (
-												<li
-													key={item.status}
-													className='flex items-center justify-between border-b pb-2 last:border-0'
-												>
-													<span>
-														{materialAssetStatusLabels[
-															item.status
-														] ?? item.status}
-													</span>
-													<span className='font-semibold'>
-														{item.count}
-													</span>
-												</li>
-											)
-										)}
-									</ul>
-								)}
-							</CardContent>
-						</Card>
-					</div>
-
-					{showRollupTabs && (
-						<Tabs defaultValue='students'>
-							<TabsList>
-								<TabsTrigger value='students'>
-									Quân nhân
-								</TabsTrigger>
-								<TabsTrigger value='material-stocks'>
-									Cơ sở vật chất
-								</TabsTrigger>
-								<TabsTrigger value='material-assets'>
-									Vũ khí/trang bị
-								</TabsTrigger>
-							</TabsList>
-
-							<TabsContent value='students'>
-								{isLoadingRollupStudents ? (
-									<TableSkeleton />
-								) : (
-									<DataTable
-										placeholder='Không có quân nhân nào'
-										columns={
-											battalionStudentColumnsWithoutAction
-										}
-										data={rollupStudents ?? []}
-										defaultColumnVisibility={
-											defaultBirthdayColumnVisibility
-										}
-									/>
-								)}
-							</TabsContent>
-
-							<TabsContent value='material-stocks'>
-								{isLoadingRollupStocks ? (
-									<TableSkeleton />
-								) : (
-									<DataTable
-										placeholder='Không có vật tư sinh hoạt nào'
-										columns={readOnlyMaterialStockColumns}
-										data={rollupStocks ?? []}
-									/>
-								)}
-							</TabsContent>
-
-							<TabsContent value='material-assets'>
-								{isLoadingRollupAssets ? (
-									<TableSkeleton />
-								) : (
-									<DataTable
-										placeholder='Không có vũ khí/trang bị nào'
-										columns={readOnlyMaterialAssetColumns}
-										data={rollupAssets ?? []}
-									/>
-								)}
-							</TabsContent>
-						</Tabs>
-					)}
-				</>
-			)}
+						<TabsContent value='details'>
+							{detailsContent}
+						</TabsContent>
+					</Tabs>
+				) : (
+					overviewContent
+				))}
 		</div>
 	)
 }
