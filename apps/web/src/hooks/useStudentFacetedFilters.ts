@@ -2,6 +2,7 @@ import useDataTableToolbarConfig from '@/hooks/useDataTableToolbarConfig'
 import useUnitsData from '@/hooks/useUnitsData'
 import { EduLevelOptions } from '@/components/data-table/data/data'
 import { EhtnicOptions } from '@/data/ethnicities'
+import { activityStatusOptions } from '@/data/activity-statuses'
 import type { Student, Unit } from '@/types'
 
 function collectSquadOptions(
@@ -57,6 +58,11 @@ export function useStudentFacetedFilters(students: Student[]) {
 			'educationLevel',
 			'Trình độ học vấn',
 			EduLevelOptions
+		),
+		createFacetedFilter(
+			'activityStatus',
+			'Tình trạng',
+			activityStatusOptions
 		)
 	]
 }

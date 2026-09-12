@@ -8,6 +8,11 @@ import EditableCell from '../data-table/editable-cell'
 import EditableMilitaryRank from '../data-table/editable-military-rank'
 import EditablePosition from '../data-table/editable-position'
 import { toDdMmYyyy } from '@/common'
+import type { ActivityStatus } from '@/types'
+import {
+	activityStatusColors,
+	activityStatusLabels
+} from '@/data/activity-statuses'
 
 function isoToDdMmYyyy(isoDate: string): string {
 	const [year, month, day] = isoDate.split('-')
@@ -554,6 +559,31 @@ export const statusColumn: ColumnDef<Student> = {
 	}
 }
 
+export const activityStatusColumn: ColumnDef<Student> = {
+	accessorKey: 'activityStatus',
+	header: ({ column }) => (
+		<DataTableColumnHeader column={column} title='Tình trạng' />
+	),
+	cell: ({ row }) => {
+		const activityStatus = row.getValue('activityStatus') as
+			| ActivityStatus
+			| undefined
+		if (activityStatus === undefined) return null
+		return (
+			<Badge className={activityStatusColors[activityStatus]}>
+				{activityStatusLabels[activityStatus]}
+			</Badge>
+		)
+	},
+	filterFn: (row, id, value) => {
+		return value.includes(row.getValue(id))
+	},
+	enableHiding: true,
+	meta: {
+		label: 'Tình trạng'
+	}
+}
+
 export const actionsColumn: ColumnDef<Student> = {
 	id: 'actions',
 	cell: ({ row }) => <DataTableRowActions row={row} />
@@ -658,7 +688,8 @@ export const columnsWithoutAction: ColumnDef<Student>[] = [
 	motherNameColumn,
 	motherJobColumn,
 	motherPhoneNumberColumn,
-	statusColumn
+	statusColumn,
+	activityStatusColumn
 ]
 
 export const hcyuTableColumns: ColumnDef<Student>[] = [
@@ -692,6 +723,7 @@ export const hcyuTableColumns: ColumnDef<Student>[] = [
 	motherJobColumn,
 	motherPhoneNumberColumn,
 	statusColumn,
+	activityStatusColumn,
 	actionsColumn
 ]
 

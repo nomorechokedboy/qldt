@@ -21,6 +21,7 @@ import usePositionsData from '@/hooks/usePositionsData'
 import useProvinces from '@/hooks/useProvinces'
 import useWards from '@/hooks/useWards'
 import { unitLevelLabels, unitLevelOrder } from '@/data/unit-levels'
+import { activityStatusOptions } from '@/data/activity-statuses'
 
 export interface ImportStudentsDialogProps {
 	isOpen: boolean
@@ -176,6 +177,7 @@ export function ImportStudentsDialog({
 				'ethnic',
 				'religion',
 				'enlistmentPeriod',
+				'activityStatus',
 				'politicalOrg',
 				'politicalOrgOfficialDate',
 				'cpvId',
@@ -223,6 +225,7 @@ export function ImportStudentsDialog({
 				'Dân tộc',
 				'Tôn giáo',
 				'Thời gian nhập ngũ',
+				'Tình trạng',
 				'Đoàn/Đảng',
 				'Ngày chính thức vào Đảng/Đoàn',
 				'Số thẻ Đảng',
@@ -275,6 +278,7 @@ export function ImportStudentsDialog({
 				'Kinh',
 				'Không',
 				'2024',
+				'Đang phục vụ',
 				'Đoàn',
 				'26/03/2020',
 				'',
@@ -377,6 +381,7 @@ export function ImportStudentsDialog({
 				],
 				isGraduated: ['Có', 'Không'],
 				isMarried: ['Có', 'Không'],
+				activityStatus: activityStatusOptions.map((o) => o.label),
 				// Backend requires politicalOrg to be exactly 'hcyu'/'cpv'
 				// (NOT NULL, no default - see schema/student.ts) - there is
 				// no "not yet joined" state, so don't offer one here.
@@ -732,6 +737,36 @@ export function ImportStudentsDialog({
 											message: `Giá trị "${value}" không hợp lệ cho Đoàn/Đảng - chỉ chấp nhận "Đoàn" hoặc "Đảng"`
 										})
 										value = ''
+									}
+								}
+							}
+
+							// Tình trạng → activityStatus enum key. Blank defaults
+							// to 'serving' (on duty); the backend column itself
+							// also defaults to 'serving', but resolving it here
+							// too keeps the preview table showing the real value.
+							if (header === 'activityStatus') {
+								const normalized =
+									typeof value === 'string'
+										? value.trim().toLowerCase()
+										: ''
+								if (normalized === '') {
+									value = 'serving'
+								} else {
+									const match = activityStatusOptions.find(
+										(o) =>
+											o.label.toLowerCase() ===
+												normalized ||
+											o.value === normalized
+									)
+									if (match) {
+										value = match.value
+									} else {
+										rowErrors.push({
+											row: rowIndex + 4,
+											message: `Giá trị "${value}" không hợp lệ cho Tình trạng`
+										})
+										value = 'serving'
 									}
 								}
 							}

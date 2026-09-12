@@ -1,6 +1,7 @@
 import { rankOptions } from '@/data/ranks'
 import usePositionsData from '@/hooks/usePositionsData'
 import { unitLevelLabels, unitLevelOrder } from '@/data/unit-levels'
+import { activityStatusOptions } from '@/data/activity-statuses'
 
 export default function MilitaryStep({ form }: { form: any }) {
 	const { data: positions } = usePositionsData(undefined, { enabled: true })
@@ -47,6 +48,16 @@ export default function MilitaryStep({ form }: { form: any }) {
 				</form.AppField>
 				<form.AppField name='enlistmentPeriod'>
 					{(field: any) => <field.TextField label='Ngày nhập ngũ' />}
+				</form.AppField>
+				<form.AppField name='activityStatus'>
+					{(field: any) => (
+						<field.Select
+							values={activityStatusOptions}
+							label='Tình trạng'
+							placeholder='Chọn tình trạng'
+							defaultValue='serving'
+						/>
+					)}
 				</form.AppField>
 			</div>
 			<div className='grid grid-cols-2 gap-6'>

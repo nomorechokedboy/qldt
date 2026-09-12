@@ -13,6 +13,7 @@ import { EhtnicOptions } from '@/data/ethnicities'
 import { religionOptions } from '@/data/religions'
 import { eduLevelOptions } from '@/data/education-levels'
 import { politicalOptions } from '@/data/political-status'
+import { activityStatusOptions } from '@/data/activity-statuses'
 import { rankOptions } from '@/data/ranks'
 import useUnitsData from '@/hooks/useUnitsData'
 import usePositionsData from '@/hooks/usePositionsData'
@@ -463,6 +464,11 @@ export default function StudentEditForm({
 										<Field
 											name='previousPosition'
 											label='Chức vụ cũ'
+										/>
+										<Field
+											name='activityStatus'
+											label='Tình trạng'
+											options={activityStatusOptions}
 										/>
 									</div>
 								</div>

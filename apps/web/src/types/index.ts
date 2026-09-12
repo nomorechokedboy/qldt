@@ -11,6 +11,17 @@ export interface UserFormData extends Base {
 
 export type PoliticalOrg = 'hcyu' | 'cpv'
 
+export type ActivityStatus =
+	| 'serving'
+	| 'hospitalized'
+	| 'annual_leave'
+	| 'infirmary_treatment'
+	| 'contest'
+	| 'business_trip'
+	| 'weekly_leave'
+	| 'rehearsal'
+	| 'discharged'
+
 export type StudentBody = {
 	fullName?: string
 	birthPlace?: string
@@ -64,6 +75,7 @@ export type StudentBody = {
 	studentId: string
 	relatedDocumentations?: string
 	status?: 'pending' | 'confirmed'
+	activityStatus?: ActivityStatus
 }
 
 type Base = {
