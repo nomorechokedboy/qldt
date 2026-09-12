@@ -2112,6 +2112,7 @@ export namespace students {
 		studentId?: string
 		relatedDocumentations?: string
 		status?: 'pending' | 'confirmed'
+		activityStatus?: schema.ActivityStatus
 	}
 
 	export interface StudentBody {
@@ -2190,6 +2191,7 @@ export namespace students {
 		studentId?: string
 		relatedDocumentations?: string
 		status?: 'pending' | 'confirmed'
+		activityStatus?: schema.ActivityStatus
 	}
 
 	export interface StudentBulkBody {
@@ -2275,6 +2277,7 @@ export namespace students {
 		studentId?: string
 		relatedDocumentations?: string
 		status?: 'pending' | 'confirmed'
+		activityStatus?: schema.ActivityStatus
 	}
 
 	export type StudentParamsCronEvent =
@@ -2372,6 +2375,7 @@ export namespace students {
 		studentId?: string
 		relatedDocumentations?: string
 		status?: 'pending' | 'confirmed'
+		activityStatus?: schema.ActivityStatus
 	}
 
 	export interface UpdatePayload {
@@ -2432,6 +2436,7 @@ export namespace students {
 		studentId?: string
 		relatedDocumentations?: string
 		status?: 'pending' | 'confirmed'
+		activityStatus?: schema.ActivityStatus
 	}
 
 	export interface UpdateStudentBody {
@@ -3625,6 +3630,17 @@ export namespace schema {
 		createdAt: string
 		updatedAt: string
 	}
+
+	export type ActivityStatus =
+		| 'serving'
+		| 'hospitalized'
+		| 'annual_leave'
+		| 'infirmary_treatment'
+		| 'contest'
+		| 'business_trip'
+		| 'weekly_leave'
+		| 'rehearsal'
+		| 'discharged'
 
 	export interface AssignRoleRequest {
 		userId: number

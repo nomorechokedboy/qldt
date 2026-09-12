@@ -1,5 +1,6 @@
 import { api, APIError } from 'encore.dev/api'
 import {
+	ActivityStatus,
 	StudentCronEvent,
 	StudentDB,
 	StudentParam,
@@ -96,6 +97,7 @@ interface StudentBody {
 	studentId?: string
 	relatedDocumentations?: string
 	status?: 'pending' | 'confirmed'
+	activityStatus?: ActivityStatus
 }
 
 interface StudentDBResponse extends StudentBody {

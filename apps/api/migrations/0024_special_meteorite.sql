@@ -1,0 +1,1 @@
+ALTER TABLE `students` ADD `activityStatus` text DEFAULT 'serving' NOT NULL;
