@@ -53,14 +53,16 @@ class controller {
 			roomsCount,
 			unitCounts,
 			materialStockSummary,
-			materialAssetSummary
+			materialAssetSummary,
+			troopSummary
 		] = await Promise.all([
 			unitStatsRepo.countStudents(descendantUnitIds),
 			unitStatsRepo.countBuildings(descendantUnitIds),
 			unitStatsRepo.countRooms(descendantUnitIds),
 			unitStatsRepo.unitCountsByLevel(descendantUnitIds, unit.id),
 			unitStatsRepo.materialStockSummary(descendantUnitIds),
-			unitStatsRepo.materialAssetSummary(descendantUnitIds)
+			unitStatsRepo.materialAssetSummary(descendantUnitIds),
+			unitStatsRepo.troopSummary(descendantUnitIds)
 		])
 
 		return {
@@ -70,7 +72,8 @@ class controller {
 			roomsCount,
 			unitCounts,
 			materialStockSummary,
-			materialAssetSummary
+			materialAssetSummary,
+			troopSummary
 		}
 	}
 

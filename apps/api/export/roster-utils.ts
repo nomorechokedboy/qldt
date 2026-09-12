@@ -116,17 +116,21 @@ function battalionTier(
  * any department-level unit), lowest tier prints first:
  *   0. commander/leadership (everyone not caught by the tiers below)
  *   1. "Trợ lý" (TL./Trợ lý prefix)
- *   2. "Nhân viên" (NV./Nhân viên prefix) or QNCN rank
- *   3. HSQ/BS rank
+ *   2. "Nhân viên" (NV./Nhân viên prefix) or QNCN
+ *   3. HSQ or CS/BS
  * Duty title decides tiers 1-2 (a QNCN-ranked "Trợ lý" still sorts as a
- * Trợ lý); rank alone decides tier 3. Ties within every tier fall back to
- * rank, highest first.
+ * Trợ lý); classifyTrooper decides tier 3. Ties within every tier fall back
+ * to rank, highest first.
  */
-function departmentTier(position: string, rank: string): number {
+function departmentTier(
+	position: string,
+	rank: string,
+	positionCategories: ReadonlyMap<string, string>
+): number {
 	const p = position.trim().toLowerCase()
 	const isTL = p.startsWith('tl') || p.startsWith('trợ lý')
 	const isNV = p.startsWith('nv') || p.startsWith('nhân viên')
-	const category = classifyRank(rank)
+	const category = classifyTrooper(position, rank, positionCategories)
 
 	if (isTL) {
 		return 1
@@ -134,7 +138,7 @@ function departmentTier(position: string, rank: string): number {
 	if (isNV || category === 'QNCN') {
 		return 2
 	}
-	if (category === 'HSQ' || category === 'BS') {
+	if (category === 'HSQ' || category === 'CS') {
 		return 3
 	}
 
@@ -145,7 +149,8 @@ function positionTier(
 	level: string,
 	position: string,
 	rank: string,
-	positionPriorities: ReadonlyMap<string, number>
+	positionPriorities: ReadonlyMap<string, number>,
+	positionCategories: ReadonlyMap<string, string>
 ): number {
 	switch (level) {
 		case 'battalion':
@@ -155,19 +160,32 @@ function positionTier(
 		case 'squad':
 			return companyTier(level, position, positionPriorities)
 		default:
-			return departmentTier(position, rank)
+			return departmentTier(position, rank, positionCategories)
 	}
 }
 
 function compareRosterStudents(
 	level: string,
 	positionPriorities: ReadonlyMap<string, number>,
+	positionCategories: ReadonlyMap<string, string>,
 	a: Pick<RosterStudent, 'position' | 'rank'>,
 	b: Pick<RosterStudent, 'position' | 'rank'>
 ): number {
 	const tierDiff =
-		positionTier(level, a.position, a.rank, positionPriorities) -
-		positionTier(level, b.position, b.rank, positionPriorities)
+		positionTier(
+			level,
+			a.position,
+			a.rank,
+			positionPriorities,
+			positionCategories
+		) -
+		positionTier(
+			level,
+			b.position,
+			b.rank,
+			positionPriorities,
+			positionCategories
+		)
 	if (tierDiff !== 0) {
 		return tierDiff
 	}
@@ -198,6 +216,8 @@ export interface RosterSummary {
 	sq: number
 	qncn: number
 	hsq: number
+	// Named `bs` for the docx template's data key; represents CS/BS
+	// (chiến sĩ/binh sĩ), the un-derived fallback category.
 	bs: number
 }
 
@@ -218,16 +238,96 @@ export interface RosterStudent {
 
 // A row from the `positions` table (level-scoped position-priority
 // overrides), used to sort a unit's members instead of the hardcoded
-// per-level heuristics — see battalionTier.
+// per-level heuristics — see battalionTier. `category` is the position's
+// troop-category override (currently only meaningful value: 'HSQ') used by
+// classifyTrooper for members whose rank alone doesn't decide SQ/QNCN.
 export interface RosterPosition {
 	level: string
 	code: string
 	priority: number
+	category?: string | null
 }
 
+/**
+ * Builds the shared `unitId -> unit level` lookup used by battalionTier /
+ * companyTier / positionTier to know which per-level sort rules apply to a
+ * given student.
+ */
+function buildUnitLevelMap(
+	rootUnit: RosterUnitNode,
+	units: RosterUnitNode[]
+): Map<number, string> {
+	const unitLevelById = new Map<number, string>([
+		[rootUnit.id, rootUnit.level]
+	])
+	for (const u of units) {
+		unitLevelById.set(u.id, u.level)
+	}
+
+	return unitLevelById
+}
+
+/**
+ * Builds the `code` -> category lookup from `positions` rows that carry a
+ * troop-category override. Keyed by code alone (not level-scoped like
+ * `positionPriorities`): a position's troop-category meaning (e.g. "at ..."
+ * or "kđt" being HSQ) holds regardless of which unit/level it's held at.
+ */
+export function buildPositionCategories(
+	positions: RosterPosition[]
+): ReadonlyMap<string, string> {
+	const categories = new Map<string, string>()
+	for (const p of positions) {
+		if (!p.category) {
+			continue
+		}
+		categories.set(p.code.trim().toLowerCase(), p.category)
+	}
+
+	return categories
+}
+
+/**
+ * Classifies a trooper into SQ / QNCN / HSQ / CS:
+ *   - SQ/QNCN are derived from rank text (see classifyRank).
+ *   - Everyone else is HSQ only if their current duty position is one of the
+ *     schooled/trained positions seeded in the `positions` table with
+ *     category='HSQ' (e.g. "at ...", "kđt", "y tá", "QKV", "BQV", "NVBV"),
+ *     regardless of which unit/level holds that position.
+ *   - Everyone else falls back to CS/BS.
+ *   - A blank rank means the trooper isn't counted in any bucket (matches
+ *     legacy classifyRank behavior).
+ */
+export function classifyTrooper(
+	position: string,
+	rank: string,
+	positionCategories: ReadonlyMap<string, string>
+): RosterSummaryCategory | undefined {
+	if (!rank.trim()) {
+		return undefined
+	}
+
+	const rankCategory = classifyRank(rank)
+	if (rankCategory !== undefined) {
+		return rankCategory
+	}
+
+	const category = positionCategories.get(position.trim().toLowerCase())
+	if (category === 'HSQ') {
+		return 'HSQ'
+	}
+
+	return 'CS'
+}
+
+type RosterSummaryCategory = 'SQ' | 'QNCN' | 'HSQ' | 'CS'
+
 export function buildRosterSummary(
-	students: Pick<RosterStudent, 'rank'>[]
+	students: Pick<RosterStudent, 'rank' | 'position'>[],
+	positions: RosterPosition[] = []
 ): RosterSummary {
+	const positionCategories = buildPositionCategories(positions)
+
 	const summary: RosterSummary = {
 		total: students.length,
 		sq: 0,
@@ -237,7 +337,7 @@ export function buildRosterSummary(
 	}
 
 	for (const s of students) {
-		switch (classifyRank(s.rank)) {
+		switch (classifyTrooper(s.position, s.rank, positionCategories)) {
 			case 'SQ':
 				summary.sq++
 				break
@@ -247,7 +347,7 @@ export function buildRosterSummary(
 			case 'HSQ':
 				summary.hsq++
 				break
-			case 'BS':
+			case 'CS':
 				summary.bs++
 				break
 		}
@@ -277,6 +377,7 @@ export function buildRosterRows(
 			p.priority
 		)
 	}
+	const positionCategories = buildPositionCategories(positions)
 
 	const childUnitsByParent = new Map<number, RosterUnitNode[]>()
 	for (const u of units) {
@@ -301,17 +402,18 @@ export function buildRosterRows(
 		}
 	}
 
-	const unitLevelById = new Map<number, string>([
-		[rootUnit.id, rootUnit.level]
-	])
-	for (const u of units) {
-		unitLevelById.set(u.id, u.level)
-	}
+	const unitLevelById = buildUnitLevelMap(rootUnit, units)
 
 	for (const [unitId, list] of studentsByUnit) {
 		const level = unitLevelById.get(unitId) ?? 'company'
 		list.sort((a, b) =>
-			compareRosterStudents(level, positionPriorities, a, b)
+			compareRosterStudents(
+				level,
+				positionPriorities,
+				positionCategories,
+				a,
+				b
+			)
 		)
 	}
 

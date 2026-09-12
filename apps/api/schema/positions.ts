@@ -21,9 +21,13 @@ export const positions = sqlite.sqliteTable(
 		code: sqlite.text().notNull(),
 		name: sqlite.text().notNull(),
 		priority: sqlite.int().notNull(),
-		// Role-category label for grouping the position picker in the UI
-		// (e.g. "Trợ lý", "NVCM-KT") - independent of `level`, which
-		// stays a unit level used by the roster-sort/leader-dedupe logic.
+		// Troop-category override for classifying this position's holder as
+		// HSQ (hạ sĩ quan) instead of the CS/BS fallback, used when rank
+		// text alone doesn't decide SQ/QNCN — see classifyTrooper in
+		// export/roster-utils.ts. Only meaningful value today: 'HSQ'; null
+		// means "no override, fall back to CS/BS". Independent of `level`,
+		// which stays a unit level used by the roster-sort/leader-dedupe
+		// logic.
 		group: sqlite.text()
 	},
 	(t) => [sqlite.unique('positions_level_code_unique').on(t.level, t.code)]

@@ -88,6 +88,7 @@ class repo {
 			unitCounts,
 			materialStockSummary,
 			materialAssetSummary,
+			troopSummary,
 			damagedAssets,
 			needMaintenanceAssets,
 			thisWeekBirthdayStudents,
@@ -99,6 +100,7 @@ class repo {
 			this.unitStatsRepo.unitCountsByLevel(descendantUnitIds, unit.id),
 			this.unitStatsRepo.materialStockSummary(descendantUnitIds),
 			this.unitStatsRepo.materialAssetSummary(descendantUnitIds),
+			this.unitStatsRepo.troopSummary(descendantUnitIds),
 			this.materialAssetRepo.find({
 				unitIds: descendantUnitIds,
 				condition: 'damaged'
@@ -123,6 +125,7 @@ class repo {
 			unitCounts,
 			materialStockSummary,
 			materialAssetSummary,
+			troopSummary,
 			damagedAssets,
 			needMaintenanceAssets,
 			thisWeekBirthdayStudents,

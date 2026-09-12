@@ -6,7 +6,9 @@ import { materialStocks } from '../schema/material-stocks'
 import { materialAssets, MaterialAssetStatus } from '../schema/material-assets'
 import { materialTypes } from '../schema/material-types'
 import { students } from '../schema/student'
+import { positions } from '../schema/positions'
 import { UnitDB, UnitLevelName, units } from '../schema/units'
+import { buildRosterSummary, RosterSummary } from '../export/roster-utils'
 import { UnitStatsRepository } from '.'
 
 export interface UnitStatsSummary {
@@ -20,6 +22,7 @@ export interface UnitStatsSummary {
 		totalQuantity: number
 	}[]
 	materialAssetSummary: { status: MaterialAssetStatus; count: number }[]
+	troopSummary: RosterSummary
 }
 
 class repo implements UnitStatsRepository {
@@ -139,6 +142,39 @@ class repo implements UnitStatsRepository {
 			.from(materialAssets)
 			.where(inArray(materialAssets.unitId, unitIds))
 			.groupBy(materialAssets.status)
+	}
+
+	async troopSummary(unitIds: number[]): Promise<RosterSummary> {
+		if (unitIds.length === 0) {
+			return { total: 0, sq: 0, qncn: 0, hsq: 0, bs: 0 }
+		}
+
+		const [studentRows, positionRows] = await Promise.all([
+			this.db
+				.select({ rank: students.rank, position: students.position })
+				.from(students)
+				.where(inArray(students.unitId, unitIds)),
+			this.db
+				.select({
+					level: positions.level,
+					code: positions.code,
+					group: positions.group
+				})
+				.from(positions)
+		])
+
+		return buildRosterSummary(
+			studentRows.map((s) => ({
+				rank: s.rank ?? '',
+				position: s.position ?? ''
+			})),
+			positionRows.map((p) => ({
+				level: p.level,
+				code: p.code,
+				priority: 0,
+				category: p.group
+			}))
+		)
 	}
 }
 
