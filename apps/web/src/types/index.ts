@@ -402,6 +402,9 @@ export type PoliticsQualitySummary = {
 export type BasePoliticsQualitySummary = Record<string, number>
 
 export type PoliticsQualityReport = {
+	// Keyed by birthPlaceProvinceCode, with legacy/unset rows bucketed under
+	// the literal key 'unknown' (see repo.ts#unitBirthPlaceProvinceSummary).
+	birthPlaceProvince: BasePoliticsQualitySummary
 	educationLevel: BasePoliticsQualitySummary
 	ethnic: BasePoliticsQualitySummary
 	politicalOrg: BasePoliticsQualitySummary

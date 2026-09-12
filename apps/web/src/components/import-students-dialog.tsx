@@ -18,6 +18,8 @@ import { toIsoDate } from '@/common'
 import type { StudentBody } from '@/types'
 import useUnitsData from '@/hooks/useUnitsData'
 import usePositionsData from '@/hooks/usePositionsData'
+import useProvinces from '@/hooks/useProvinces'
+import useWards from '@/hooks/useWards'
 import { unitLevelLabels, unitLevelOrder } from '@/data/unit-levels'
 
 export interface ImportStudentsDialogProps {
@@ -40,6 +42,11 @@ export function ImportStudentsDialog({
 	const { data: positions = [] } = usePositionsData(undefined, {
 		enabled: isOpen
 	})
+	const { data: provinces = [] } = useProvinces({ enabled: isOpen })
+	// Unfiltered - the whole ward list is needed up front to build the
+	// per-province cascading dropdown sheet and the name->code lookup used
+	// when parsing the uploaded file back.
+	const { data: wards = [] } = useWards(undefined, { enabled: isOpen })
 
 	// `units` is already a flat list of every unit the caller is
 	// authorized for (each row also carries a shallow `children`
@@ -92,6 +99,44 @@ export function ImportStudentsDialog({
 		return map
 	}, [positionOptions])
 
+	// wards grouped by provinceCode, in a stable order - used both to build
+	// the per-province ward columns/named ranges in the template and as the
+	// basis for wardNameToCode below.
+	const wardsByProvinceCode = useMemo(() => {
+		const map = new Map<string, typeof wards>()
+		wards.forEach((w) => {
+			const list = map.get(w.provinceCode) ?? []
+			list.push(w)
+			map.set(w.provinceCode, list)
+		})
+		return map
+	}, [wards])
+
+	// province display name (lowercased, trimmed) -> code, used to resolve
+	// the imported "...ProvinceName" column back to a code.
+	const provinceNameToCode = useMemo(() => {
+		const map = new Map<string, string>()
+		provinces.forEach((p) =>
+			map.set(p.nameWithType.trim().toLowerCase(), p.code)
+		)
+		return map
+	}, [provinces])
+
+	// provinceCode -> (ward display name, lowercased/trimmed -> code). Ward
+	// names aren't globally unique, so resolution must be scoped to the
+	// row's already-resolved province.
+	const wardNameToCodeByProvince = useMemo(() => {
+		const map = new Map<string, Map<string, string>>()
+		wardsByProvinceCode.forEach((provinceWards, provinceCode) => {
+			const inner = new Map<string, string>()
+			provinceWards.forEach((w) =>
+				inner.set(w.nameWithType.trim().toLowerCase(), w.code)
+			)
+			map.set(provinceCode, inner)
+		})
+		return map
+	}, [wardsByProvinceCode])
+
 	const createStudentsMutation = useCreateStudents()
 	const [students, setStudents] = useState<StudentBody[]>([])
 	const [selectedFile, setSelectedFile] = useState(null)
@@ -117,8 +162,12 @@ export function ImportStudentsDialog({
 			const headers = [
 				'fullName',
 				'studentId',
-				'birthPlace',
-				'address',
+				'birthPlaceProvinceName',
+				'birthPlaceWardName',
+				'birthPlaceDetail',
+				'addressProvinceName',
+				'addressWardName',
+				'addressDetail',
 				'dob',
 				'phone',
 				'unitId',
@@ -160,8 +209,12 @@ export function ImportStudentsDialog({
 			const vietnameseHeaders = [
 				'Họ và tên',
 				'Mã số quân nhân',
-				'Nơi sinh',
-				'Địa chỉ',
+				'Tỉnh/Thành (Quê quán)',
+				'Phường/Xã (Quê quán)',
+				'Số nhà, đường (Quê quán)',
+				'Tỉnh/Thành (Trú quán)',
+				'Phường/Xã (Trú quán)',
+				'Số nhà, đường (Trú quán)',
 				'Ngày sinh',
 				'Số điện thoại',
 				'Đơn vị',
@@ -200,10 +253,19 @@ export function ImportStudentsDialog({
 				'Lịch sử kỷ luật'
 			]
 
+			const sampleProvince = provinces[0]
+			const sampleWard = sampleProvince
+				? (wardsByProvinceCode.get(sampleProvince.code)?.[0] ?? null)
+				: null
+
 			const sampleData = [
 				'Nguyễn Văn A',
 				'',
-				'Hà Nội',
+				sampleProvince?.nameWithType ?? '',
+				sampleWard?.nameWithType ?? '',
+				'123 Đường ABC',
+				sampleProvince?.nameWithType ?? '',
+				sampleWard?.nameWithType ?? '',
 				'123 Đường ABC',
 				'01/01/2000',
 				'0911222333',
@@ -378,6 +440,96 @@ export function ImportStudentsDialog({
 				})
 			}
 
+			// ===== Sheet Tỉnh/Thành (reference list + dropdown source for the
+			// two *ProvinceName columns) =====
+			// Excel worksheet names can't contain '/' (or \ ? * [ ] :), so this
+			// intentionally drops the slash that "Tỉnh/Thành" would otherwise have.
+			const provinceSheet = workbook.addWorksheet('Danh sách tỉnh thành')
+			provinceSheet.addRow(['Mã', 'Tên'])
+			provinces.forEach((p) =>
+				provinceSheet.addRow([p.code, p.nameWithType])
+			)
+			provinceSheet.getColumn(1).width = 10
+			provinceSheet.getColumn(2).width = 40
+			const lastProvinceRow = provinces.length + 1
+
+			// ===== Sheet Phường/Xã - one column per province. Each column also
+			// becomes a workbook-scoped named range "P<code>", which the ward
+			// dropdowns below resolve into via INDIRECT so the ward list
+			// cascades off whichever province was picked in the same row. =====
+			const wardSheet = workbook.addWorksheet('Danh sách phường xã')
+			provinces.forEach((p, colIdx) => {
+				const col = colIdx + 1
+				wardSheet.getCell(1, col).value = p.nameWithType
+				const provinceWards = wardsByProvinceCode.get(p.code) ?? []
+				provinceWards.forEach((w, rowIdx) => {
+					wardSheet.getCell(rowIdx + 2, col).value = w.nameWithType
+				})
+				wardSheet.getColumn(col).width = 30
+
+				if (provinceWards.length > 0) {
+					const colLetter = wardSheet.getColumn(col).letter
+					workbook.definedNames.add(
+						`'Danh sách phường xã'!$${colLetter}$2:$${colLetter}$${provinceWards.length + 1}`,
+						`P${p.code}`
+					)
+				}
+			})
+
+			// Dropdown cho *ProvinceName - every province's display name.
+			;['birthPlaceProvinceName', 'addressProvinceName'].forEach(
+				(field) => {
+					const col = headers.indexOf(field)
+					if (col >= 0 && provinces.length) {
+						const colLetter = sheet.getColumn(col + 1).letter
+						sheet.dataValidations.add(
+							`${colLetter}4:${colLetter}1000`,
+							{
+								type: 'list',
+								allowBlank: true,
+								formulae: [
+									`'Danh sách tỉnh thành'!$B$2:$B$${lastProvinceRow}`
+								]
+							}
+						)
+					}
+				}
+			)
+
+			// Dropdown cho *WardName - cascades off the matching *ProvinceName
+			// cell in the same row: resolves that province's code, then
+			// INDIRECTs into the "P<code>" named range built above, so only
+			// wards belonging to the chosen province are offered.
+			;[
+				{
+					provinceField: 'birthPlaceProvinceName',
+					wardField: 'birthPlaceWardName'
+				},
+				{
+					provinceField: 'addressProvinceName',
+					wardField: 'addressWardName'
+				}
+			].forEach(({ provinceField, wardField }) => {
+				const provinceCol = headers.indexOf(provinceField)
+				const wardCol = headers.indexOf(wardField)
+				if (provinceCol >= 0 && wardCol >= 0 && provinces.length) {
+					const provinceColLetter = sheet.getColumn(
+						provinceCol + 1
+					).letter
+					const wardColLetter = sheet.getColumn(wardCol + 1).letter
+					sheet.dataValidations.add(
+						`${wardColLetter}4:${wardColLetter}1000`,
+						{
+							type: 'list',
+							allowBlank: true,
+							formulae: [
+								`INDIRECT("P"&INDEX('Danh sách tỉnh thành'!$A$2:$A$${lastProvinceRow},MATCH(${provinceColLetter}4,'Danh sách tỉnh thành'!$B$2:$B$${lastProvinceRow},0)))`
+							]
+						}
+					)
+				}
+			})
+
 			const textDateFields = [
 				'dob',
 				'politicalOrgOfficialDate',
@@ -441,7 +593,12 @@ export function ImportStudentsDialog({
 				],
 				[''],
 				[
-					'7. Nếu có thắc mắc, vui lòng liên hệ bộ phận IT để được hỗ trợ.'
+					'7. Cột Tỉnh/Thành và Phường/Xã (cho cả Quê quán và Trú quán): vui lòng chọn Tỉnh/Thành trước, ' +
+						'sau đó danh sách Phường/Xã sẽ tự động lọc theo Tỉnh/Thành đã chọn. Cả hai đều bắt buộc đối với quân nhân mới.'
+				],
+				[''],
+				[
+					'8. Nếu có thắc mắc, vui lòng liên hệ bộ phận IT để được hỗ trợ.'
 				],
 				['']
 			]
@@ -711,6 +868,77 @@ export function ImportStudentsDialog({
 						student.childrenInfos = []
 						student.previousUnit = ''
 						student.previousPosition = ''
+
+						// Resolve the imported "<prefix>ProvinceName"/
+						// "<prefix>WardName" dropdown values back to codes,
+						// scoped to the row's own province (ward names
+						// aren't globally unique). Both are required since
+						// import always creates new students - same rule
+						// the backend enforces in
+						// controller.ts#validatePlaceCodes.
+						const resolvePlace = (
+							prefix: 'birthPlace' | 'address',
+							placeLabel: string
+						) => {
+							const provinceNameKey = `${prefix}ProvinceName`
+							const wardNameKey = `${prefix}WardName`
+							const detailKey = `${prefix}Detail`
+
+							const provinceName =
+								typeof student[provinceNameKey] === 'string'
+									? student[provinceNameKey].trim()
+									: ''
+							const wardName =
+								typeof student[wardNameKey] === 'string'
+									? student[wardNameKey].trim()
+									: ''
+							const detail =
+								typeof student[detailKey] === 'string'
+									? student[detailKey].trim()
+									: ''
+
+							delete student[provinceNameKey]
+							delete student[wardNameKey]
+							delete student[detailKey]
+							student[prefix] = detail
+
+							if (provinceName === '' && wardName === '') {
+								rowErrors.push({
+									row: rowIndex + 4,
+									message: `Vui lòng chọn Tỉnh/Thành và Phường/Xã cho ${placeLabel}`
+								})
+								return
+							}
+
+							const provinceCode = provinceNameToCode.get(
+								provinceName.toLowerCase()
+							)
+							if (provinceCode === undefined) {
+								rowErrors.push({
+									row: rowIndex + 4,
+									message: `Không tìm thấy Tỉnh/Thành "${provinceName}" (${placeLabel})`
+								})
+								return
+							}
+
+							const wardCode = wardNameToCodeByProvince
+								.get(provinceCode)
+								?.get(wardName.toLowerCase())
+							if (wardCode === undefined) {
+								rowErrors.push({
+									row: rowIndex + 4,
+									message: `Không tìm thấy Phường/Xã "${wardName}" thuộc Tỉnh/Thành "${provinceName}" (${placeLabel})`
+								})
+								return
+							}
+
+							student[`${prefix}ProvinceCode`] = provinceCode
+							student[`${prefix}WardCode`] = wardCode
+						}
+
+						resolvePlace('birthPlace', 'Quê quán')
+						resolvePlace('address', 'Trú quán')
+
 						return student as StudentBody
 					})
 

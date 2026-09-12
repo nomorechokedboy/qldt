@@ -37,6 +37,7 @@ import Client, {
 	type export_templates,
 	type facilities,
 	type inventory_sessions,
+	type locations,
 	type materials,
 	type positions,
 	type students,
@@ -81,6 +82,18 @@ export function UpdateStudentStatus(studentIds: number[]) {
 	return requestClient.students
 		.updateStudentStatus({ studentIds, status: 'confirmed' })
 		.then((resp) => resp)
+}
+
+export function GetProvinces(): Promise<locations.Province[]> {
+	return requestClient.locations.GetProvinces().then((resp) => resp.data)
+}
+
+export function GetWards(
+	params?: locations.GetWardsQuery
+): Promise<locations.Ward[]> {
+	return requestClient.locations
+		.GetWards(params ?? {})
+		.then((resp) => resp.data)
 }
 
 export function GetUnitTroopers({ id }: { id: number }): Promise<Student[]> {

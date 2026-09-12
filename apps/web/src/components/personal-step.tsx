@@ -3,6 +3,7 @@ import { religionOptions } from '@/data/religions'
 import { eduLevelOptions } from '@/data/education-levels'
 import useUnitsData from '@/hooks/useUnitsData'
 import { useMemo } from 'react'
+import PlacePickerFields from '@/components/place-picker-fields'
 
 export default function PersonalStep({ form }: { form: any }) {
 	const { data: units = [] } = useUnitsData()
@@ -61,15 +62,24 @@ export default function PersonalStep({ form }: { form: any }) {
 				</form.AppField>
 			</div>
 
-			{/* Birth Place and Address - Two Columns  1*/}
+			{/* Birth Place and Address - each a province/ward picker
+			    plus a narrowed street/detail text field */}
 			<div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-				<form.AppField name='birthPlace'>
-					{(field: any) => <field.TextField label='Quê quán' />}
-				</form.AppField>
+				<div className='space-y-4'>
+					<PlacePickerFields
+						form={form}
+						prefix='birthPlace'
+						label='quê quán'
+					/>
+				</div>
 
-				<form.AppField name='address'>
-					{(field: any) => <field.TextField label='Trú quán' />}
-				</form.AppField>
+				<div className='space-y-4'>
+					<PlacePickerFields
+						form={form}
+						prefix='address'
+						label='trú quán'
+					/>
+				</div>
 			</div>
 
 			<div className='grid grid-cols-1 md:grid-cols-2 gap-6'>

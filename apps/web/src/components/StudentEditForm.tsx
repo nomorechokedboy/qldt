@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import type { Student, ChildrenInfo } from '@/types'
 import usePatchStudentInfo from '@/hooks/usePatchStudentInfo'
+import PlacePickerFields from '@/components/place-picker-fields'
 // option cho dân tộc, tôn giáo, trình độ học vấn
 import { EhtnicOptions } from '@/data/ethnicities'
 import { religionOptions } from '@/data/religions'
@@ -393,10 +394,6 @@ export default function StudentEditForm({
 										/>
 										<Field name='dob' label='Ngày sinh' />
 										<Field
-											name='birthPlace'
-											label='Nơi sinh'
-										/>
-										<Field
 											name='ethnic'
 											label='Dân tộc'
 											options={EhtnicOptions}
@@ -406,11 +403,26 @@ export default function StudentEditForm({
 											label='Tôn giáo'
 											options={religionOptions}
 										/>
-										<Field name='address' label='Địa chỉ' />
 										<Field
 											name='phone'
 											label='Số điện thoại'
 										/>
+									</div>
+									<div className='grid grid-cols-1 md:grid-cols-2 gap-4 text-sm mt-4'>
+										<div className='space-y-3'>
+											<PlacePickerFields
+												form={form}
+												prefix='birthPlace'
+												label='quê quán'
+											/>
+										</div>
+										<div className='space-y-3'>
+											<PlacePickerFields
+												form={form}
+												prefix='address'
+												label='trú quán'
+											/>
+										</div>
 									</div>
 								</div>
 							</div>

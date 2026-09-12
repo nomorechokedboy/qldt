@@ -341,6 +341,7 @@ export function Combobox({
 										<CommandItem
 											key={item.value}
 											value={item.value}
+											keywords={[item.label]}
 											onSelect={(currentValue) => {
 												const newValue =
 													currentValue ===
