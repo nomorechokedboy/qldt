@@ -33,13 +33,13 @@ const BROWSER = typeof globalThis === 'object' && 'window' in globalThis
  */
 export default class Client {
 	public readonly actions: actions.ServiceClient
-	public readonly assistant_chat: assistant_chat.ServiceClient
 	public readonly audit_logs: audit_logs.ServiceClient
 	public readonly auth: auth.ServiceClient
 	public readonly export_templates: export_templates.ServiceClient
 	public readonly facilities: facilities.ServiceClient
 	public readonly healthcheck: healthcheck.ServiceClient
 	public readonly inventory_sessions: inventory_sessions.ServiceClient
+	public readonly locations: locations.ServiceClient
 	public readonly materials: materials.ServiceClient
 	public readonly media: media.ServiceClient
 	public readonly notifications: notifications.ServiceClient
@@ -66,13 +66,13 @@ export default class Client {
 		this.options = options ?? {}
 		const base = new BaseClient(this.target, this.options)
 		this.actions = new actions.ServiceClient(base)
-		this.assistant_chat = new assistant_chat.ServiceClient(base)
 		this.audit_logs = new audit_logs.ServiceClient(base)
 		this.auth = new auth.ServiceClient(base)
 		this.export_templates = new export_templates.ServiceClient(base)
 		this.facilities = new facilities.ServiceClient(base)
 		this.healthcheck = new healthcheck.ServiceClient(base)
 		this.inventory_sessions = new inventory_sessions.ServiceClient(base)
+		this.locations = new locations.ServiceClient(base)
 		this.materials = new materials.ServiceClient(base)
 		this.media = new media.ServiceClient(base)
 		this.notifications = new notifications.ServiceClient(base)
@@ -141,75 +141,6 @@ export namespace actions {
 			// Now make the actual call to the API
 			const resp = await this.baseClient.callTypedAPI('GET', `/actions`)
 			return (await resp.json()) as GetActionsResponse
-		}
-	}
-}
-
-export namespace assistant_chat {
-	export interface ExtractRequest {
-		mode: string
-		history: lib.LLMMessage[]
-	}
-
-	export interface ExtractResponse {
-		data: {
-			rows: ExtractedStaffingRow[]
-		}
-	}
-
-	export interface ExtractedStaffingRow {
-		fullName: string
-		dob: string
-		rank: string
-		position: string
-		previousUnit: string
-		previousPosition: string
-	}
-
-	export class ServiceClient {
-		private baseClient: BaseClient
-
-		constructor(baseClient: BaseClient) {
-			this.baseClient = baseClient
-			this.Chat = this.Chat.bind(this)
-			this.Extract = this.Extract.bind(this)
-		}
-
-		/**
-		 * Stateless multi-turn assistant chat, used for OCR/document-import (and,
-		 * later, other guided flows keyed by `mode`). No server-side conversation
-		 * persistence: the client resends the full running transcript (`history`)
-		 * every turn, and this endpoint returns the resolved user message (images
-		 * baked in as data URLs) alongside the assistant reply so the client can
-		 * append both without re-uploading files on the next turn.
-		 */
-		public async Chat(
-			method: 'POST',
-			body?: RequestInit['body'],
-			options?: CallParameters
-		): Promise<globalThis.Response> {
-			return this.baseClient.callAPI(
-				method,
-				`/assistant-chat/chat`,
-				body,
-				options
-			)
-		}
-
-		/**
-		 * Deterministic counterpart to Chat: structures the OCR text already
-		 * collected across the conversation into rows without another LLM call -
-		 * see extractors.ts / parse-staffing.ts for why this doesn't go through the
-		 * conversational model.
-		 */
-		public async Extract(params: ExtractRequest): Promise<ExtractResponse> {
-			// Now make the actual call to the API
-			const resp = await this.baseClient.callTypedAPI(
-				'POST',
-				`/assistant-chat/extract`,
-				JSON.stringify(params)
-			)
-			return (await resp.json()) as ExtractResponse
 		}
 	}
 }
@@ -1045,6 +976,73 @@ export namespace inventory_sessions {
 				JSON.stringify(params)
 			)
 			return (await resp.json()) as InventorySessionReview
+		}
+	}
+}
+
+export namespace locations {
+	export interface GetProvincesResponse {
+		data: Province[]
+	}
+
+	export interface GetWardsQuery {
+		provinceCode?: string
+	}
+
+	export interface GetWardsResponse {
+		data: Ward[]
+	}
+
+	export interface Province {
+		code: string
+		name: string
+		slug: string
+		type: string
+		nameWithType: string
+	}
+
+	export interface Ward {
+		code: string
+		name: string
+		slug: string
+		type: string
+		nameWithType: string
+		path: string
+		pathWithType: string
+		provinceCode: string
+	}
+
+	export class ServiceClient {
+		private baseClient: BaseClient
+
+		constructor(baseClient: BaseClient) {
+			this.baseClient = baseClient
+			this.GetProvinces = this.GetProvinces.bind(this)
+			this.GetWards = this.GetWards.bind(this)
+		}
+
+		public async GetProvinces(): Promise<GetProvincesResponse> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI('GET', `/provinces`)
+			return (await resp.json()) as GetProvincesResponse
+		}
+
+		public async GetWards(
+			params: GetWardsQuery
+		): Promise<GetWardsResponse> {
+			// Convert our params into the objects we need for the request
+			const query = makeRecord<string, string | string[]>({
+				provinceCode: params.provinceCode
+			})
+
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'GET',
+				`/wards`,
+				undefined,
+				{ query }
+			)
+			return (await resp.json()) as GetWardsResponse
 		}
 	}
 }
@@ -3571,32 +3569,6 @@ export namespace audit_logs {
 	export interface GetAuditLogsResponse {
 		data: AuditLogResponse[]
 		total: number
-	}
-}
-
-export namespace lib {
-	export type LLMContentPart = LLMTextContentPart | LLMImageContentPart
-
-	export interface LLMImageContentPart {
-		type: 'image_url'
-		image_url: {
-			url: string
-		}
-	}
-
-	export interface LLMMessage {
-		role: 'system' | 'user' | 'assistant'
-		/**
-		 * A plain string for text-only turns (the common case), or an array of
-		 * content parts when a user turn carries image attachments alongside text -
-		 * the OpenAI-compatible vision message shape.
-		 */
-		content: string | LLMContentPart[]
-	}
-
-	export interface LLMTextContentPart {
-		type: 'text'
-		text: string
 	}
 }
 
