@@ -51,8 +51,13 @@ export function buildPositionColumns(
 		},
 		{
 			accessorKey: 'group',
-			header: 'Nhóm',
-			cell: ({ row }) => row.getValue('group') ?? '—'
+			header: 'HSQ',
+			cell: ({ row }) =>
+				row.getValue('group') === 'HSQ' ? (
+					<Badge>HSQ</Badge>
+				) : (
+					<span className='text-muted-foreground'>—</span>
+				)
 		},
 		{
 			id: 'actions',

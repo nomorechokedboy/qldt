@@ -13,6 +13,7 @@ import {
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
 import { useCreatePosition } from '@/hooks/useCreatePosition'
 import { getErrorMessage } from '@/lib/utils'
 
@@ -26,7 +27,7 @@ export default function PositionForm({ level, onSuccess }: PositionFormProps) {
 	const [code, setCode] = useState('')
 	const [name, setName] = useState('')
 	const [priority, setPriority] = useState('')
-	const [group, setGroup] = useState('')
+	const [isHsq, setIsHsq] = useState(false)
 
 	const createMutation = useCreatePosition()
 
@@ -34,7 +35,7 @@ export default function PositionForm({ level, onSuccess }: PositionFormProps) {
 		setCode('')
 		setName('')
 		setPriority('')
-		setGroup('')
+		setIsHsq(false)
 	}
 
 	const handleSubmit = async (e: React.FormEvent) => {
@@ -46,7 +47,7 @@ export default function PositionForm({ level, onSuccess }: PositionFormProps) {
 				code,
 				name,
 				priority: Number(priority),
-				group: group.trim() === '' ? null : group
+				group: isHsq ? 'HSQ' : null
 			})
 			toast.success('Thêm mới chức vụ thành công')
 			onSuccess?.()
@@ -112,16 +113,15 @@ export default function PositionForm({ level, onSuccess }: PositionFormProps) {
 						/>
 					</div>
 
-					<div className='space-y-2'>
-						<Label htmlFor='position-group'>
-							Nhóm (tuỳ chọn, dùng để gộp trong danh sách chọn)
-						</Label>
-						<Input
-							id='position-group'
-							value={group}
-							onChange={(e) => setGroup(e.target.value)}
-							placeholder='vd: Trợ lý, NVCM-KT'
+					<div className='flex items-center gap-2'>
+						<Checkbox
+							id='position-hsq'
+							checked={isHsq}
+							onCheckedChange={(value) => setIsHsq(!!value)}
 						/>
+						<Label htmlFor='position-hsq'>
+							Chức vụ Hạ sĩ quan (HSQ)
+						</Label>
 					</div>
 
 					<DialogFooter>

@@ -1,7 +1,31 @@
-import { Building2, DoorOpen, Package, Shield, Users } from 'lucide-react'
+import {
+	Building2,
+	DoorOpen,
+	Package,
+	Shield,
+	Target,
+	Users
+} from 'lucide-react'
 import { useNavigate } from '@tanstack/react-router'
+import { useQuery } from '@tanstack/react-query'
+import {
+	Bar,
+	BarChart,
+	CartesianGrid,
+	Cell,
+	Pie,
+	PieChart,
+	ResponsiveContainer,
+	XAxis,
+	YAxis
+} from 'recharts'
 import { Route } from '@/routes/thong-ke-doanh-trai'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+	ChartContainer,
+	ChartTooltip,
+	ChartTooltipContent
+} from '@/components/ui/chart'
 import {
 	Select,
 	SelectContent,
@@ -25,8 +49,15 @@ import { battalionStudentColumnsWithoutAction } from '@/components/student-table
 import { defaultBirthdayColumnVisibility } from '@/components/student-table/default-columns-visibility'
 import { buildMaterialStockColumns } from '@/components/material-stock-table/columns'
 import { buildMaterialAssetColumns } from '@/components/material-asset-table/columns'
+import {
+	COLORS as POLITICS_CHART_COLORS,
+	PieChartCard,
+	politicalOrgNameMapping
+} from '@/components/politics-quality-report/charts-section'
 import { unitLevelLabels, unitLevelOrder } from '@/data/unit-levels'
 import { materialAssetStatusLabels } from '@/data/material-categories'
+import { GetPoliticsQualityReport } from '@/api'
+import { transformPoliticsQualityData } from '@/lib/utils'
 import type { Unit, UnitLevel } from '@/types'
 import type { units } from '@/api/client'
 
@@ -36,6 +67,8 @@ const readOnlyMaterialStockColumns = buildMaterialStockColumns([]).filter(
 const readOnlyMaterialAssetColumns = buildMaterialAssetColumns([], []).filter(
 	(c) => c.id !== 'actions'
 )
+
+const TROOP_CHART_COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042']
 
 function GroupUnits({ unitsMap }: { unitsMap: Map<UnitLevel, Unit[]> }) {
 	const flatUnitsMapEntries = [...unitsMap.entries()]
@@ -68,6 +101,16 @@ export default function BaseStatsDashboard() {
 
 	const { data: stats, isLoading: isLoadingStats } =
 		useUnitStats(selectedAlias)
+
+	const selectedUnit = units.find((u) => u.alias === selectedAlias)
+	const { data: politicsQualityData, isLoading: isLoadingPoliticsQuality } =
+		useQuery({
+			enabled: selectedUnit !== undefined,
+			queryKey: ['politics-quality-report', selectedUnit?.id],
+			queryFn: () => GetPoliticsQualityReport([selectedUnit!.id])
+		})
+	const transformedData = transformPoliticsQualityData(politicsQualityData)
+	const politicsReport = transformedData[0]?.politicsQualityReport
 
 	const showRollupTabs = stats !== undefined && stats.unit.level !== 'squad'
 
@@ -123,6 +166,62 @@ export default function BaseStatsDashboard() {
 			valueColor: 'text-amber-900'
 		}
 	]
+
+	const troopSummaryCards = [
+		{
+			label: 'SQ',
+			value: stats?.troopSummary.sq ?? 0,
+			color: TROOP_CHART_COLORS[0]
+		},
+		{
+			label: 'QNCN',
+			value: stats?.troopSummary.qncn ?? 0,
+			color: TROOP_CHART_COLORS[1]
+		},
+		{
+			label: 'HSQ',
+			value: stats?.troopSummary.hsq ?? 0,
+			color: TROOP_CHART_COLORS[2]
+		},
+		{
+			label: 'CS (BS)',
+			value: stats?.troopSummary.bs ?? 0,
+			color: TROOP_CHART_COLORS[3]
+		}
+	]
+	const troopChartData = troopSummaryCards.filter(({ value }) => value > 0)
+
+	const unitCountChartData = unitLevelOrder
+		.filter((level) => stats?.unitCounts[level] !== undefined)
+		.map((level, idx) => ({
+			level,
+			label: unitLevelLabels[level],
+			value: stats?.unitCounts[level] ?? 0,
+			color: TROOP_CHART_COLORS[idx % TROOP_CHART_COLORS.length]
+		}))
+
+	const buildPoliticsPieData = (
+		record: Record<string, number> | undefined,
+		labelMap?: Record<string, string>
+	) =>
+		Object.entries(record ?? {}).map(([name, value], idx) => ({
+			name: labelMap?.[name] ?? name,
+			value,
+			color: POLITICS_CHART_COLORS[idx % POLITICS_CHART_COLORS.length]
+		}))
+
+	const ethnicData = buildPoliticsPieData(politicsReport?.ethnic)
+	const religionData = buildPoliticsPieData(politicsReport?.religion)
+	const educationData = buildPoliticsPieData(politicsReport?.educationLevel)
+	const politicalOrgData = buildPoliticsPieData(
+		politicsReport?.politicalOrg,
+		politicalOrgNameMapping
+	)
+	const hasPoliticsData =
+		ethnicData.length > 0 ||
+		religionData.length > 0 ||
+		educationData.length > 0 ||
+		politicalOrgData.length > 0
 
 	return (
 		<div className='container mx-auto p-6 space-y-6'>
@@ -197,31 +296,230 @@ export default function BaseStatsDashboard() {
 							</CardTitle>
 						</CardHeader>
 						<CardContent>
-							{Object.keys(stats.unitCounts).length === 0 ? (
+							{unitCountChartData.length === 0 ? (
 								<p className='text-muted-foreground'>
 									Đơn vị này không có đơn vị trực thuộc nào.
 								</p>
 							) : (
-								<div className='grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4'>
-									{unitLevelOrder
-										.filter(
-											(level) =>
-												stats.unitCounts[level] !==
-												undefined
-										)
-										.map((level) => (
-											<div
-												key={level}
-												className='rounded-lg border p-4 text-center'
-											>
-												<div className='text-2xl font-bold'>
-													{stats.unitCounts[level]}
+								<div className='grid grid-cols-1 md:grid-cols-2 gap-4 items-center'>
+									<ChartContainer
+										config={{
+											value: { label: 'Số lượng' }
+										}}
+										className='h-[260px] w-full'
+									>
+										<ResponsiveContainer
+											width='100%'
+											height='100%'
+										>
+											<BarChart data={unitCountChartData}>
+												<CartesianGrid strokeDasharray='3 3' />
+												<XAxis
+													dataKey='label'
+													interval={0}
+													tick={{ fontSize: 11 }}
+													angle={
+														unitCountChartData.length >
+														4
+															? -30
+															: 0
+													}
+													textAnchor={
+														unitCountChartData.length >
+														4
+															? 'end'
+															: 'middle'
+													}
+													height={
+														unitCountChartData.length >
+														4
+															? 50
+															: 30
+													}
+												/>
+												<YAxis
+													allowDecimals={false}
+													width={32}
+												/>
+												<ChartTooltip
+													content={
+														<ChartTooltipContent />
+													}
+												/>
+												<Bar
+													dataKey='value'
+													radius={[4, 4, 0, 0]}
+												>
+													{unitCountChartData.map(
+														(entry) => (
+															<Cell
+																key={
+																	entry.level
+																}
+																fill={
+																	entry.color
+																}
+															/>
+														)
+													)}
+												</Bar>
+											</BarChart>
+										</ResponsiveContainer>
+									</ChartContainer>
+
+									<div className='grid grid-cols-2 gap-3 content-start max-h-[260px] overflow-y-auto pr-1'>
+										{unitCountChartData.map(
+											({
+												level,
+												label,
+												value,
+												color
+											}) => (
+												<div
+													key={level}
+													className='rounded-lg border p-3 text-center'
+												>
+													<div
+														className='text-xl font-bold'
+														style={{
+															color
+														}}
+													>
+														{value}
+													</div>
+													<div className='text-xs text-muted-foreground'>
+														{label}
+													</div>
 												</div>
-												<div className='text-xs text-muted-foreground'>
-													{unitLevelLabels[level]}
+											)
+										)}
+									</div>
+								</div>
+							)}
+						</CardContent>
+					</Card>
+
+					<Card>
+						<CardHeader>
+							<CardTitle className='flex items-center gap-2'>
+								<Users className='h-5 w-5' />
+								Cơ cấu quân số
+							</CardTitle>
+						</CardHeader>
+						<CardContent>
+							{troopChartData.length === 0 ? (
+								<p className='text-muted-foreground'>
+									Chưa có dữ liệu quân số.
+								</p>
+							) : (
+								<div className='grid grid-cols-1 md:grid-cols-2 gap-4 items-center'>
+									<ChartContainer
+										config={{
+											value: { label: 'Số lượng' }
+										}}
+										className='h-[260px] w-full'
+									>
+										<ResponsiveContainer
+											width='100%'
+											height='100%'
+										>
+											<PieChart>
+												<Pie
+													data={troopChartData}
+													cx='50%'
+													cy='50%'
+													labelLine={false}
+													label={({
+														name,
+														percent
+													}) =>
+														`${name} ${(percent * 100).toFixed(0)}%`
+													}
+													outerRadius={80}
+													dataKey='value'
+													nameKey='label'
+												>
+													{troopChartData.map(
+														(entry) => (
+															<Cell
+																key={
+																	entry.label
+																}
+																fill={
+																	entry.color
+																}
+															/>
+														)
+													)}
+												</Pie>
+												<ChartTooltip
+													content={
+														<ChartTooltipContent />
+													}
+												/>
+											</PieChart>
+										</ResponsiveContainer>
+									</ChartContainer>
+
+									<div className='grid grid-cols-2 gap-4'>
+										{troopSummaryCards.map(
+											({ label, value, color }) => (
+												<div
+													key={label}
+													className='rounded-lg border p-4 text-center'
+												>
+													<div
+														className='text-2xl font-bold'
+														style={{
+															color
+														}}
+													>
+														{value}
+													</div>
+													<div className='text-xs text-muted-foreground'>
+														{label}
+													</div>
 												</div>
-											</div>
-										))}
+											)
+										)}
+									</div>
+								</div>
+							)}
+						</CardContent>
+					</Card>
+
+					<Card>
+						<CardHeader>
+							<CardTitle className='flex items-center gap-2'>
+								<Target className='h-5 w-5' />
+								Thống kê quân số
+							</CardTitle>
+						</CardHeader>
+						<CardContent>
+							{isLoadingPoliticsQuality ? (
+								<TableSkeleton />
+							) : !hasPoliticsData ? (
+								<p className='text-muted-foreground'>
+									Chưa có dữ liệu thống kê quân số.
+								</p>
+							) : (
+								<div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
+									<PieChartCard
+										data={educationData}
+										title='Trình độ văn hóa'
+									/>
+									<PieChartCard
+										data={ethnicData}
+										title='Dân tộc'
+									/>
+									<PieChartCard
+										data={religionData}
+										title='Tôn giáo'
+									/>
+									<PieChartCard
+										data={politicalOrgData}
+										title='Đoàn/Đảng'
+									/>
 								</div>
 							)}
 						</CardContent>
