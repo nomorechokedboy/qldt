@@ -21,7 +21,7 @@ export interface ChartsSectionProps {
 	data: UnitPoliticsQualitySummary[]
 }
 
-const COLORS = [
+export const COLORS = [
 	'#0088FE',
 	'#00C49F',
 	'#FFBB28',
@@ -33,7 +33,7 @@ const COLORS = [
 	'#FF6666'
 ]
 
-const politicalOrgNameMapping = { cpv: 'Đảng', hcyu: 'Đoàn' }
+export const politicalOrgNameMapping = { cpv: 'Đảng', hcyu: 'Đoàn' }
 
 export function ChartsSection({ data }: ChartsSectionProps) {
 	const units = data
@@ -214,7 +214,7 @@ export function ChartsSection({ data }: ChartsSectionProps) {
 	)
 }
 
-type PieChartData = {
+export type PieChartData = {
 	name: string
 	value: number
 	color: string
@@ -225,7 +225,7 @@ type PieChartCardProps = {
 	data: PieChartData[]
 }
 
-function PieChartCard({ data, title }: PieChartCardProps) {
+export function PieChartCard({ data, title }: PieChartCardProps) {
 	return (
 		<Card>
 			<CardHeader>

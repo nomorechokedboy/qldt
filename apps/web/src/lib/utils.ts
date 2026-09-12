@@ -76,18 +76,23 @@ export function transformPoliticsQualityData(
 
 	const { data, units } = params
 
+	// Returns a NEW object rather than mutating `target` - `target` here is
+	// often a live reference into the cached API response (data[unitId]), and
+	// this function is re-run on every render, so mutating it in place would
+	// keep compounding the same totals higher on each subsequent render.
 	function mergeReports(
 		target: Record<string, any>,
 		source: Record<string, any>
 	) {
+		const result: Record<string, any> = { ...target }
 		for (const [key, value] of Object.entries(source)) {
 			if (typeof value === 'number') {
-				target[key] = (target[key] ?? 0) + value
+				result[key] = (result[key] ?? 0) + value
 			} else if (typeof value === 'object' && value !== null) {
-				target[key] = mergeReports(target[key] ?? {}, value)
+				result[key] = mergeReports(result[key] ?? {}, value)
 			}
 		}
-		return target
+		return result
 	}
 
 	function traverse(unitNode: Unit): UnitPoliticsQualitySummary {

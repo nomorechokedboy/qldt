@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Checkbox } from '@/components/ui/checkbox'
 import { useUpdatePosition } from '@/hooks/useUpdatePosition'
 import type { Position } from '@/types'
 import { getErrorMessage } from '@/lib/utils'
@@ -22,7 +23,7 @@ export default function PositionEditForm({
 	const [code, setCode] = useState(data.code)
 	const [name, setName] = useState(data.name)
 	const [priority, setPriority] = useState(String(data.priority))
-	const [group, setGroup] = useState(data.group ?? '')
+	const [isHsq, setIsHsq] = useState(data.group === 'HSQ')
 
 	const updateMutation = useUpdatePosition()
 
@@ -37,7 +38,7 @@ export default function PositionEditForm({
 						code,
 						name,
 						priority: Number(priority),
-						group: group.trim() === '' ? null : group
+						group: isHsq ? 'HSQ' : null
 					}
 				]
 			})
@@ -96,16 +97,15 @@ export default function PositionEditForm({
 					/>
 				</div>
 
-				<div className='space-y-2'>
-					<Label htmlFor='edit-position-group'>
-						Nhóm (tuỳ chọn, dùng để gộp trong danh sách chọn)
-					</Label>
-					<Input
-						id='edit-position-group'
-						value={group}
-						onChange={(e) => setGroup(e.target.value)}
-						placeholder='vd: Trợ lý, NVCM-KT'
+				<div className='flex items-center gap-2'>
+					<Checkbox
+						id='edit-position-hsq'
+						checked={isHsq}
+						onCheckedChange={(value) => setIsHsq(!!value)}
 					/>
+					<Label htmlFor='edit-position-hsq'>
+						Chức vụ Hạ sĩ quan (HSQ)
+					</Label>
 				</div>
 
 				<div className='flex justify-end gap-2'>

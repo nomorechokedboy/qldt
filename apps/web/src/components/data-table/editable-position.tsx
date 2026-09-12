@@ -30,15 +30,12 @@ export default function EditablePosition({
 				unitLevelOrder.indexOf(b.level as never)
 			if (levelDiff !== 0) return levelDiff
 
-			const groupDiff = (a.group ?? '').localeCompare(b.group ?? '')
-			if (groupDiff !== 0) return groupDiff
-
 			return a.priority - b.priority
 		})
 		.map((p) => ({
 			label: p.name,
 			value: String(p.id),
-			group: p.group ?? unitLevelLabels[p.level as never] ?? p.level
+			group: unitLevelLabels[p.level as never] ?? p.level
 		}))
 
 	const handleSave = async (value: string) => {
