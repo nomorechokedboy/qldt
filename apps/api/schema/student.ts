@@ -20,6 +20,17 @@ const PoliticalOrgEnum = customType<{ data: string; driverData: string }>({
 	}
 })
 
+export type ActivityStatus =
+	| 'serving'
+	| 'hospitalized'
+	| 'annual_leave'
+	| 'infirmary_treatment'
+	| 'contest'
+	| 'business_trip'
+	| 'weekly_leave'
+	| 'rehearsal'
+	| 'discharged'
+
 export const students = sqlite.sqliteTable('students', {
 	...baseSchema,
 	fullName: sqlite.text().default(''),
@@ -94,6 +105,13 @@ export const students = sqlite.sqliteTable('students', {
 		.text()
 		.$type<'pending' | 'confirmed'>()
 		.default('pending')
+		.notNull(),
+	// What the trooper is currently doing (not to be confused with `status`
+	// above, which tracks record-confirmation workflow state).
+	activityStatus: sqlite
+		.text()
+		.$type<ActivityStatus>()
+		.default('serving')
 		.notNull()
 })
 

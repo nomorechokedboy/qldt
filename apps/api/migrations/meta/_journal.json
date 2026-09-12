@@ -169,6 +169,13 @@
 			"when": 1789207590306,
 			"tag": "0023_loving_adam_warlock",
 			"breakpoints": true
+		},
+		{
+			"idx": 24,
+			"version": "6",
+			"when": 1789219677475,
+			"tag": "0024_special_meteorite",
+			"breakpoints": true
 		}
 	]
 }
