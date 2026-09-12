@@ -68,6 +68,7 @@ export const militaryInfoSchema = z.object({
 	policyBeneficiaryGroup: z.string().optional(),
 	previousUnit: z.string().optional(),
 	previousPosition: z.string().optional(),
+	activityStatus: z.string().optional().default('serving'),
 	politicalOrg: z.string(),
 	politicalOrgOfficialDate: optionalDate,
 	cpvId: z.string().optional(),

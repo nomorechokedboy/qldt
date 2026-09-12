@@ -91,6 +91,7 @@ export default function StudentForm({
 			rank: '',
 			previousUnit: '',
 			previousPosition: '',
+			activityStatus: 'serving',
 			positionId: undefined,
 			ethnic: '',
 			religion: '',
