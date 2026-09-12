@@ -21,6 +21,7 @@
 		"allowImportingTsExtensions": true,
 		"noEmit": true,
 		"allowSyntheticDefaultImports": true,
+		"resolveJsonModule": true,
 		"isolatedModules": true,
 		"sourceMap": true,
 
