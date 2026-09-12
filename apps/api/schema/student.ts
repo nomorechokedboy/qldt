@@ -23,8 +23,18 @@ const PoliticalOrgEnum = customType<{ data: string; driverData: string }>({
 export const students = sqlite.sqliteTable('students', {
 	...baseSchema,
 	fullName: sqlite.text().default(''),
+	// Narrowed going forward to street/detail-only text; existing rows keep
+	// whatever full free-text value they already had (no backfill - see
+	// birthPlaceProvinceCode/birthPlaceWardCode for the structured part).
 	birthPlace: sqlite.text().default(''),
+	birthPlaceProvinceCode: sqlite.text(),
+	birthPlaceWardCode: sqlite.text(),
+	// Narrowed going forward to street/detail-only text; existing rows keep
+	// whatever full free-text value they already had (no backfill - see
+	// addressProvinceCode/addressWardCode for the structured part).
 	address: sqlite.text().default(''),
+	addressProvinceCode: sqlite.text(),
+	addressWardCode: sqlite.text(),
 	dob: sqlite.text().default(''),
 	rank: sqlite.text().default(''),
 	previousUnit: sqlite.text().default(''),
