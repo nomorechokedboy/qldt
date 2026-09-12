@@ -42,6 +42,7 @@ import exportTemplateController from '../export-templates/controller'
 import unitRepo from '../units/repo'
 import unitStatsRepo from '../units/stats-repo'
 import positionRepo from '../positions/repo'
+import locationsRepo from '../locations/repo'
 import { Unit, UnitDB, UnitLevelName } from '../schema/units'
 import log from 'encore.dev/log'
 import dayjs from 'dayjs'
@@ -199,6 +200,88 @@ export class Controller {
 		}
 	}
 
+	// Validates the two structured place fields (birthPlace*, address*)
+	// against the in-memory locations index. DB columns stay nullable -
+	// `required` only controls whether a pair is mandatory here, in
+	// application logic, per the product decision to require province/ward
+	// for newly created students without forcing a DB-level NOT NULL or a
+	// backfill of existing rows.
+	private validatePlaceCodes<
+		T extends {
+			birthPlaceProvinceCode?: string | null
+			birthPlaceWardCode?: string | null
+			addressProvinceCode?: string | null
+			addressWardCode?: string | null
+		}
+	>(entries: T[], { required }: { required: boolean }): void {
+		const pairs = [
+			{
+				provinceKey: 'birthPlaceProvinceCode',
+				wardKey: 'birthPlaceWardCode',
+				label: 'quê quán'
+			},
+			{
+				provinceKey: 'addressProvinceCode',
+				wardKey: 'addressWardCode',
+				label: 'trú quán'
+			}
+		] as const
+
+		for (const entry of entries) {
+			for (const { provinceKey, wardKey, label } of pairs) {
+				const provinceCode = entry[provinceKey]
+				const wardCode = entry[wardKey]
+				const hasProvince =
+					provinceCode !== undefined &&
+					provinceCode !== null &&
+					provinceCode !== ''
+				const hasWard =
+					wardCode !== undefined &&
+					wardCode !== null &&
+					wardCode !== ''
+
+				if (!hasProvince && !hasWard) {
+					if (required) {
+						throw AppError.handleAppErr(
+							AppError.invalidArgument(
+								`Vui lòng chọn tỉnh/thành và phường/xã cho ${label}`
+							)
+						)
+					}
+					continue
+				}
+
+				if (hasProvince !== hasWard) {
+					throw AppError.handleAppErr(
+						AppError.invalidArgument(
+							`${provinceKey} và ${wardKey} phải được cung cấp cùng nhau`
+						)
+					)
+				}
+
+				const province = locationsRepo.findProvinceByCode(
+					provinceCode as string
+				)
+				if (province === undefined) {
+					throw AppError.handleAppErr(
+						AppError.invalidArgument(
+							`${provinceKey} không hợp lệ: ${provinceCode}`
+						)
+					)
+				}
+
+				const ward = locationsRepo.findWardByCode(wardCode as string)
+				if (ward === undefined || ward.provinceCode !== provinceCode) {
+					throw AppError.handleAppErr(
+						AppError.invalidArgument(
+							`${wardKey} không hợp lệ hoặc không thuộc ${provinceKey}: ${wardCode}`
+						)
+					)
+				}
+			}
+		}
+	}
+
 	async create(
 		params: StudentParam[],
 		unitIds: number[]
@@ -223,6 +306,7 @@ export class Controller {
 
 		await this.resolvePositionText(params)
 		await this.validateUniqueLeaderPositions(params)
+		this.validatePlaceCodes(params, { required: true })
 
 		return this.repo.create(params).catch(AppError.handleAppErr)
 	}
@@ -354,6 +438,7 @@ export class Controller {
 
 		await this.resolvePositionText(params)
 		await this.validateUniqueLeaderPositions(params, existingById)
+		this.validatePlaceCodes(params, { required: false })
 
 		const updateMap: UpdateStudentMap = params.map(
 			({ id, ...updatePayload }) => {

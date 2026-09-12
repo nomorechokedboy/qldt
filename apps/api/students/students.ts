@@ -39,7 +39,14 @@ interface ContactPerson {
 interface StudentBody {
 	fullName: string
 	birthPlace: string
+	// Required for newly created students, enforced in
+	// controller.ts#validatePlaceCodes (not a DB constraint) - optional here
+	// only so existing/updated records without them still type-check.
+	birthPlaceProvinceCode?: string | null
+	birthPlaceWardCode?: string | null
 	address: string
+	addressProvinceCode?: string | null
+	addressWardCode?: string | null
 	dob: string
 	rank: string
 	previousUnit: string

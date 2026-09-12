@@ -359,6 +359,19 @@ class StudentSqliteRepo implements Repository {
 		})
 	}
 
+	private unitBirthPlaceProvinceSummary(unitIds: number[]) {
+		return this.baseUnitStudentSummary({
+			unitIds,
+			category: 'birthPlaceProvince',
+			// Legacy rows created before the province/ward columns existed
+			// (and any row where the field was left unset) have a null code -
+			// coalesce to an explicit 'unknown' bucket instead of surfacing a
+			// blank category key to the frontend chart.
+			value: sql<string>`coalesce(${students.birthPlaceProvinceCode}, 'unknown')`,
+			groupBy: [students.birthPlaceProvinceCode]
+		})
+	}
+
 	async politicsQualityReport(
 		unitIds: number[]
 	): Promise<PoliticsQualityRow[]> {
@@ -370,7 +383,8 @@ class StudentSqliteRepo implements Repository {
 			this.unitReligionSummary(unitIds),
 			this.unitEducationLevelSummary(unitIds),
 			this.unitPoliticalOrgSummary(unitIds),
-			this.unitPreviousUnitSummary(unitIds)
+			this.unitPreviousUnitSummary(unitIds),
+			this.unitBirthPlaceProvinceSummary(unitIds)
 		).catch(handleDatabaseErr)
 	}
 }

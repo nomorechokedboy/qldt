@@ -24,4 +24,6 @@ export type WardQuery = {
 export interface Repository {
 	findProvinces(): Province[]
 	findWards(query: WardQuery): Ward[]
+	findProvinceByCode(code: string): Province | undefined
+	findWardByCode(code: string): Ward | undefined
 }

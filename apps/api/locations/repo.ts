@@ -59,6 +59,12 @@ for (const ward of wards) {
 	wardsByProvinceCode.set(ward.provinceCode, list)
 }
 
+const provincesByCode = new Map<string, Province>(
+	provinces.map((p) => [p.code, p])
+)
+
+const wardsByCode = new Map<string, Ward>(wards.map((w) => [w.code, w]))
+
 class LocationsInMemoryRepo implements Repository {
 	findProvinces(): Province[] {
 		return provinces
@@ -70,6 +76,14 @@ class LocationsInMemoryRepo implements Repository {
 		}
 
 		return wardsByProvinceCode.get(query.provinceCode) ?? []
+	}
+
+	findProvinceByCode(code: string): Province | undefined {
+		return provincesByCode.get(code)
+	}
+
+	findWardByCode(code: string): Ward | undefined {
+		return wardsByCode.get(code)
 	}
 }
 
