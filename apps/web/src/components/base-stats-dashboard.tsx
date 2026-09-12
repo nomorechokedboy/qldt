@@ -45,6 +45,7 @@ import useUnitStats from '@/hooks/useUnitStats'
 import useUnitStatsStudents from '@/hooks/useUnitStatsStudents'
 import useUnitStatsMaterialStocks from '@/hooks/useUnitStatsMaterialStocks'
 import useUnitStatsMaterialAssets from '@/hooks/useUnitStatsMaterialAssets'
+import useProvinces from '@/hooks/useProvinces'
 import { battalionStudentColumnsWithoutAction } from '@/components/student-table/columns'
 import { defaultBirthdayColumnVisibility } from '@/components/student-table/default-columns-visibility'
 import { useStudentFacetedFilters } from '@/hooks/useStudentFacetedFilters'
@@ -112,6 +113,12 @@ export default function BaseStatsDashboard() {
 		})
 	const transformedData = transformPoliticsQualityData(politicsQualityData)
 	const politicsReport = transformedData[0]?.politicsQualityReport
+
+	const { data: provinces = [] } = useProvinces()
+	const provinceNameMap: Record<string, string> = {
+		unknown: 'Chưa xác định',
+		...Object.fromEntries(provinces.map((p) => [p.code, p.nameWithType]))
+	}
 
 	const showRollupTabs = stats !== undefined && stats.unit.level !== 'squad'
 
@@ -219,11 +226,16 @@ export default function BaseStatsDashboard() {
 		politicsReport?.politicalOrg,
 		politicalOrgNameMapping
 	)
+	const originPlaceData = buildPoliticsPieData(
+		politicsReport?.birthPlaceProvince,
+		provinceNameMap
+	)
 	const hasPoliticsData =
 		ethnicData.length > 0 ||
 		religionData.length > 0 ||
 		educationData.length > 0 ||
-		politicalOrgData.length > 0
+		politicalOrgData.length > 0 ||
+		originPlaceData.length > 0
 
 	const overviewContent = stats !== undefined && (
 		<div className='space-y-6'>
@@ -444,6 +456,10 @@ export default function BaseStatsDashboard() {
 							<PieChartCard
 								data={politicalOrgData}
 								title='Đoàn/Đảng'
+							/>
+							<PieChartCard
+								data={originPlaceData}
+								title='Quê quán (Tỉnh/Thành)'
 							/>
 						</div>
 					)}

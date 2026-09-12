@@ -2039,7 +2039,17 @@ export namespace students {
 	export interface StudentBody {
 		fullName: string
 		birthPlace: string
+		/**
+		 * Required for newly created students, enforced in
+		 * controller.ts#validatePlaceCodes (not a DB constraint) - optional here
+		 * only so existing/updated records without them still type-check.
+		 */
+		birthPlaceProvinceCode?: string | null
+
+		birthPlaceWardCode?: string | null
 		address: string
+		addressProvinceCode?: string | null
+		addressWardCode?: string | null
 		dob: string
 		rank: string
 		previousUnit: string
@@ -2107,7 +2117,17 @@ export namespace students {
 	export interface StudentBody {
 		fullName: string
 		birthPlace: string
+		/**
+		 * Required for newly created students, enforced in
+		 * controller.ts#validatePlaceCodes (not a DB constraint) - optional here
+		 * only so existing/updated records without them still type-check.
+		 */
+		birthPlaceProvinceCode?: string | null
+
+		birthPlaceWardCode?: string | null
 		address: string
+		addressProvinceCode?: string | null
+		addressWardCode?: string | null
 		dob: string
 		rank: string
 		previousUnit: string
@@ -2182,7 +2202,17 @@ export namespace students {
 		updatedAt: string
 		fullName: string
 		birthPlace: string
+		/**
+		 * Required for newly created students, enforced in
+		 * controller.ts#validatePlaceCodes (not a DB constraint) - optional here
+		 * only so existing/updated records without them still type-check.
+		 */
+		birthPlaceProvinceCode?: string | null
+
+		birthPlaceWardCode?: string | null
 		address: string
+		addressProvinceCode?: string | null
+		addressWardCode?: string | null
 		dob: string
 		rank: string
 		previousUnit: string
@@ -2269,7 +2299,17 @@ export namespace students {
 		updatedAt: string
 		fullName: string
 		birthPlace: string
+		/**
+		 * Required for newly created students, enforced in
+		 * controller.ts#validatePlaceCodes (not a DB constraint) - optional here
+		 * only so existing/updated records without them still type-check.
+		 */
+		birthPlaceProvinceCode?: string | null
+
+		birthPlaceWardCode?: string | null
 		address: string
+		addressProvinceCode?: string | null
+		addressWardCode?: string | null
 		dob: string
 		rank: string
 		previousUnit: string
@@ -2338,7 +2378,11 @@ export namespace students {
 		id: number
 		fullName?: string
 		birthPlace?: string
+		birthPlaceProvinceCode?: string | null
+		birthPlaceWardCode?: string | null
 		address?: string
+		addressProvinceCode?: string | null
+		addressWardCode?: string | null
 		dob?: string
 		rank?: string
 		previousUnit?: string
