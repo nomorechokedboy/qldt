@@ -28,6 +28,7 @@ export interface NotificationEvent {
 		| 'cpvOfficialThisWeek'
 		| 'cpvOfficialThisMonth'
 		| 'cpvOfficialThisQuarter'
+		| 'activityStatusProposal'
 }
 
 export const notiTopic = new Topic<NotificationEvent>('notification-events', {
