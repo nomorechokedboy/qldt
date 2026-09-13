@@ -158,6 +158,9 @@ export namespace activity_status_proposals {
 		decidedAt: string | null
 		createdAt: string
 		updatedAt: string
+		effectiveDate: string | null
+		startDate: string | null
+		endDate: string | null
 		unit?: UnitSummary
 		requestedBy?: UserSummary
 		approver?: UserSummary
@@ -170,6 +173,11 @@ export namespace activity_status_proposals {
 		id: number
 		itemStatus: string
 		failureReason: string | null
+		effectiveDate: string | null
+		startDate: string | null
+		endDate: string | null
+		appliedAt: string | null
+		revertedAt: string | null
 		student?: StudentSummary
 	}
 
@@ -186,6 +194,9 @@ export namespace activity_status_proposals {
 		approverUserId: number
 		targetActivityStatus: schema.TargetActivityStatus
 		note?: string | null
+		effectiveDate?: string | null
+		startDate?: string | null
+		endDate?: string | null
 		troopers: schema.CreateActivityStatusProposalTrooperInput[]
 	}
 
@@ -3888,6 +3899,9 @@ export namespace schema {
 
 	export interface CreateActivityStatusProposalTrooperInput {
 		studentId: number
+		effectiveDate?: string | null
+		startDate?: string | null
+		endDate?: string | null
 	}
 
 	export interface CreateRoleRequest {

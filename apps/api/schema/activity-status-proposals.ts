@@ -106,6 +106,18 @@ const TargetActivityStatusEnum = sqlite.customType<{
 	}
 })
 
+// 'discharged' is a one-off transition, so a proposal targeting it carries
+// a single effectiveDate. The 3 ranged statuses (annual_leave, weekly_leave,
+// rehearsal) carry a startDate/endDate window instead: the student takes on
+// the target status when startDate is reached and reverts to 'serving' when
+// endDate is reached. Which pair applies is derived from targetActivityStatus,
+// not stored separately.
+export function isRangedTargetActivityStatus(
+	target: TargetActivityStatus
+): boolean {
+	return target !== 'discharged'
+}
+
 export const activityStatusProposals = sqlite.sqliteTable(
 	'activity_status_proposals',
 	{
@@ -134,7 +146,14 @@ export const activityStatusProposals = sqlite.sqliteTable(
 			.$type<TargetActivityStatus>()
 			.notNull(),
 		rejectionReason: sqlite.text(),
-		note: sqlite.text()
+		note: sqlite.text(),
+		// Batch-wide defaults for when the target status takes effect ("YYYY-MM-DD",
+		// same date-only convention as students.dob). A trooper line item may
+		// override any of these with its own value — see
+		// activityStatusProposalTroopers below.
+		effectiveDate: sqlite.text(),
+		startDate: sqlite.text(),
+		endDate: sqlite.text()
 	}
 )
 
@@ -154,7 +173,21 @@ export const activityStatusProposalTroopers = sqlite.sqliteTable(
 			.$type<ActivityStatusProposalItemStatus>()
 			.default('pending')
 			.notNull(),
-		failureReason: sqlite.text()
+		failureReason: sqlite.text(),
+		// Per-trooper override of the proposal's effectiveDate/startDate/endDate
+		// — null means "use the proposal's value". See
+		// isRangedTargetActivityStatus for which pair applies.
+		effectiveDate: sqlite.text(),
+		startDate: sqlite.text(),
+		endDate: sqlite.text(),
+		// Execution timing, distinct from itemStatus (the approval decision):
+		// appliedAt is stamped when the target activityStatus was actually
+		// pushed to the student (at approval time if already due, otherwise
+		// by the scheduled sweep once startDate/effectiveDate arrives).
+		// revertedAt is stamped when a ranged status's endDate is reached and
+		// the student is reverted back to 'serving'.
+		appliedAt: sqlite.text(),
+		revertedAt: sqlite.text()
 	}
 )
 
@@ -234,6 +267,15 @@ export type ActivityStatusProposalTrooper = activityStatusProposalTrooper & {
 	student?: StudentDB
 }
 
+// Row shape returned by the scheduled-transition sweep's queries — a
+// trooper line item joined with its parent proposal (to read
+// targetActivityStatus and the header-level date fallbacks) and a minimal
+// student projection (just enough to know it still exists).
+export type PendingTrooperTransition = ActivityStatusProposalTrooperDB & {
+	proposal: ActivityStatusProposalDB
+	student: { id: number; unitId: number | null } | null
+}
+
 export type ActivityStatusProposalQuery = {
 	unitIds?: number[]
 	status?: ActivityStatusProposalStatus
@@ -254,6 +296,9 @@ export type UpdateActivityStatusProposalMap = {
 
 export type CreateActivityStatusProposalTrooperInput = {
 	studentId: number
+	effectiveDate?: string | null
+	startDate?: string | null
+	endDate?: string | null
 }
 
 export type CreateActivityStatusProposalInput = {
@@ -261,5 +306,8 @@ export type CreateActivityStatusProposalInput = {
 	approverUserId: number
 	targetActivityStatus: TargetActivityStatus
 	note?: string | null
+	effectiveDate?: string | null
+	startDate?: string | null
+	endDate?: string | null
 	troopers: CreateActivityStatusProposalTrooperInput[]
 }

@@ -5,6 +5,7 @@ import {
 	ActivityStatusProposalParams,
 	ActivityStatusProposalQuery,
 	CreateActivityStatusProposalTrooperInput,
+	PendingTrooperTransition,
 	UpdateActivityStatusProposalMap
 } from '../schema/activity-status-proposals'
 
@@ -23,4 +24,8 @@ export interface Repository {
 		status: ActivityStatusProposalItemStatus,
 		failureReason?: string
 	): Promise<void>
+	markTrooperApplied(id: number, appliedAt: string): Promise<void>
+	markTrooperReverted(id: number, revertedAt: string): Promise<void>
+	findPendingApplication(): Promise<PendingTrooperTransition[]>
+	findPendingRevert(): Promise<PendingTrooperTransition[]>
 }
