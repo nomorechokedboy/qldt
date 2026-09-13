@@ -9,7 +9,7 @@ import {
 	TransferRequest,
 	TransferRequestQuery
 } from '../schema/transfer-requests'
-import { Unit, UnitDB, UnitLevel } from '../schema/units'
+import { Unit, UnitLevel } from '../schema/units'
 import {
 	MaterialConditionName,
 	MaterialStockDB,
@@ -17,74 +17,46 @@ import {
 } from '../schema/material-stocks'
 import { Student } from '../schema/student'
 import studentRepo from '../students/repo'
+import {
+	commanderIdsOf,
+	eligibleApproverIdsOrEmpty
+} from '../units/commander-eligibility'
 import unitRepo from '../units/repo'
 import unitStatsRepo from '../units/stats-repo'
 import userRepo from '../users/repo'
 import { UserDB } from '../schema/users'
 import transferRequestRepo from './repo'
 
-const COMMANDER_FIELDS = [
-	'commanderId',
-	'deputyCommanderId',
-	'politicalCommanderId',
-	'deputyPoliticalCommanderId'
-] as const
-
 class controller {
 	constructor(private readonly repo: Repository) {}
-
-	private commanderIdsOf(unit: UnitDB): number[] {
-		return COMMANDER_FIELDS.map((f) => unit[f]).filter(
-			(id): id is number => id !== null && id !== undefined
-		)
-	}
-
-	// Units at-or-above both the source and destination units in the
-	// hierarchy (ancestor-or-self of both). Any of their 4 leadership roles
-	// is a valid "superior commander" for a transfer between those two units.
-	private async commonAncestorUnits(
-		sourceUnitId: number,
-		destinationUnitId: number
-	): Promise<UnitDB[]> {
-		const [sourceChain, destChain] = await Promise.all([
-			unitRepo.findAncestorChain(sourceUnitId),
-			unitRepo.findAncestorChain(destinationUnitId)
-		])
-		const destIds = new Set(destChain.map((u) => u.id))
-		return sourceChain.filter((u) => destIds.has(u.id))
-	}
 
 	private async eligibleApproverIds(
 		sourceUnitId: number,
 		destinationUnitId: number
 	): Promise<Set<number>> {
-		const commonUnits = await this.commonAncestorUnits(
+		const ids = await eligibleApproverIdsOrEmpty([
 			sourceUnitId,
 			destinationUnitId
-		)
-		if (commonUnits.length === 0) {
+		])
+		if (ids.size === 0) {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(
 					'Source and destination units have no common superior unit'
 				)
 			)
 		}
-		return new Set(commonUnits.flatMap((u) => this.commanderIdsOf(u)))
+		return ids
 	}
 
 	// Same eligibility rule as eligibleApproverIds, but never throws for a
 	// source/destination pair with no common superior unit — used for
 	// read-only UI hints (approver picker, "can this user decide" flags)
 	// where an empty result is a valid answer rather than an error.
-	private async eligibleApproverIdsOrEmpty(
+	private pairEligibleApproverIdsOrEmpty(
 		sourceUnitId: number,
 		destinationUnitId: number
 	): Promise<Set<number>> {
-		const commonUnits = await this.commonAncestorUnits(
-			sourceUnitId,
-			destinationUnitId
-		)
-		return new Set(commonUnits.flatMap((u) => this.commanderIdsOf(u)))
+		return eligibleApproverIdsOrEmpty([sourceUnitId, destinationUnitId])
 	}
 
 	// Users eligible to approve a transfer between the given source and
@@ -94,7 +66,7 @@ class controller {
 		sourceUnitId: number,
 		destinationUnitId: number
 	): Promise<UserDB[]> {
-		const ids = await this.eligibleApproverIdsOrEmpty(
+		const ids = await this.pairEligibleApproverIdsOrEmpty(
 			sourceUnitId,
 			destinationUnitId
 		)
@@ -115,7 +87,7 @@ class controller {
 		destinationUnitId: number,
 		userId: number
 	): Promise<boolean> {
-		const ids = await this.eligibleApproverIdsOrEmpty(
+		const ids = await this.pairEligibleApproverIdsOrEmpty(
 			sourceUnitId,
 			destinationUnitId
 		)
@@ -225,7 +197,7 @@ class controller {
 		// commander).
 		const sourceChain = await unitRepo.findAncestorChain(input.sourceUnitId)
 		const requesterEligibleIds = new Set(
-			sourceChain.flatMap((u) => this.commanderIdsOf(u))
+			sourceChain.flatMap((u) => commanderIdsOf(u))
 		)
 		if (!requesterEligibleIds.has(requestedByUserId)) {
 			throw AppError.handleAppErr(
