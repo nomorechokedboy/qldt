@@ -1,4 +1,5 @@
 export * from './actions'
+export * from './activity-status-proposals'
 export * from './audit-logs'
 export * from './base'
 export * from './buildings'
