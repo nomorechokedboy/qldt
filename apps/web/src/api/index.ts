@@ -32,6 +32,7 @@ import {
 	type UserBody
 } from '@/types'
 import Client, {
+	type activity_status_proposals,
 	type audit_logs,
 	type auth,
 	type export_templates,
@@ -630,4 +631,54 @@ export function ExportTransferRequestHandover(id: number) {
 		'GET',
 		String(id)
 	)
+}
+
+// Activity status proposals
+
+export function GetActivityStatusProposals(
+	params?: activity_status_proposals.GetActivityStatusProposalsQuery
+) {
+	return requestClient.activity_status_proposals
+		.GetActivityStatusProposals(params ?? {})
+		.then((resp) => resp.data)
+}
+
+export function GetActivityStatusProposalEligibleApprovers(
+	params: activity_status_proposals.GetActivityStatusProposalEligibleApproversQuery
+) {
+	return requestClient.activity_status_proposals
+		.GetActivityStatusProposalEligibleApprovers(params)
+		.then((resp) => resp.data)
+}
+
+export function GetActivityStatusProposal(id: number) {
+	return requestClient.activity_status_proposals
+		.GetActivityStatusProposal(id)
+		.then((resp) => resp.data)
+}
+
+export function CreateActivityStatusProposal(
+	body: activity_status_proposals.CreateActivityStatusProposalBody
+) {
+	return requestClient.activity_status_proposals
+		.CreateActivityStatusProposal(body)
+		.then((resp) => resp.data)
+}
+
+export function ApproveActivityStatusProposal(id: number) {
+	return requestClient.activity_status_proposals
+		.ApproveActivityStatusProposal(id)
+		.then((resp) => resp.data)
+}
+
+export function RejectActivityStatusProposal(id: number, reason: string) {
+	return requestClient.activity_status_proposals
+		.RejectActivityStatusProposal(id, { reason })
+		.then((resp) => resp.data)
+}
+
+export function CancelActivityStatusProposal(id: number) {
+	return requestClient.activity_status_proposals
+		.CancelActivityStatusProposal(id)
+		.then((resp) => resp.data)
 }

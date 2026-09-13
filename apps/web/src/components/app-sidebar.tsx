@@ -12,7 +12,8 @@ import {
 	UserRoundCog,
 	Package,
 	History,
-	ArrowLeftRight
+	ArrowLeftRight,
+	ClipboardCheck
 } from 'lucide-react'
 import {
 	Sidebar,
@@ -99,6 +100,19 @@ const data = {
 					title: 'Bàn giao quân số/vật chất',
 					url: '/chuyen-giao-tai-san',
 					icon: ArrowLeftRight
+				}
+			]
+		},
+		{
+			title: 'Quân nhân',
+			url: '#',
+			superAdminOnly: false,
+			icon: ClipboardCheck,
+			items: [
+				{
+					title: 'Đề xuất chế độ',
+					url: '/de-xuat-che-do',
+					icon: ClipboardCheck
 				}
 			]
 		},

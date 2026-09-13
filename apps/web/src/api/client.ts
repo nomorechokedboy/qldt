@@ -33,6 +33,7 @@ const BROWSER = typeof globalThis === 'object' && 'window' in globalThis
  */
 export default class Client {
 	public readonly actions: actions.ServiceClient
+	public readonly activity_status_proposals: activity_status_proposals.ServiceClient
 	public readonly audit_logs: audit_logs.ServiceClient
 	public readonly auth: auth.ServiceClient
 	public readonly export_templates: export_templates.ServiceClient
@@ -66,6 +67,8 @@ export default class Client {
 		this.options = options ?? {}
 		const base = new BaseClient(this.target, this.options)
 		this.actions = new actions.ServiceClient(base)
+		this.activity_status_proposals =
+			new activity_status_proposals.ServiceClient(base)
 		this.audit_logs = new audit_logs.ServiceClient(base)
 		this.auth = new auth.ServiceClient(base)
 		this.export_templates = new export_templates.ServiceClient(base)
@@ -141,6 +144,224 @@ export namespace actions {
 			// Now make the actual call to the API
 			const resp = await this.baseClient.callTypedAPI('GET', `/actions`)
 			return (await resp.json()) as GetActionsResponse
+		}
+	}
+}
+
+export namespace activity_status_proposals {
+	export interface ActivityStatusProposalResp {
+		id: number
+		status: string
+		targetActivityStatus: string
+		note: string | null
+		rejectionReason: string | null
+		decidedAt: string | null
+		createdAt: string
+		updatedAt: string
+		unit?: UnitSummary
+		requestedBy?: UserSummary
+		approver?: UserSummary
+		decidedBy?: UserSummary | null
+		troopers?: ActivityStatusProposalTrooperItemResp[]
+		canDecide: boolean
+	}
+
+	export interface ActivityStatusProposalTrooperItemResp {
+		id: number
+		itemStatus: string
+		failureReason: string | null
+		student?: StudentSummary
+	}
+
+	export interface ApproveActivityStatusProposalResponse {
+		data: ActivityStatusProposalResp
+	}
+
+	export interface CancelActivityStatusProposalResponse {
+		data: ActivityStatusProposalResp
+	}
+
+	export interface CreateActivityStatusProposalBody {
+		unitId: number
+		approverUserId: number
+		targetActivityStatus: schema.TargetActivityStatus
+		note?: string | null
+		troopers: schema.CreateActivityStatusProposalTrooperInput[]
+	}
+
+	export interface CreateActivityStatusProposalResponse {
+		data: ActivityStatusProposalResp
+	}
+
+	export interface GetActivityStatusProposalEligibleApproversQuery {
+		unitId: number
+	}
+
+	export interface GetActivityStatusProposalEligibleApproversResponse {
+		data: UserSummary[]
+	}
+
+	export interface GetActivityStatusProposalResponse {
+		data: ActivityStatusProposalResp
+	}
+
+	export interface GetActivityStatusProposalsQuery {
+		status?: schema.ActivityStatusProposalStatus
+	}
+
+	export interface GetActivityStatusProposalsResponse {
+		data: ActivityStatusProposalResp[]
+	}
+
+	export interface RejectActivityStatusProposalRequest {
+		reason: string
+	}
+
+	export interface RejectActivityStatusProposalResponse {
+		data: ActivityStatusProposalResp
+	}
+
+	export interface StudentSummary {
+		id: number
+		fullName: string | null
+		unitId: number | null
+	}
+
+	export interface UnitSummary {
+		id: number
+		alias: string
+		name: string
+		level: string
+	}
+
+	export interface UserSummary {
+		id: number
+		username: string
+		displayName: string
+	}
+
+	export class ServiceClient {
+		private baseClient: BaseClient
+
+		constructor(baseClient: BaseClient) {
+			this.baseClient = baseClient
+			this.ApproveActivityStatusProposal =
+				this.ApproveActivityStatusProposal.bind(this)
+			this.CancelActivityStatusProposal =
+				this.CancelActivityStatusProposal.bind(this)
+			this.CreateActivityStatusProposal =
+				this.CreateActivityStatusProposal.bind(this)
+			this.GetActivityStatusProposal =
+				this.GetActivityStatusProposal.bind(this)
+			this.GetActivityStatusProposalEligibleApprovers =
+				this.GetActivityStatusProposalEligibleApprovers.bind(this)
+			this.GetActivityStatusProposals =
+				this.GetActivityStatusProposals.bind(this)
+			this.RejectActivityStatusProposal =
+				this.RejectActivityStatusProposal.bind(this)
+		}
+
+		public async ApproveActivityStatusProposal(
+			id: number
+		): Promise<ApproveActivityStatusProposalResponse> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'POST',
+				`/activity-status-proposals/${encodeURIComponent(id)}/approve`
+			)
+			return (await resp.json()) as ApproveActivityStatusProposalResponse
+		}
+
+		public async CancelActivityStatusProposal(
+			id: number
+		): Promise<CancelActivityStatusProposalResponse> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'POST',
+				`/activity-status-proposals/${encodeURIComponent(id)}/cancel`
+			)
+			return (await resp.json()) as CancelActivityStatusProposalResponse
+		}
+
+		public async CreateActivityStatusProposal(
+			params: CreateActivityStatusProposalBody
+		): Promise<CreateActivityStatusProposalResponse> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'POST',
+				`/activity-status-proposals`,
+				JSON.stringify(params)
+			)
+			return (await resp.json()) as CreateActivityStatusProposalResponse
+		}
+
+		public async GetActivityStatusProposal(
+			id: number
+		): Promise<GetActivityStatusProposalResponse> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'GET',
+				`/activity-status-proposals/${encodeURIComponent(id)}`
+			)
+			return (await resp.json()) as GetActivityStatusProposalResponse
+		}
+
+		/**
+		 * Users eligible to approve a proposal raised from the given unit —
+		 * commanders/deputy commanders/political commanders/deputy political
+		 * commanders of the unit itself or any of its ancestors. Used to populate
+		 * the approver picker with only valid choices.
+		 */
+		public async GetActivityStatusProposalEligibleApprovers(
+			params: GetActivityStatusProposalEligibleApproversQuery
+		): Promise<GetActivityStatusProposalEligibleApproversResponse> {
+			// Convert our params into the objects we need for the request
+			const query = makeRecord<string, string | string[]>({
+				unitId: String(params.unitId)
+			})
+
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'GET',
+				`/activity-status-proposals/eligible-approvers`,
+				undefined,
+				{ query }
+			)
+			return (await resp.json()) as GetActivityStatusProposalEligibleApproversResponse
+		}
+
+		public async GetActivityStatusProposals(
+			params: GetActivityStatusProposalsQuery
+		): Promise<GetActivityStatusProposalsResponse> {
+			// Convert our params into the objects we need for the request
+			const query = makeRecord<string, string | string[]>({
+				status:
+					params.status === undefined
+						? undefined
+						: String(params.status)
+			})
+
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'GET',
+				`/activity-status-proposals`,
+				undefined,
+				{ query }
+			)
+			return (await resp.json()) as GetActivityStatusProposalsResponse
+		}
+
+		public async RejectActivityStatusProposal(
+			id: number,
+			params: RejectActivityStatusProposalRequest
+		): Promise<RejectActivityStatusProposalResponse> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'POST',
+				`/activity-status-proposals/${encodeURIComponent(id)}/reject`,
+				JSON.stringify(params)
+			)
+			return (await resp.json()) as RejectActivityStatusProposalResponse
 		}
 	}
 }
@@ -1579,6 +1800,7 @@ export namespace notifications {
 			| 'cpvOfficialThisWeek'
 			| 'cpvOfficialThisMonth'
 			| 'cpvOfficialThisQuarter'
+			| 'activityStatusProposal'
 		data: {
 			title: string
 			message: string
@@ -1599,7 +1821,11 @@ export namespace notifications {
 		id: string
 		createdAt: string
 		readAt: string
-		notificationType: 'birthday' | 'officialCpv' | 'commanderDigest'
+		notificationType:
+			| 'birthday'
+			| 'officialCpv'
+			| 'commanderDigest'
+			| 'activityStatusProposal'
 		title: string
 		message: string
 		isBatch: boolean
@@ -3642,6 +3868,12 @@ export namespace schema {
 		| 'rehearsal'
 		| 'discharged'
 
+	export type ActivityStatusProposalStatus =
+		| 'pending'
+		| 'approved'
+		| 'rejected'
+		| 'cancelled'
+
 	export interface AssignRoleRequest {
 		userId: number
 		roleIds: number[]
@@ -3653,6 +3885,10 @@ export namespace schema {
 		| 'delete'
 		| 'approve'
 		| 'reject'
+
+	export interface CreateActivityStatusProposalTrooperInput {
+		studentId: number
+	}
 
 	export interface CreateRoleRequest {
 		name: string
@@ -3741,6 +3977,18 @@ export namespace schema {
 		createdAt: string
 		updatedAt: string
 	}
+
+	/**
+	 * Only these 4 of the 9 activityStatus values are things a commander can
+	 * propose a batch of troopers into — the rest (serving, hospitalized,
+	 * infirmary_treatment, contest, business_trip) reflect current unplanned
+	 * state rather than something requiring a higher commander's approval.
+	 */
+	export type TargetActivityStatus =
+		| 'annual_leave'
+		| 'discharged'
+		| 'weekly_leave'
+		| 'rehearsal'
 
 	export type TransferRequestStatus =
 		| 'pending'
