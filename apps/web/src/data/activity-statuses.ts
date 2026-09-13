@@ -13,6 +13,24 @@ export const activityStatusOptions: { label: string; value: ActivityStatus }[] =
 		{ label: 'Xuất ngũ', value: 'discharged' }
 	]
 
+// The 4 statuses a commander can propose a batch of troopers into, via an
+// activity status proposal requiring a higher commander's approval.
+const targetActivityStatusValues = [
+	'annual_leave',
+	'discharged',
+	'weekly_leave',
+	'rehearsal'
+] as const
+
+export const targetActivityStatusOptions = activityStatusOptions.filter(
+	(
+		o
+	): o is {
+		label: string
+		value: (typeof targetActivityStatusValues)[number]
+	} => (targetActivityStatusValues as readonly string[]).includes(o.value)
+)
+
 export const activityStatusLabels: Record<ActivityStatus, string> =
 	Object.fromEntries(
 		activityStatusOptions.map((o) => [o.value, o.label])

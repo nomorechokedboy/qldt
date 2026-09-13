@@ -239,7 +239,10 @@ export interface AppNotificationItem extends Base {
 	relatedData: Student
 }
 
-export type AppNotificationType = 'birthday' | 'officialCpv'
+export type AppNotificationType =
+	| 'birthday'
+	| 'officialCpv'
+	| 'activityStatusProposal'
 
 export interface AppNotification {
 	id: string
