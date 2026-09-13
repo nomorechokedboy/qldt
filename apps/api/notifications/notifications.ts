@@ -26,7 +26,11 @@ interface NotificationResponse {
 	createdAt: string
 	readAt: string
 
-	notificationType: 'birthday' | 'officialCpv' | 'commanderDigest'
+	notificationType:
+		| 'birthday'
+		| 'officialCpv'
+		| 'commanderDigest'
+		| 'activityStatusProposal'
 	title: string
 	message: string
 
@@ -96,6 +100,7 @@ export interface Message {
 		| 'cpvOfficialThisWeek'
 		| 'cpvOfficialThisMonth'
 		| 'cpvOfficialThisQuarter'
+		| 'activityStatusProposal'
 	data: { title: string; message: string; userId: number }
 }
 

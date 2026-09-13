@@ -176,6 +176,20 @@
 			"when": 1789219677475,
 			"tag": "0024_special_meteorite",
 			"breakpoints": true
+		},
+		{
+			"idx": 25,
+			"version": "6",
+			"when": 1789220000000,
+			"tag": "0025_seed-activity-status-proposals-authz",
+			"breakpoints": true
+		},
+		{
+			"idx": 26,
+			"version": "6",
+			"when": 1789223412559,
+			"tag": "0026_unique_killer_shrike",
+			"breakpoints": true
 		}
 	]
 }
