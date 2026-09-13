@@ -1,0 +1,54 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+    name: daily-activity-status-transitions
+    labels:
+        app: qlhv-cronjobs
+        job-type: activity-status-proposals
+        schedule: daily
+spec:
+    # Every day at midnight (0 0 * * *) — proposal dates are day-granularity
+    # ("YYYY-MM-DD"), so a daily sweep is enough to apply/revert on time.
+    schedule: '0 0 * * *'
+    timeZone: 'Asia/Ho_Chi_Minh'
+    successfulJobsHistoryLimit: 3
+    failedJobsHistoryLimit: 3
+    concurrencyPolicy: Forbid
+    jobTemplate:
+        spec:
+            backoffLimit: 3
+            template:
+                metadata:
+                    labels:
+                        app: qlhv-cronjobs
+                        job-type: activity-status-proposals
+                        schedule: daily
+                spec:
+                    restartPolicy: OnFailure
+                    containers:
+                        - name: daily-activity-status-transitions
+                          image: alpine:latest
+                          command:
+                              - /bin/sh
+                              - /scripts/daily_activity_status_transitions.sh
+                          env:
+                              - name: APP_URL
+                                value: 'http://qlhv-api.qlhv.svc.cluster.local:8080'
+                              - name: TZ
+                                value: 'Asia/Ho_Chi_Minh'
+                          volumeMounts:
+                              - name: cron-scripts
+                                mountPath: /scripts
+                                readOnly: true
+                          resources:
+                              limits:
+                                  cpu: 100m
+                                  memory: 128Mi
+                              requests:
+                                  cpu: 50m
+                                  memory: 64Mi
+                    volumes:
+                        - name: cron-scripts
+                          configMap:
+                              name: qlhv-cron-scripts
+                              defaultMode: 0755
