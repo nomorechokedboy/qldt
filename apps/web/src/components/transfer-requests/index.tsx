@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
+import { DataTable } from '@/components/data-table'
+import DataTableSkeleton from '@/components/data-table-skeleton'
 import { ErrorState } from '@/components/error-state'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import {
 	Select,
 	SelectContent,
@@ -16,15 +17,6 @@ import {
 	SheetHeader,
 	SheetTitle
 } from '@/components/ui/sheet'
-import { Skeleton } from '@/components/ui/skeleton'
-import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow
-} from '@/components/ui/table'
 import useAuth from '@/hooks/useAuth'
 import useTransferRequests from '@/hooks/useTransferRequests'
 import {
@@ -32,44 +24,21 @@ import {
 	useCancelTransferRequest,
 	useExportTransferRequestHandover
 } from '@/hooks/useTransferRequestActions'
-import { formatDbTimestamp, getErrorMessage } from '@/lib/utils'
+import { getErrorMessage } from '@/lib/utils'
 import type { transfer_requests } from '@/api/client'
+import {
+	getTransferRequestColumns,
+	STATUS_BADGE_VARIANT,
+	STATUS_LABELS,
+	type TransferRequestRow
+} from './columns'
 import CreateTransferRequestForm from './create-transfer-request-form'
 import RejectDialog from './reject-dialog'
-
-const STATUS_LABELS: Record<string, string> = {
-	pending: 'Chờ duyệt',
-	approved: 'Đã duyệt',
-	rejected: 'Đã từ chối',
-	cancelled: 'Đã hủy'
-}
-
-const STATUS_BADGE_VARIANT: Record<
-	string,
-	'default' | 'secondary' | 'destructive' | 'outline'
-> = {
-	pending: 'outline',
-	approved: 'default',
-	rejected: 'destructive',
-	cancelled: 'secondary'
-}
 
 const ITEM_STATUS_LABELS: Record<string, string> = {
 	pending: 'Chờ duyệt',
 	approved: 'Thành công',
 	failed: 'Thất bại'
-}
-
-type TransferRequestRow = transfer_requests.TransferRequestResp
-
-function resourceSummary(row: TransferRequestRow) {
-	const parts: string[] = []
-	if (row.troopers?.length) parts.push(`${row.troopers.length} quân nhân`)
-	if (row.materialAssetItems?.length)
-		parts.push(`${row.materialAssetItems.length} khí tài`)
-	if (row.materialStockItems?.length)
-		parts.push(`${row.materialStockItems.length} vật tư`)
-	return parts.length > 0 ? parts.join(', ') : '—'
 }
 
 export default function TransferRequestsTab() {
@@ -121,6 +90,31 @@ export default function TransferRequestsTab() {
 		}
 	}
 
+	const columns = useMemo(
+		() =>
+			getTransferRequestColumns({
+				currentUserId: user?.id,
+				canApprove,
+				canReject,
+				isApproving: approveMutation.isPending,
+				isCancelling: cancelMutation.isPending,
+				isExportingHandover: exportHandoverMutation.isPending,
+				onView: setSelected,
+				onApprove: handleApprove,
+				onReject: setRejectingId,
+				onCancel: handleCancel,
+				onExportHandover: handleExportHandover
+			}),
+		[
+			user?.id,
+			canApprove,
+			canReject,
+			approveMutation.isPending,
+			cancelMutation.isPending,
+			exportHandoverMutation.isPending
+		]
+	)
+
 	if (error) {
 		return <ErrorState error={error as Error} onRetry={() => refetch()} />
 	}
@@ -148,170 +142,17 @@ export default function TransferRequestsTab() {
 				<CreateTransferRequestForm onSuccess={() => refetch()} />
 			</div>
 
-			<div className='rounded-md border'>
-				<Table>
-					<TableHeader>
-						<TableRow>
-							<TableHead>Thời gian</TableHead>
-							<TableHead>Nguồn</TableHead>
-							<TableHead>Đích</TableHead>
-							<TableHead>Nguồn lực</TableHead>
-							<TableHead>Người yêu cầu</TableHead>
-							<TableHead>Người phê duyệt</TableHead>
-							<TableHead>Trạng thái</TableHead>
-							<TableHead className='text-right'>
-								Thao tác
-							</TableHead>
-						</TableRow>
-					</TableHeader>
-					<TableBody>
-						{isLoading &&
-							Array.from({ length: 8 }).map((_, i) => (
-								<TableRow key={i}>
-									{Array.from({ length: 8 }).map((_, j) => (
-										<TableCell key={j}>
-											<Skeleton className='h-4 w-full' />
-										</TableCell>
-									))}
-								</TableRow>
-							))}
-
-						{!isLoading && data?.length === 0 && (
-							<TableRow>
-								<TableCell
-									colSpan={8}
-									className='py-10 text-center text-muted-foreground'
-								>
-									Không có yêu cầu bàn giao nào
-								</TableCell>
-							</TableRow>
-						)}
-
-						{!isLoading &&
-							data?.map((row) => {
-								const isRequester =
-									user?.id === row.requestedBy?.id
-								const isPending = row.status === 'pending'
-								const hasMaterialItems =
-									!!row.materialAssetItems?.length ||
-									!!row.materialStockItems?.length
-
-								return (
-									<TableRow key={row.id}>
-										<TableCell className='whitespace-nowrap text-sm'>
-											{formatDbTimestamp(row.createdAt)}
-										</TableCell>
-										<TableCell>
-											{row.sourceUnit?.name ?? '—'}
-										</TableCell>
-										<TableCell>
-											{row.destinationUnit?.name ?? '—'}
-										</TableCell>
-										<TableCell className='text-sm'>
-											{resourceSummary(row)}
-										</TableCell>
-										<TableCell>
-											{row.requestedBy?.displayName ??
-												'—'}
-										</TableCell>
-										<TableCell>
-											{row.approver?.displayName ?? '—'}
-										</TableCell>
-										<TableCell>
-											<Badge
-												variant={
-													STATUS_BADGE_VARIANT[
-														row.status
-													] ?? 'secondary'
-												}
-											>
-												{STATUS_LABELS[row.status] ??
-													row.status}
-											</Badge>
-										</TableCell>
-										<TableCell className='text-right'>
-											<div className='flex justify-end gap-1'>
-												<Button
-													variant='ghost'
-													size='sm'
-													onClick={() =>
-														setSelected(row)
-													}
-												>
-													Xem
-												</Button>
-												{isPending &&
-													canApprove &&
-													row.canDecide && (
-														<Button
-															variant='ghost'
-															size='sm'
-															disabled={
-																approveMutation.isPending
-															}
-															onClick={() =>
-																handleApprove(
-																	row.id
-																)
-															}
-														>
-															Duyệt
-														</Button>
-													)}
-												{isPending &&
-													canReject &&
-													row.canDecide && (
-														<Button
-															variant='ghost'
-															size='sm'
-															onClick={() =>
-																setRejectingId(
-																	row.id
-																)
-															}
-														>
-															Từ chối
-														</Button>
-													)}
-												{isPending && isRequester && (
-													<Button
-														variant='ghost'
-														size='sm'
-														disabled={
-															cancelMutation.isPending
-														}
-														onClick={() =>
-															handleCancel(row.id)
-														}
-													>
-														Hủy
-													</Button>
-												)}
-												{row.status === 'approved' &&
-													hasMaterialItems && (
-														<Button
-															variant='ghost'
-															size='sm'
-															disabled={
-																exportHandoverMutation.isPending
-															}
-															onClick={() =>
-																handleExportHandover(
-																	row.id
-																)
-															}
-														>
-															Xuất biên bản
-														</Button>
-													)}
-											</div>
-										</TableCell>
-									</TableRow>
-								)
-							})}
-					</TableBody>
-				</Table>
-			</div>
+			{isLoading ? (
+				<DataTableSkeleton columns={7} rows={8} />
+			) : (
+				<DataTable
+					columns={columns}
+					data={data ?? []}
+					toolbarVisible={false}
+					placeholder='Không có yêu cầu bàn giao nào'
+					getRowId={(row) => String(row.id)}
+				/>
+			)}
 
 			<Sheet
 				open={selected !== null}
