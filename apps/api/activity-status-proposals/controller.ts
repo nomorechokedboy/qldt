@@ -1,3 +1,4 @@
+import dayjs from 'dayjs'
 import log from 'encore.dev/log'
 import { Repository } from '.'
 import { AppError } from '../errors'
@@ -5,7 +6,10 @@ import { notifyUser } from '../notifications/notify'
 import {
 	ActivityStatusProposal,
 	ActivityStatusProposalQuery,
-	CreateActivityStatusProposalInput
+	CreateActivityStatusProposalInput,
+	isRangedTargetActivityStatus,
+	PendingTrooperTransition,
+	TargetActivityStatus
 } from '../schema/activity-status-proposals'
 import { UnitLevel } from '../schema/units'
 import { UserDB } from '../schema/users'
@@ -90,6 +94,74 @@ class controller {
 		return proposal
 	}
 
+	// Resolves the effective/start/end date a given trooper actually runs
+	// under: its own override if set, otherwise the proposal's batch-wide
+	// default. Shared by create()'s validation, approve()'s "apply now vs.
+	// defer to the sweep" decision, and the sweep itself.
+	private resolveDates(
+		target: TargetActivityStatus,
+		header: {
+			effectiveDate?: string | null
+			startDate?: string | null
+			endDate?: string | null
+		},
+		override: {
+			effectiveDate?: string | null
+			startDate?: string | null
+			endDate?: string | null
+		}
+	): {
+		effectiveDate?: string | null
+		startDate?: string | null
+		endDate?: string | null
+	} {
+		if (!isRangedTargetActivityStatus(target)) {
+			return {
+				effectiveDate: override.effectiveDate ?? header.effectiveDate
+			}
+		}
+		return {
+			startDate: override.startDate ?? header.startDate,
+			endDate: override.endDate ?? header.endDate
+		}
+	}
+
+	private validateTrooperDates(
+		target: TargetActivityStatus,
+		studentId: number,
+		dates: {
+			effectiveDate?: string | null
+			startDate?: string | null
+			endDate?: string | null
+		}
+	): void {
+		if (!isRangedTargetActivityStatus(target)) {
+			if (!dates.effectiveDate) {
+				throw AppError.handleAppErr(
+					AppError.invalidArgument(
+						`Trooper ${studentId} is missing an effective date (either on the proposal or on the trooper itself)`
+					)
+				)
+			}
+			return
+		}
+
+		if (!dates.startDate || !dates.endDate) {
+			throw AppError.handleAppErr(
+				AppError.invalidArgument(
+					`Trooper ${studentId} is missing a start/end date (either on the proposal or on the trooper itself)`
+				)
+			)
+		}
+		if (dates.startDate > dates.endDate) {
+			throw AppError.handleAppErr(
+				AppError.invalidArgument(
+					`Trooper ${studentId}'s start date must not be after its end date`
+				)
+			)
+		}
+	}
+
 	private notify(recipientId: number, title: string, message: string): void {
 		notifyUser(
 			recipientId,
@@ -156,6 +228,17 @@ class controller {
 					)
 				)
 			}
+
+			const resolved = this.resolveDates(
+				input.targetActivityStatus,
+				input,
+				t
+			)
+			this.validateTrooperDates(
+				input.targetActivityStatus,
+				t.studentId,
+				resolved
+			)
 		}
 
 		const created = await this.repo.create(
@@ -165,7 +248,10 @@ class controller {
 				approverUserId: input.approverUserId,
 				targetActivityStatus: input.targetActivityStatus,
 				note: input.note ?? null,
-				status: 'pending'
+				status: 'pending',
+				effectiveDate: input.effectiveDate ?? null,
+				startDate: input.startDate ?? null,
+				endDate: input.endDate ?? null
 			},
 			input.troopers
 		)
@@ -225,8 +311,11 @@ class controller {
 		await this.assertActorIsApprover(proposal, actorUserId)
 
 		const unitScopeIds = await this.unitAndDescendantIds(proposal.unit!.id)
+		const today = dayjs().format('YYYY-MM-DD')
+		const now = new Date().toISOString()
 
-		const approvedItemIds: number[] = []
+		const dueNowItemIds: number[] = []
+		const deferredItemIds: number[] = []
 		const studentUpdates: Parameters<typeof studentRepo.update>[0] = []
 
 		for (const item of proposal.troopers ?? []) {
@@ -247,20 +336,44 @@ class controller {
 				continue
 			}
 
-			studentUpdates.push({
-				id: student.id,
-				updatePayload: { activityStatus: proposal.targetActivityStatus }
-			})
-			approvedItemIds.push(item.id)
+			const resolved = this.resolveDates(
+				proposal.targetActivityStatus,
+				proposal,
+				item
+			)
+			const dueDate = isRangedTargetActivityStatus(
+				proposal.targetActivityStatus
+			)
+				? resolved.startDate
+				: resolved.effectiveDate
+			// No resolved date at all shouldn't happen post create()-time
+			// validation, but if it does, don't silently strand the trooper
+			// in limbo — apply now, same as the pre-dates behavior.
+			const isDue = !dueDate || dueDate <= today
+
+			if (isDue) {
+				studentUpdates.push({
+					id: student.id,
+					updatePayload: {
+						activityStatus: proposal.targetActivityStatus
+					}
+				})
+				dueNowItemIds.push(item.id)
+			} else {
+				deferredItemIds.push(item.id)
+			}
 		}
 
-		// One batched update (single transaction) for every valid trooper,
+		// One batched update (single transaction) for every trooper due now,
 		// instead of one round-trip per trooper.
 		if (studentUpdates.length > 0) {
 			await studentRepo.update(studentUpdates)
 		}
 
-		for (const itemId of approvedItemIds) {
+		for (const itemId of dueNowItemIds) {
+			await this.repo.markTrooperApplied(itemId, now)
+		}
+		for (const itemId of deferredItemIds) {
 			await this.repo.setTrooperItemStatus(itemId, 'approved')
 		}
 
@@ -366,6 +479,89 @@ class controller {
 		])
 
 		return this.getRequestOrThrow(id)
+	}
+
+	// Hit periodically by an external scheduler (same "expose:false GET
+	// endpoint polled by a k8s CronJob" convention as /students/cron and
+	// /commander-digest/cron — this codebase has no in-process cron job).
+	// Two independent sweeps:
+	//  1. approved-but-not-yet-applied troopers whose resolved
+	//     effectiveDate/startDate has arrived -> push activityStatus, stamp
+	//     appliedAt.
+	//  2. applied troopers on a ranged status whose resolved endDate has
+	//     arrived -> revert activityStatus to 'serving', stamp revertedAt.
+	async runScheduledTransitions(): Promise<{
+		applied: number
+		reverted: number
+	}> {
+		const today = dayjs().format('YYYY-MM-DD')
+		const now = new Date().toISOString()
+
+		const isDueForApplication = (
+			item: PendingTrooperTransition
+		): boolean => {
+			const dueDate = isRangedTargetActivityStatus(
+				item.proposal.targetActivityStatus
+			)
+				? (item.startDate ?? item.proposal.startDate)
+				: (item.effectiveDate ?? item.proposal.effectiveDate)
+			return !!dueDate && dueDate <= today
+		}
+
+		const pendingApplication = await this.repo.findPendingApplication()
+		const dueApplication = pendingApplication.filter(isDueForApplication)
+
+		const applyUpdates: Parameters<typeof studentRepo.update>[0] =
+			dueApplication
+				.filter((item) => item.student !== null)
+				.map((item) => ({
+					id: item.student!.id,
+					updatePayload: {
+						activityStatus: item.proposal.targetActivityStatus
+					}
+				}))
+		if (applyUpdates.length > 0) {
+			await studentRepo.update(applyUpdates)
+		}
+		for (const item of dueApplication) {
+			await this.repo.markTrooperApplied(item.id, now)
+		}
+
+		const isDueForRevert = (item: PendingTrooperTransition): boolean => {
+			if (
+				!isRangedTargetActivityStatus(
+					item.proposal.targetActivityStatus
+				)
+			) {
+				return false
+			}
+			const dueDate = item.endDate ?? item.proposal.endDate
+			return !!dueDate && dueDate <= today
+		}
+
+		const pendingRevert = await this.repo.findPendingRevert()
+		const dueRevert = pendingRevert.filter(isDueForRevert)
+
+		const revertUpdates: Parameters<typeof studentRepo.update>[0] =
+			dueRevert
+				.filter((item) => item.student !== null)
+				.map((item) => ({
+					id: item.student!.id,
+					updatePayload: { activityStatus: 'serving' }
+				}))
+		if (revertUpdates.length > 0) {
+			await studentRepo.update(revertUpdates)
+		}
+		for (const item of dueRevert) {
+			await this.repo.markTrooperReverted(item.id, now)
+		}
+
+		log.info(
+			'ActivityStatusProposalController.runScheduledTransitions complete',
+			{ applied: dueApplication.length, reverted: dueRevert.length }
+		)
+
+		return { applied: dueApplication.length, reverted: dueRevert.length }
 	}
 }
 

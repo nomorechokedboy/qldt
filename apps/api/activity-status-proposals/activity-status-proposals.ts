@@ -1,5 +1,6 @@
 import { api, Query } from 'encore.dev/api'
 import { APICallMeta, currentRequest } from 'encore.dev'
+import log from 'encore.dev/log'
 import { getAuthData } from '~encore/auth'
 import { AppError } from '../errors'
 import { setAuditContext } from '../middleware/audit'
@@ -46,6 +47,11 @@ interface ActivityStatusProposalTrooperItemResp {
 	id: number
 	itemStatus: string
 	failureReason: string | null
+	effectiveDate: string | null
+	startDate: string | null
+	endDate: string | null
+	appliedAt: string | null
+	revertedAt: string | null
 	student?: StudentSummary
 }
 
@@ -58,6 +64,9 @@ interface ActivityStatusProposalResp {
 	decidedAt: string | null
 	createdAt: string
 	updatedAt: string
+	effectiveDate: string | null
+	startDate: string | null
+	endDate: string | null
 	unit?: UnitSummary
 	requestedBy?: UserSummary
 	approver?: UserSummary
@@ -109,6 +118,9 @@ function toResponse(
 		decidedAt: p.decidedAt,
 		createdAt: p.createdAt ?? '',
 		updatedAt: p.updatedAt ?? '',
+		effectiveDate: p.effectiveDate,
+		startDate: p.startDate,
+		endDate: p.endDate,
 		unit: toUnitSummary(p.unit),
 		requestedBy: toUserSummary(p.requestedBy),
 		approver: toUserSummary(p.approver),
@@ -117,6 +129,11 @@ function toResponse(
 			id: t.id,
 			itemStatus: t.itemStatus,
 			failureReason: t.failureReason,
+			effectiveDate: t.effectiveDate,
+			startDate: t.startDate,
+			endDate: t.endDate,
+			appliedAt: t.appliedAt,
+			revertedAt: t.revertedAt,
 			student: toStudentSummary(t.student)
 		}))
 	}
@@ -153,6 +170,9 @@ interface CreateActivityStatusProposalBody {
 	approverUserId: number
 	targetActivityStatus: TargetActivityStatus
 	note?: string | null
+	effectiveDate?: string | null
+	startDate?: string | null
+	endDate?: string | null
 	troopers: CreateActivityStatusProposalTrooperInput[]
 }
 
@@ -311,6 +331,22 @@ export const ApproveActivityStatusProposal = api(
 		})
 
 		return { data: await toResponseWithCanDecide(data, actorUserId) }
+	}
+)
+
+// Triggered externally (k8s CronJob hitting this over the internal
+// network), same convention as GET /commander-digest/cron and
+// GET /students/cron - no `auth: true`. Applies due status transitions
+// (effectiveDate/startDate reached) and reverts due windows (endDate
+// reached) for already-approved troopers. Not gated by a shared secret,
+// same as the other cron endpoints.
+export const ActivityStatusProposalCron = api(
+	{ expose: false, method: 'GET', path: '/activity-status-proposals/cron' },
+	async (): Promise<{ ok: true }> => {
+		log.info('ActivityStatusProposalCron triggered')
+		await activityStatusProposalController.runScheduledTransitions()
+		log.info('ActivityStatusProposalCron complete')
+		return { ok: true }
 	}
 )
 

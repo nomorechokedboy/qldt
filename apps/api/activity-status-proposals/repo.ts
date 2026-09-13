@@ -1,4 +1,4 @@
-import { and, eq, inArray, SQL } from 'drizzle-orm'
+import { and, eq, inArray, isNotNull, isNull, SQL } from 'drizzle-orm'
 import log from 'encore.dev/log'
 import { Repository } from '.'
 import orm, { DrizzleDatabase } from '../database'
@@ -11,6 +11,7 @@ import {
 	activityStatusProposalTroopers,
 	activityStatusProposals,
 	CreateActivityStatusProposalTrooperInput,
+	PendingTrooperTransition,
 	UpdateActivityStatusProposalMap
 } from '../schema/activity-status-proposals'
 import { handleDatabaseErr } from '../utils'
@@ -48,7 +49,10 @@ class repo implements Repository {
 					await tx.insert(activityStatusProposalTroopers).values(
 						troopers.map((t) => ({
 							proposalId: created.id,
-							studentId: t.studentId
+							studentId: t.studentId,
+							effectiveDate: t.effectiveDate ?? null,
+							startDate: t.startDate ?? null,
+							endDate: t.endDate ?? null
 						}))
 					)
 				}
@@ -155,6 +159,63 @@ class repo implements Repository {
 			.set({ itemStatus, failureReason: failureReason ?? null })
 			.where(eq(activityStatusProposalTroopers.id, id))
 			.catch(handleDatabaseErr)
+	}
+
+	async markTrooperApplied(id: number, appliedAt: string): Promise<void> {
+		await this.db
+			.update(activityStatusProposalTroopers)
+			.set({ itemStatus: 'approved', appliedAt })
+			.where(eq(activityStatusProposalTroopers.id, id))
+			.catch(handleDatabaseErr)
+	}
+
+	async markTrooperReverted(id: number, revertedAt: string): Promise<void> {
+		await this.db
+			.update(activityStatusProposalTroopers)
+			.set({ revertedAt })
+			.where(eq(activityStatusProposalTroopers.id, id))
+			.catch(handleDatabaseErr)
+	}
+
+	// Approved troopers whose target status hasn't been pushed to the
+	// student yet — candidates for the scheduled-transition sweep to apply
+	// once their resolved effectiveDate/startDate is reached.
+	findPendingApplication(): Promise<PendingTrooperTransition[]> {
+		return this.db.query.activityStatusProposalTroopers
+			.findMany({
+				where: and(
+					eq(activityStatusProposalTroopers.itemStatus, 'approved'),
+					isNull(activityStatusProposalTroopers.appliedAt)
+				),
+				with: {
+					proposal: true,
+					student: { columns: { id: true, unitId: true } }
+				}
+			})
+			.catch(handleDatabaseErr) as unknown as Promise<
+			PendingTrooperTransition[]
+		>
+	}
+
+	// Applied troopers on a ranged target status whose endDate hasn't been
+	// reverted to 'serving' yet — candidates for the scheduled-transition
+	// sweep once their resolved endDate is reached.
+	findPendingRevert(): Promise<PendingTrooperTransition[]> {
+		return this.db.query.activityStatusProposalTroopers
+			.findMany({
+				where: and(
+					eq(activityStatusProposalTroopers.itemStatus, 'approved'),
+					isNotNull(activityStatusProposalTroopers.appliedAt),
+					isNull(activityStatusProposalTroopers.revertedAt)
+				),
+				with: {
+					proposal: true,
+					student: { columns: { id: true, unitId: true } }
+				}
+			})
+			.catch(handleDatabaseErr) as unknown as Promise<
+			PendingTrooperTransition[]
+		>
 	}
 }
 
