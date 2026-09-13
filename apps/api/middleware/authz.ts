@@ -174,6 +174,22 @@ const PERMISSION_MAP: Record<string, string[]> = {
 	'POST:/transfer-requests/:id/reject': ['transfer_requests:reject'],
 	'POST:/transfer-requests/:id/cancel': ['transfer_requests:update'],
 
+	'POST:/activity-status-proposals': ['activity_status_proposals:create'],
+	'GET:/activity-status-proposals': ['activity_status_proposals:read'],
+	'GET:/activity-status-proposals/eligible-approvers': [
+		'activity_status_proposals:create'
+	],
+	'GET:/activity-status-proposals/:id': ['activity_status_proposals:read'],
+	'POST:/activity-status-proposals/:id/approve': [
+		'activity_status_proposals:approve'
+	],
+	'POST:/activity-status-proposals/:id/reject': [
+		'activity_status_proposals:reject'
+	],
+	'POST:/activity-status-proposals/:id/cancel': [
+		'activity_status_proposals:update'
+	],
+
 	'POST:/inventory-sessions': ['inventory_sessions:create'],
 	'POST:/inventory-sessions/results': ['inventory_sessions:update'],
 	'GET:/inventory-sessions/room/:roomId/open': ['inventory_sessions:read'],
