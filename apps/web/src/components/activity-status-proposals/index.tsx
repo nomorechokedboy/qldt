@@ -24,7 +24,7 @@ import {
 	useApproveActivityStatusProposal,
 	useCancelActivityStatusProposal
 } from '@/hooks/useActivityStatusProposalActions'
-import { getErrorMessage } from '@/lib/utils'
+import { formatDbTimestamp, getErrorMessage } from '@/lib/utils'
 import type { activity_status_proposals } from '@/api/client'
 import {
 	getActivityStatusProposalColumns,
@@ -39,6 +39,43 @@ const ITEM_STATUS_LABELS: Record<string, string> = {
 	pending: 'Chờ duyệt',
 	approved: 'Thành công',
 	failed: 'Thất bại'
+}
+
+// 'discharged' is a one-off transition (single effectiveDate); the other 3
+// target statuses are ranged (startDate → endDate, reverting to 'serving'
+// once endDate is reached). Mirrors isRangedTargetActivityStatus on the
+// backend.
+const isRangedTarget = (target: string) => target !== 'discharged'
+
+function resolveDates(
+	target: string,
+	header: {
+		effectiveDate: string | null
+		startDate: string | null
+		endDate: string | null
+	},
+	override?: {
+		effectiveDate: string | null
+		startDate: string | null
+		endDate: string | null
+	}
+): {
+	effectiveDate: string | null
+	startDate: string | null
+	endDate: string | null
+} {
+	if (!isRangedTarget(target)) {
+		return {
+			effectiveDate: override?.effectiveDate ?? header.effectiveDate,
+			startDate: null,
+			endDate: null
+		}
+	}
+	return {
+		effectiveDate: null,
+		startDate: override?.startDate ?? header.startDate,
+		endDate: override?.endDate ?? header.endDate
+	}
 }
 
 export default function ActivityStatusProposalsTab() {
@@ -192,6 +229,29 @@ export default function ActivityStatusProposalsTab() {
 											selected.status}
 									</Badge>
 								</span>
+								{isRangedTarget(
+									selected.targetActivityStatus
+								) ? (
+									<>
+										<span className='text-muted-foreground'>
+											Từ ngày
+										</span>
+										<span>{selected.startDate ?? '—'}</span>
+										<span className='text-muted-foreground'>
+											Đến ngày
+										</span>
+										<span>{selected.endDate ?? '—'}</span>
+									</>
+								) : (
+									<>
+										<span className='text-muted-foreground'>
+											Ngày hiệu lực
+										</span>
+										<span>
+											{selected.effectiveDate ?? '—'}
+										</span>
+									</>
+								)}
 								{selected.note && (
 									<>
 										<span className='text-muted-foreground'>
@@ -216,29 +276,77 @@ export default function ActivityStatusProposalsTab() {
 										Quân nhân
 									</h4>
 									<ul className='space-y-1 text-sm'>
-										{selected.troopers.map((t) => (
-											<li
-												key={t.id}
-												className='flex items-center justify-between rounded-md border p-2'
-											>
-												<span>
-													{t.student?.fullName ??
-														`#${t.id}`}
-												</span>
-												<span className='flex items-center gap-2'>
-													<Badge variant='outline'>
-														{ITEM_STATUS_LABELS[
-															t.itemStatus
-														] ?? t.itemStatus}
-													</Badge>
-													{t.failureReason && (
-														<span className='text-xs text-destructive'>
-															{t.failureReason}
+										{selected.troopers.map((t) => {
+											const dates = resolveDates(
+												selected.targetActivityStatus,
+												selected,
+												t
+											)
+											return (
+												<li
+													key={t.id}
+													className='flex flex-col gap-1 rounded-md border p-2'
+												>
+													<div className='flex items-center justify-between'>
+														<span>
+															{t.student
+																?.fullName ??
+																`#${t.id}`}
 														</span>
-													)}
-												</span>
-											</li>
-										))}
+														<span className='flex items-center gap-2'>
+															<Badge variant='outline'>
+																{ITEM_STATUS_LABELS[
+																	t.itemStatus
+																] ??
+																	t.itemStatus}
+															</Badge>
+															{t.failureReason && (
+																<span className='text-xs text-destructive'>
+																	{
+																		t.failureReason
+																	}
+																</span>
+															)}
+														</span>
+													</div>
+													<div className='flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground'>
+														{isRangedTarget(
+															selected.targetActivityStatus
+														) ? (
+															<span>
+																{dates.startDate ??
+																	'—'}{' '}
+																→{' '}
+																{dates.endDate ??
+																	'—'}
+															</span>
+														) : (
+															<span>
+																Ngày hiệu lực:{' '}
+																{dates.effectiveDate ??
+																	'—'}
+															</span>
+														)}
+														{t.appliedAt && (
+															<span>
+																Đã áp dụng:{' '}
+																{formatDbTimestamp(
+																	t.appliedAt
+																)}
+															</span>
+														)}
+														{t.revertedAt && (
+															<span>
+																Đã khôi phục:{' '}
+																{formatDbTimestamp(
+																	t.revertedAt
+																)}
+															</span>
+														)}
+													</div>
+												</li>
+											)
+										})}
 									</ul>
 								</div>
 							)}
