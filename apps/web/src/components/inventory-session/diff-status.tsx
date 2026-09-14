@@ -46,11 +46,11 @@ export function AssetDiffColor(
 ) {
 	switch (status) {
 		case 'condition_changed':
-			return 'bg-yellow-50 text-yellow-700'
+			return 'bg-yellow-50 text-yellow-700 dark:bg-yellow-950/40 dark:text-yellow-400'
 		case 'matched':
-			return 'bg-green-50 text-green-700'
+			return 'bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-400'
 		case 'extra':
-			return 'bg-blue-50 text-blue-700'
+			return 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400'
 		default:
 			return ''
 	}
@@ -61,11 +61,11 @@ export function StockDiffColor(
 ) {
 	switch (status) {
 		case 'matched':
-			return 'bg-green-50 text-green-700'
+			return 'bg-green-50 text-green-700 dark:bg-green-950/40 dark:text-green-400'
 		case 'extra':
-			return 'bg-blue-50 text-blue-700'
+			return 'bg-blue-50 text-blue-700 dark:bg-blue-950/40 dark:text-blue-400'
 		case 'over':
-			return 'bg-yellow-50 text-yellow-700'
+			return 'bg-yellow-50 text-yellow-700 dark:bg-yellow-950/40 dark:text-yellow-400'
 		default:
 			return ''
 	}

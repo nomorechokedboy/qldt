@@ -44,7 +44,7 @@ export default function DynamicPersonList({
 												onClick={() => {
 													field.removeValue(index)
 												}}
-												className='text-red-500 hover:text-red-700 hover:bg-red-50'
+												className='text-destructive hover:text-destructive hover:bg-accent'
 											>
 												<Trash2 className='h-4 w-4' />
 											</Button>

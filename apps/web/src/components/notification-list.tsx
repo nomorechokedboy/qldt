@@ -85,7 +85,7 @@ export function NotificationList({ onItemClick }: NotificationListProps) {
 
 	if (error) {
 		return (
-			<div className='p-4 text-center text-red-500'>
+			<div className='p-4 text-center text-destructive'>
 				Failed to load notifications
 			</div>
 		)
@@ -105,7 +105,7 @@ export function NotificationList({ onItemClick }: NotificationListProps) {
 				{sortedDates.map((date) => (
 					<div key={date} className='mb-4'>
 						{/* Date Header */}
-						<div className='sticky top-0 bg-gray-100 px-4 py-2 text-xs font-medium text-gray-600 uppercase tracking-wide border-b'>
+						<div className='sticky top-0 bg-muted px-4 py-2 text-xs font-medium text-muted-foreground uppercase tracking-wide border-b'>
 							{formatDateHeader(date)}
 						</div>
 
@@ -127,20 +127,20 @@ export function NotificationList({ onItemClick }: NotificationListProps) {
 				{isFetchingNextPage && (
 					<div className='flex items-center justify-center p-4'>
 						<Loader2 className='h-4 w-4 animate-spin mr-2' />
-						<span className='text-sm text-gray-500'>
+						<span className='text-sm text-muted-foreground'>
 							Đang tải...
 						</span>
 					</div>
 				)}
 
 				{!hasNextPage && allNotifications.length > 0 && (
-					<div className='p-4 text-center text-gray-500 text-sm'>
+					<div className='p-4 text-center text-muted-foreground text-sm'>
 						Không còn thông báo mới
 					</div>
 				)}
 
 				{allNotifications.length === 0 && (
-					<div className='p-8 text-center text-gray-500'>
+					<div className='p-8 text-center text-muted-foreground'>
 						<Bell className='h-12 w-12 mx-auto mb-4 opacity-50' />
 						<p>Chưa có thông báo nào</p>
 					</div>

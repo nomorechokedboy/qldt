@@ -5,7 +5,14 @@ import { Badge } from '@/components/ui/badge'
 import UserEditForm from './user-edit-form'
 import type { User } from '@/types'
 import { getMediaUri, isSuperAdmin } from '@/lib/utils'
-import { UserPen, Shield, User as UserIcon, Building2, Award, Briefcase } from 'lucide-react'
+import {
+	UserPen,
+	Shield,
+	User as UserIcon,
+	Building2,
+	Award,
+	Briefcase
+} from 'lucide-react'
 import useUserData from '@/hooks/useUsers'
 
 interface StudentInfoTabsProps {
@@ -16,12 +23,20 @@ export default function StudentInfoTabs({ user }: StudentInfoTabsProps) {
 	const [open, setOpen] = useState(false)
 	const { refetch: refetchStudents } = useUserData()
 	console.log('Render UserInfoTabs for user:', user)
-	const InfoItem = ({ icon: Icon, label, value }: { icon: React.ElementType; label: string; value?: string }) => {
+	const InfoItem = ({
+		icon: Icon,
+		label,
+		value
+	}: {
+		icon: React.ElementType
+		label: string
+		value?: string
+	}) => {
 		if (!value) return null
 		return (
 			<div className='flex items-center gap-2 text-sm'>
-				<Icon className='w-4 h-4 text-gray-500' />
-				<span className='text-gray-600'>
+				<Icon className='w-4 h-4 text-muted-foreground' />
+				<span className='text-muted-foreground'>
 					<span className='font-medium'>{label}:</span> {value}
 				</span>
 			</div>
@@ -35,7 +50,7 @@ export default function StudentInfoTabs({ user }: StudentInfoTabsProps) {
 					<div className='flex flex-col sm:flex-row gap-6'>
 						{/* Avatar */}
 						<div className='flex-shrink-0'>
-							<div className='w-32 h-32 bg-gradient-to-br from-gray-200 to-gray-300 rounded-lg overflow-hidden shadow-md'>
+							<div className='w-32 h-32 bg-gradient-to-br from-muted to-muted/70 rounded-lg overflow-hidden shadow-md'>
 								<img
 									src={getMediaUri('/avt.jpg')}
 									alt={user?.displayName}
@@ -52,7 +67,7 @@ export default function StudentInfoTabs({ user }: StudentInfoTabsProps) {
 									{user?.displayName}
 								</CardTitle>
 								{user?.isSuperUser && (
-									<Badge variant='default' className='bg-blue-600'>
+									<Badge variant='default'>
 										<Shield className='w-3 h-3 mr-1' />
 										Quản trị viên
 									</Badge>
@@ -61,7 +76,7 @@ export default function StudentInfoTabs({ user }: StudentInfoTabsProps) {
 
 							{/* Position (if exists) - shown prominently */}
 							{user?.position && (
-								<p className='text-lg text-blue-600 font-medium'>
+								<p className='text-lg text-primary font-medium'>
 									{user.position}
 								</p>
 							)}
@@ -93,9 +108,12 @@ export default function StudentInfoTabs({ user }: StudentInfoTabsProps) {
 							{/* Account Type for non-admin users */}
 							{!user?.isSuperUser && (
 								<div className='flex items-center gap-2 text-sm pt-2'>
-									<UserIcon className='w-4 h-4 text-gray-500' />
-									<span className='text-gray-600'>
-										<span className='font-medium'>Loại tài khoản:</span> Người dùng
+									<UserIcon className='w-4 h-4 text-muted-foreground' />
+									<span className='text-muted-foreground'>
+										<span className='font-medium'>
+											Loại tài khoản:
+										</span>{' '}
+										Người dùng
 									</span>
 								</div>
 							)}

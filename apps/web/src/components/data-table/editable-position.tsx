@@ -64,9 +64,7 @@ export default function EditablePosition({
 			}
 			isLoading={isPending}
 			placeholder={
-				<Badge className='bg-blue-500 font-bold'>
-					{row.original.position}
-				</Badge>
+				<Badge className='font-bold'>{row.original.position}</Badge>
 			}
 		/>
 	)

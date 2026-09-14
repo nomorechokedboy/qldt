@@ -288,7 +288,7 @@ export default function StudentEditForm({
 					)}
 
 					{field.state.meta.errors.length > 0 && (
-						<span className='text-red-500 text-sm'>
+						<span className='text-destructive text-sm'>
 							{field.state.meta.errors.join(', ')}
 						</span>
 					)}
@@ -326,11 +326,13 @@ export default function StudentEditForm({
 						<CardTitle className='text-xl'>
 							{student.fullName}
 						</CardTitle>
-						<p className='text-gray-600'>
+						<p className='text-muted-foreground'>
 							Chức vụ: {student.position}
 						</p>
-						<p className='text-gray-600'>Cấp bậc: {student.rank}</p>
-						<p className='text-gray-600'>
+						<p className='text-muted-foreground'>
+							Cấp bậc: {student.rank}
+						</p>
+						<p className='text-muted-foreground'>
 							Đơn vị: {student.unit?.name || 'Chưa có đơn vị'}
 						</p>
 					</div>
@@ -341,35 +343,35 @@ export default function StudentEditForm({
 						<Tabs.List className='flex border-b mb-4 space-x-4 px-2 overflow-x-auto'>
 							<Tabs.Trigger
 								value='personal'
-								className='pb-2 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 whitespace-nowrap'
+								className='pb-2 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary whitespace-nowrap'
 							>
 								<User className='h-4 w-4 inline mr-1' />
 								Thông tin cá nhân
 							</Tabs.Trigger>
 							<Tabs.Trigger
 								value='military'
-								className='pb-2 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 whitespace-nowrap'
+								className='pb-2 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary whitespace-nowrap'
 							>
 								<Shield className='h-4 w-4 inline mr-1' />
 								Quân sự & Chính trị
 							</Tabs.Trigger>
 							<Tabs.Trigger
 								value='education'
-								className='pb-2 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 whitespace-nowrap'
+								className='pb-2 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary whitespace-nowrap'
 							>
 								<GraduationCap className='h-4 w-4 inline mr-1' />
 								Học vấn & Kỹ năng
 							</Tabs.Trigger>
 							<Tabs.Trigger
 								value='family'
-								className='pb-2 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 whitespace-nowrap'
+								className='pb-2 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary whitespace-nowrap'
 							>
 								<Users className='h-4 w-4 inline mr-1' />
 								Gia đình
 							</Tabs.Trigger>
 							<Tabs.Trigger
 								value='history'
-								className='pb-2 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 whitespace-nowrap'
+								className='pb-2 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary whitespace-nowrap'
 							>
 								<Award className='h-4 w-4 inline mr-1' />
 								Lịch sử & Khác
@@ -379,7 +381,7 @@ export default function StudentEditForm({
 						{/* TAB THÔNG TIN CÁ NHÂN */}
 						<Tabs.Content value='personal'>
 							<div className='space-y-6'>
-								<div className='border-l-4 border-blue-500 pl-4 py-2 bg-blue-50/30 rounded-r'>
+								<div className='border-l-4 border-primary pl-4 py-2 bg-primary/5 rounded-r'>
 									<h3 className='font-semibold mb-3 text-base flex items-center gap-2'>
 										<User className='h-4 w-4' />
 										Thông tin cá nhân
@@ -432,7 +434,7 @@ export default function StudentEditForm({
 						{/* TAB QUÂN SỰ & CHÍNH TRỊ */}
 						<Tabs.Content value='military'>
 							<div className='space-y-6'>
-								<div className='border-l-4 border-green-500 pl-4 py-2 bg-green-50/30 rounded-r'>
+								<div className='border-l-4 border-green-500 pl-4 py-2 bg-green-50 dark:bg-green-950/30 rounded-r'>
 									<h3 className='font-semibold mb-3 text-base flex items-center gap-2'>
 										<Shield className='h-4 w-4' />
 										Quân sự
@@ -613,7 +615,7 @@ export default function StudentEditForm({
 									</h3>
 									<div className='space-y-4'>
 										{childrenInfos.length === 0 && (
-											<div className='text-center py-6 text-gray-500 border-2 border-dashed rounded-md'>
+											<div className='text-center py-6 text-muted-foreground border-2 border-dashed rounded-md'>
 												<Users className='h-8 w-8 mx-auto mb-2 opacity-50' />
 												<p className='text-sm'>
 													Chưa có thông tin con cái
@@ -623,7 +625,7 @@ export default function StudentEditForm({
 										{childrenInfos.map((child, index) => (
 											<div
 												key={index}
-												className='grid grid-cols-1 md:grid-cols-3 gap-2 items-end border p-3 rounded-md bg-white'
+												className='grid grid-cols-1 md:grid-cols-3 gap-2 items-end border p-3 rounded-md bg-card'
 											>
 												<div className='flex flex-col gap-1'>
 													<Label>Họ tên</Label>
@@ -685,7 +687,7 @@ export default function StudentEditForm({
 									</h3>
 									<div className='space-y-4'>
 										{siblings.length === 0 && (
-											<div className='text-center py-6 text-gray-500 border-2 border-dashed rounded-md'>
+											<div className='text-center py-6 text-muted-foreground border-2 border-dashed rounded-md'>
 												<Users className='h-8 w-8 mx-auto mb-2 opacity-50' />
 												<p className='text-sm'>
 													Chưa có thông tin anh chị em
@@ -695,7 +697,7 @@ export default function StudentEditForm({
 										{siblings.map((sibling, index) => (
 											<div
 												key={index}
-												className='grid grid-cols-1 md:grid-cols-3 gap-2 items-end border p-3 rounded-md bg-white'
+												className='grid grid-cols-1 md:grid-cols-3 gap-2 items-end border p-3 rounded-md bg-card'
 											>
 												<div className='flex flex-col gap-1'>
 													<Label>Họ tên</Label>

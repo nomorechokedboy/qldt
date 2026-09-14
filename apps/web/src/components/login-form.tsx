@@ -18,7 +18,7 @@ export function LoginForm() {
 	})
 
 	return (
-		<div className='w-screen h-screen flex flex-col items-center bg-gray-100 overflow-auto'>
+		<div className='w-screen h-screen flex flex-col items-center bg-background overflow-auto'>
 			{/* Pattern chấm mờ */}
 			<div className='absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.15),transparent_50%),radial-gradient(circle_at_bottom_right,rgba(139,92,246,0.15),transparent_50%)]'></div>
 
@@ -30,21 +30,21 @@ export function LoginForm() {
 						variant='badge'
 						className='h-28 w-28 mb-3 text-primary drop-shadow-md'
 					/>
-					<h1 className='text-2xl uppercase font-extrabold text-gray-800 text-center'>
+					<h1 className='text-2xl uppercase font-extrabold text-foreground text-center'>
 						Lữ đoàn 75, Quân khu 7
 					</h1>
-					<p className='text-gray-600 font-medium uppercase'>
+					<p className='text-muted-foreground font-medium uppercase'>
 						PHẦN MỀM QUẢN LÝ DOANH TRẠI
 					</p>
 				</div>
 
 				{/* Form login */}
-				<Card className='shadow-xl border backdrop-blur bg-white/90'>
+				<Card className='shadow-xl border backdrop-blur bg-card/90'>
 					<CardHeader>
-						<CardTitle className='text-center text-blue-900'>
+						<CardTitle className='text-center text-primary'>
 							Đăng nhập hệ thống
 						</CardTitle>
-						<p className='text-center text-gray-500 text-sm'>
+						<p className='text-center text-muted-foreground text-sm'>
 							Phiên bản 1.0
 						</p>
 					</CardHeader>
@@ -88,7 +88,7 @@ export function LoginForm() {
 								)}
 							</form.AppField>
 
-							<div className='text-sm text-blue-600 hover:underline cursor-pointer'>
+							<div className='text-sm text-primary hover:underline cursor-pointer'>
 								Quên mật khẩu?
 							</div>
 

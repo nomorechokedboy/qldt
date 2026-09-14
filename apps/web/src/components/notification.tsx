@@ -4,7 +4,8 @@ import { formatTimestamp } from '@/lib/utils'
 import type { AppNotification, AppNotificationType } from '@/types'
 import { useMutation } from '@tanstack/react-query'
 import { Link, type LinkProps } from '@tanstack/react-router'
-import { Cake, UserRoundCheck } from 'lucide-react'
+import { Bell, Cake, UserRoundCheck } from 'lucide-react'
+import { Button } from './ui/button'
 
 export type NotificationProps = {
 	notification: AppNotification
@@ -18,7 +19,7 @@ const getNotificationIcon = (type: AppNotificationType) => {
 		case 'birthday':
 			return <Cake size={16} />
 		default:
-			return '🔔'
+			return <Bell size={16} />
 	}
 }
 
@@ -70,19 +71,19 @@ export default function Notification({
 	return (
 		<Link to={to} onClick={handleReadNotification}>
 			<div
-				className={`p-4 hover:bg-gray-50 transition-colors ${
-					!notification.readAt === null ? 'bg-blue-50' : ''
+				className={`p-4 hover:bg-accent transition-colors ${
+					notification.readAt === null ? 'bg-primary/5' : ''
 				}`}
 			>
 				<div className='flex flex-col gap-2 space-x-3'>
 					<div className='flex gap-2'>
-						<div className='bg-white rounded-full p-1'>
+						<Button variant='ghost' size='icon' disabled>
 							<span className='text-xs'>
 								{getNotificationIcon(
 									notification.notificationType
 								)}
 							</span>
-						</div>
+						</Button>
 						{notification.title}
 					</div>
 					<div className='flex-1 min-w-0'>
@@ -91,12 +92,12 @@ export default function Notification({
 								{notification.message}
 							</span>
 						</p>
-						<p className='text-xs text-gray-500 mt-1'>
+						<p className='text-xs text-muted-foreground mt-1'>
 							{formatTimestamp(notification.createdAt)}
 						</p>
 					</div>
 					{!notification.readAt && (
-						<div className='w-2 h-2 bg-blue-500 rounded-full mt-2' />
+						<div className='w-2 h-2 bg-primary rounded-full mt-2' />
 					)}
 				</div>
 			</div>

@@ -472,7 +472,7 @@ export default function ToggleInput<T extends InputType>(
 							variant='ghost'
 							onClick={handleSave}
 							onMouseDown={(e) => e.preventDefault()}
-							className='h-8 w-8 p-0 text-green-600 hover:text-green-700 hover:bg-green-50'
+							className='h-8 w-8 p-0 text-green-600 hover:text-green-700 dark:text-green-500 dark:hover:text-green-400 hover:bg-accent'
 							disabled={disabled || isLoading}
 						>
 							<Check className='h-4 w-4' />
@@ -482,7 +482,7 @@ export default function ToggleInput<T extends InputType>(
 							variant='ghost'
 							onClick={handleCancel}
 							onMouseDown={(e) => e.preventDefault()}
-							className='h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50'
+							className='h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-accent'
 							disabled={disabled || isLoading}
 						>
 							<X className='h-4 w-4' />

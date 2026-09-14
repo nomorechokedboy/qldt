@@ -145,7 +145,7 @@ export function PoliticalQualityDashboard() {
 						<Users className='h-4 w-4 text-blue-600' />
 					</CardHeader>
 					<CardContent>
-						<div className='text-2xl font-bold text-blue-900'>
+						<div className='text-2xl font-bold text-foreground'>
 							{totalPersonnel}
 						</div>
 						<p className='text-xs text-muted-foreground'>
@@ -162,7 +162,7 @@ export function PoliticalQualityDashboard() {
 						<Target className='h-4 w-4 text-green-600' />
 					</CardHeader>
 					<CardContent>
-						<div className='text-2xl font-bold text-green-900'>
+						<div className='text-2xl font-bold text-foreground'>
 							{totalUnit}
 						</div>
 						<p className='text-xs text-muted-foreground'>Đơn vị</p>
@@ -177,7 +177,7 @@ export function PoliticalQualityDashboard() {
 						<School />
 					</CardHeader>
 					<CardContent>
-						<div className='text-2xl font-bold text-green-900'>
+						<div className='text-2xl font-bold text-foreground'>
 							{totalSquads}
 						</div>
 						<p className='text-xs text-muted-foreground'>
@@ -188,7 +188,7 @@ export function PoliticalQualityDashboard() {
 			</div>
 
 			{/* Navigation Tabs */}
-			<div className='flex space-x-1 bg-gray-100 p-1 rounded-lg'>
+			<div className='flex space-x-1 bg-muted p-1 rounded-lg'>
 				<Button
 					variant={activeTab === 'overview' ? 'default' : 'ghost'}
 					onClick={() => setActiveTab('overview')}

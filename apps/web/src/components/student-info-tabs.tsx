@@ -93,7 +93,9 @@ export default function StudentInfoTabs({ student }: StudentInfoTabsProps) {
 
 		return (
 			<div>
-				<p className='text-xs font-medium text-gray-500'>{label}</p>
+				<p className='text-xs font-medium text-muted-foreground'>
+					{label}
+				</p>
 				<p>{displayValue}</p>
 			</div>
 		)
@@ -107,10 +109,10 @@ export default function StudentInfoTabs({ student }: StudentInfoTabsProps) {
 		<>
 			{/* HEADER + NÚT SỬA */}
 			<Card className='mb-4 border-l-4 '>
-				<CardHeader className='flex flex-col lg:flex-row items-start gap-6 p-6 bg-gradient-to-r from-blue-50/50 to-transparent'>
+				<CardHeader className='flex flex-col lg:flex-row items-start gap-6 p-6 bg-gradient-to-r from-primary/5 to-transparent'>
 					{/* Avatar Section */}
 					<div className='relative group'>
-						<div className='w-40 h-40 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg overflow-hidden shrink-0 ring-4 ring-white shadow-lg'>
+						<div className='w-40 h-40 bg-gradient-to-br from-muted to-muted/70 rounded-lg overflow-hidden shrink-0 ring-4 ring-background shadow-lg'>
 							<img
 								src={getMediaUri(avatarUri)}
 								alt={student.fullName}
@@ -134,12 +136,12 @@ export default function StudentInfoTabs({ student }: StudentInfoTabsProps) {
 					<div className='flex-1 min-w-0'>
 						<div className='flex items-start justify-between gap-4 mb-4'>
 							<div>
-								<CardTitle className='text-2xl font-bold text-gray-900 mb-1'>
+								<CardTitle className='text-2xl font-bold text-foreground mb-1'>
 									{student.fullName}
 								</CardTitle>
-								<p className='text-sm text-gray-500'>
+								<p className='text-sm text-muted-foreground'>
 									Mã quân nhân:{' '}
-									<span className='font-semibold text-gray-700'>
+									<span className='font-semibold text-foreground'>
 										{student.studentId || 'Chưa có'}
 									</span>
 								</p>
@@ -150,10 +152,10 @@ export default function StudentInfoTabs({ student }: StudentInfoTabsProps) {
 							<div className='flex items-center gap-2 text-sm'>
 								<Shield className='h-4 w-4 text-green-600 shrink-0' />
 								<div>
-									<p className='text-xs text-gray-500'>
+									<p className='text-xs text-muted-foreground'>
 										Cấp bậc
 									</p>
-									<p className='font-semibold text-gray-900'>
+									<p className='font-semibold text-foreground'>
 										{student.rank || '-'}
 									</p>
 								</div>
@@ -162,10 +164,10 @@ export default function StudentInfoTabs({ student }: StudentInfoTabsProps) {
 							<div className='flex items-center gap-2 text-sm'>
 								<User className='h-4 w-4 text-blue-600 shrink-0' />
 								<div>
-									<p className='text-xs text-gray-500'>
+									<p className='text-xs text-muted-foreground'>
 										Chức vụ
 									</p>
-									<p className='font-semibold text-gray-900'>
+									<p className='font-semibold text-foreground'>
 										{student.position || '-'}
 									</p>
 								</div>
@@ -174,10 +176,10 @@ export default function StudentInfoTabs({ student }: StudentInfoTabsProps) {
 							<div className='flex items-center gap-2 text-sm'>
 								<Users className='h-4 w-4 text-purple-600 shrink-0' />
 								<div>
-									<p className='text-xs text-gray-500'>
+									<p className='text-xs text-muted-foreground'>
 										Đơn vị
 									</p>
-									<p className='font-semibold text-gray-900'>
+									<p className='font-semibold text-foreground'>
 										{student.unit?.name || 'Chưa có đơn vị'}
 									</p>
 								</div>
@@ -198,10 +200,10 @@ export default function StudentInfoTabs({ student }: StudentInfoTabsProps) {
 									/>
 								</svg>
 								<div>
-									<p className='text-xs text-gray-500'>
+									<p className='text-xs text-muted-foreground'>
 										Nhập ngũ
 									</p>
-									<p className='font-semibold text-gray-900'>
+									<p className='font-semibold text-foreground'>
 										{student.enlistmentPeriod || '-'}
 									</p>
 								</div>
@@ -277,7 +279,7 @@ export default function StudentInfoTabs({ student }: StudentInfoTabsProps) {
 				<Tabs.List className='flex border-b mb-4 space-x-4 px-2 overflow-x-auto'>
 					<Tabs.Trigger
 						value='personal'
-						className='pb-2 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 whitespace-nowrap'
+						className='pb-2 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary whitespace-nowrap'
 					>
 						<User className='h-4 w-4 inline mr-1' />
 						Thông tin cá nhân
@@ -285,7 +287,7 @@ export default function StudentInfoTabs({ student }: StudentInfoTabsProps) {
 
 					<Tabs.Trigger
 						value='military'
-						className='pb-2 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 whitespace-nowrap'
+						className='pb-2 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary whitespace-nowrap'
 					>
 						<Shield className='h-4 w-4 inline mr-1' />
 						Quân sự & Chính trị
@@ -293,7 +295,7 @@ export default function StudentInfoTabs({ student }: StudentInfoTabsProps) {
 
 					<Tabs.Trigger
 						value='education'
-						className='pb-2 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 whitespace-nowrap'
+						className='pb-2 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary whitespace-nowrap'
 					>
 						<GraduationCap className='h-4 w-4 inline mr-1' />
 						Học vấn & Kỹ năng
@@ -301,7 +303,7 @@ export default function StudentInfoTabs({ student }: StudentInfoTabsProps) {
 
 					<Tabs.Trigger
 						value='family'
-						className='pb-2 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 whitespace-nowrap'
+						className='pb-2 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary whitespace-nowrap'
 					>
 						<Users className='h-4 w-4 inline mr-1' />
 						Gia đình
@@ -309,7 +311,7 @@ export default function StudentInfoTabs({ student }: StudentInfoTabsProps) {
 
 					<Tabs.Trigger
 						value='history'
-						className='pb-2 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:text-blue-600 whitespace-nowrap'
+						className='pb-2 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary whitespace-nowrap'
 					>
 						<Award className='h-4 w-4 inline mr-1' />
 						Lịch sử & Khác
@@ -320,7 +322,7 @@ export default function StudentInfoTabs({ student }: StudentInfoTabsProps) {
 				<Tabs.Content value='personal'>
 					<Card>
 						<CardContent className='space-y-6 pt-6'>
-							<div className='border-l-4 border-blue-500 pl-4 py-2 bg-blue-50/30 rounded-r'>
+							<div className='border-l-4 border-primary pl-4 py-2 bg-primary/5 rounded-r'>
 								<h3 className='font-semibold mb-3 text-base flex items-center gap-2'>
 									<User className='h-4 w-4' />
 									Thông tin cá nhân
@@ -368,7 +370,7 @@ export default function StudentInfoTabs({ student }: StudentInfoTabsProps) {
 				<Tabs.Content value='military'>
 					<Card>
 						<CardContent className='space-y-6 pt-6'>
-							<div className='border-l-4 border-green-500 pl-4 py-2 bg-green-50/30 rounded-r'>
+							<div className='border-l-4 border-green-500 pl-4 py-2 bg-green-50 dark:bg-green-950/30 rounded-r'>
 								<h3 className='font-semibold mb-3 text-base flex items-center gap-2'>
 									<Shield className='h-4 w-4' />
 									Quân sự
@@ -554,7 +556,7 @@ export default function StudentInfoTabs({ student }: StudentInfoTabsProps) {
 											(child, idx) => (
 												<div
 													key={idx}
-													className='border p-3 rounded bg-white'
+													className='border p-3 rounded bg-card'
 												>
 													<p className='font-medium'>
 														Con {idx + 1}
@@ -570,7 +572,7 @@ export default function StudentInfoTabs({ student }: StudentInfoTabsProps) {
 										)}
 									</div>
 								) : (
-									<div className='text-center py-6 text-gray-500 border-2 border-dashed rounded-md'>
+									<div className='text-center py-6 text-muted-foreground border-2 border-dashed rounded-md'>
 										<Users className='h-8 w-8 mx-auto mb-2 opacity-50' />
 										<p className='text-sm'>
 											Chưa có thông tin con cái
@@ -592,7 +594,7 @@ export default function StudentInfoTabs({ student }: StudentInfoTabsProps) {
 											(sibling, idx) => (
 												<div
 													key={idx}
-													className='border p-3 rounded bg-white'
+													className='border p-3 rounded bg-card'
 												>
 													<p className='font-medium'>
 														Người {idx + 1}
@@ -609,7 +611,7 @@ export default function StudentInfoTabs({ student }: StudentInfoTabsProps) {
 										)}
 									</div>
 								) : (
-									<div className='text-center py-6 text-gray-500 border-2 border-dashed rounded-md'>
+									<div className='text-center py-6 text-muted-foreground border-2 border-dashed rounded-md'>
 										<Users className='h-8 w-8 mx-auto mb-2 opacity-50' />
 										<p className='text-sm'>
 											Chưa có thông tin anh chị em

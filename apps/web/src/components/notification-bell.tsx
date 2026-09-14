@@ -48,9 +48,9 @@ export function NotificationBell() {
 			</Button>
 
 			{isOpen && (
-				<div className='absolute right-0 top-full mt-2 w-80 bg-white rounded-lg shadow-lg border z-50'>
+				<div className='absolute right-0 top-full mt-2 w-80 bg-popover text-popover-foreground rounded-lg shadow-lg border z-50'>
 					<div className='p-4 border-b'>
-						<h3 className='font-semibold text-lg'>Notifications</h3>
+						<h3 className='font-semibold text-lg'>Thông báo</h3>
 					</div>
 					<NotificationList onItemClick={handleCloseDropdown} />
 				</div>
