@@ -67,11 +67,6 @@ class controller {
 		return userRepo.findByIds([...ids])
 	}
 
-	async canDecide(unitId: number, userId: number): Promise<boolean> {
-		const ids = await this.eligibleApproverIds(unitId)
-		return ids.has(userId)
-	}
-
 	// A unit's own troopers plus every descendant unit's troopers — a
 	// proposal raised from a battalion-or-above unit covers troopers
 	// assigned anywhere in its subordinate chain, not only directly on the
@@ -282,15 +277,18 @@ class controller {
 		return this.getRequestOrThrow(id)
 	}
 
-	private async assertActorIsApprover(
+	// Only the specific user chosen as approverUserId at creation time may
+	// decide this proposal - being a generically-eligible commander for the
+	// unit is not enough (that broader set only gates who can be PICKED as
+	// approver, via listEligibleApprovers/eligibleApproverIds above).
+	private assertActorIsApprover(
 		proposal: ActivityStatusProposal,
 		actorUserId: number
-	): Promise<void> {
-		const eligibleIds = await this.eligibleApproverIds(proposal.unit!.id)
-		if (!eligibleIds.has(actorUserId)) {
+	): void {
+		if (proposal.approver?.id !== actorUserId) {
 			throw AppError.handleAppErr(
 				AppError.unauthorized(
-					"You don't have permission to approve/reject this activity status proposal"
+					'Only the designated approver can approve/reject this activity status proposal'
 				)
 			)
 		}

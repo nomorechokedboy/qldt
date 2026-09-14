@@ -243,25 +243,15 @@ function toResponse(
 	}
 }
 
-// Whether the given actor currently holds one of the 4 leadership roles on
-// a unit that is ancestor-or-self of both the request's source and
-// destination units — i.e. whether the approve/reject buttons should show
-// for this specific request, independent of the org-wide
+// Whether the given actor is the specific user chosen as this request's
+// approver — i.e. whether the approve/reject buttons should show for this
+// specific request, independent of the org-wide
 // transfer_requests:approve/reject permission.
 async function toResponseWithCanDecide(
 	tr: TransferRequest,
 	actorUserId: number
 ): Promise<TransferRequestResp> {
-	const canDecide =
-		tr.status === 'pending' &&
-		tr.sourceUnit !== undefined &&
-		tr.destinationUnit !== undefined
-			? await transferRequestController.canDecide(
-					tr.sourceUnit.id,
-					tr.destinationUnit.id,
-					actorUserId
-				)
-			: false
+	const canDecide = tr.status === 'pending' && tr.approver?.id === actorUserId
 	return { ...toResponse(tr), canDecide }
 }
 

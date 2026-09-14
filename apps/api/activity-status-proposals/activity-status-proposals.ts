@@ -139,22 +139,15 @@ function toResponse(
 	}
 }
 
-// Whether the given actor currently holds one of the 4 leadership roles on
-// the proposal's unit or one of its ancestors — i.e. whether the
-// approve/reject buttons should show for this specific proposal,
-// independent of the org-wide activity_status_proposals:approve/reject
-// permission.
+// Whether the given actor is the specific user chosen as this proposal's
+// approver — i.e. whether the approve/reject buttons should show for this
+// specific proposal, independent of the org-wide
+// activity_status_proposals:approve/reject permission.
 async function toResponseWithCanDecide(
 	p: ActivityStatusProposal,
 	actorUserId: number
 ): Promise<ActivityStatusProposalResp> {
-	const canDecide =
-		p.status === 'pending' && p.unit !== undefined
-			? await activityStatusProposalController.canDecide(
-					p.unit.id,
-					actorUserId
-				)
-			: false
+	const canDecide = p.status === 'pending' && p.approver?.id === actorUserId
 	return { ...toResponse(p), canDecide }
 }
 

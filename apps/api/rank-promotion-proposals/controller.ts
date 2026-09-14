@@ -65,11 +65,6 @@ class controller {
 		return userRepo.findByIds([...ids])
 	}
 
-	async canDecide(unitId: number, userId: number): Promise<boolean> {
-		const ids = await this.eligibleApproverIds(unitId)
-		return ids.has(userId)
-	}
-
 	// Students currently locked into a still-live proposal (pending, or
 	// approved but not yet applied) - a trooper can't be targeted by a
 	// second, concurrent promotion until the first one is decided/applied.
@@ -263,15 +258,18 @@ class controller {
 		return this.getRequestOrThrow(id)
 	}
 
-	private async assertActorIsApprover(
+	// Only the specific user chosen as approverUserId at creation time may
+	// decide this proposal - being a generically-eligible commander for the
+	// unit is not enough (that broader set only gates who can be PICKED as
+	// approver, via listEligibleApprovers/eligibleApproverIds above).
+	private assertActorIsApprover(
 		proposal: RankPromotionProposal,
 		actorUserId: number
-	): Promise<void> {
-		const eligibleIds = await this.eligibleApproverIds(proposal.unit!.id)
-		if (!eligibleIds.has(actorUserId)) {
+	): void {
+		if (proposal.approver?.id !== actorUserId) {
 			throw AppError.handleAppErr(
 				AppError.unauthorized(
-					"You don't have permission to approve/reject this rank promotion proposal"
+					'Only the designated approver can approve/reject this rank promotion proposal'
 				)
 			)
 		}
