@@ -41,6 +41,7 @@ import Client, {
 	type locations,
 	type materials,
 	type positions,
+	type rank_promotion_proposals,
 	type students,
 	type transfer_requests,
 	type units
@@ -680,5 +681,55 @@ export function RejectActivityStatusProposal(id: number, reason: string) {
 export function CancelActivityStatusProposal(id: number) {
 	return requestClient.activity_status_proposals
 		.CancelActivityStatusProposal(id)
+		.then((resp) => resp.data)
+}
+
+// Rank promotion proposals
+
+export function GetRankPromotionProposals(
+	params?: rank_promotion_proposals.GetRankPromotionProposalsQuery
+) {
+	return requestClient.rank_promotion_proposals
+		.GetRankPromotionProposals(params ?? {})
+		.then((resp) => resp.data)
+}
+
+export function GetRankPromotionProposalEligibleApprovers(
+	params: rank_promotion_proposals.GetRankPromotionProposalEligibleApproversQuery
+) {
+	return requestClient.rank_promotion_proposals
+		.GetRankPromotionProposalEligibleApprovers(params)
+		.then((resp) => resp.data)
+}
+
+export function GetRankPromotionProposal(id: number) {
+	return requestClient.rank_promotion_proposals
+		.GetRankPromotionProposal(id)
+		.then((resp) => resp.data)
+}
+
+export function CreateRankPromotionProposal(
+	body: rank_promotion_proposals.CreateRankPromotionProposalBody
+) {
+	return requestClient.rank_promotion_proposals
+		.CreateRankPromotionProposal(body)
+		.then((resp) => resp.data)
+}
+
+export function ApproveRankPromotionProposal(id: number) {
+	return requestClient.rank_promotion_proposals
+		.ApproveRankPromotionProposal(id)
+		.then((resp) => resp.data)
+}
+
+export function RejectRankPromotionProposal(id: number, reason: string) {
+	return requestClient.rank_promotion_proposals
+		.RejectRankPromotionProposal(id, { reason })
+		.then((resp) => resp.data)
+}
+
+export function CancelRankPromotionProposal(id: number) {
+	return requestClient.rank_promotion_proposals
+		.CancelRankPromotionProposal(id)
 		.then((resp) => resp.data)
 }

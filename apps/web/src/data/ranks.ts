@@ -1,6 +1,6 @@
 export const rankOptions = [
-	{ label: 'Binh nhất', value: 'Binh nhất', group: 'HSQ-BS' },
 	{ label: 'Binh nhì', value: 'Binh nhì', group: 'HSQ-BS' },
+	{ label: 'Binh nhất', value: 'Binh nhất', group: 'HSQ-BS' },
 	{ label: 'Hạ sĩ', value: 'Hạ sĩ', group: 'HSQ-BS' },
 	{ label: 'Trung sĩ', value: 'Trung sĩ', group: 'HSQ-BS' },
 	{ label: 'Thượng sĩ', value: 'Thượng sĩ', group: 'HSQ-BS' },
