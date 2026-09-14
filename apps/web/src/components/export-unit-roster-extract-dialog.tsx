@@ -1,5 +1,5 @@
 import { ExportUnitRosterExtract } from '@/api'
-import { DocxPreviewDialog } from '@/components/docx-preview-dialog'
+import { LazyDocxPreviewDialog as DocxPreviewDialog } from '@/components/docx-preview-dialog-lazy'
 import { Button } from '@/components/ui/button'
 import {
 	Dialog,
