@@ -9,19 +9,39 @@ import {
 import { SidebarTrigger } from '@/components/ui/sidebar'
 import { Separator } from '@/components/ui/separator'
 import { NotificationBell } from './notification-bell'
-import React from 'react'
+import React, { useMemo } from 'react'
 import { useLocation } from '@tanstack/react-router'
 import { UserNav } from './data-table/user-nav'
+import { routeSegmentLabels } from '@/data/route-labels'
+import useUnitsData from '@/hooks/useUnitsData'
 
 export default function Header() {
 	const location = useLocation()
 	const path = location.pathname
 	const segments = path.split('/').filter(Boolean)
 
+	// Dynamic route segments (e.g. /dai-doi/$companyAlias) are unit aliases
+	// rather than known slugs - resolve them to the unit's name so the
+	// breadcrumb never shows a raw alias like "c1".
+	const { data: units = [] } = useUnitsData()
+	const unitNameByAlias = useMemo(
+		() => new Map(units.map((u) => [u.alias, u.name])),
+		[units]
+	)
+
+	const segmentLabel = (seg: string) => {
+		const decoded = decodeURIComponent(seg)
+		return (
+			routeSegmentLabels[decoded] ??
+			unitNameByAlias.get(decoded) ??
+			decoded
+		)
+	}
+
 	const breadcrumbItems = [
 		{ label: 'Trang chủ', href: '/' },
 		...segments.map((seg, idx) => ({
-			label: decodeURIComponent(seg),
+			label: segmentLabel(seg),
 			href: '/' + segments.slice(0, idx + 1).join('/')
 		}))
 	]
