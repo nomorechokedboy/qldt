@@ -1,6 +1,7 @@
 import { DataTable } from '@/components/data-table'
 import { ExportMaterialAssetsDialog } from '@/components/export-material-assets-dialog'
 import { ExportTemplateManager } from '@/components/export-template-manager'
+import { LazyImportMaterialAssetsDialog as ImportMaterialAssetsDialog } from '@/components/import-material-assets-dialog-lazy'
 import MaterialAssetForm from '@/components/material-asset-form'
 import { buildMaterialAssetColumns } from '@/components/material-asset-table/columns'
 import { Button } from '@/components/ui/button'
@@ -12,7 +13,8 @@ import useRoomsData from '@/hooks/useRoomsData'
 import useStudentData from '@/hooks/useStudents'
 import useUnitData from '@/hooks/useUnitData'
 import type { MaterialAsset } from '@/types'
-import { ArrowDownToLine, Settings } from 'lucide-react'
+import { ArrowDownToLine, Settings, Upload } from 'lucide-react'
+import { useState } from 'react'
 
 type CompanyWeaponsTabProps = {
 	unitAlias: string
@@ -39,6 +41,7 @@ export default function CompanyWeaponsTab({
 	})
 	const { createSearchConfig, createFacetedFilter } =
 		useDataTableToolbarConfig()
+	const [importAssetsOpen, setImportAssetsOpen] = useState(false)
 
 	const unitOptions = company ? [company] : []
 	const unitIds = unitOptions.map((u) => u.id)
@@ -67,16 +70,31 @@ export default function CompanyWeaponsTab({
 					Vũ khí/trang bị của {company?.name}
 				</h2>
 				{company?.id !== undefined && (
-					<MaterialAssetForm
-						unitOptions={unitOptions}
-						defaultUnitId={company.id}
-						roomOptions={companyRooms}
-						materialTypeOptions={weaponTypes}
-						studentOptions={students ?? []}
-						onSuccess={handleChanged}
-					/>
+					<div className='flex items-center gap-2'>
+						<Button
+							variant='outline'
+							onClick={() => setImportAssetsOpen(true)}
+						>
+							<Upload />
+							Import
+						</Button>
+						<MaterialAssetForm
+							unitOptions={unitOptions}
+							defaultUnitId={company.id}
+							roomOptions={companyRooms}
+							materialTypeOptions={weaponTypes}
+							studentOptions={students ?? []}
+							onSuccess={handleChanged}
+						/>
+					</div>
 				)}
 			</div>
+
+			<ImportMaterialAssetsDialog
+				isOpen={importAssetsOpen}
+				onClose={() => setImportAssetsOpen(false)}
+				onSuccess={handleChanged}
+			/>
 
 			<DataTable
 				placeholder='Đơn vị chưa có vũ khí/trang bị nào'

@@ -531,6 +531,12 @@ export function AddMaterialStock(body: materials.MaterialStockBody) {
 		.then((resp) => resp.data)
 }
 
+export function AddMaterialStocks(body: materials.MaterialStockBody[]) {
+	return requestClient.materials
+		.AddMaterialStock({ data: body ?? [] })
+		.then((resp) => resp.data)
+}
+
 export function UpdateMaterialStocks(
 	data: materials.UpdateMaterialStockBody['data']
 ) {
@@ -552,6 +558,12 @@ export function GetMaterialAssets(params?: materials.GetMaterialAssetsQuery) {
 export function CreateMaterialAsset(body: materials.MaterialAssetBody) {
 	return requestClient.materials
 		.CreateMaterialAsset({ data: [body] })
+		.then((resp) => resp.data)
+}
+
+export function CreateMaterialAssets(body: materials.MaterialAssetBody[]) {
+	return requestClient.materials
+		.CreateMaterialAsset({ data: body ?? [] })
 		.then((resp) => resp.data)
 }
 

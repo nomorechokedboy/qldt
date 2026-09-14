@@ -3,6 +3,7 @@ import { DataTable } from '@/components/data-table'
 import { ExportMaterialStocksDialog } from '@/components/export-material-stocks-dialog'
 import { ExportTemplateManager } from '@/components/export-template-manager'
 import BuildingCard from '@/components/facility-table/building-card'
+import { LazyImportMaterialStocksDialog as ImportMaterialStocksDialog } from '@/components/import-material-stocks-dialog-lazy'
 import MaterialStockForm from '@/components/material-stock-form'
 import { buildMaterialStockColumns } from '@/components/material-stock-table/columns'
 import { Button } from '@/components/ui/button'
@@ -14,7 +15,8 @@ import useMaterialTypesData from '@/hooks/useMaterialTypesData'
 import useRoomsData from '@/hooks/useRoomsData'
 import useUnitData from '@/hooks/useUnitData'
 import type { MaterialStock } from '@/types'
-import { ArrowDownToLine, Settings } from 'lucide-react'
+import { ArrowDownToLine, Settings, Upload } from 'lucide-react'
+import { useState } from 'react'
 
 type CompanyFacilitiesTabProps = {
 	unitAlias: string
@@ -40,6 +42,7 @@ export default function CompanyFacilitiesTab({
 	const { data: materialTypes } = useMaterialTypesData({ enabled: true })
 	const { createSearchConfig, createFacetedFilter } =
 		useDataTableToolbarConfig()
+	const [importStocksOpen, setImportStocksOpen] = useState(false)
 
 	const unitOptions = company ? [company] : []
 	const unitIds = unitOptions.map((u) => u.id)
@@ -116,15 +119,30 @@ export default function CompanyFacilitiesTab({
 					Vật tư sinh hoạt
 				</h2>
 				{company?.id !== undefined && (
-					<MaterialStockForm
-						unitOptions={unitOptions}
-						defaultUnitId={company.id}
-						roomOptions={companyRooms}
-						materialTypeOptions={supplyTypes}
-						onSuccess={handleStockChanged}
-					/>
+					<div className='flex items-center gap-2'>
+						<Button
+							variant='outline'
+							onClick={() => setImportStocksOpen(true)}
+						>
+							<Upload />
+							Import
+						</Button>
+						<MaterialStockForm
+							unitOptions={unitOptions}
+							defaultUnitId={company.id}
+							roomOptions={companyRooms}
+							materialTypeOptions={supplyTypes}
+							onSuccess={handleStockChanged}
+						/>
+					</div>
 				)}
 			</div>
+
+			<ImportMaterialStocksDialog
+				isOpen={importStocksOpen}
+				onClose={() => setImportStocksOpen(false)}
+				onSuccess={handleStockChanged}
+			/>
 
 			<DataTable
 				placeholder='Đơn vị chưa có vật tư sinh hoạt nào'

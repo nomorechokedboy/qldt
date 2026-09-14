@@ -35,6 +35,7 @@ import { AxiosError } from 'axios'
 import { BaseSchema } from './data/schema'
 import { Button } from '../ui/button'
 import type { FacetedFilterConfig } from '@/types'
+import { cn } from '@/lib/utils'
 
 type ToolbarProps<TData> = Omit<DataTableToolbarProps<TData>, 'table'>
 
@@ -65,6 +66,7 @@ interface DataTableProps<TData, TValue> {
 	}) => React.ReactNode
 	getRowId?: Parameters<typeof useReactTable<TData>>[0]['getRowId']
 	withDynamicColsData?: boolean
+	getRowClassName?: (data: TData, index: number) => string | undefined
 }
 
 type ViewMode = 'table' | 'card'
@@ -87,7 +89,8 @@ export function DataTable<TData, TValue>({
 	onConfirmRows,
 	renderToolbarActions,
 	getRowId,
-	withDynamicColsData = true
+	withDynamicColsData = true,
+	getRowClassName
 }: DataTableProps<TData, TValue>) {
 	const [rowSelection, setRowSelection] = useState({})
 	const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
@@ -290,6 +293,12 @@ export function DataTable<TData, TValue>({
 									data-state={
 										row.getIsSelected() && 'selected'
 									}
+									className={cn(
+										getRowClassName?.(
+											row.original,
+											row.index
+										)
+									)}
 								>
 									{row.getVisibleCells().map((cell) => (
 										<TableCell key={cell.id}>
