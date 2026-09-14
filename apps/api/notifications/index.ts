@@ -12,6 +12,9 @@ export interface Repository {
 	createBatch(params: CreateBatchNotificationData): Promise<NotificationDB>
 	delete(params: NotificationDB[]): Promise<NotificationDB[]>
 	find(q: NotificationQuery): Promise<Notification[]>
-	update(params: UpdateNotificationMap): Promise<NotificationDB[]>
-	unreadCount(): Promise<number>
+	update(
+		params: UpdateNotificationMap,
+		recipientId: number
+	): Promise<NotificationDB[]>
+	unreadCount(recipientId: number): Promise<number>
 }

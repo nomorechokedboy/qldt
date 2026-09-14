@@ -76,6 +76,7 @@ export type NotificationDB = InferSelectModel<typeof notifications>
 export type NotificationQuery = {
 	page: number
 	pageSize: number
+	recipientId: number
 }
 
 export type Notification = NotificationDB & { items: NotificationItem[] }

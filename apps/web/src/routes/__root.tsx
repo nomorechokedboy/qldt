@@ -100,9 +100,7 @@ function RootLayout() {
 	async function setupStream() {
 		try {
 			const stream = await requestClient.notifications.NotificationStream(
-				{
-					userId: 0
-				}
+				{}
 			)
 
 			streamRef.current = stream
