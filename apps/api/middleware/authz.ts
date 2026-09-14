@@ -190,6 +190,22 @@ const PERMISSION_MAP: Record<string, string[]> = {
 		'activity_status_proposals:update'
 	],
 
+	'POST:/rank-promotion-proposals': ['rank_promotion_proposals:create'],
+	'GET:/rank-promotion-proposals': ['rank_promotion_proposals:read'],
+	'GET:/rank-promotion-proposals/eligible-approvers': [
+		'rank_promotion_proposals:create'
+	],
+	'GET:/rank-promotion-proposals/:id': ['rank_promotion_proposals:read'],
+	'POST:/rank-promotion-proposals/:id/approve': [
+		'rank_promotion_proposals:approve'
+	],
+	'POST:/rank-promotion-proposals/:id/reject': [
+		'rank_promotion_proposals:reject'
+	],
+	'POST:/rank-promotion-proposals/:id/cancel': [
+		'rank_promotion_proposals:update'
+	],
+
 	'POST:/inventory-sessions': ['inventory_sessions:create'],
 	'POST:/inventory-sessions/results': ['inventory_sessions:update'],
 	'GET:/inventory-sessions/room/:roomId/open': ['inventory_sessions:read'],
