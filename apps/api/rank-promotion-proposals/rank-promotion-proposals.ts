@@ -242,10 +242,12 @@ export const GetRankPromotionProposalEligibleApprovers = api(
 	async (
 		q: GetRankPromotionProposalEligibleApproversQuery
 	): Promise<GetRankPromotionProposalEligibleApproversResponse> => {
-		const users =
+		const actorUserId = requireActorUserId()
+		const users = (
 			await rankPromotionProposalController.listEligibleApprovers(
 				q.unitId
 			)
+		).filter((u) => u.id !== actorUserId)
 		return {
 			data: users.map((u) => ({
 				id: u.id,

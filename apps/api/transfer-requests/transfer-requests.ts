@@ -382,10 +382,13 @@ export const GetTransferEligibleApprovers = api(
 	async (
 		q: GetTransferEligibleApproversQuery
 	): Promise<GetTransferEligibleApproversResponse> => {
-		const users = await transferRequestController.listEligibleApprovers(
-			q.sourceUnitId,
-			q.destinationUnitId
-		)
+		const actorUserId = requireActorUserId()
+		const users = (
+			await transferRequestController.listEligibleApprovers(
+				q.sourceUnitId,
+				q.destinationUnitId
+			)
+		).filter((u) => u.id !== actorUserId)
 		return {
 			data: users.map((u) => ({
 				id: u.id,
