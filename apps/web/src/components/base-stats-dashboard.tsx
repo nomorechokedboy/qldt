@@ -600,7 +600,7 @@ export default function BaseStatsDashboard() {
 			<div className='flex flex-col gap-4 md:flex-row md:items-center md:justify-between'>
 				<div>
 					<h2 className='text-2xl font-bold tracking-tight'>
-						Thống kê doanh trại
+						Thống kê đơn vị
 					</h2>
 					<p className='text-muted-foreground'>
 						Tổng hợp quân số, cơ sở vật chất và vũ khí/trang bị của

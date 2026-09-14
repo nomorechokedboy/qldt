@@ -63,8 +63,8 @@ export default function InitializeRootUnitForm() {
 					Khởi tạo đơn vị
 				</CardTitle>
 				<CardDescription className='text-center text-muted-foreground'>
-					Hệ thống chưa có đơn vị nào. Hãy khởi tạo đơn vị gốc của
-					doanh trại trước khi tiếp tục sử dụng.
+					Hệ thống chưa có đơn vị nào. Hãy khởi tạo đơn vị gốc của đơn
+					vị trước khi tiếp tục sử dụng.
 				</CardDescription>
 			</CardHeader>
 			<CardContent>
