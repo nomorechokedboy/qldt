@@ -2,8 +2,21 @@ import { api } from 'encore.dev/api'
 import notificationController from './controller'
 import log from 'encore.dev/log'
 import { Subscription } from 'encore.dev/pubsub'
+import { getAuthData } from '~encore/auth'
+import { AppError } from '../errors'
 import { notiTopic } from '../topics'
 import NotificationBroadcaster from './broadcaster'
+
+function requireActorUserId(): number {
+	const authData = getAuthData()
+	const actorUserId = authData?.userID ? Number(authData.userID) : undefined
+	if (actorUserId === undefined) {
+		throw AppError.handleAppErr(
+			AppError.unauthenticated('Authentication required')
+		)
+	}
+	return actorUserId
+}
 
 export interface GetNotificationsQuery {
 	page?: number
@@ -46,16 +59,19 @@ interface GetNotificationsResponse {
 }
 
 export const GetNotifications = api(
-	{ expose: true, method: 'GET', path: '/notifications' },
+	{ expose: true, method: 'GET', path: '/notifications', auth: true },
 	async (q: GetNotificationsQuery): Promise<GetNotificationsResponse> => {
-		const resp = await notificationController.find(q).then((data) =>
-			data.map(
-				(n) =>
-					({
-						...n
-					}) as NotificationResponse
+		const actorUserId = requireActorUserId()
+		const resp = await notificationController
+			.find(q, actorUserId)
+			.then((data) =>
+				data.map(
+					(n) =>
+						({
+							...n
+						}) as NotificationResponse
+				)
 			)
-		)
 
 		return { data: resp }
 	}
@@ -66,9 +82,15 @@ interface MarkAsReadRequest {
 }
 
 export const MarkAsRead = api(
-	{ expose: true, method: 'PATCH', path: '/notifications/mark-as-read' },
+	{
+		expose: true,
+		method: 'PATCH',
+		path: '/notifications/mark-as-read',
+		auth: true
+	},
 	async ({ ids }: MarkAsReadRequest) => {
-		await notificationController.markAsRead(ids)
+		const actorUserId = requireActorUserId()
+		await notificationController.markAsRead(ids, actorUserId)
 
 		return {}
 	}
@@ -79,17 +101,18 @@ interface GetUnreadCountResponse {
 }
 
 export const GetUnreadCount = api(
-	{ expose: true, method: 'GET', path: '/notifications/unread' },
+	{ expose: true, method: 'GET', path: '/notifications/unread', auth: true },
 	async (): Promise<GetUnreadCountResponse> => {
-		const count = await notificationController.getUnreadCount()
+		const actorUserId = requireActorUserId()
+		const count = await notificationController.getUnreadCount(actorUserId)
 
 		return { data: { count } }
 	}
 )
 
-interface Handshake {
-	userId: number
-}
+// The stream's recipient is derived from the authenticated actor, never from
+// client-supplied data - so the handshake itself carries nothing.
+interface Handshake {}
 
 export interface Message {
 	type:
@@ -107,11 +130,12 @@ export interface Message {
 const notificationBroadcaster = new NotificationBroadcaster()
 
 export const NotificationStream = api.streamOut<Handshake, Message>(
-	{ expose: true, path: '/notifications/stream' },
-	async ({ userId }, stream) => {
-		log.trace(`Starting notification stream for user ${userId}`)
+	{ expose: true, path: '/notifications/stream', auth: true },
+	async (_handshake, stream) => {
+		const actorUserId = requireActorUserId()
+		log.trace(`Starting notification stream for user ${actorUserId}`)
 
-		notificationBroadcaster.addStream(userId, stream)
+		notificationBroadcaster.addStream(actorUserId, stream)
 
 		try {
 			log.trace('Starting heartbeat stream')
@@ -121,13 +145,13 @@ export const NotificationStream = api.streamOut<Handshake, Message>(
 				const hbStr = hb.toString()
 				await stream.send({
 					type: 'ping',
-					data: { message: hbStr, title: hbStr, userId: userId }
+					data: { message: hbStr, title: hbStr, userId: actorUserId }
 				})
 			}
 		} catch (err) {
 			log.error('Stream error:', err)
 		} finally {
-			notificationBroadcaster.handleStreamDisconnect(userId, stream)
+			notificationBroadcaster.handleStreamDisconnect(actorUserId, stream)
 		}
 	}
 )

@@ -12,7 +12,7 @@ import {
 } from '../schema/notifications'
 import { handleDatabaseErr } from '../utils/index'
 import { Repository } from './index'
-import { desc, eq, inArray, isNull } from 'drizzle-orm'
+import { and, eq, inArray, isNull } from 'drizzle-orm'
 import log from 'encore.dev/log'
 import { v4 as uuidv4 } from 'uuid'
 import { notificationItems } from '../schema/notification-items'
@@ -96,6 +96,7 @@ class NotificationSqliteRepo implements Repository {
 
 		const notis = await this.db.query.notifications
 			.findMany({
+				where: eq(notifications.recipientId, q.recipientId),
 				with: {
 					items: true
 				},
@@ -132,8 +133,13 @@ class NotificationSqliteRepo implements Repository {
 		return enrichedNotifications
 	}
 
-	update(params: UpdateNotificationMap): Promise<NotificationDB[]> {
-		log.info('notifications.update params: ', { params })
+	// Scoped to recipientId as well as id so one user can never flip another
+	// user's notification (e.g. by guessing/enumerating notification ids).
+	update(
+		params: UpdateNotificationMap,
+		recipientId: number
+	): Promise<NotificationDB[]> {
+		log.info('notifications.update params: ', { params, recipientId })
 
 		return this.db
 			.transaction(async (tx) => {
@@ -143,7 +149,12 @@ class NotificationSqliteRepo implements Repository {
 					const updated = await tx
 						.update(notifications)
 						.set(updatePayload)
-						.where(eq(notifications.id, id))
+						.where(
+							and(
+								eq(notifications.id, id),
+								eq(notifications.recipientId, recipientId)
+							)
+						)
 						.returning()
 
 					if (updated.length > 0) {
@@ -212,8 +223,14 @@ class NotificationSqliteRepo implements Repository {
 		}))
 	}
 
-	unreadCount(): Promise<number> {
-		return this.db.$count(notifications, isNull(notifications.readAt))
+	unreadCount(recipientId: number): Promise<number> {
+		return this.db.$count(
+			notifications,
+			and(
+				isNull(notifications.readAt),
+				eq(notifications.recipientId, recipientId)
+			)
+		)
 	}
 }
 

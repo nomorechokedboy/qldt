@@ -21,7 +21,8 @@ export class Controller {
 	) {}
 
 	private convertToEntityQuery(
-		query: GetNotificationsQuery
+		query: GetNotificationsQuery,
+		recipientId: number
 	): NotificationQuery {
 		let page: number = query.page ?? 0
 		let pageSize = query.pageSize ?? 10
@@ -36,7 +37,7 @@ export class Controller {
 			pageSize = 100
 		}
 
-		return { pageSize, page }
+		return { pageSize, page, recipientId }
 	}
 
 	create(params: CreateNotificationParams[]) {
@@ -47,8 +48,14 @@ export class Controller {
 		return this.repo.createBatch(data).catch(AppError.handleAppErr)
 	}
 
-	async find(query: GetNotificationsQuery): Promise<Notification[]> {
-		const q: NotificationQuery = this.convertToEntityQuery(query)
+	async find(
+		query: GetNotificationsQuery,
+		recipientId: number
+	): Promise<Notification[]> {
+		const q: NotificationQuery = this.convertToEntityQuery(
+			query,
+			recipientId
+		)
 		return await this.repo.find(q).catch(AppError.handleAppErr)
 		/* const notifications = await this.repo
             .find(q)
@@ -85,14 +92,19 @@ export class Controller {
         return enrichedNotifications */
 	}
 
-	markAsRead(ids: Array<string>): Promise<Array<NotificationDB>> {
+	markAsRead(
+		ids: Array<string>,
+		recipientId: number
+	): Promise<Array<NotificationDB>> {
 		const updateNotiMap: UpdateNotificationMap = ids.map((id) => ({
 			id,
 			updatePayload: {
 				readAt: dayjs().format('YYYY-MM-DD HH:mm:ss')
 			}
 		}))
-		return this.repo.update(updateNotiMap).catch(AppError.handleAppErr)
+		return this.repo
+			.update(updateNotiMap, recipientId)
+			.catch(AppError.handleAppErr)
 	}
 
 	private async loadPolymorphicData<
@@ -169,8 +181,8 @@ export class Controller {
 		})
 	}
 
-	getUnreadCount(): Promise<number> {
-		return this.repo.unreadCount()
+	getUnreadCount(recipientId: number): Promise<number> {
+		return this.repo.unreadCount(recipientId)
 	}
 }
 
