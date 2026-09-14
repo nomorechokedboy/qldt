@@ -1,5 +1,5 @@
 import { ExportMaterialAssets } from '@/api'
-import { DocxPreviewDialog } from '@/components/docx-preview-dialog'
+import { LazyDocxPreviewDialog as DocxPreviewDialog } from '@/components/docx-preview-dialog-lazy'
 import { ExportColumnPicker } from '@/components/export-column-picker'
 import {
 	buildMaterialAssetExportRow,
