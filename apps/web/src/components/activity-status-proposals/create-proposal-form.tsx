@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react'
 import dayjs from 'dayjs'
-import { Plus } from 'lucide-react'
+import { Plus, Search, X } from 'lucide-react'
 import type { DateRange } from 'react-day-picker'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
+import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
@@ -73,6 +74,18 @@ type TrooperDates = {
 	endDate?: string
 }
 
+// Diacritic- and case-insensitive match so searching "nguyen" finds "Nguyễn"
+// - typing tone marks on every search is a real friction point for
+// Vietnamese names, and the trooper list is exactly where a long roster
+// makes that friction worst.
+function normalizeForSearch(value: string): string {
+	return value
+		.toLowerCase()
+		.normalize('NFD')
+		.replace(/[̀-ͯ]/g, '')
+		.replace(/đ/g, 'd')
+}
+
 export default function CreateActivityStatusProposalForm({
 	onSuccess
 }: {
@@ -87,6 +100,7 @@ export default function CreateActivityStatusProposalForm({
 	const [effectiveDate, setEffectiveDate] = useState<string | undefined>()
 	const [startDate, setStartDate] = useState<string | undefined>()
 	const [endDate, setEndDate] = useState<string | undefined>()
+	const [trooperSearch, setTrooperSearch] = useState('')
 	// Troopers whose "tuỳ chỉnh ngày riêng" row is expanded, and their
 	// override values (only sent to the backend when set - a missing entry
 	// falls back to the header-level date(s) above).
@@ -146,6 +160,17 @@ export default function CreateActivityStatusProposalForm({
 		[students, unitScopeIds]
 	)
 
+	// The name search narrows what's rendered, not what's selectable - a
+	// trooper picked before a search (or under a different query) stays
+	// selected even while filtered out of view.
+	const visibleStudents = useMemo(() => {
+		const query = normalizeForSearch(trooperSearch.trim())
+		if (!query) return unitStudents
+		return unitStudents.filter((s) =>
+			normalizeForSearch(s.fullName ?? '').includes(query)
+		)
+	}, [unitStudents, trooperSearch])
+
 	// Activity status proposals require the unit to be Battalion level or
 	// larger (matches the backend constraint). Scoped to units the current
 	// user can access.
@@ -164,6 +189,7 @@ export default function CreateActivityStatusProposalForm({
 		setStartDate(undefined)
 		setEndDate(undefined)
 		setTrooperDateOverrides(new Map())
+		setTrooperSearch('')
 	}
 
 	const setTrooperDateOverride = (id: number, patch: TrooperDates) => {
@@ -204,12 +230,19 @@ export default function CreateActivityStatusProposalForm({
 			return next
 		})
 	}
+	// Scoped to visibleStudents (not the full roster) so "select all" under an
+	// active search only affects the troopers actually shown - matching
+	// filtered multi-select elsewhere (e.g. Gmail), and avoiding a search
+	// wiping out selections made under a different query.
 	const toggleAllTroopers = (value: boolean) => {
-		if (!value) {
-			setTrooperIds(new Set())
-			return
-		}
-		setTrooperIds(new Set(unitStudents.map((trooper) => trooper.id)))
+		setTrooperIds((prev) => {
+			const next = new Set(prev)
+			for (const s of visibleStudents) {
+				if (value) next.add(s.id)
+				else next.delete(s.id)
+			}
+			return next
+		})
 	}
 
 	const handleSubmit = async (e: React.FormEvent) => {
@@ -274,11 +307,14 @@ export default function CreateActivityStatusProposalForm({
 	// A count comparison alone would misreport "all selected" if trooperIds
 	// ever diverges from the current roster (e.g. the roster changes while
 	// the sheet is open) but still happens to match its size — checking
-	// actual membership avoids that.
+	// actual membership avoids that. Scoped to visibleStudents to match
+	// toggleAllTroopers above.
 	const isAllTroopersSelected =
-		unitStudents.length > 0 &&
-		unitStudents.every((trooper) => trooperIds.has(trooper.id))
-	const isSomeTrooperSelected = trooperIds.size > 0
+		visibleStudents.length > 0 &&
+		visibleStudents.every((trooper) => trooperIds.has(trooper.id))
+	const isSomeVisibleTrooperSelected = visibleStudents.some((trooper) =>
+		trooperIds.has(trooper.id)
+	)
 
 	return (
 		<Sheet
@@ -311,6 +347,7 @@ export default function CreateActivityStatusProposalForm({
 								setUnitId(v)
 								setTrooperIds(new Set())
 								setApproverUserId('')
+								setTrooperSearch('')
 							}}
 						>
 							<SelectTrigger>
@@ -422,144 +459,213 @@ export default function CreateActivityStatusProposalForm({
 					</div>
 
 					<div className='flex min-h-0 flex-1 flex-col space-y-2'>
-						<Label>Quân nhân</Label>
+						<div className='flex items-center justify-between gap-2'>
+							<Label>Quân nhân</Label>
+							{unitStudents.length > 0 && (
+								<span className='text-xs text-muted-foreground'>
+									Đã chọn {trooperIds.size}/
+									{unitStudents.length}
+								</span>
+							)}
+						</div>
 						{!unitId ? (
 							<p className='py-6 text-center text-sm text-muted-foreground'>
 								Chọn đơn vị để xem danh sách quân nhân
 							</p>
 						) : (
-							<ScrollArea className='min-h-32 flex-1 rounded-md border p-2'>
-								{unitStudents.length === 0 && (
-									<p className='p-2 text-sm text-muted-foreground'>
-										Không có quân nhân nào thuộc đơn vị này
-									</p>
-								)}
-
-								{unitStudents.length !== 0 && (
-									<Label
-										htmlFor='proposalTrooperCheckAll'
-										className='flex items-center gap-2 rounded-md p-2 hover:bg-muted'
-									>
-										<Checkbox
-											checked={
-												isAllTroopersSelected ||
-												(isSomeTrooperSelected &&
-													'indeterminate')
+							<>
+								{unitStudents.length > 0 && (
+									<div className='relative'>
+										<Search className='pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground' />
+										<Input
+											value={trooperSearch}
+											onChange={(e) =>
+												setTrooperSearch(e.target.value)
 											}
-											onCheckedChange={(value) => {
-												toggleAllTroopers(!!value)
-											}}
-											id='proposalTrooperCheckAll'
+											placeholder='Tìm theo tên quân nhân...'
+											className='pl-8 pr-8'
 										/>
-										Chọn tất cả
-									</Label>
-								)}
-								{unitStudents.length !== 0 &&
-									unitStudents.map((s) => {
-										const isSelected = trooperIds.has(s.id)
-										const hasOverride =
-											trooperDateOverrides.has(s.id)
-										const override =
-											trooperDateOverrides.get(s.id)
-										const ranged =
-											isRangedTarget(targetActivityStatus)
-										return (
-											<div
-												key={s.id}
-												className='rounded-md p-2 hover:bg-muted'
+										{trooperSearch && (
+											<button
+												type='button'
+												onClick={() =>
+													setTrooperSearch('')
+												}
+												className='absolute top-1/2 right-2.5 -translate-y-1/2 text-muted-foreground hover:text-foreground'
 											>
-												<Label
-													className='flex items-center gap-2'
-													htmlFor={`trooperID-${s.id}`}
+												<X className='size-4' />
+												<span className='sr-only'>
+													Xóa tìm kiếm
+												</span>
+											</button>
+										)}
+									</div>
+								)}
+								<ScrollArea className='min-h-32 flex-1 rounded-md border p-2'>
+									{unitStudents.length === 0 && (
+										<p className='p-2 text-sm text-muted-foreground'>
+											Không có quân nhân nào thuộc đơn vị
+											này
+										</p>
+									)}
+									{unitStudents.length !== 0 &&
+										visibleStudents.length === 0 && (
+											<div className='flex flex-col items-center gap-2 p-4 text-center'>
+												<p className='text-sm text-muted-foreground'>
+													Không tìm thấy quân nhân nào
+													khớp với "{trooperSearch}"
+												</p>
+												<Button
+													type='button'
+													variant='link'
+													size='sm'
+													className='h-auto p-0 text-xs'
+													onClick={() =>
+														setTrooperSearch('')
+													}
 												>
-													<Checkbox
-														id={`trooperID-${s.id}`}
-														checked={isSelected}
-														onCheckedChange={() =>
-															toggleTrooper(s.id)
-														}
-													/>
-													<span className='flex-1 text-sm'>
-														{s.fullName}
-													</span>
-													{isSelected &&
-														targetActivityStatus && (
-															<Button
-																type='button'
-																variant='link'
-																size='sm'
-																className='h-auto p-0 text-xs'
-																onClick={() =>
-																	toggleTrooperDateOverride(
-																		s.id,
-																		!hasOverride
-																	)
-																}
-															>
-																{hasOverride
-																	? 'Dùng ngày chung'
-																	: 'Tuỳ chỉnh ngày riêng'}
-															</Button>
-														)}
-												</Label>
-												{isSelected &&
-													hasOverride &&
-													(ranged ? (
-														<div className='mt-2 pl-6'>
-															<DateRangePicker
-																value={toDateRange(
-																	override?.startDate,
-																	override?.endDate
-																)}
-																onChange={(
-																	range
-																) => {
-																	const {
-																		startDate:
-																			s2,
-																		endDate:
-																			e2
-																	} =
-																		fromDateRange(
-																			range
+													Xóa tìm kiếm
+												</Button>
+											</div>
+										)}
+
+									{visibleStudents.length !== 0 && (
+										<Label
+											htmlFor='proposalTrooperCheckAll'
+											className='flex items-center gap-2 rounded-md p-2 hover:bg-muted'
+										>
+											<Checkbox
+												checked={
+													isAllTroopersSelected ||
+													(isSomeVisibleTrooperSelected &&
+														'indeterminate')
+												}
+												onCheckedChange={(value) => {
+													toggleAllTroopers(!!value)
+												}}
+												id='proposalTrooperCheckAll'
+											/>
+											Chọn tất cả
+											{visibleStudents.length !==
+												unitStudents.length &&
+												` (${visibleStudents.length} hiển thị)`}
+										</Label>
+									)}
+									{visibleStudents.length !== 0 &&
+										visibleStudents.map((s) => {
+											const isSelected = trooperIds.has(
+												s.id
+											)
+											const hasOverride =
+												trooperDateOverrides.has(s.id)
+											const override =
+												trooperDateOverrides.get(s.id)
+											const ranged =
+												isRangedTarget(
+													targetActivityStatus
+												)
+											return (
+												<div
+													key={s.id}
+													className='rounded-md p-2 hover:bg-muted'
+												>
+													<Label
+														className='flex items-center gap-2'
+														htmlFor={`trooperID-${s.id}`}
+													>
+														<Checkbox
+															id={`trooperID-${s.id}`}
+															checked={isSelected}
+															onCheckedChange={() =>
+																toggleTrooper(
+																	s.id
+																)
+															}
+														/>
+														<span className='flex-1 text-sm'>
+															{s.fullName}
+														</span>
+														{isSelected &&
+															targetActivityStatus && (
+																<Button
+																	type='button'
+																	variant='link'
+																	size='sm'
+																	className='h-auto p-0 text-xs'
+																	onClick={() =>
+																		toggleTrooperDateOverride(
+																			s.id,
+																			!hasOverride
 																		)
-																	setTrooperDateOverride(
-																		s.id,
-																		{
+																	}
+																>
+																	{hasOverride
+																		? 'Dùng ngày chung'
+																		: 'Tuỳ chỉnh ngày riêng'}
+																</Button>
+															)}
+													</Label>
+													{isSelected &&
+														hasOverride &&
+														(ranged ? (
+															<div className='mt-2 pl-6'>
+																<DateRangePicker
+																	value={toDateRange(
+																		override?.startDate,
+																		override?.endDate
+																	)}
+																	onChange={(
+																		range
+																	) => {
+																		const {
 																			startDate:
 																				s2,
 																			endDate:
 																				e2
-																		}
-																	)
-																}}
-																placeholder='Khoảng ngày (riêng)'
-																className='w-full'
-															/>
-														</div>
-													) : (
-														<div className='mt-2 pl-6'>
-															<ActivityStatusDateField
-																value={
-																	override?.effectiveDate
-																}
-																onChange={(v) =>
-																	setTrooperDateOverride(
-																		s.id,
-																		{
-																			effectiveDate:
-																				v
-																		}
-																	)
-																}
-																placeholder='Ngày hiệu lực (riêng)'
-															/>
-														</div>
-													))}
-											</div>
-										)
-									})}
-							</ScrollArea>
+																		} =
+																			fromDateRange(
+																				range
+																			)
+																		setTrooperDateOverride(
+																			s.id,
+																			{
+																				startDate:
+																					s2,
+																				endDate:
+																					e2
+																			}
+																		)
+																	}}
+																	placeholder='Khoảng ngày (riêng)'
+																	className='w-full'
+																/>
+															</div>
+														) : (
+															<div className='mt-2 pl-6'>
+																<ActivityStatusDateField
+																	value={
+																		override?.effectiveDate
+																	}
+																	onChange={(
+																		v
+																	) =>
+																		setTrooperDateOverride(
+																			s.id,
+																			{
+																				effectiveDate:
+																					v
+																			}
+																		)
+																	}
+																	placeholder='Ngày hiệu lực (riêng)'
+																/>
+															</div>
+														))}
+												</div>
+											)
+										})}
+								</ScrollArea>
+							</>
 						)}
 					</div>
 				</form>
