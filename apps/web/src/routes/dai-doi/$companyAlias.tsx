@@ -87,7 +87,8 @@ function RouteComponent() {
 								columnVisibility={{
 									...defaultBirthdayColumnVisibility,
 									address: false,
-									status: false
+									status: false,
+									'unit.name': false
 								}}
 								columns={[
 									...battalionStudentColumnsWithoutAction,

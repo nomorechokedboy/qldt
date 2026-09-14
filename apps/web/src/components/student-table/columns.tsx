@@ -14,6 +14,7 @@ import {
 	activityStatusLabels
 } from '@/data/activity-statuses'
 import { unitLabelWithAncestry } from '@/lib/unit-labels'
+import { EllipsisText } from '../data-table/ellipsis-text'
 
 function isoToDdMmYyyy(isoDate: string): string {
 	const [year, month, day] = isoDate.split('-')
@@ -72,9 +73,14 @@ export function buildBattalionUnitColumnWithParent(
 					className='bg-green-400 text-white font-bold'
 					variant='secondary'
 				>
-					{row.original.unit !== undefined
-						? unitLabelWithAncestry(row.original.unit, unitsById)
-						: row.getValue('unit.name')}
+					<EllipsisText maxWidth='120px'>
+						{row.original.unit !== undefined
+							? unitLabelWithAncestry(
+									row.original.unit,
+									unitsById
+								)
+							: row.getValue('unit.name')}
+					</EllipsisText>
 				</Badge>
 			</div>
 		),
@@ -611,7 +617,9 @@ export const baseStudentsColumns: ColumnDef<Student>[] = [
 					className='bg-green-400 text-white font-bold'
 					variant='secondary'
 				>
-					{row.getValue('unit.name')}
+					<EllipsisText maxWidth='120px'>
+						{row.getValue('unit.name')}
+					</EllipsisText>
 				</Badge>
 			</div>
 		),
@@ -753,7 +761,11 @@ export const adversityTableColumns: ColumnDef<Student>[] = [
 			<DataTableColumnHeader column={column} title='Hoàn cảnh gia đình' />
 		),
 		cell: ({ row }) => (
-			<div className='min-w-32'>{row.getValue('familyBackground')}</div>
+			<div className='min-w-32'>
+				<EllipsisText maxWidth='300px'>
+					{row.getValue('familyBackground')}
+				</EllipsisText>
+			</div>
 		),
 		enableHiding: true,
 		meta: {

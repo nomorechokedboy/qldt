@@ -49,7 +49,8 @@ export const defaultCompanyTrooperColumnVisibility = {
 	ethnic: false,
 	educationLevel: false,
 	address: false,
-	status: false
+	status: false,
+	'unit.name': false
 }
 
 export const defaultHcyuColumnVisibility = {

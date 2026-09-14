@@ -56,7 +56,8 @@ export default function UnitTabs({
 					columnVisibility={{
 						...defaultBirthdayColumnVisibility,
 						address: false,
-						status: false
+						status: false,
+						'unit.name': false
 					}}
 					columns={[
 						...buildBattalionStudentColumnsWithoutAction(unitsById),
