@@ -11,10 +11,12 @@ import {
 	FileSpreadsheet,
 	Info,
 	Users,
-	ArrowRight
+	ArrowRight,
+	ArrowLeft,
+	ClipboardList
 } from 'lucide-react'
 import useCreateStudents from '@/hooks/useCreateStudents'
-import { toIsoDate } from '@/common'
+import { toIsoDate, toDdMmYyyy } from '@/common'
 import type { StudentBody } from '@/types'
 import useUnitsData from '@/hooks/useUnitsData'
 import usePositionsData from '@/hooks/usePositionsData'
@@ -140,9 +142,13 @@ export function ImportStudentsDialog({
 
 	const createStudentsMutation = useCreateStudents()
 	const [students, setStudents] = useState<StudentBody[]>([])
-	const [selectedFile, setSelectedFile] = useState(null)
+	const [selectedFile, setSelectedFile] = useState<File | null>(null)
 	const [dragActive, setDragActive] = useState(false)
-	const [uploadStatus, setUploadStatus] = useState('idle') // idle, uploading, success, error
+	// idle -> ready (parsed, awaiting review confirmation) -> uploading ->
+	// success | error (error can also happen pre-parse, e.g. wrong file type)
+	const [uploadStatus, setUploadStatus] = useState<
+		'idle' | 'ready' | 'uploading' | 'success' | 'error'
+	>('idle')
 	const [uploadMessage, setUploadMessage] = useState('')
 	const [parseErrors, setParseErrors] = useState<
 		{ row: number; message: string }[]
@@ -153,7 +159,28 @@ export function ImportStudentsDialog({
 		totalCount: number
 		errors: { row: number; message: string }[]
 	} | null>(null)
-	const fileInputRef = useRef(null)
+	const fileInputRef = useRef<HTMLInputElement>(null)
+
+	// Once a file has been parsed into `students`, the dialog switches from
+	// the upload step to the review step until the user either confirms the
+	// import (-> success) or goes back to pick a different file.
+	const isReviewing = students.length > 0 && uploadStatus !== 'success'
+
+	// Row errors are recorded against the Excel row number (dataRow index +
+	// 4, see handleFileSelect), which is a fixed offset from the matching
+	// `students` array index - used to highlight bad rows in the review table.
+	const errorsByStudentIndex = useMemo(() => {
+		const map = new Map<number, string[]>()
+		parseErrors.forEach((e) => {
+			const index = e.row - 4
+			const list = map.get(index) ?? []
+			list.push(e.message)
+			map.set(index, list)
+		})
+		return map
+	}, [parseErrors])
+
+	const validRowCount = students.length - errorsByStudentIndex.size
 
 	const downloadTemplate = async () => {
 		try {
@@ -582,24 +609,24 @@ export function ImportStudentsDialog({
 				],
 				[''],
 				[
-					'3. Trường childrenInfos: luôn nhập giá trị mặc định [] (nếu chưa có dữ liệu), nếu có dữ liệu sẽ được bổ sung sau trên hệ thống.'
+					'3. Cột Chức vụ và Đơn vị là danh sách chọn (dropdown) hiển thị tên thay vì mã số - vui lòng chỉ chọn từ danh sách có sẵn (xem thêm ở sheet "Danh sách đơn vị" / "Danh sách chức vụ").'
 				],
 				[''],
 				[
-					'4. Cột Chức vụ và Đơn vị là danh sách chọn (dropdown) hiển thị tên thay vì mã số - vui lòng chỉ chọn từ danh sách có sẵn (xem thêm ở sheet "Danh sách đơn vị" / "Danh sách chức vụ").'
+					'4. Các cột có danh sách chọn (dropdown) khác vui lòng chỉ chọn từ danh sách có sẵn.'
 				],
 				[''],
 				[
-					'5. Các cột có danh sách chọn (dropdown) khác vui lòng chỉ chọn từ danh sách có sẵn.'
+					'5. KHÔNG được thay đổi tên cột (row 1, row 2) và chỉ nhập dữ liệu từ dòng 4 trở đi.'
 				],
 				[''],
 				[
-					'6. KHÔNG được thay đổi tên cột (row 1, row 2) và chỉ nhập dữ liệu từ dòng 4 trở đi.'
-				],
-				[''],
-				[
-					'7. Cột Tỉnh/Thành và Phường/Xã (cho cả Quê quán và Trú quán): vui lòng chọn Tỉnh/Thành trước, ' +
+					'6. Cột Tỉnh/Thành và Phường/Xã (cho cả Quê quán và Trú quán): vui lòng chọn Tỉnh/Thành trước, ' +
 						'sau đó danh sách Phường/Xã sẽ tự động lọc theo Tỉnh/Thành đã chọn. Cả hai đều bắt buộc đối với quân nhân mới.'
+				],
+				[''],
+				[
+					'7. Sau khi tải file lên, hệ thống sẽ hiển thị bảng xem trước để kiểm tra dữ liệu trước khi import vào hệ thống.'
 				],
 				[''],
 				[
@@ -653,7 +680,7 @@ export function ImportStudentsDialog({
 		}
 	}
 
-	const handleFileSelect = (file) => {
+	const handleFileSelect = (file: File) => {
 		if (
 			file &&
 			(file.type === 'text/csv' ||
@@ -880,8 +907,6 @@ export function ImportStudentsDialog({
 							}
 
 							if (header === 'enlistmentPeriod') {
-								console.log('Found it')
-
 								if (typeof value === 'number') {
 									// Excel silently turned "03/2026" into a date serial — decode it
 									// back into month/year instead of losing the data.
@@ -1041,7 +1066,7 @@ export function ImportStudentsDialog({
 		try {
 			await createStudentsMutation.mutateAsync(students)
 
-			const mockResults = {
+			const results = {
 				successCount: students.length,
 				errorCount: 0,
 				totalCount: students.length,
@@ -1049,11 +1074,11 @@ export function ImportStudentsDialog({
 			}
 
 			setUploadStatus('success')
-			setImportResults(mockResults)
+			setImportResults(results)
 			setUploadMessage(
-				`Import hoàn tất! Thành công: ${mockResults.successCount}/${mockResults.totalCount} quân nhân`
+				`Import hoàn tất! Thành công: ${results.successCount}/${results.totalCount} quân nhân`
 			)
-			onSuccess?.(mockResults)
+			onSuccess?.(results)
 		} catch (error) {
 			console.error('Import error:', error)
 			setUploadStatus('error')
@@ -1072,6 +1097,7 @@ export function ImportStudentsDialog({
 
 	const resetDialog = () => {
 		setSelectedFile(null)
+		setStudents([])
 		setUploadStatus('idle')
 		setUploadMessage('')
 		setImportResults(null)
@@ -1085,6 +1111,47 @@ export function ImportStudentsDialog({
 	const handleClose = () => {
 		resetDialog()
 		onClose()
+	}
+
+	// Lets the user fix a row directly in the review table instead of having
+	// to re-upload the whole file for a small mistake.
+	const updateStudentField = <K extends keyof StudentBody>(
+		index: number,
+		field: K,
+		value: StudentBody[K]
+	) => {
+		setStudents((prev) =>
+			prev.map((s, i) => (i === index ? { ...s, [field]: value } : s))
+		)
+	}
+
+	// Picking a unit/position from the dropdown always yields a valid id, so
+	// the "not found" parse error recorded for this row (if any) no longer
+	// applies once the user has corrected it here.
+	const handleUnitChange = (index: number, value: string) => {
+		const id = value === '' ? undefined : Number(value)
+		updateStudentField(index, 'unitId', id)
+		if (id !== undefined) {
+			setParseErrors((prev) =>
+				prev.filter(
+					(e) =>
+						!(e.row === index + 4 && e.message.includes('đơn vị'))
+				)
+			)
+		}
+	}
+
+	const handlePositionChange = (index: number, value: string) => {
+		const id = value === '' ? undefined : Number(value)
+		updateStudentField(index, 'positionId', id)
+		if (id !== undefined) {
+			setParseErrors((prev) =>
+				prev.filter(
+					(e) =>
+						!(e.row === index + 4 && e.message.includes('chức vụ'))
+				)
+			)
+		}
 	}
 
 	if (!isOpen) return null
@@ -1110,141 +1177,501 @@ export function ImportStudentsDialog({
 
 				{/* Content */}
 				<div className='p-6 space-y-6'>
-					{/* Instructions */}
-					<div className='bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-lg p-4'>
-						<div className='flex items-start space-x-3'>
-							<Info className='h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0' />
-							<div>
-								<h3 className='font-medium text-blue-900 dark:text-blue-100 mb-2'>
-									Hướng dẫn import
-								</h3>
-								<div className='text-sm text-blue-800 dark:text-blue-200 space-y-2'>
-									<div className='flex items-center space-x-2'>
-										<span className='bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-medium'>
-											1
-										</span>
-										<span>Tải xuống file mẫu</span>
-									</div>
-									<div className='flex items-center space-x-2'>
-										<span className='bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-medium'>
-											2
-										</span>
-										<span>
-											Điền thông tin quân nhân theo định
-											dạng mẫu
-										</span>
-									</div>
-									<div className='flex items-center space-x-2'>
-										<span className='bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-medium'>
-											3
-										</span>
-										<span>Tải file lên và nhấn Import</span>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-
-					{/* Download template */}
-					<div className='border rounded-lg p-4'>
-						<div className='flex items-center justify-between'>
-							<div className='flex items-center space-x-3'>
-								<FileSpreadsheet className='h-8 w-8 text-green-500' />
-								<div>
-									<h3 className='font-medium text-foreground'>
-										File mẫu Excel
-									</h3>
-									<p className='text-sm text-muted-foreground'>
-										Tải xuống để có cấu trúc dữ liệu chính
-										xác
-									</p>
-								</div>
-							</div>
-							<button
-								onClick={downloadTemplate}
-								className='flex items-center space-x-2 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors'
-							>
-								<Download className='h-4 w-4' />
-								<span>Tải xuống</span>
-							</button>
-						</div>
-					</div>
-
-					{/* File upload area */}
-					<div className='space-y-4'>
-						<h3 className='font-medium text-foreground'>
-							Chọn file để import
-						</h3>
-
-						<div
-							className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-								dragActive
-									? 'border-blue-400 bg-blue-50 dark:bg-blue-950/30'
-									: selectedFile
-										? 'border-green-400 bg-green-50 dark:bg-green-950/30'
-										: 'border-border hover:border-muted-foreground'
-							}`}
-							onDragEnter={handleDrag}
-							onDragLeave={handleDrag}
-							onDragOver={handleDrag}
-							onDrop={handleDrop}
-						>
-							<input
-								ref={fileInputRef}
-								type='file'
-								accept='.csv,.xlsx,.xls'
-								onChange={handleFileInputChange}
-								className='hidden'
-							/>
-
-							{selectedFile ? (
-								<div className='space-y-3'>
-									<CheckCircle className='h-12 w-12 text-green-500 mx-auto' />
+					{!isReviewing && (
+						<>
+							{/* Instructions */}
+							<div className='bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-lg p-4'>
+								<div className='flex items-start space-x-3'>
+									<Info className='h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0' />
 									<div>
-										<p className='font-medium text-green-700 dark:text-green-400'>
-											{selectedFile.name}
-										</p>
-										<p className='text-sm text-muted-foreground'>
-											{(
-												selectedFile.size /
-												1024 /
-												1024
-											).toFixed(2)}{' '}
-											MB
-										</p>
+										<h3 className='font-medium text-blue-900 dark:text-blue-100 mb-2'>
+											Hướng dẫn import
+										</h3>
+										<div className='text-sm text-blue-800 dark:text-blue-200 space-y-2'>
+											<div className='flex items-center space-x-2'>
+												<span className='bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-medium'>
+													1
+												</span>
+												<span>Tải xuống file mẫu</span>
+											</div>
+											<div className='flex items-center space-x-2'>
+												<span className='bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-medium'>
+													2
+												</span>
+												<span>
+													Điền thông tin quân nhân
+													theo định dạng mẫu
+												</span>
+											</div>
+											<div className='flex items-center space-x-2'>
+												<span className='bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-medium'>
+													3
+												</span>
+												<span>
+													Tải file lên và nhấn Import
+												</span>
+											</div>
+										</div>
+									</div>
+								</div>
+							</div>
+
+							{/* Download template */}
+							<div className='border rounded-lg p-4'>
+								<div className='flex items-center justify-between'>
+									<div className='flex items-center space-x-3'>
+										<FileSpreadsheet className='h-8 w-8 text-green-500' />
+										<div>
+											<h3 className='font-medium text-foreground'>
+												File mẫu Excel
+											</h3>
+											<p className='text-sm text-muted-foreground'>
+												Tải xuống để có cấu trúc dữ liệu
+												chính xác
+											</p>
+										</div>
 									</div>
 									<button
-										onClick={() =>
-											fileInputRef.current?.click()
-										}
-										className='text-primary hover:text-primary/80 text-sm font-medium'
+										onClick={downloadTemplate}
+										className='flex items-center space-x-2 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors'
 									>
-										Chọn file khác
+										<Download className='h-4 w-4' />
+										<span>Tải xuống</span>
 									</button>
 								</div>
-							) : (
-								<div className='space-y-3'>
-									<FileUp className='h-12 w-12 text-muted-foreground mx-auto' />
-									<div>
-										<p className='text-muted-foreground'>
-											Kéo thả file vào đây hoặc{' '}
+							</div>
+
+							{/* File upload area */}
+							<div className='space-y-4'>
+								<h3 className='font-medium text-foreground'>
+									Chọn file để import
+								</h3>
+
+								<div
+									className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+										dragActive
+											? 'border-blue-400 bg-blue-50 dark:bg-blue-950/30'
+											: selectedFile
+												? 'border-green-400 bg-green-50 dark:bg-green-950/30'
+												: 'border-border hover:border-muted-foreground'
+									}`}
+									onDragEnter={handleDrag}
+									onDragLeave={handleDrag}
+									onDragOver={handleDrag}
+									onDrop={handleDrop}
+								>
+									<input
+										ref={fileInputRef}
+										type='file'
+										accept='.csv,.xlsx,.xls'
+										onChange={handleFileInputChange}
+										className='hidden'
+									/>
+
+									{selectedFile ? (
+										<div className='space-y-3'>
+											<CheckCircle className='h-12 w-12 text-green-500 mx-auto' />
+											<div>
+												<p className='font-medium text-green-700 dark:text-green-400'>
+													{selectedFile.name}
+												</p>
+												<p className='text-sm text-muted-foreground'>
+													{(
+														selectedFile.size /
+														1024 /
+														1024
+													).toFixed(2)}{' '}
+													MB
+												</p>
+											</div>
 											<button
 												onClick={() =>
 													fileInputRef.current?.click()
 												}
-												className='text-primary hover:text-primary/80 font-medium'
+												className='text-primary hover:text-primary/80 text-sm font-medium'
 											>
-												chọn file
+												Chọn file khác
 											</button>
-										</p>
-										<p className='text-sm text-muted-foreground mt-1'>
-											Hỗ trợ file CSV, Excel (.xlsx, .xls)
+										</div>
+									) : (
+										<div className='space-y-3'>
+											<FileUp className='h-12 w-12 text-muted-foreground mx-auto' />
+											<div>
+												<p className='text-muted-foreground'>
+													Kéo thả file vào đây hoặc{' '}
+													<button
+														onClick={() =>
+															fileInputRef.current?.click()
+														}
+														className='text-primary hover:text-primary/80 font-medium'
+													>
+														chọn file
+													</button>
+												</p>
+												<p className='text-sm text-muted-foreground mt-1'>
+													Hỗ trợ file CSV, Excel
+													(.xlsx, .xls)
+												</p>
+											</div>
+										</div>
+									)}
+								</div>
+							</div>
+						</>
+					)}
+
+					{isReviewing && (
+						<div className='space-y-4'>
+							<div className='flex items-center justify-between'>
+								<div className='flex items-center space-x-3'>
+									<ClipboardList className='h-6 w-6 text-primary' />
+									<div>
+										<h3 className='font-medium text-foreground'>
+											Xem trước dữ liệu import
+										</h3>
+										<p className='text-sm text-muted-foreground'>
+											Kiểm tra và chỉnh sửa dữ liệu bên
+											dưới trước khi import vào hệ thống
 										</p>
 									</div>
 								</div>
+								<button
+									onClick={resetDialog}
+									disabled={uploadStatus === 'uploading'}
+									className='flex items-center space-x-2 text-sm font-medium text-primary hover:text-primary/80 disabled:opacity-50 disabled:cursor-not-allowed'
+								>
+									<ArrowLeft className='h-4 w-4' />
+									<span>Chọn file khác</span>
+								</button>
+							</div>
+
+							<div className='flex flex-wrap items-center gap-4 text-sm'>
+								<span className='text-muted-foreground'>
+									Tổng số:{' '}
+									<span className='font-medium text-foreground'>
+										{students.length}
+									</span>
+								</span>
+								<span className='flex items-center gap-1 text-green-700 dark:text-green-400'>
+									<CheckCircle className='h-4 w-4' />
+									Hợp lệ: {validRowCount}
+								</span>
+								{errorsByStudentIndex.size > 0 && (
+									<span className='flex items-center gap-1 text-destructive'>
+										<AlertCircle className='h-4 w-4' />
+										Lỗi: {errorsByStudentIndex.size}
+									</span>
+								)}
+							</div>
+
+							<div className='border rounded-lg overflow-auto max-h-96'>
+								<table className='w-full text-sm'>
+									<thead className='sticky top-0 bg-muted text-muted-foreground'>
+										<tr>
+											<th className='p-2 text-left font-medium'>
+												#
+											</th>
+											<th className='p-2 text-left font-medium'>
+												Trạng thái
+											</th>
+											<th className='p-2 text-left font-medium'>
+												Họ và tên
+											</th>
+											<th className='p-2 text-left font-medium'>
+												Mã số QN
+											</th>
+											<th className='p-2 text-left font-medium'>
+												Đơn vị
+											</th>
+											<th className='p-2 text-left font-medium'>
+												Chức vụ
+											</th>
+											<th className='p-2 text-left font-medium'>
+												Cấp bậc
+											</th>
+											<th className='p-2 text-left font-medium'>
+												Ngày sinh
+											</th>
+											<th className='p-2 text-left font-medium'>
+												SĐT
+											</th>
+											<th className='p-2 text-left font-medium'>
+												Tình trạng
+											</th>
+										</tr>
+									</thead>
+									<tbody className='divide-y'>
+										{students.map((student, index) => {
+											const rowErrors =
+												errorsByStudentIndex.get(index)
+											const hasError =
+												rowErrors !== undefined
+											const cellClass =
+												'p-1 align-top whitespace-nowrap'
+											const inputClass =
+												'w-full min-w-28 bg-transparent border border-transparent hover:border-border focus:border-primary focus:outline-none rounded px-1.5 py-1'
+											return (
+												<tr
+													key={index}
+													className={
+														hasError
+															? 'bg-red-50 dark:bg-red-950/30'
+															: undefined
+													}
+												>
+													<td className='p-2 text-muted-foreground align-top'>
+														{index + 1}
+													</td>
+													<td className='p-2 align-top'>
+														{rowErrors !==
+														undefined ? (
+															<span
+																className='flex items-center gap-1 text-destructive'
+																title={rowErrors.join(
+																	'\n'
+																)}
+															>
+																<AlertCircle className='h-4 w-4 flex-shrink-0' />
+																Lỗi
+															</span>
+														) : (
+															<span className='flex items-center gap-1 text-green-700 dark:text-green-400'>
+																<CheckCircle className='h-4 w-4 flex-shrink-0' />
+																OK
+															</span>
+														)}
+													</td>
+													<td className={cellClass}>
+														<input
+															type='text'
+															className={
+																inputClass
+															}
+															value={
+																student.fullName ??
+																''
+															}
+															onChange={(e) =>
+																updateStudentField(
+																	index,
+																	'fullName',
+																	e.target
+																		.value
+																)
+															}
+														/>
+													</td>
+													<td className={cellClass}>
+														<input
+															type='text'
+															className={
+																inputClass
+															}
+															value={
+																student.studentId ??
+																''
+															}
+															onChange={(e) =>
+																updateStudentField(
+																	index,
+																	'studentId',
+																	e.target
+																		.value
+																)
+															}
+														/>
+													</td>
+													<td className={cellClass}>
+														<select
+															className={
+																inputClass
+															}
+															value={
+																student.unitId ??
+																''
+															}
+															onChange={(e) =>
+																handleUnitChange(
+																	index,
+																	e.target
+																		.value
+																)
+															}
+														>
+															<option value=''>
+																-- Chọn đơn vị
+																--
+															</option>
+															{unitOptions.map(
+																(o) => (
+																	<option
+																		key={
+																			o.id
+																		}
+																		value={
+																			o.id
+																		}
+																	>
+																		{
+																			o.label
+																		}
+																	</option>
+																)
+															)}
+														</select>
+													</td>
+													<td className={cellClass}>
+														<select
+															className={
+																inputClass
+															}
+															value={
+																student.positionId ??
+																''
+															}
+															onChange={(e) =>
+																handlePositionChange(
+																	index,
+																	e.target
+																		.value
+																)
+															}
+														>
+															<option value=''>
+																-- Chọn chức vụ
+																--
+															</option>
+															{positionOptions.map(
+																(o) => (
+																	<option
+																		key={
+																			o.id
+																		}
+																		value={
+																			o.id
+																		}
+																	>
+																		{
+																			o.label
+																		}
+																	</option>
+																)
+															)}
+														</select>
+													</td>
+													<td className={cellClass}>
+														<input
+															type='text'
+															className={
+																inputClass
+															}
+															value={
+																student.rank ??
+																''
+															}
+															onChange={(e) =>
+																updateStudentField(
+																	index,
+																	'rank',
+																	e.target
+																		.value
+																)
+															}
+														/>
+													</td>
+													<td className={cellClass}>
+														<input
+															type='date'
+															className={
+																inputClass
+															}
+															value={
+																student.dob ??
+																''
+															}
+															onChange={(e) =>
+																updateStudentField(
+																	index,
+																	'dob',
+																	e.target
+																		.value
+																)
+															}
+														/>
+													</td>
+													<td className={cellClass}>
+														<input
+															type='text'
+															className={
+																inputClass
+															}
+															value={
+																student.phone ??
+																''
+															}
+															onChange={(e) =>
+																updateStudentField(
+																	index,
+																	'phone',
+																	e.target
+																		.value
+																)
+															}
+														/>
+													</td>
+													<td className={cellClass}>
+														<select
+															className={
+																inputClass
+															}
+															value={
+																student.activityStatus ??
+																'serving'
+															}
+															onChange={(e) =>
+																updateStudentField(
+																	index,
+																	'activityStatus',
+																	e.target
+																		.value as StudentBody['activityStatus']
+																)
+															}
+														>
+															{activityStatusOptions.map(
+																(o) => (
+																	<option
+																		key={
+																			o.value
+																		}
+																		value={
+																			o.value
+																		}
+																	>
+																		{
+																			o.label
+																		}
+																	</option>
+																)
+															)}
+														</select>
+													</td>
+												</tr>
+											)
+										})}
+									</tbody>
+								</table>
+							</div>
+
+							{errorsByStudentIndex.size > 0 && (
+								<p className='text-sm text-muted-foreground'>
+									Di chuột vào nhãn "Lỗi" của từng dòng để xem
+									chi tiết. Một số lỗi (quê quán/trú quán
+									không hợp lệ) cần được sửa trong file và tải
+									lên lại.
+								</p>
 							)}
 						</div>
-					</div>
+					)}
 
 					{/* Status message */}
 					{uploadMessage && (
@@ -1337,11 +1764,17 @@ export function ImportStudentsDialog({
 						{uploadStatus === 'success' ? 'Đóng' : 'Hủy'}
 					</button>
 
-					{uploadStatus !== 'success' && (
+					{isReviewing && (
 						<button
 							onClick={handleImport}
 							disabled={
-								!selectedFile || uploadStatus === 'uploading'
+								parseErrors.length > 0 ||
+								uploadStatus === 'uploading'
+							}
+							title={
+								parseErrors.length > 0
+									? 'Vui lòng sửa các dòng có lỗi trước khi import'
+									: undefined
 							}
 							className='flex items-center space-x-2 px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
 						>
@@ -1353,7 +1786,7 @@ export function ImportStudentsDialog({
 							) : (
 								<>
 									<Upload className='h-4 w-4' />
-									<span>Import danh sách</span>
+									<span>Xác nhận &amp; Import</span>
 									<ArrowRight className='h-4 w-4' />
 								</>
 							)}
