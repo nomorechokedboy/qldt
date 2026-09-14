@@ -242,7 +242,9 @@ export interface AppNotificationItem extends Base {
 export type AppNotificationType =
 	| 'birthday'
 	| 'officialCpv'
+	| 'commanderDigest'
 	| 'activityStatusProposal'
+	| 'rankPromotionProposal'
 
 export interface AppNotification {
 	id: string

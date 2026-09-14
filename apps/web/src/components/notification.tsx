@@ -3,7 +3,7 @@ import useUnreadNotificationCount from '@/hooks/useUnreadNotificationCount'
 import { formatTimestamp } from '@/lib/utils'
 import type { AppNotification, AppNotificationType } from '@/types'
 import { useMutation } from '@tanstack/react-query'
-import { Link } from '@tanstack/react-router'
+import { Link, type LinkProps } from '@tanstack/react-router'
 import { Cake, UserRoundCheck } from 'lucide-react'
 
 export type NotificationProps = {
@@ -22,11 +22,21 @@ const getNotificationIcon = (type: AppNotificationType) => {
 	}
 }
 
+// Where clicking a notification of each type should navigate. commanderDigest
+// has no dedicated page in this app (it's an emailed/exported report), so it
+// falls back to the dashboard rather than reusing an unrelated route.
+const NOTIFICATION_ROUTES: Record<AppNotificationType, LinkProps['to']> = {
+	birthday: '/birthday',
+	officialCpv: '/chuyen-dang-chinh-thuc',
+	activityStatusProposal: '/de-xuat-che-do',
+	rankPromotionProposal: '/de-xuat-thang-quan-ham',
+	commanderDigest: '/'
+}
+
 export default function Notification({
 	notification,
 	onClick
 }: NotificationProps) {
-	const isBirthdayNoti = notification.notificationType === 'birthday'
 	const { refetch: refetchUnreadNotification } = useUnreadNotificationCount()
 	const { mutate } = useMutation({
 		mutationFn: MarkAsRead,
@@ -55,7 +65,7 @@ export default function Notification({
 		onClick?.()
 	}
 
-	const to = isBirthdayNoti ? '/birthday' : '/chuyen-dang-chinh-thuc'
+	const to = NOTIFICATION_ROUTES[notification.notificationType] ?? '/'
 
 	return (
 		<Link to={to} onClick={handleReadNotification}>
