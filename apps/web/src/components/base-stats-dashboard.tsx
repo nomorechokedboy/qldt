@@ -158,21 +158,21 @@ export default function BaseStatsDashboard() {
 			value: stats?.totalStudents ?? 0,
 			icon: Users,
 			color: 'text-blue-600',
-			valueColor: 'text-blue-900'
+			valueColor: 'text-foreground'
 		},
 		{
 			label: 'Nhà/khu nhà',
 			value: stats?.buildingsCount ?? 0,
 			icon: Building2,
 			color: 'text-green-600',
-			valueColor: 'text-green-900'
+			valueColor: 'text-foreground'
 		},
 		{
 			label: 'Phòng',
 			value: stats?.roomsCount ?? 0,
 			icon: DoorOpen,
 			color: 'text-amber-600',
-			valueColor: 'text-amber-900'
+			valueColor: 'text-foreground'
 		}
 	]
 

@@ -1091,9 +1091,9 @@ export function ImportStudentsDialog({
 
 	return (
 		<div className='fixed inset-0 flex items-center justify-center z-50 bg-black/50 p-4'>
-			<div className='bg-white rounded-xl w-[90vw] max-w-6xl max-h-[90vh] overflow-y-auto shadow-2xl'>
+			<div className='bg-card rounded-xl w-[90vw] max-w-6xl max-h-[90vh] overflow-y-auto shadow-2xl'>
 				{/* Header */}
-				<div className='flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-t-xl'>
+				<div className='flex items-center justify-between p-6 border-b border-white/10 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-t-xl'>
 					<div className='flex items-center space-x-3'>
 						<Users className='h-6 w-6' />
 						<h2 className='text-xl font-semibold'>
@@ -1111,14 +1111,14 @@ export function ImportStudentsDialog({
 				{/* Content */}
 				<div className='p-6 space-y-6'>
 					{/* Instructions */}
-					<div className='bg-blue-50 border border-blue-200 rounded-lg p-4'>
+					<div className='bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-lg p-4'>
 						<div className='flex items-start space-x-3'>
 							<Info className='h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0' />
 							<div>
-								<h3 className='font-medium text-blue-900 mb-2'>
+								<h3 className='font-medium text-blue-900 dark:text-blue-100 mb-2'>
 									Hướng dẫn import
 								</h3>
-								<div className='text-sm text-blue-800 space-y-2'>
+								<div className='text-sm text-blue-800 dark:text-blue-200 space-y-2'>
 									<div className='flex items-center space-x-2'>
 										<span className='bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-medium'>
 											1
@@ -1146,15 +1146,15 @@ export function ImportStudentsDialog({
 					</div>
 
 					{/* Download template */}
-					<div className='border border-gray-200 rounded-lg p-4'>
+					<div className='border rounded-lg p-4'>
 						<div className='flex items-center justify-between'>
 							<div className='flex items-center space-x-3'>
 								<FileSpreadsheet className='h-8 w-8 text-green-500' />
 								<div>
-									<h3 className='font-medium text-gray-900'>
+									<h3 className='font-medium text-foreground'>
 										File mẫu Excel
 									</h3>
-									<p className='text-sm text-gray-500'>
+									<p className='text-sm text-muted-foreground'>
 										Tải xuống để có cấu trúc dữ liệu chính
 										xác
 									</p>
@@ -1172,17 +1172,17 @@ export function ImportStudentsDialog({
 
 					{/* File upload area */}
 					<div className='space-y-4'>
-						<h3 className='font-medium text-gray-900'>
+						<h3 className='font-medium text-foreground'>
 							Chọn file để import
 						</h3>
 
 						<div
 							className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
 								dragActive
-									? 'border-blue-400 bg-blue-50'
+									? 'border-blue-400 bg-blue-50 dark:bg-blue-950/30'
 									: selectedFile
-										? 'border-green-400 bg-green-50'
-										: 'border-gray-300 hover:border-gray-400'
+										? 'border-green-400 bg-green-50 dark:bg-green-950/30'
+										: 'border-border hover:border-muted-foreground'
 							}`}
 							onDragEnter={handleDrag}
 							onDragLeave={handleDrag}
@@ -1201,10 +1201,10 @@ export function ImportStudentsDialog({
 								<div className='space-y-3'>
 									<CheckCircle className='h-12 w-12 text-green-500 mx-auto' />
 									<div>
-										<p className='font-medium text-green-700'>
+										<p className='font-medium text-green-700 dark:text-green-400'>
 											{selectedFile.name}
 										</p>
-										<p className='text-sm text-gray-500'>
+										<p className='text-sm text-muted-foreground'>
 											{(
 												selectedFile.size /
 												1024 /
@@ -1217,27 +1217,27 @@ export function ImportStudentsDialog({
 										onClick={() =>
 											fileInputRef.current?.click()
 										}
-										className='text-blue-500 hover:text-blue-600 text-sm font-medium'
+										className='text-primary hover:text-primary/80 text-sm font-medium'
 									>
 										Chọn file khác
 									</button>
 								</div>
 							) : (
 								<div className='space-y-3'>
-									<FileUp className='h-12 w-12 text-gray-400 mx-auto' />
+									<FileUp className='h-12 w-12 text-muted-foreground mx-auto' />
 									<div>
-										<p className='text-gray-600'>
+										<p className='text-muted-foreground'>
 											Kéo thả file vào đây hoặc{' '}
 											<button
 												onClick={() =>
 													fileInputRef.current?.click()
 												}
-												className='text-blue-500 hover:text-blue-600 font-medium'
+												className='text-primary hover:text-primary/80 font-medium'
 											>
 												chọn file
 											</button>
 										</p>
-										<p className='text-sm text-gray-400 mt-1'>
+										<p className='text-sm text-muted-foreground mt-1'>
 											Hỗ trợ file CSV, Excel (.xlsx, .xls)
 										</p>
 									</div>
@@ -1251,10 +1251,10 @@ export function ImportStudentsDialog({
 						<div
 							className={`flex items-center space-x-2 p-3 rounded-lg ${
 								uploadStatus === 'success'
-									? 'bg-green-50 text-green-700 border border-green-200'
+									? 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-900'
 									: uploadStatus === 'error'
-										? 'bg-red-50 text-red-700 border border-red-200'
-										: 'bg-blue-50 text-blue-700 border border-blue-200'
+										? 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-900'
+										: 'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-900'
 							}`}
 						>
 							{uploadStatus === 'success' && (
@@ -1272,8 +1272,8 @@ export function ImportStudentsDialog({
 
 					{/* Import results */}
 					{importResults && (
-						<div className='bg-gray-50 border border-gray-200 rounded-lg p-4 space-y-3'>
-							<h4 className='font-medium text-gray-900'>
+						<div className='bg-muted border rounded-lg p-4 space-y-3'>
+							<h4 className='font-medium text-foreground'>
 								Kết quả import:
 							</h4>
 							<div className='grid grid-cols-3 gap-4 text-sm'>
@@ -1281,7 +1281,7 @@ export function ImportStudentsDialog({
 									<div className='text-2xl font-bold text-green-600'>
 										{importResults.successCount}
 									</div>
-									<div className='text-gray-600'>
+									<div className='text-muted-foreground'>
 										Thành công
 									</div>
 								</div>
@@ -1289,13 +1289,15 @@ export function ImportStudentsDialog({
 									<div className='text-2xl font-bold text-red-600'>
 										{importResults.errorCount}
 									</div>
-									<div className='text-gray-600'>Lỗi</div>
+									<div className='text-muted-foreground'>
+										Lỗi
+									</div>
 								</div>
 								<div className='text-center'>
 									<div className='text-2xl font-bold text-blue-600'>
 										{importResults.totalCount}
 									</div>
-									<div className='text-gray-600'>
+									<div className='text-muted-foreground'>
 										Tổng cộng
 									</div>
 								</div>
@@ -1312,7 +1314,7 @@ export function ImportStudentsDialog({
 												(error, index) => (
 													<div
 														key={index}
-														className='text-sm text-red-600 bg-red-50 p-2 rounded'
+														className='text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 p-2 rounded'
 													>
 														Dòng {error.row}:{' '}
 														{error.message}
@@ -1327,10 +1329,10 @@ export function ImportStudentsDialog({
 				</div>
 
 				{/* Footer */}
-				<div className='flex items-center justify-end space-x-3 p-6 border-t border-gray-200 bg-gray-50 rounded-b-xl'>
+				<div className='flex items-center justify-end space-x-3 p-6 border-t bg-muted rounded-b-xl'>
 					<button
 						onClick={handleClose}
-						className='px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors'
+						className='px-4 py-2 text-secondary-foreground bg-secondary rounded-lg hover:bg-secondary/80 transition-colors'
 					>
 						{uploadStatus === 'success' ? 'Đóng' : 'Hủy'}
 					</button>
@@ -1341,7 +1343,7 @@ export function ImportStudentsDialog({
 							disabled={
 								!selectedFile || uploadStatus === 'uploading'
 							}
-							className='flex items-center space-x-2 px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
+							className='flex items-center space-x-2 px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
 						>
 							{uploadStatus === 'uploading' ? (
 								<>

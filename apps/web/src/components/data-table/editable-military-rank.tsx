@@ -23,9 +23,7 @@ export default function EditableMilitaryRank({
 			onSave={handlePatchStudentData}
 			isLoading={isPending}
 			placeholder={
-				<Badge className='bg-blue-500 font-bold'>
-					{row.getValue(column.id)}
-				</Badge>
+				<Badge className='font-bold'>{row.getValue(column.id)}</Badge>
 			}
 		/>
 	)

@@ -91,13 +91,13 @@ export function StatisticsTable({ data }: StatisticsTableProps) {
 		return (
 			<TableRow key={`${name}-${parentName}`}>
 				<TableCell
-					className={`font-medium sticky left-0 border-r ${depth > 0 ? 'bg-gray-50' : 'bg-white'}  ${depth === 1 && 'pl-4'} ${depth === 2 && 'pl-6'}`}
+					className={`font-medium sticky left-0 border-r ${depth > 0 ? 'bg-muted' : 'bg-card'}  ${depth === 1 && 'pl-4'} ${depth === 2 && 'pl-6'}`}
 				>
 					<div className='flex items-center gap-2'>
 						{isCollapsible && (
 							<button
 								onClick={() => toggleCollapse(rowId)}
-								className='p-1 hover:bg-gray-200 rounded transition-colors'
+								className='p-1 hover:bg-accent rounded transition-colors'
 								aria-label={
 									isCollapsed ? 'Expand row' : 'Collapse row'
 								}
@@ -207,7 +207,7 @@ export function StatisticsTable({ data }: StatisticsTableProps) {
 						<TableHeader>
 							<TableRow>
 								<TableHead
-									className='w-32 sticky left-0 bg-white z-20 border-t border-r shadow-sm'
+									className='w-32 sticky left-0 bg-card z-20 border-t border-r shadow-sm'
 									rowSpan={2}
 								>
 									Đơn vị

@@ -15,11 +15,7 @@ function formatDate(isoDate: string): string {
 }
 
 // Helper component for empty data cells
-const EmptyCell = () => (
-	<Badge variant='secondary' className='bg-gray-200 text-gray-600'>
-		Chưa có thông tin
-	</Badge>
-)
+const EmptyCell = () => <Badge variant='secondary'>Chưa có thông tin</Badge>
 
 export const baseUsersColumns: ColumnDef<User>[] = [
 	{
@@ -32,7 +28,7 @@ export const baseUsersColumns: ColumnDef<User>[] = [
 			<div className='flex items-center gap-2 min-w-40'>
 				<span className='font-medium'>{row.original.displayName}</span>
 				{row.original.isSuperUser && (
-					<Badge variant='default' className='bg-blue-600'>
+					<Badge variant='default'>
 						<Shield className='w-3 h-3' />
 					</Badge>
 				)}
@@ -123,7 +119,7 @@ export const baseUsersColumns: ColumnDef<User>[] = [
 			<DataTableColumnHeader column={column} title='Ngày tạo' />
 		),
 		cell: ({ row }) => (
-			<div className='min-w-28 text-gray-600'>
+			<div className='min-w-28 text-muted-foreground'>
 				{row.original.createdAt ? (
 					formatDate(row.original.createdAt)
 				) : (
@@ -160,7 +156,7 @@ export const battalionStudentColumnsWithoutAction: ColumnDef<User>[] = [
 			<div className='flex items-center gap-2'>
 				<span className='font-medium'>{row.original.displayName}</span>
 				{row.original.isSuperUser && (
-					<Badge variant='default' className='bg-blue-600'>
+					<Badge variant='default'>
 						<Shield className='w-3 h-3' />
 					</Badge>
 				)}
@@ -233,7 +229,7 @@ export const battalionStudentColumnsWithoutAction: ColumnDef<User>[] = [
 			<DataTableColumnHeader column={column} title='Ngày tạo' />
 		),
 		cell: ({ row }) => (
-			<div className='text-gray-600'>
+			<div className='text-muted-foreground'>
 				{row.original.createdAt
 					? formatDate(row.original.createdAt)
 					: '-'}
@@ -249,7 +245,7 @@ export const battalionStudentColumnsWithoutAction: ColumnDef<User>[] = [
 		cell: ({ row }) => (
 			<button
 				onClick={() => console.log('Edit:', row.original.id)}
-				className='px-3 py-1 text-sm bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors'
+				className='px-3 py-1 text-sm bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors'
 			>
 				Sửa
 			</button>
