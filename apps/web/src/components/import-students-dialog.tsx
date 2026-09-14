@@ -6,14 +6,13 @@ import {
 	Download,
 	AlertCircle,
 	CheckCircle,
-	X,
 	Upload,
 	FileSpreadsheet,
 	Info,
-	Users,
 	ArrowRight,
 	ArrowLeft,
-	ClipboardList
+	ClipboardList,
+	Loader2
 } from 'lucide-react'
 import useCreateStudents from '@/hooks/useCreateStudents'
 import { toIsoDate, toDdMmYyyy } from '@/common'
@@ -25,6 +24,21 @@ import useWards from '@/hooks/useWards'
 import { unitLevelLabels, unitLevelOrder } from '@/data/unit-levels'
 import { activityStatusOptions } from '@/data/activity-statuses'
 import { buildUnitsById, unitLabelWithAncestry } from '@/lib/unit-labels'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
+import {
+	Dialog,
+	DialogContent,
+	DialogDescription,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle
+} from '@/components/ui/dialog'
+import { DataTable } from '@/components/data-table'
+import type { ColumnDef } from '@tanstack/react-table'
+
+export const reviewInputClass =
+	'w-full min-w-28 bg-transparent border border-transparent hover:border-border focus:border-primary focus:outline-none rounded px-1.5 py-1'
 
 export interface ImportStudentsDialogProps {
 	isOpen: boolean
@@ -1156,91 +1170,261 @@ export function ImportStudentsDialog({
 		}
 	}
 
+	const reviewColumns = useMemo<ColumnDef<StudentBody>[]>(
+		() => [
+			{
+				id: 'index',
+				header: '#',
+				cell: ({ row }) => (
+					<span className='text-muted-foreground'>
+						{row.index + 1}
+					</span>
+				)
+			},
+			{
+				id: 'status',
+				header: 'Trạng thái',
+				cell: ({ row }) => {
+					const rowErrors = errorsByStudentIndex.get(row.index)
+					return rowErrors !== undefined ? (
+						<span
+							className='flex items-center gap-1 text-destructive'
+							title={rowErrors.join('\n')}
+						>
+							<AlertCircle className='h-4 w-4 flex-shrink-0' />
+							Lỗi
+						</span>
+					) : (
+						<span className='flex items-center gap-1 text-green-700 dark:text-green-400'>
+							<CheckCircle className='h-4 w-4 flex-shrink-0' />
+							OK
+						</span>
+					)
+				}
+			},
+			{
+				accessorKey: 'fullName',
+				header: 'Họ và tên',
+				cell: ({ row }) => (
+					<input
+						type='text'
+						className={reviewInputClass}
+						value={row.original.fullName ?? ''}
+						onChange={(e) =>
+							updateStudentField(
+								row.index,
+								'fullName',
+								e.target.value
+							)
+						}
+					/>
+				)
+			},
+			{
+				accessorKey: 'studentId',
+				header: 'Mã số QN',
+				cell: ({ row }) => (
+					<input
+						type='text'
+						className={reviewInputClass}
+						value={row.original.studentId ?? ''}
+						onChange={(e) =>
+							updateStudentField(
+								row.index,
+								'studentId',
+								e.target.value
+							)
+						}
+					/>
+				)
+			},
+			{
+				accessorKey: 'unitId',
+				header: 'Đơn vị',
+				cell: ({ row }) => (
+					<select
+						className={reviewInputClass}
+						value={row.original.unitId ?? ''}
+						onChange={(e) =>
+							handleUnitChange(row.index, e.target.value)
+						}
+					>
+						<option value=''>-- Chọn đơn vị --</option>
+						{unitOptions.map((o) => (
+							<option key={o.id} value={o.id}>
+								{o.label}
+							</option>
+						))}
+					</select>
+				)
+			},
+			{
+				accessorKey: 'positionId',
+				header: 'Chức vụ',
+				cell: ({ row }) => (
+					<select
+						className={reviewInputClass}
+						value={row.original.positionId ?? ''}
+						onChange={(e) =>
+							handlePositionChange(row.index, e.target.value)
+						}
+					>
+						<option value=''>-- Chọn chức vụ --</option>
+						{positionOptions.map((o) => (
+							<option key={o.id} value={o.id}>
+								{o.label}
+							</option>
+						))}
+					</select>
+				)
+			},
+			{
+				accessorKey: 'rank',
+				header: 'Cấp bậc',
+				cell: ({ row }) => (
+					<input
+						type='text'
+						className={reviewInputClass}
+						value={row.original.rank ?? ''}
+						onChange={(e) =>
+							updateStudentField(
+								row.index,
+								'rank',
+								e.target.value
+							)
+						}
+					/>
+				)
+			},
+			{
+				accessorKey: 'dob',
+				header: 'Ngày sinh',
+				cell: ({ row }) => (
+					<input
+						type='date'
+						className={reviewInputClass}
+						value={row.original.dob ?? ''}
+						onChange={(e) =>
+							updateStudentField(row.index, 'dob', e.target.value)
+						}
+					/>
+				)
+			},
+			{
+				accessorKey: 'phone',
+				header: 'SĐT',
+				cell: ({ row }) => (
+					<input
+						type='text'
+						className={reviewInputClass}
+						value={row.original.phone ?? ''}
+						onChange={(e) =>
+							updateStudentField(
+								row.index,
+								'phone',
+								e.target.value
+							)
+						}
+					/>
+				)
+			},
+			{
+				accessorKey: 'activityStatus',
+				header: 'Tình trạng',
+				cell: ({ row }) => (
+					<select
+						className={reviewInputClass}
+						value={row.original.activityStatus ?? 'serving'}
+						onChange={(e) =>
+							updateStudentField(
+								row.index,
+								'activityStatus',
+								e.target.value as StudentBody['activityStatus']
+							)
+						}
+					>
+						{activityStatusOptions.map((o) => (
+							<option key={o.value} value={o.value}>
+								{o.label}
+							</option>
+						))}
+					</select>
+				)
+			}
+		],
+		[errorsByStudentIndex, unitOptions, positionOptions]
+	)
+
 	if (!isOpen) return null
 
 	return (
-		<div className='fixed inset-0 flex items-center justify-center z-50 bg-black/50 p-4'>
-			<div className='bg-card rounded-xl w-[90vw] max-w-6xl max-h-[90vh] overflow-y-auto shadow-2xl'>
-				{/* Header */}
-				<div className='flex items-center justify-between p-6 border-b border-white/10 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-t-xl'>
-					<div className='flex items-center space-x-3'>
-						<Users className='h-6 w-6' />
-						<h2 className='text-xl font-semibold'>
-							Import danh sách quân nhân
-						</h2>
-					</div>
-					<button
-						onClick={handleClose}
-						className='text-white hover:text-gray-200 transition-colors p-1 rounded-full hover:bg-white hover:bg-opacity-20'
-					>
-						<X className='h-5 w-5' />
-					</button>
-				</div>
+		<Dialog
+			open={isOpen}
+			onOpenChange={(open) => {
+				if (!open) handleClose()
+			}}
+		>
+			<DialogContent>
+				<DialogHeader>
+					<DialogTitle>Import danh sách quân nhân</DialogTitle>
+					{!isReviewing && (
+						<DialogDescription>
+							Tải lên file Excel hoặc CSV để thêm nhiều quân nhân
+							cùng lúc.
+						</DialogDescription>
+					)}
+				</DialogHeader>
 
-				{/* Content */}
-				<div className='p-6 space-y-6'>
+				<div className='space-y-6'>
 					{!isReviewing && (
 						<>
 							{/* Instructions */}
-							<div className='bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-900 rounded-lg p-4'>
-								<div className='flex items-start space-x-3'>
-									<Info className='h-5 w-5 text-blue-500 mt-0.5 flex-shrink-0' />
-									<div>
-										<h3 className='font-medium text-blue-900 dark:text-blue-100 mb-2'>
-											Hướng dẫn import
-										</h3>
-										<div className='text-sm text-blue-800 dark:text-blue-200 space-y-2'>
-											<div className='flex items-center space-x-2'>
-												<span className='bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-medium'>
-													1
-												</span>
-												<span>Tải xuống file mẫu</span>
-											</div>
-											<div className='flex items-center space-x-2'>
-												<span className='bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-medium'>
-													2
-												</span>
-												<span>
-													Điền thông tin quân nhân
-													theo định dạng mẫu
-												</span>
-											</div>
-											<div className='flex items-center space-x-2'>
-												<span className='bg-blue-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-medium'>
-													3
-												</span>
-												<span>
-													Tải file lên và nhấn Import
-												</span>
-											</div>
-										</div>
-									</div>
-								</div>
+							<div className='flex items-start gap-3 rounded-lg border bg-muted/30 p-4'>
+								<Info className='h-5 w-5 text-muted-foreground mt-0.5 flex-shrink-0' />
+								<ol className='space-y-1.5 text-sm text-muted-foreground'>
+									<li>
+										<span className='font-medium text-foreground'>
+											1.
+										</span>{' '}
+										Tải xuống file mẫu
+									</li>
+									<li>
+										<span className='font-medium text-foreground'>
+											2.
+										</span>{' '}
+										Điền thông tin quân nhân theo định dạng
+										mẫu
+									</li>
+									<li>
+										<span className='font-medium text-foreground'>
+											3.
+										</span>{' '}
+										Tải file lên và nhấn Import
+									</li>
+								</ol>
 							</div>
 
 							{/* Download template */}
-							<div className='border rounded-lg p-4'>
-								<div className='flex items-center justify-between'>
-									<div className='flex items-center space-x-3'>
-										<FileSpreadsheet className='h-8 w-8 text-green-500' />
-										<div>
-											<h3 className='font-medium text-foreground'>
-												File mẫu Excel
-											</h3>
-											<p className='text-sm text-muted-foreground'>
-												Tải xuống để có cấu trúc dữ liệu
-												chính xác
-											</p>
-										</div>
+							<div className='flex items-center justify-between rounded-lg border p-4'>
+								<div className='flex items-center space-x-3'>
+									<FileSpreadsheet className='h-8 w-8 text-emerald-600 dark:text-emerald-500' />
+									<div>
+										<h3 className='font-medium text-foreground'>
+											File mẫu Excel
+										</h3>
+										<p className='text-sm text-muted-foreground'>
+											Tải xuống để có cấu trúc dữ liệu
+											chính xác
+										</p>
 									</div>
-									<button
-										onClick={downloadTemplate}
-										className='flex items-center space-x-2 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors'
-									>
-										<Download className='h-4 w-4' />
-										<span>Tải xuống</span>
-									</button>
 								</div>
+								<Button
+									variant='outline'
+									onClick={downloadTemplate}
+								>
+									<Download className='h-4 w-4' />
+									Tải xuống
+								</Button>
 							</div>
 
 							{/* File upload area */}
@@ -1252,7 +1436,7 @@ export function ImportStudentsDialog({
 								<div
 									className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
 										dragActive
-											? 'border-blue-400 bg-blue-50 dark:bg-blue-950/30'
+											? 'border-primary bg-primary/5'
 											: selectedFile
 												? 'border-green-400 bg-green-50 dark:bg-green-950/30'
 												: 'border-border hover:border-muted-foreground'
@@ -1286,14 +1470,15 @@ export function ImportStudentsDialog({
 													MB
 												</p>
 											</div>
-											<button
+											<Button
+												variant='ghost'
+												size='sm'
 												onClick={() =>
 													fileInputRef.current?.click()
 												}
-												className='text-primary hover:text-primary/80 text-sm font-medium'
 											>
 												Chọn file khác
-											</button>
+											</Button>
 										</div>
 									) : (
 										<div className='space-y-3'>
@@ -1305,7 +1490,7 @@ export function ImportStudentsDialog({
 														onClick={() =>
 															fileInputRef.current?.click()
 														}
-														className='text-primary hover:text-primary/80 font-medium'
+														className='text-primary hover:underline font-medium'
 													>
 														chọn file
 													</button>
@@ -1337,332 +1522,53 @@ export function ImportStudentsDialog({
 										</p>
 									</div>
 								</div>
-								<button
+								<Button
+									variant='ghost'
+									size='sm'
 									onClick={resetDialog}
 									disabled={uploadStatus === 'uploading'}
-									className='flex items-center space-x-2 text-sm font-medium text-primary hover:text-primary/80 disabled:opacity-50 disabled:cursor-not-allowed'
 								>
 									<ArrowLeft className='h-4 w-4' />
-									<span>Chọn file khác</span>
-								</button>
+									Chọn file khác
+								</Button>
 							</div>
 
-							<div className='flex flex-wrap items-center gap-4 text-sm'>
+							<div className='flex flex-wrap items-center gap-3 text-sm'>
 								<span className='text-muted-foreground'>
 									Tổng số:{' '}
 									<span className='font-medium text-foreground'>
 										{students.length}
 									</span>
 								</span>
-								<span className='flex items-center gap-1 text-green-700 dark:text-green-400'>
-									<CheckCircle className='h-4 w-4' />
+								<Badge
+									variant='outline'
+									className='gap-1 border-green-400 text-green-700 dark:border-green-800 dark:text-green-400'
+								>
+									<CheckCircle className='h-3.5 w-3.5' />
 									Hợp lệ: {validRowCount}
-								</span>
+								</Badge>
 								{errorsByStudentIndex.size > 0 && (
-									<span className='flex items-center gap-1 text-destructive'>
-										<AlertCircle className='h-4 w-4' />
+									<Badge
+										variant='destructive'
+										className='gap-1'
+									>
+										<AlertCircle className='h-3.5 w-3.5' />
 										Lỗi: {errorsByStudentIndex.size}
-									</span>
+									</Badge>
 								)}
 							</div>
 
-							<div className='border rounded-lg overflow-auto max-h-96'>
-								<table className='w-full text-sm'>
-									<thead className='sticky top-0 bg-muted text-muted-foreground'>
-										<tr>
-											<th className='p-2 text-left font-medium'>
-												#
-											</th>
-											<th className='p-2 text-left font-medium'>
-												Trạng thái
-											</th>
-											<th className='p-2 text-left font-medium'>
-												Họ và tên
-											</th>
-											<th className='p-2 text-left font-medium'>
-												Mã số QN
-											</th>
-											<th className='p-2 text-left font-medium'>
-												Đơn vị
-											</th>
-											<th className='p-2 text-left font-medium'>
-												Chức vụ
-											</th>
-											<th className='p-2 text-left font-medium'>
-												Cấp bậc
-											</th>
-											<th className='p-2 text-left font-medium'>
-												Ngày sinh
-											</th>
-											<th className='p-2 text-left font-medium'>
-												SĐT
-											</th>
-											<th className='p-2 text-left font-medium'>
-												Tình trạng
-											</th>
-										</tr>
-									</thead>
-									<tbody className='divide-y'>
-										{students.map((student, index) => {
-											const rowErrors =
-												errorsByStudentIndex.get(index)
-											const hasError =
-												rowErrors !== undefined
-											const cellClass =
-												'p-1 align-top whitespace-nowrap'
-											const inputClass =
-												'w-full min-w-28 bg-transparent border border-transparent hover:border-border focus:border-primary focus:outline-none rounded px-1.5 py-1'
-											return (
-												<tr
-													key={index}
-													className={
-														hasError
-															? 'bg-red-50 dark:bg-red-950/30'
-															: undefined
-													}
-												>
-													<td className='p-2 text-muted-foreground align-top'>
-														{index + 1}
-													</td>
-													<td className='p-2 align-top'>
-														{rowErrors !==
-														undefined ? (
-															<span
-																className='flex items-center gap-1 text-destructive'
-																title={rowErrors.join(
-																	'\n'
-																)}
-															>
-																<AlertCircle className='h-4 w-4 flex-shrink-0' />
-																Lỗi
-															</span>
-														) : (
-															<span className='flex items-center gap-1 text-green-700 dark:text-green-400'>
-																<CheckCircle className='h-4 w-4 flex-shrink-0' />
-																OK
-															</span>
-														)}
-													</td>
-													<td className={cellClass}>
-														<input
-															type='text'
-															className={
-																inputClass
-															}
-															value={
-																student.fullName ??
-																''
-															}
-															onChange={(e) =>
-																updateStudentField(
-																	index,
-																	'fullName',
-																	e.target
-																		.value
-																)
-															}
-														/>
-													</td>
-													<td className={cellClass}>
-														<input
-															type='text'
-															className={
-																inputClass
-															}
-															value={
-																student.studentId ??
-																''
-															}
-															onChange={(e) =>
-																updateStudentField(
-																	index,
-																	'studentId',
-																	e.target
-																		.value
-																)
-															}
-														/>
-													</td>
-													<td className={cellClass}>
-														<select
-															className={
-																inputClass
-															}
-															value={
-																student.unitId ??
-																''
-															}
-															onChange={(e) =>
-																handleUnitChange(
-																	index,
-																	e.target
-																		.value
-																)
-															}
-														>
-															<option value=''>
-																-- Chọn đơn vị
-																--
-															</option>
-															{unitOptions.map(
-																(o) => (
-																	<option
-																		key={
-																			o.id
-																		}
-																		value={
-																			o.id
-																		}
-																	>
-																		{
-																			o.label
-																		}
-																	</option>
-																)
-															)}
-														</select>
-													</td>
-													<td className={cellClass}>
-														<select
-															className={
-																inputClass
-															}
-															value={
-																student.positionId ??
-																''
-															}
-															onChange={(e) =>
-																handlePositionChange(
-																	index,
-																	e.target
-																		.value
-																)
-															}
-														>
-															<option value=''>
-																-- Chọn chức vụ
-																--
-															</option>
-															{positionOptions.map(
-																(o) => (
-																	<option
-																		key={
-																			o.id
-																		}
-																		value={
-																			o.id
-																		}
-																	>
-																		{
-																			o.label
-																		}
-																	</option>
-																)
-															)}
-														</select>
-													</td>
-													<td className={cellClass}>
-														<input
-															type='text'
-															className={
-																inputClass
-															}
-															value={
-																student.rank ??
-																''
-															}
-															onChange={(e) =>
-																updateStudentField(
-																	index,
-																	'rank',
-																	e.target
-																		.value
-																)
-															}
-														/>
-													</td>
-													<td className={cellClass}>
-														<input
-															type='date'
-															className={
-																inputClass
-															}
-															value={
-																student.dob ??
-																''
-															}
-															onChange={(e) =>
-																updateStudentField(
-																	index,
-																	'dob',
-																	e.target
-																		.value
-																)
-															}
-														/>
-													</td>
-													<td className={cellClass}>
-														<input
-															type='text'
-															className={
-																inputClass
-															}
-															value={
-																student.phone ??
-																''
-															}
-															onChange={(e) =>
-																updateStudentField(
-																	index,
-																	'phone',
-																	e.target
-																		.value
-																)
-															}
-														/>
-													</td>
-													<td className={cellClass}>
-														<select
-															className={
-																inputClass
-															}
-															value={
-																student.activityStatus ??
-																'serving'
-															}
-															onChange={(e) =>
-																updateStudentField(
-																	index,
-																	'activityStatus',
-																	e.target
-																		.value as StudentBody['activityStatus']
-																)
-															}
-														>
-															{activityStatusOptions.map(
-																(o) => (
-																	<option
-																		key={
-																			o.value
-																		}
-																		value={
-																			o.value
-																		}
-																	>
-																		{
-																			o.label
-																		}
-																	</option>
-																)
-															)}
-														</select>
-													</td>
-												</tr>
-											)
-										})}
-									</tbody>
-								</table>
-							</div>
+							<DataTable
+								columns={reviewColumns}
+								data={students}
+								toolbarVisible={false}
+								placeholder='Không có dữ liệu'
+								getRowClassName={(_student, index) =>
+									errorsByStudentIndex.has(index)
+										? 'bg-destructive/5 hover:bg-destructive/10'
+										: undefined
+								}
+							/>
 
 							{errorsByStudentIndex.size > 0 && (
 								<p className='text-sm text-muted-foreground'>
@@ -1677,37 +1583,39 @@ export function ImportStudentsDialog({
 
 					{/* Status message */}
 					{uploadMessage && (
-						<div
-							className={`flex items-center space-x-2 p-3 rounded-lg ${
-								uploadStatus === 'success'
-									? 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-400 border border-green-200 dark:border-green-900'
-									: uploadStatus === 'error'
-										? 'bg-red-50 dark:bg-red-950/30 text-red-700 dark:text-red-400 border border-red-200 dark:border-red-900'
-										: 'bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400 border border-blue-200 dark:border-blue-900'
-							}`}
-						>
+						<div className='flex items-center gap-2 rounded-lg border p-3 text-sm'>
 							{uploadStatus === 'success' && (
-								<CheckCircle className='h-5 w-5 flex-shrink-0' />
+								<CheckCircle className='h-5 w-5 flex-shrink-0 text-green-600 dark:text-green-400' />
 							)}
 							{uploadStatus === 'error' && (
-								<AlertCircle className='h-5 w-5 flex-shrink-0' />
+								<AlertCircle className='h-5 w-5 flex-shrink-0 text-destructive' />
 							)}
 							{uploadStatus === 'uploading' && (
-								<div className='animate-spin rounded-full h-5 w-5 border-b-2 border-blue-500'></div>
+								<Loader2 className='h-5 w-5 flex-shrink-0 animate-spin text-primary' />
 							)}
-							<span>{uploadMessage}</span>
+							<span
+								className={
+									uploadStatus === 'success'
+										? 'text-green-700 dark:text-green-400'
+										: uploadStatus === 'error'
+											? 'text-destructive'
+											: 'text-foreground'
+								}
+							>
+								{uploadMessage}
+							</span>
 						</div>
 					)}
 
 					{/* Import results */}
 					{importResults && (
-						<div className='bg-muted border rounded-lg p-4 space-y-3'>
+						<div className='space-y-3 rounded-lg border bg-muted/30 p-4'>
 							<h4 className='font-medium text-foreground'>
 								Kết quả import:
 							</h4>
 							<div className='grid grid-cols-3 gap-4 text-sm'>
 								<div className='text-center'>
-									<div className='text-2xl font-bold text-green-600'>
+									<div className='text-2xl font-bold text-green-600 dark:text-green-400'>
 										{importResults.successCount}
 									</div>
 									<div className='text-muted-foreground'>
@@ -1715,7 +1623,7 @@ export function ImportStudentsDialog({
 									</div>
 								</div>
 								<div className='text-center'>
-									<div className='text-2xl font-bold text-red-600'>
+									<div className='text-2xl font-bold text-destructive'>
 										{importResults.errorCount}
 									</div>
 									<div className='text-muted-foreground'>
@@ -1723,7 +1631,7 @@ export function ImportStudentsDialog({
 									</div>
 								</div>
 								<div className='text-center'>
-									<div className='text-2xl font-bold text-blue-600'>
+									<div className='text-2xl font-bold text-foreground'>
 										{importResults.totalCount}
 									</div>
 									<div className='text-muted-foreground'>
@@ -1734,8 +1642,8 @@ export function ImportStudentsDialog({
 
 							{importResults.errors &&
 								importResults.errors.length > 0 && (
-									<div className='mt-3 space-y-2'>
-										<h5 className='font-medium text-red-700'>
+									<div className='space-y-2 pt-1'>
+										<h5 className='font-medium text-destructive'>
 											Chi tiết lỗi:
 										</h5>
 										<div className='max-h-32 overflow-y-auto space-y-1'>
@@ -1743,7 +1651,7 @@ export function ImportStudentsDialog({
 												(error, index) => (
 													<div
 														key={index}
-														className='text-sm text-red-600 dark:text-red-400 bg-red-50 dark:bg-red-950/30 p-2 rounded'
+														className='rounded border bg-background p-2 text-sm text-destructive'
 													>
 														Dòng {error.row}:{' '}
 														{error.message}
@@ -1757,17 +1665,13 @@ export function ImportStudentsDialog({
 					)}
 				</div>
 
-				{/* Footer */}
-				<div className='flex items-center justify-end space-x-3 p-6 border-t bg-muted rounded-b-xl'>
-					<button
-						onClick={handleClose}
-						className='px-4 py-2 text-secondary-foreground bg-secondary rounded-lg hover:bg-secondary/80 transition-colors'
-					>
+				<DialogFooter>
+					<Button variant='secondary' onClick={handleClose}>
 						{uploadStatus === 'success' ? 'Đóng' : 'Hủy'}
-					</button>
+					</Button>
 
 					{isReviewing && (
-						<button
+						<Button
 							onClick={handleImport}
 							disabled={
 								parseErrors.length > 0 ||
@@ -1778,24 +1682,23 @@ export function ImportStudentsDialog({
 									? 'Vui lòng sửa các dòng có lỗi trước khi import'
 									: undefined
 							}
-							className='flex items-center space-x-2 px-6 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors'
 						>
 							{uploadStatus === 'uploading' ? (
 								<>
-									<div className='animate-spin rounded-full h-4 w-4 border-b-2 border-white'></div>
-									<span>Đang import...</span>
+									<Loader2 className='h-4 w-4 animate-spin' />
+									Đang import...
 								</>
 							) : (
 								<>
 									<Upload className='h-4 w-4' />
-									<span>Xác nhận &amp; Import</span>
+									Xác nhận &amp; Import
 									<ArrowRight className='h-4 w-4' />
 								</>
 							)}
-						</button>
+						</Button>
 					)}
-				</div>
-			</div>
-		</div>
+				</DialogFooter>
+			</DialogContent>
+		</Dialog>
 	)
 }
