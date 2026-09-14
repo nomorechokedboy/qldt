@@ -46,7 +46,7 @@ import useUnitStatsStudents from '@/hooks/useUnitStatsStudents'
 import useUnitStatsMaterialStocks from '@/hooks/useUnitStatsMaterialStocks'
 import useUnitStatsMaterialAssets from '@/hooks/useUnitStatsMaterialAssets'
 import useProvinces from '@/hooks/useProvinces'
-import { battalionStudentColumnsWithoutAction } from '@/components/student-table/columns'
+import { buildBattalionStudentColumnsWithoutAction } from '@/components/student-table/columns'
 import { defaultBirthdayColumnVisibility } from '@/components/student-table/default-columns-visibility'
 import { useStudentFacetedFilters } from '@/hooks/useStudentFacetedFilters'
 import { buildMaterialStockColumns } from '@/components/material-stock-table/columns'
@@ -57,6 +57,7 @@ import {
 	politicalOrgNameMapping
 } from '@/components/politics-quality-report/charts-section'
 import { unitLevelLabels, unitLevelOrder } from '@/data/unit-levels'
+import { buildUnitsById, unitLabelWithAncestry } from '@/lib/unit-labels'
 import { materialAssetStatusLabels } from '@/data/material-categories'
 import { GetPoliticsQualityReport } from '@/api'
 import { transformPoliticsQualityData } from '@/lib/utils'
@@ -72,7 +73,13 @@ const readOnlyMaterialAssetColumns = buildMaterialAssetColumns([], []).filter(
 
 const TROOP_CHART_COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042']
 
-function GroupUnits({ unitsMap }: { unitsMap: Map<UnitLevel, Unit[]> }) {
+function GroupUnits({
+	unitsMap,
+	unitsById
+}: {
+	unitsMap: Map<UnitLevel, Unit[]>
+	unitsById: Map<number, Unit>
+}) {
 	const flatUnitsMapEntries = [...unitsMap.entries()]
 	return flatUnitsMapEntries.map(([level, units], idx) => (
 		<>
@@ -80,10 +87,7 @@ function GroupUnits({ unitsMap }: { unitsMap: Map<UnitLevel, Unit[]> }) {
 				<SelectLabel>{unitLevelLabels[level]}</SelectLabel>
 				{units.map((u) => (
 					<SelectItem key={u.id} value={u.alias}>
-						{u.name}
-						{u?.parent?.name !== undefined
-							? ` (${u?.parent?.name})`
-							: ''}
+						{unitLabelWithAncestry(u, unitsById)}
 					</SelectItem>
 				))}
 			</SelectGroup>
@@ -138,6 +142,9 @@ export default function BaseStatsDashboard() {
 		navigate({ search: (prev) => ({ ...prev, unit: alias }) })
 	}
 
+	const unitsById = buildUnitsById(units)
+	const battalionStudentColumnsWithoutAction =
+		buildBattalionStudentColumnsWithoutAction(unitsById)
 	const groupedUnits: Map<UnitLevel, units.Unit[]> = new Map()
 	units.forEach((u) => {
 		if (u.level === 'squad') {
@@ -606,7 +613,10 @@ export default function BaseStatsDashboard() {
 						<SelectValue placeholder='Chọn đơn vị' />
 					</SelectTrigger>
 					<SelectContent>
-						<GroupUnits unitsMap={groupedUnits} />
+						<GroupUnits
+							unitsMap={groupedUnits}
+							unitsById={unitsById}
+						/>
 					</SelectContent>
 				</Select>
 			</div>

@@ -4,6 +4,7 @@ import { eduLevelOptions } from '@/data/education-levels'
 import useUnitsData from '@/hooks/useUnitsData'
 import { useMemo } from 'react'
 import PlacePickerFields from '@/components/place-picker-fields'
+import { buildUnitsById, unitLabelWithAncestry } from '@/lib/unit-labels'
 
 export default function PersonalStep({ form }: { form: any }) {
 	const { data: units = [] } = useUnitsData()
@@ -12,13 +13,14 @@ export default function PersonalStep({ form }: { form: any }) {
 	// authorized for (each row also carries a shallow `children`
 	// relation), so mapping directly avoids re-adding non-root units
 	// a second time via `.children`.
+	const unitsById = useMemo(() => buildUnitsById(units), [units])
 	const unitOptions = useMemo(
 		() =>
 			units.map((u) => ({
 				value: u.id.toString(),
-				label: `${u.name}${u?.parent?.name !== undefined ? ` (${u?.parent?.name})` : ''}`
+				label: unitLabelWithAncestry(u, unitsById)
 			})),
-		[units]
+		[units, unitsById]
 	)
 
 	return (

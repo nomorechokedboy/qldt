@@ -5,6 +5,7 @@ import { createReport } from 'docx-templates'
 import { AppError } from '../errors'
 import { TransferRequest } from '../schema/transfer-requests'
 import transferRequestRepo from './repo'
+import unitRepo from '../units/repo'
 
 const TEMPLATE_FILE = 'transfer-handover-templ.docx'
 
@@ -42,11 +43,12 @@ interface HandoverPerson {
 	position: string
 }
 
-function unitFullName(
-	unit: { name: string; parent?: { name: string } | null } | undefined
-): string {
-	if (unit === undefined) return ''
-	return unit.parent ? `${unit.name}/${unit.parent.name}` : unit.name
+// `name` plus every ancestor up to the root (nearest first), e.g.
+// "Tiểu đội Trinh sát/Trung đội Chỉ huy/Đại đội 2" - a single parent
+// level isn't enough to identify a unit uniquely, since sibling
+// companies can share an identically-named chain of sub-units.
+function unitFullName(name: string, ancestorNames: string[]): string {
+	return [name, ...ancestorNames].join('/')
 }
 
 function personFromUser(
@@ -169,16 +171,34 @@ export async function buildHandoverReport(
 		(tr.destinationUnit as UnitWithCommander | undefined)?.commander
 	)
 
+	const [sourceChain, destinationChain] = await Promise.all([
+		tr.sourceUnit !== undefined
+			? unitRepo.findAncestorChain(tr.sourceUnit.id)
+			: Promise.resolve([]),
+		tr.destinationUnit !== undefined
+			? unitRepo.findAncestorChain(tr.destinationUnit.id)
+			: Promise.resolve([])
+	])
+	// findAncestorChain returns the unit itself first, then ancestors
+	// nearest-first - drop the unit itself to get just the ancestor names.
+	const sourceAncestorNames = sourceChain.slice(1).map((u) => u.name)
+	const destinationAncestorNames = destinationChain
+		.slice(1)
+		.map((u) => u.name)
+
 	const sourceUnitName = tr.sourceUnit?.name ?? ''
 	const destinationUnitName = tr.destinationUnit?.name ?? ''
-	const parentUnitName = tr.sourceUnit?.parent?.name ?? sourceUnitName
+	const parentUnitName = sourceAncestorNames[0] ?? sourceUnitName
 
 	const templateData = {
 		parentUnitName,
 		sourceUnitName,
 		destinationUnitName,
-		sourceUnitFullName: unitFullName(tr.sourceUnit),
-		destinationUnitFullName: unitFullName(tr.destinationUnit),
+		sourceUnitFullName: unitFullName(sourceUnitName, sourceAncestorNames),
+		destinationUnitFullName: unitFullName(
+			destinationUnitName,
+			destinationAncestorNames
+		),
 		itemsSummary: itemsSummary(items),
 		city,
 		day: decidedAt.format('DD'),

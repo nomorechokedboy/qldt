@@ -24,6 +24,7 @@ import useProvinces from '@/hooks/useProvinces'
 import useWards from '@/hooks/useWards'
 import { unitLevelLabels, unitLevelOrder } from '@/data/unit-levels'
 import { activityStatusOptions } from '@/data/activity-statuses'
+import { buildUnitsById, unitLabelWithAncestry } from '@/lib/unit-labels'
 
 export interface ImportStudentsDialogProps {
 	isOpen: boolean
@@ -55,13 +56,14 @@ export function ImportStudentsDialog({
 	// authorized for (each row also carries a shallow `children`
 	// relation), so mapping directly avoids re-adding non-root units
 	// a second time via `.children`.
+	const unitsById = useMemo(() => buildUnitsById(units), [units])
 	const unitOptions = useMemo(
 		() =>
 			units.map((u) => ({
 				id: u.id,
-				label: `${u.name}${u.parent?.name !== undefined ? ` (${u.parent.name})` : ''}`
+				label: unitLabelWithAncestry(u, unitsById)
 			})),
-		[units]
+		[units, unitsById]
 	)
 
 	const positionOptions = useMemo(

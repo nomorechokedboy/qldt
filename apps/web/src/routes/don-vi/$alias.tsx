@@ -4,6 +4,7 @@ import { unitLevelOrder } from '@/data/unit-levels'
 import useActionColumn from '@/hooks/useActionColumn'
 import useOnDeleteStudents from '@/hooks/useOnDeleteStudents'
 import useUnitData from '@/hooks/useUnitData'
+import useUnitsData from '@/hooks/useUnitsData'
 import useUnitTroopersData from '@/hooks/useUnitTroopersData'
 import { createFileRoute } from '@tanstack/react-router'
 import type { UnitLevel } from '@/types'
@@ -11,6 +12,7 @@ import z from 'zod'
 import UnitPageHeader from '@/components/unit/page-header'
 import UnitTabs from '@/components/unit/tabs'
 import useUnitFacetedFilters from '@/hooks/useUnitFacetedFilter'
+import { buildUnitsById } from '@/lib/unit-labels'
 
 const aliasSearchSchema = z.object({
 	level: z.enum(unitLevelOrder as [string, ...string[]]).default('battalion'),
@@ -34,6 +36,8 @@ function RouteComponent() {
 		refetch: refetchStudents
 	} = useUnitTroopersData({ id })
 	const { data: unit } = useUnitData({ alias, level, id })
+	const { data: units = [] } = useUnitsData()
+	const unitsById = buildUnitsById(units)
 
 	const facetedFilters = useUnitFacetedFilters({ troopers, unit })
 	const handleDeleteStudents = useOnDeleteStudents(refetchStudents)
@@ -59,6 +63,7 @@ function RouteComponent() {
 					actionColumn={actionColumn}
 					onDeleteRows={handleDeleteStudents}
 					onCreateSuccess={refetchStudents}
+					unitsById={unitsById}
 				/>
 			</div>
 		</ProtectedRoute>

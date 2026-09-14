@@ -10,11 +10,13 @@ import {
 	SelectValue
 } from '@/components/ui/select'
 import { defaultCpvOfficialColumnVisibility } from './student-table/default-columns-visibility'
-import { battalionStudentColumnsWithoutAction } from '@/components/student-table/columns'
+import { buildBattalionStudentColumnsWithoutAction } from '@/components/student-table/columns'
 import useStudentData from '@/hooks/useStudents'
+import useUnitsData from '@/hooks/useUnitsData'
 import StudentTable from './student-table'
 import UnitFacetedFilter, { useFilteredClassIds } from './unit-filter'
 import { useStudentFacetedFilters } from '@/hooks/useStudentFacetedFilters'
+import { buildUnitsById } from '@/lib/unit-labels'
 
 const quarterOptions = [
 	{ value: 'Q1', label: 'Quý 1' },
@@ -29,6 +31,9 @@ export default function CpvOfficialInQuarter() {
 	)
 	const [selectedUnits, setSelectedUnits] = useState<number[]>([])
 	const filteredUnitIds = useFilteredClassIds(selectedUnits)
+	const { data: units = [] } = useUnitsData()
+	const battalionStudentColumnsWithoutAction =
+		buildBattalionStudentColumnsWithoutAction(buildUnitsById(units))
 	const studentQueryParams: StudentQueryParams = {
 		cpvOfficialInQuarter: quarter
 	}

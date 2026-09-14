@@ -1,5 +1,6 @@
-import { battalionStudentColumnsWithoutAction } from '@/components/student-table/columns'
+import { buildBattalionStudentColumnsWithoutAction } from '@/components/student-table/columns'
 import useStudentData from '@/hooks/useStudents'
+import useUnitsData from '@/hooks/useUnitsData'
 import type { Month, Student, StudentQueryParams } from '@/types'
 import dayjs from 'dayjs'
 import { useCallback, useState } from 'react'
@@ -15,6 +16,7 @@ import { defaultCpvOfficialColumnVisibility } from './student-table/default-colu
 import StudentTable from './student-table'
 import UnitFacetedFilter, { useFilteredClassIds } from './unit-filter'
 import { useStudentFacetedFilters } from '@/hooks/useStudentFacetedFilters'
+import { buildUnitsById } from '@/lib/unit-labels'
 
 const monthOptions = [
 	{
@@ -71,6 +73,9 @@ export default function CpvOfficialInMonth() {
 	const [selectedUnits, setSelectedUnits] = useState<number[]>([])
 	const filteredUnitIds = useFilteredClassIds(selectedUnits)
 	const [month, setMonth] = useState<Month>(dayjs().format('MM') as Month)
+	const { data: units = [] } = useUnitsData()
+	const battalionStudentColumnsWithoutAction =
+		buildBattalionStudentColumnsWithoutAction(buildUnitsById(units))
 	const studentQueryParams: StudentQueryParams = {
 		cpvOfficialInMonth: month
 	}

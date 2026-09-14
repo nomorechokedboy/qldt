@@ -23,6 +23,7 @@ import { useAppForm } from '@/hooks/use-app-form'
 import { toast } from 'sonner'
 import useUploadFiles from '@/hooks/useUploadFiles'
 import { getErrorMessage } from '@/lib/utils'
+import { buildUnitsById, unitLabelWithAncestry } from '@/lib/unit-labels'
 import {
 	Plus,
 	Trash2,
@@ -79,13 +80,14 @@ export default function StudentEditForm({
 	// already present as their own top-level entries in this same array.
 	// Recursing into `.children` here re-added every non-root unit a
 	// second time, so map directly instead.
+	const unitsById = useMemo(() => buildUnitsById(units), [units])
 	const unitOptions = useMemo(
 		() =>
 			units.map((u) => ({
 				value: u.id.toString(),
-				label: `${u.name}${u?.parent?.name !== undefined ? ` (${u?.parent?.name})` : ''}`
+				label: unitLabelWithAncestry(u, unitsById)
 			})),
-		[units]
+		[units, unitsById]
 	)
 	const { data: positions = [] } = usePositionsData()
 	const positionOptions = useMemo(

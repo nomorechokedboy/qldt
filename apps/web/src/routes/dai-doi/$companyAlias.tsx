@@ -12,8 +12,10 @@ import useOnDeleteStudents from '@/hooks/useOnDeleteStudents'
 import useActionColumn from '@/hooks/useActionColumn'
 import TableSkeleton from '@/components/table-skeleton'
 import { defaultBirthdayColumnVisibility } from '@/components/student-table/default-columns-visibility'
-import { battalionStudentColumnsWithoutAction } from '@/components/student-table/columns'
+import { buildBattalionStudentColumnsWithoutAction } from '@/components/student-table/columns'
 import useUnitData from '@/hooks/useUnitData'
+import useUnitsData from '@/hooks/useUnitsData'
+import { buildUnitsById } from '@/lib/unit-labels'
 import { PermissionTag } from '@/lib/permission-tags'
 
 const companyAliasSearchSchema = z.object({ id: z.number().nonoptional() })
@@ -36,6 +38,10 @@ function RouteComponent() {
 		level: 'company',
 		id
 	})
+	const { data: units = [] } = useUnitsData()
+	const unitsById = buildUnitsById(units)
+	const battalionStudentColumnsWithoutAction =
+		buildBattalionStudentColumnsWithoutAction(unitsById)
 	const filename = `danh-sach-quan-nhan-${companyAlias}`
 
 	// const facetedFilters = useUnitFacetedFilters({ troopers, unit })

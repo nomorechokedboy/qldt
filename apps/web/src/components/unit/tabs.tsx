@@ -1,12 +1,12 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { battalionStudentColumnsWithoutAction } from '@/components/student-table/columns'
+import { buildBattalionStudentColumnsWithoutAction } from '@/components/student-table/columns'
 import { defaultBirthdayColumnVisibility } from '@/components/student-table/default-columns-visibility'
 import StudentTable from '@/components/student-table'
 import CompanyFacilitiesTab from '@/components/company-facilities-tab'
 import CompanyWeaponsTab from '@/components/company-weapons-tab'
 import type { ColumnDef } from '@tanstack/react-table'
 import type { QueryObserverResult } from '@tanstack/react-query'
-import type { Student as Trooper, UnitLevel } from '@/types'
+import type { Student as Trooper, Unit, UnitLevel } from '@/types'
 import type useUnitFacetedFilters from '@/hooks/useUnitFacetedFilter'
 
 interface UnitTabsProps {
@@ -21,6 +21,7 @@ interface UnitTabsProps {
 	actionColumn: ColumnDef<Trooper>
 	onDeleteRows: (rows: Trooper[]) => void
 	onCreateSuccess: () => void
+	unitsById: Map<number, Unit>
 }
 
 export default function UnitTabs({
@@ -34,7 +35,8 @@ export default function UnitTabs({
 	facetedFilters,
 	actionColumn,
 	onDeleteRows,
-	onCreateSuccess
+	onCreateSuccess,
+	unitsById
 }: UnitTabsProps) {
 	const filename = `danh-sach-quan-nhan-${alias}`
 
@@ -57,7 +59,7 @@ export default function UnitTabs({
 						status: false
 					}}
 					columns={[
-						...battalionStudentColumnsWithoutAction,
+						...buildBattalionStudentColumnsWithoutAction(unitsById),
 						actionColumn
 					]}
 					facetedFilters={facetedFilters}
