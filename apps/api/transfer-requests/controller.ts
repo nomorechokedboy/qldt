@@ -76,24 +76,6 @@ class controller {
 		return userRepo.findByIds([...ids])
 	}
 
-	// Whether the given user currently holds one of the 4 leadership roles
-	// on a unit that is ancestor-or-self of both the source and destination
-	// units — i.e. whether they're allowed to approve/reject this specific
-	// pending request. Used to drive the approve/reject buttons in the UI so
-	// they only show for actually-eligible commanders, not everyone holding
-	// the org-wide transfer_requests:approve/reject permission.
-	async canDecide(
-		sourceUnitId: number,
-		destinationUnitId: number,
-		userId: number
-	): Promise<boolean> {
-		const ids = await this.pairEligibleApproverIdsOrEmpty(
-			sourceUnitId,
-			destinationUnitId
-		)
-		return ids.has(userId)
-	}
-
 	private studentUnitId(student: Student): number | undefined {
 		return student.unit?.id
 	}
@@ -356,18 +338,18 @@ class controller {
 		])
 	}
 
-	private async assertActorIsApprover(
+	// Only the specific user chosen as approverUserId at creation time may
+	// decide this request - being a generically-eligible commander for the
+	// source/destination units is not enough (that broader set only gates
+	// who can be PICKED as approver, via listEligibleApprovers above).
+	private assertActorIsApprover(
 		request: TransferRequest,
 		actorUserId: number
-	): Promise<void> {
-		const eligibleIds = await this.eligibleApproverIds(
-			request.sourceUnit!.id,
-			request.destinationUnit!.id
-		)
-		if (!eligibleIds.has(actorUserId)) {
+	): void {
+		if (request.approver?.id !== actorUserId) {
 			throw AppError.handleAppErr(
 				AppError.unauthorized(
-					"You don't have permission to approve/reject this transfer request"
+					'Only the designated approver can approve/reject this transfer request'
 				)
 			)
 		}
