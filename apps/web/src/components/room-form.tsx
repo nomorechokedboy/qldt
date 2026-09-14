@@ -75,7 +75,7 @@ export default function RoomForm({
 					Thêm phòng
 				</Button>
 			</DialogTrigger>
-			<DialogContent className='sm:max-w-md'>
+			<DialogContent className='sm:max-w-md h-auto'>
 				<DialogHeader>
 					<DialogTitle>Biểu mẫu thêm phòng</DialogTitle>
 				</DialogHeader>

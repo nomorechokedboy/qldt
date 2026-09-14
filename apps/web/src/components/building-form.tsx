@@ -83,7 +83,7 @@ export default function BuildingForm({
 					Thêm nhà/khu nhà
 				</Button>
 			</DialogTrigger>
-			<DialogContent className='sm:max-w-md'>
+			<DialogContent className='sm:max-w-md h-auto'>
 				<DialogHeader>
 					<DialogTitle>Biểu mẫu thêm nhà/khu nhà</DialogTitle>
 				</DialogHeader>

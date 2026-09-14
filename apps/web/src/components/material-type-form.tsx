@@ -83,7 +83,7 @@ export default function MaterialTypeForm({ onSuccess }: MaterialTypeFormProps) {
 					Thêm danh mục
 				</Button>
 			</DialogTrigger>
-			<DialogContent className='sm:max-w-md'>
+			<DialogContent className='sm:max-w-md h-auto'>
 				<DialogHeader>
 					<DialogTitle>Biểu mẫu thêm danh mục vật tư</DialogTitle>
 				</DialogHeader>

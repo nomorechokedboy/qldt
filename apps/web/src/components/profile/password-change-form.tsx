@@ -89,7 +89,7 @@ export default function PasswordChangeForm({
 
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
-			<DialogContent className='sm:max-w-md'>
+			<DialogContent className='sm:max-w-md h-auto'>
 				<DialogHeader>
 					<DialogTitle>Đổi mật khẩu</DialogTitle>
 				</DialogHeader>

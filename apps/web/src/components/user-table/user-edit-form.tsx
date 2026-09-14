@@ -168,7 +168,7 @@ export default function UserEditForm({
 
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
-			<DialogContent className='sm:max-w-md'>
+			<DialogContent className='sm:max-w-md h-auto'>
 				<DialogHeader>
 					<DialogTitle>Biểu mẫu sửa thông tin người dùng</DialogTitle>
 				</DialogHeader>

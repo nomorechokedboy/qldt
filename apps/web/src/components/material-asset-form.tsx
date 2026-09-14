@@ -102,7 +102,7 @@ export default function MaterialAssetForm({
 					Thêm khí tài
 				</Button>
 			</DialogTrigger>
-			<DialogContent className='sm:max-w-md'>
+			<DialogContent className='sm:max-w-md h-auto'>
 				<DialogHeader>
 					<DialogTitle>Biểu mẫu thêm khí tài/vũ khí</DialogTitle>
 				</DialogHeader>

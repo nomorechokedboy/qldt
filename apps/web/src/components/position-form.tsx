@@ -73,7 +73,7 @@ export default function PositionForm({ level, onSuccess }: PositionFormProps) {
 					Thêm chức vụ
 				</Button>
 			</DialogTrigger>
-			<DialogContent className='sm:max-w-md'>
+			<DialogContent className='sm:max-w-md h-auto'>
 				<DialogHeader>
 					<DialogTitle>Biểu mẫu thêm chức vụ</DialogTitle>
 				</DialogHeader>

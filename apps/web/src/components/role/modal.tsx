@@ -42,7 +42,7 @@ export default function RoleModal({
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<form onSubmit={handleSubmit} id={formId}>
 				<DialogTrigger asChild>{trigger}</DialogTrigger>
-				<DialogContent className='sm:max-w-md'>
+				<DialogContent className='sm:max-w-md h-auto'>
 					<DialogHeader>
 						<DialogTitle>{title}</DialogTitle>
 					</DialogHeader>

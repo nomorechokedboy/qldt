@@ -143,7 +143,7 @@ export default function UnitForm({ onSuccess }: UnitFormProps) {
 					Thêm đơn vị
 				</Button>
 			</DialogTrigger>
-			<DialogContent className='sm:max-w-md'>
+			<DialogContent className='sm:max-w-md h-auto'>
 				<DialogHeader>
 					<DialogTitle>Biểu mẫu thêm đơn vị</DialogTitle>
 				</DialogHeader>
