@@ -18,11 +18,12 @@ export const NotificationTypeEnum = customType<{
 				'birthday',
 				'officialCpv',
 				'commanderDigest',
-				'activityStatusProposal'
+				'activityStatusProposal',
+				'rankPromotionProposal'
 			].includes(val)
 		) {
 			throw AppError.invalidArgument(
-				'notification type can only be birthday, officialCpv, commanderDigest or activityStatusProposal'
+				'notification type can only be birthday, officialCpv, commanderDigest, activityStatusProposal or rankPromotionProposal'
 			)
 		}
 		return val
@@ -42,6 +43,7 @@ export const notifications = sqlite.sqliteTable(
 				| 'officialCpv'
 				| 'commanderDigest'
 				| 'activityStatusProposal'
+				| 'rankPromotionProposal'
 			>()
 			.default('birthday')
 			.notNull(),
