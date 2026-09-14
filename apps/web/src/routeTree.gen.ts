@@ -23,6 +23,7 @@ import { Route as KhoiTaoDonViRouteImport } from './routes/khoi-tao-don-vi'
 import { Route as HoanCanhKhoKhanRouteImport } from './routes/hoan-canh-kho-khan'
 import { Route as HcyuRouteImport } from './routes/hcyu'
 import { Route as EthnicMinorityRouteImport } from './routes/ethnic-minority'
+import { Route as DeXuatThangQuanHamRouteImport } from './routes/de-xuat-thang-quan-ham'
 import { Route as DeXuatCheDoRouteImport } from './routes/de-xuat-che-do'
 import { Route as CpvRouteImport } from './routes/cpv'
 import { Route as ChuyenGiaoTaiSanRouteImport } from './routes/chuyen-giao-tai-san'
@@ -106,6 +107,11 @@ const EthnicMinorityRoute = EthnicMinorityRouteImport.update({
   path: '/ethnic-minority',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DeXuatThangQuanHamRoute = DeXuatThangQuanHamRouteImport.update({
+  id: '/de-xuat-thang-quan-ham',
+  path: '/de-xuat-thang-quan-ham',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DeXuatCheDoRoute = DeXuatCheDoRouteImport.update({
   id: '/de-xuat-che-do',
   path: '/de-xuat-che-do',
@@ -176,6 +182,7 @@ export interface FileRoutesByFullPath {
   '/chuyen-giao-tai-san': typeof ChuyenGiaoTaiSanRoute
   '/cpv': typeof CpvRoute
   '/de-xuat-che-do': typeof DeXuatCheDoRoute
+  '/de-xuat-thang-quan-ham': typeof DeXuatThangQuanHamRoute
   '/ethnic-minority': typeof EthnicMinorityRoute
   '/hcyu': typeof HcyuRoute
   '/hoan-canh-kho-khan': typeof HoanCanhKhoKhanRoute
@@ -204,6 +211,7 @@ export interface FileRoutesByTo {
   '/chuyen-giao-tai-san': typeof ChuyenGiaoTaiSanRoute
   '/cpv': typeof CpvRoute
   '/de-xuat-che-do': typeof DeXuatCheDoRoute
+  '/de-xuat-thang-quan-ham': typeof DeXuatThangQuanHamRoute
   '/ethnic-minority': typeof EthnicMinorityRoute
   '/hcyu': typeof HcyuRoute
   '/hoan-canh-kho-khan': typeof HoanCanhKhoKhanRoute
@@ -233,6 +241,7 @@ export interface FileRoutesById {
   '/chuyen-giao-tai-san': typeof ChuyenGiaoTaiSanRoute
   '/cpv': typeof CpvRoute
   '/de-xuat-che-do': typeof DeXuatCheDoRoute
+  '/de-xuat-thang-quan-ham': typeof DeXuatThangQuanHamRoute
   '/ethnic-minority': typeof EthnicMinorityRoute
   '/hcyu': typeof HcyuRoute
   '/hoan-canh-kho-khan': typeof HoanCanhKhoKhanRoute
@@ -263,6 +272,7 @@ export interface FileRouteTypes {
     | '/chuyen-giao-tai-san'
     | '/cpv'
     | '/de-xuat-che-do'
+    | '/de-xuat-thang-quan-ham'
     | '/ethnic-minority'
     | '/hcyu'
     | '/hoan-canh-kho-khan'
@@ -291,6 +301,7 @@ export interface FileRouteTypes {
     | '/chuyen-giao-tai-san'
     | '/cpv'
     | '/de-xuat-che-do'
+    | '/de-xuat-thang-quan-ham'
     | '/ethnic-minority'
     | '/hcyu'
     | '/hoan-canh-kho-khan'
@@ -319,6 +330,7 @@ export interface FileRouteTypes {
     | '/chuyen-giao-tai-san'
     | '/cpv'
     | '/de-xuat-che-do'
+    | '/de-xuat-thang-quan-ham'
     | '/ethnic-minority'
     | '/hcyu'
     | '/hoan-canh-kho-khan'
@@ -348,6 +360,7 @@ export interface RootRouteChildren {
   ChuyenGiaoTaiSanRoute: typeof ChuyenGiaoTaiSanRoute
   CpvRoute: typeof CpvRoute
   DeXuatCheDoRoute: typeof DeXuatCheDoRoute
+  DeXuatThangQuanHamRoute: typeof DeXuatThangQuanHamRoute
   EthnicMinorityRoute: typeof EthnicMinorityRoute
   HcyuRoute: typeof HcyuRoute
   HoanCanhKhoKhanRoute: typeof HoanCanhKhoKhanRoute
@@ -468,6 +481,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof EthnicMinorityRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/de-xuat-thang-quan-ham': {
+      id: '/de-xuat-thang-quan-ham'
+      path: '/de-xuat-thang-quan-ham'
+      fullPath: '/de-xuat-thang-quan-ham'
+      preLoaderRoute: typeof DeXuatThangQuanHamRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/de-xuat-che-do': {
       id: '/de-xuat-che-do'
       path: '/de-xuat-che-do'
@@ -564,6 +584,7 @@ const rootRouteChildren: RootRouteChildren = {
   ChuyenGiaoTaiSanRoute: ChuyenGiaoTaiSanRoute,
   CpvRoute: CpvRoute,
   DeXuatCheDoRoute: DeXuatCheDoRoute,
+  DeXuatThangQuanHamRoute: DeXuatThangQuanHamRoute,
   EthnicMinorityRoute: EthnicMinorityRoute,
   HcyuRoute: HcyuRoute,
   HoanCanhKhoKhanRoute: HoanCanhKhoKhanRoute,

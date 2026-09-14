@@ -46,6 +46,7 @@ export default class Client {
 	public readonly notifications: notifications.ServiceClient
 	public readonly permissions: permissions.ServiceClient
 	public readonly positions: positions.ServiceClient
+	public readonly rank_promotion_proposals: rank_promotion_proposals.ServiceClient
 	public readonly resources: resources.ServiceClient
 	public readonly roles: roles.ServiceClient
 	public readonly students: students.ServiceClient
@@ -81,6 +82,8 @@ export default class Client {
 		this.notifications = new notifications.ServiceClient(base)
 		this.permissions = new permissions.ServiceClient(base)
 		this.positions = new positions.ServiceClient(base)
+		this.rank_promotion_proposals =
+			new rank_promotion_proposals.ServiceClient(base)
 		this.resources = new resources.ServiceClient(base)
 		this.roles = new roles.ServiceClient(base)
 		this.students = new students.ServiceClient(base)
@@ -2094,6 +2097,229 @@ export namespace positions {
 	}
 }
 
+export namespace rank_promotion_proposals {
+	export interface ApproveRankPromotionProposalResponse {
+		data: RankPromotionProposalResp
+	}
+
+	export interface CancelRankPromotionProposalResponse {
+		data: RankPromotionProposalResp
+	}
+
+	export interface CreateRankPromotionProposalBody {
+		unitId: number
+		approverUserId: number
+		targetRank: string
+		note?: string | null
+		effectiveDate?: string | null
+		troopers: schema.CreateRankPromotionProposalTrooperInput[]
+	}
+
+	export interface CreateRankPromotionProposalResponse {
+		data: RankPromotionProposalResp
+	}
+
+	export interface GetRankPromotionProposalEligibleApproversQuery {
+		unitId: number
+	}
+
+	export interface GetRankPromotionProposalEligibleApproversResponse {
+		data: UserSummary[]
+	}
+
+	export interface GetRankPromotionProposalResponse {
+		data: RankPromotionProposalResp
+	}
+
+	export interface GetRankPromotionProposalsQuery {
+		status?: schema.RankPromotionProposalStatus
+	}
+
+	export interface GetRankPromotionProposalsResponse {
+		data: RankPromotionProposalResp[]
+	}
+
+	export interface RankPromotionProposalResp {
+		id: number
+		status: string
+		targetRank: string
+		note: string | null
+		rejectionReason: string | null
+		decidedAt: string | null
+		createdAt: string
+		updatedAt: string
+		effectiveDate: string | null
+		unit?: UnitSummary
+		requestedBy?: UserSummary
+		approver?: UserSummary
+		decidedBy?: UserSummary | null
+		troopers?: RankPromotionProposalTrooperItemResp[]
+		canDecide: boolean
+	}
+
+	export interface RankPromotionProposalTrooperItemResp {
+		id: number
+		itemStatus: string
+		failureReason: string | null
+		targetRank: string | null
+		effectiveDate: string | null
+		appliedAt: string | null
+		student?: StudentSummary
+	}
+
+	export interface RejectRankPromotionProposalRequest {
+		reason: string
+	}
+
+	export interface RejectRankPromotionProposalResponse {
+		data: RankPromotionProposalResp
+	}
+
+	export interface StudentSummary {
+		id: number
+		fullName: string | null
+		unitId: number | null
+	}
+
+	export interface UnitSummary {
+		id: number
+		alias: string
+		name: string
+		level: string
+	}
+
+	export interface UserSummary {
+		id: number
+		username: string
+		displayName: string
+	}
+
+	export class ServiceClient {
+		private baseClient: BaseClient
+
+		constructor(baseClient: BaseClient) {
+			this.baseClient = baseClient
+			this.ApproveRankPromotionProposal =
+				this.ApproveRankPromotionProposal.bind(this)
+			this.CancelRankPromotionProposal =
+				this.CancelRankPromotionProposal.bind(this)
+			this.CreateRankPromotionProposal =
+				this.CreateRankPromotionProposal.bind(this)
+			this.GetRankPromotionProposal =
+				this.GetRankPromotionProposal.bind(this)
+			this.GetRankPromotionProposalEligibleApprovers =
+				this.GetRankPromotionProposalEligibleApprovers.bind(this)
+			this.GetRankPromotionProposals =
+				this.GetRankPromotionProposals.bind(this)
+			this.RejectRankPromotionProposal =
+				this.RejectRankPromotionProposal.bind(this)
+		}
+
+		public async ApproveRankPromotionProposal(
+			id: number
+		): Promise<ApproveRankPromotionProposalResponse> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'POST',
+				`/rank-promotion-proposals/${encodeURIComponent(id)}/approve`
+			)
+			return (await resp.json()) as ApproveRankPromotionProposalResponse
+		}
+
+		public async CancelRankPromotionProposal(
+			id: number
+		): Promise<CancelRankPromotionProposalResponse> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'POST',
+				`/rank-promotion-proposals/${encodeURIComponent(id)}/cancel`
+			)
+			return (await resp.json()) as CancelRankPromotionProposalResponse
+		}
+
+		public async CreateRankPromotionProposal(
+			params: CreateRankPromotionProposalBody
+		): Promise<CreateRankPromotionProposalResponse> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'POST',
+				`/rank-promotion-proposals`,
+				JSON.stringify(params)
+			)
+			return (await resp.json()) as CreateRankPromotionProposalResponse
+		}
+
+		public async GetRankPromotionProposal(
+			id: number
+		): Promise<GetRankPromotionProposalResponse> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'GET',
+				`/rank-promotion-proposals/${encodeURIComponent(id)}`
+			)
+			return (await resp.json()) as GetRankPromotionProposalResponse
+		}
+
+		/**
+		 * Users eligible to approve a proposal raised from the given unit —
+		 * commanders/deputy commanders/political commanders/deputy political
+		 * commanders of the unit itself or any of its ancestors. Used to populate
+		 * the approver picker with only valid choices.
+		 */
+		public async GetRankPromotionProposalEligibleApprovers(
+			params: GetRankPromotionProposalEligibleApproversQuery
+		): Promise<GetRankPromotionProposalEligibleApproversResponse> {
+			// Convert our params into the objects we need for the request
+			const query = makeRecord<string, string | string[]>({
+				unitId: String(params.unitId)
+			})
+
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'GET',
+				`/rank-promotion-proposals/eligible-approvers`,
+				undefined,
+				{ query }
+			)
+			return (await resp.json()) as GetRankPromotionProposalEligibleApproversResponse
+		}
+
+		public async GetRankPromotionProposals(
+			params: GetRankPromotionProposalsQuery
+		): Promise<GetRankPromotionProposalsResponse> {
+			// Convert our params into the objects we need for the request
+			const query = makeRecord<string, string | string[]>({
+				status:
+					params.status === undefined
+						? undefined
+						: String(params.status)
+			})
+
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'GET',
+				`/rank-promotion-proposals`,
+				undefined,
+				{ query }
+			)
+			return (await resp.json()) as GetRankPromotionProposalsResponse
+		}
+
+		public async RejectRankPromotionProposal(
+			id: number,
+			params: RejectRankPromotionProposalRequest
+		): Promise<RejectRankPromotionProposalResponse> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'POST',
+				`/rank-promotion-proposals/${encodeURIComponent(id)}/reject`,
+				JSON.stringify(params)
+			)
+			return (await resp.json()) as RejectRankPromotionProposalResponse
+		}
+	}
+}
+
 export namespace resources {
 	export interface GetResourcesResponse {
 		data: schema.Resource[]
@@ -3904,6 +4130,12 @@ export namespace schema {
 		endDate?: string | null
 	}
 
+	export interface CreateRankPromotionProposalTrooperInput {
+		studentId: number
+		targetRank?: string | null
+		effectiveDate?: string | null
+	}
+
 	export interface CreateRoleRequest {
 		name: string
 		description?: string
@@ -3971,6 +4203,12 @@ export namespace schema {
 		createdAt: string
 		updatedAt: string
 	}
+
+	export type RankPromotionProposalStatus =
+		| 'pending'
+		| 'approved'
+		| 'rejected'
+		| 'cancelled'
 
 	export interface Resource {
 		permissions: Permission[]

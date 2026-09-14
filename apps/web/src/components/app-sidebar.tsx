@@ -13,7 +13,8 @@ import {
 	Package,
 	History,
 	ArrowLeftRight,
-	ClipboardCheck
+	ClipboardCheck,
+	TrendingUp
 } from 'lucide-react'
 import {
 	Sidebar,
@@ -113,6 +114,11 @@ const data = {
 					title: 'Đề xuất chế độ',
 					url: '/de-xuat-che-do',
 					icon: ClipboardCheck
+				},
+				{
+					title: 'Đề xuất thăng quân hàm',
+					url: '/de-xuat-thang-quan-ham',
+					icon: TrendingUp
 				}
 			]
 		},
