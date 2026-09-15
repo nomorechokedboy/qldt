@@ -453,7 +453,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 			<SidebarRail />
 			<SidebarFooter>
 				<div className='w-full flex items-center justify-between'>
-					<div className='hidden'>
+					<div></div>
+					<div className=''>
 						<ThemeToggle />
 					</div>
 				</div>

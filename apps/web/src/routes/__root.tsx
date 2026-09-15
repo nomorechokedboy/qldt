@@ -31,7 +31,7 @@ interface MyRouterContext {
 
 function RootLayout() {
 	const navigate = useNavigate()
-	const { isAuthenticated } = useAuth()
+	const { isAuthenticated, user } = useAuth()
 	const { refetch: refetchNotifications } = useInfiniteNotification()
 	const { refetch: refetchUnreadNoti } = useUnreadNotificationCount()
 	const streamRef = useRef<StreamIn<notifications.Message>>(null)
@@ -57,18 +57,27 @@ function RootLayout() {
 			navigate({ to: '/khoi-tao-qtv', replace: true })
 		} else if (
 			isAuthenticated &&
+			user?.isSuperAdmin === true &&
 			isInitAdmin === true &&
 			!isUnitsLoading &&
 			units !== undefined &&
 			units.length === 0 &&
 			location.pathname !== '/khoi-tao-don-vi'
 		) {
+			// Only super admins get bounced here on an empty unit list - it's a
+			// recovery path for "every unit was deleted after setup". Regular
+			// users are scoped to their own unit's subtree (see authzMiddleware's
+			// validUnitIds), so an empty result for them just means their account
+			// isn't assigned to a unit (or lost access) - not that the app itself
+			// needs re-onboarding. Treating that the same way used to force
+			// every such user back to the root-unit wizard on every navigation.
 			navigate({ to: '/khoi-tao-don-vi', replace: true })
 		}
 	}, [
 		rootUnitStatus,
 		isInitAdmin,
 		isAuthenticated,
+		user?.isSuperAdmin,
 		isUnitsLoading,
 		units,
 		location.pathname,

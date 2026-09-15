@@ -195,7 +195,7 @@ export default function StudentTable({
 			{enableCreation && (
 				<Button variant='outline' onClick={() => setImportOpen(true)}>
 					<Upload />
-					Import danh sách
+					Import
 				</Button>
 			)}
 			{showRefreshButton && (
