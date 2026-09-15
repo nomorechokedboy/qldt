@@ -25,8 +25,8 @@ const LEVELS = [
 	{ value: 'platoon', label: 'Trung đội' },
 	{ value: 'company', label: 'Đại đội' },
 	{ value: 'battalion', label: 'Tiểu đoàn' },
-	{ value: 'regiment', label: 'Trung đoàn' },
 	{ value: 'brigade', label: 'Lữ đoàn' },
+	{ value: 'regiment', label: 'Trung đoàn' },
 	{ value: 'division', label: 'Sư đoàn' }
 ] as const
 
