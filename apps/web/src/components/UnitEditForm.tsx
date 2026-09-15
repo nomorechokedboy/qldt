@@ -13,17 +13,21 @@ import {
 } from '@/components/ui/select'
 import { useUpdateUnits } from '@/hooks/useUpdateUnits'
 import useUnitsData from '@/hooks/useUnitsData'
+import useUnitData from '@/hooks/useUnitData'
 import useAuth from '@/hooks/useAuth'
 import {
+	isCompanyOrAboveLevel,
 	isLargerUnitLevel,
-	unitLevelLabels,
-	unitLevelOptions
+	levelOptionsUnderRoot,
+	rootUnitLevelOptions,
+	unitLevelLabels
 } from '@/data/unit-levels'
 import type { Unit, UnitLevel } from '@/types'
 import { getErrorMessage } from '@/lib/utils'
 import UnitCommanderFields, {
 	commanderValuesFromUnit,
 	commanderValuesToPayload,
+	SingleCommanderField,
 	type CommanderFieldKey,
 	type UnitCommanderValues
 } from '@/components/unit-commander-fields'
@@ -46,6 +50,43 @@ export default function UnitEditForm({
 	onUpdate,
 	onClose
 }: UnitEditFormProps) {
+	// unitData may have come from a nested list (e.g. a platoon read off its
+	// company's `children`, or a squad off a platoon's), where `.parent`
+	// isn't populated past the first level of nesting. Re-fetch this exact
+	// unit by its own alias so `.parent` is always correct regardless of how
+	// deeply it was nested when the caller found it.
+	const { data: freshUnit, isLoading } = useUnitData({
+		alias: unitData.alias,
+		level: unitData.level
+	})
+
+	if (isLoading || freshUnit === undefined) {
+		return (
+			<div className='rounded-2xl shadow-xl w-full max-w-md p-6 relative'>
+				<Button
+					type='button'
+					onClick={onClose}
+					variant='ghost'
+					size='icon'
+					className='absolute top-3 right-3'
+				>
+					<X className='h-4 w-4' />
+				</Button>
+				<p className='text-sm text-muted-foreground'>Đang tải...</p>
+			</div>
+		)
+	}
+
+	return (
+		<UnitEditFormBody
+			unitData={freshUnit}
+			onUpdate={onUpdate}
+			onClose={onClose}
+		/>
+	)
+}
+
+function UnitEditFormBody({ unitData, onUpdate, onClose }: UnitEditFormProps) {
 	const [alias, setAlias] = useState(unitData.alias)
 	const [name, setName] = useState(unitData.name)
 	const [level, setLevel] = useState<UnitLevel>(unitData.level)
@@ -67,6 +108,16 @@ export default function UnitEditForm({
 	// check in units/controller.ts#update). Non-super-admins still see the
 	// current values, just as read-only text rather than editable pickers.
 	const isSuperAdmin = !!user?.isSuperAdmin
+
+	// Same ceiling as the create form: nothing can sit at or above the
+	// actual root unit's level. The one exception is the root unit's own
+	// edit form - it keeps its root-eligible range (company-or-above)
+	// instead of being capped against itself.
+	const rootUnit = allUnits?.find((u) => !u.parent)
+	const isEditingRoot = rootUnit !== undefined && rootUnit.id === unitData.id
+	const levelOptions = isEditingRoot
+		? rootUnitLevelOptions
+		: levelOptionsUnderRoot(rootUnit?.level)
 
 	const parentOptions =
 		allUnits?.filter(
@@ -149,7 +200,7 @@ export default function UnitEditForm({
 								<SelectValue placeholder='Chọn cấp đơn vị' />
 							</SelectTrigger>
 							<SelectContent>
-								{unitLevelOptions.map((opt) => (
+								{levelOptions.map((opt) => (
 									<SelectItem
 										key={opt.value}
 										value={opt.value}
@@ -212,13 +263,34 @@ export default function UnitEditForm({
 					)}
 				</div>
 
-				<UnitCommanderFields
-					idPrefix='edit-unit'
-					values={commanders}
-					onChange={(field: CommanderFieldKey, value: string) =>
-						setCommanders((prev) => ({ ...prev, [field]: value }))
-					}
-				/>
+				{isCompanyOrAboveLevel(level) ? (
+					<UnitCommanderFields
+						idPrefix='edit-unit'
+						values={commanders}
+						onChange={(field: CommanderFieldKey, value: string) =>
+							setCommanders((prev) => ({
+								...prev,
+								[field]: value
+							}))
+						}
+					/>
+				) : (
+					<SingleCommanderField
+						idPrefix='edit-unit'
+						label={
+							level === 'squad'
+								? 'Tiểu đội trưởng'
+								: 'Trung đội trưởng'
+						}
+						value={commanders.commanderId}
+						onChange={(value) =>
+							setCommanders((prev) => ({
+								...prev,
+								commanderId: value
+							}))
+						}
+					/>
+				)}
 
 				<div className='flex justify-end gap-2 pt-2'>
 					<Button type='button' onClick={onClose} variant='outline'>

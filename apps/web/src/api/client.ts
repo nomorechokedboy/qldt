@@ -4251,8 +4251,8 @@ export namespace schema {
 	export type UnitLevelName =
 		| 'corps'
 		| 'division'
-		| 'brigade'
 		| 'regiment'
+		| 'brigade'
 		| 'battalion'
 		| 'company'
 		| 'platoon'

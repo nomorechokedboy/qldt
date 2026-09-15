@@ -16,8 +16,8 @@ export class UnitLevel {
 	// level's `value` ever has to change.
 	static readonly CORPS = new UnitLevel(-4, 'corps')
 	static readonly DIVISION = new UnitLevel(-3, 'division')
-	static readonly BRIGADE = new UnitLevel(-2, 'brigade')
 	static readonly REGIMENT = new UnitLevel(-1, 'regiment')
+	static readonly BRIGADE = new UnitLevel(-2, 'brigade')
 	static readonly DEPARTMENT = new UnitLevel(4, 'department')
 	static readonly BATTALION = new UnitLevel(0, 'battalion')
 	static readonly COMPANY = new UnitLevel(1, 'company')
@@ -29,8 +29,8 @@ export class UnitLevel {
 	private static readonly values = [
 		UnitLevel.CORPS,
 		UnitLevel.DIVISION,
-		UnitLevel.BRIGADE,
 		UnitLevel.REGIMENT,
+		UnitLevel.BRIGADE,
 		UnitLevel.DEPARTMENT,
 		UnitLevel.BATTALION,
 		UnitLevel.COMPANY,
