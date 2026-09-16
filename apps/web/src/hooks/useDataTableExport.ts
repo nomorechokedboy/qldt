@@ -26,9 +26,20 @@ export type useDataTableExportProps<TData> = {
 	isDynamic?: boolean
 }
 
+// Module-level so the default stays referentially stable across renders. A
+// `= ['actions', 'select']` literal in the parameter list is re-created on
+// every call, which broke the `useMemo` below for every caller that doesn't
+// pass its own `excludeKeys` (the majority): `exporTableDataDynamically`
+// recomputed - mapping ALL of `table.getPrePaginationRowModel().rows`, not
+// just the visible page - on every single DataTable render, even when the
+// export toolbar action isn't rendered at all. For a table that re-renders
+// on every keystroke (e.g. the students-import review grid), that's what
+// made picking any cell's value feel laggy in proportion to total row count.
+const DEFAULT_EXCLUDE_KEYS = ['actions', 'select']
+
 export default function useDataTableExport<TData>({
 	table,
-	excludeKeys = ['actions', 'select'],
+	excludeKeys = DEFAULT_EXCLUDE_KEYS,
 	isDynamic = true
 }: useDataTableExportProps<TData>): DataTableExportHook {
 	const exporTableDataDynamically = useMemo((): ExportableData => {
