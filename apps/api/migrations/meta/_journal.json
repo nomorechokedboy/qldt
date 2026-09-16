@@ -211,6 +211,20 @@
 			"when": 1789303296004,
 			"tag": "0029_seed-rank-promotion-proposals-authz",
 			"breakpoints": true
+		},
+		{
+			"idx": 30,
+			"version": "6",
+			"when": 1789466856326,
+			"tag": "0030_seed-positions-resource",
+			"breakpoints": true
+		},
+		{
+			"idx": 31,
+			"version": "6",
+			"when": 1789516674170,
+			"tag": "0031_tiny_wolfpack",
+			"breakpoints": true
 		}
 	]
 }

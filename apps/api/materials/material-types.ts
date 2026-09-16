@@ -9,6 +9,7 @@ export type MaterialTypeBody = {
 	category: MaterialCategoryName
 	unitOfMeasure?: string
 	isSerialized: boolean
+	images?: string[]
 }
 
 export type MaterialTypeDB = MaterialTypeBody & {

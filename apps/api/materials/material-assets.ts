@@ -19,6 +19,7 @@ export type MaterialAssetBody = {
 	condition?: MaterialConditionName
 	status?: MaterialAssetStatus
 	assignedTrooperId?: number | null
+	images?: string[]
 }
 
 export type MaterialAssetDB = MaterialAssetBody & {

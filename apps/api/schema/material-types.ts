@@ -1,4 +1,4 @@
-import { InferInsertModel, InferSelectModel, relations } from 'drizzle-orm'
+import { InferInsertModel, InferSelectModel, relations, sql } from 'drizzle-orm'
 import * as sqlite from 'drizzle-orm/sqlite-core'
 import { AppError } from '../errors'
 import { baseSchema } from './base'
@@ -40,7 +40,8 @@ export const materialTypes = sqlite.sqliteTable('material_types', {
 		.$type<MaterialCategoryName>()
 		.notNull(),
 	unitOfMeasure: sqlite.text().default('cái'),
-	isSerialized: sqlite.int({ mode: 'boolean' }).default(false).notNull()
+	isSerialized: sqlite.int({ mode: 'boolean' }).default(false).notNull(),
+	images: sqlite.text({ mode: 'json' }).default(sql`'[]'`)
 })
 
 export const materialTypesRelations = relations(materialTypes, () => ({}))
@@ -64,5 +65,6 @@ export type UpdateMaterialTypeMap = {
 		category: MaterialCategoryName
 		unitOfMeasure: string | null
 		isSerialized: boolean
+		images: string[]
 	}>
 }[]

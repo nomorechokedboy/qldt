@@ -1,4 +1,4 @@
-import { InferInsertModel, InferSelectModel, relations } from 'drizzle-orm'
+import { InferInsertModel, InferSelectModel, relations, sql } from 'drizzle-orm'
 import * as sqlite from 'drizzle-orm/sqlite-core'
 import { AppError } from '../errors'
 import { baseSchema } from './base'
@@ -74,7 +74,8 @@ export const materialAssets = sqlite.sqliteTable('material_assets', {
 		.$type<MaterialAssetStatus>()
 		.default('in_service')
 		.notNull(),
-	assignedTrooperId: sqlite.int().references(() => students.id)
+	assignedTrooperId: sqlite.int().references(() => students.id),
+	images: sqlite.text({ mode: 'json' }).default(sql`'[]'`)
 })
 
 export const materialAssetsRelations = relations(
@@ -137,5 +138,6 @@ export type UpdateMaterialAssetMap = {
 		condition: MaterialConditionName
 		status: MaterialAssetStatus
 		assignedTrooperId: number | null
+		images: string[]
 	}>
 }[]
