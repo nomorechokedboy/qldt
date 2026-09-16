@@ -516,6 +516,7 @@ export interface MaterialType extends Base {
 	category: MaterialCategory
 	unitOfMeasure?: string
 	isSerialized: boolean
+	images?: string[]
 }
 
 export interface Position extends Base {
@@ -565,6 +566,7 @@ export interface MaterialAsset extends Base {
 	condition?: string
 	status?: MaterialAssetStatus
 	assignedTrooperId?: number | null
+	images?: string[]
 	materialType?: MaterialType
 	unit?: Unit
 	room?: Room

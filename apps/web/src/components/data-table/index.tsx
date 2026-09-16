@@ -1,7 +1,21 @@
 import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow
+} from '@/components/ui/table'
+import type { DataTableExportHook } from '@/hooks/useDataTableExport'
+import useDataTableExport from '@/hooks/useDataTableExport'
+import { cn } from '@/lib/utils'
+import type { FacetedFilterConfig } from '@/types'
+import type { QueryObserverResult } from '@tanstack/react-query'
+import {
 	type ColumnDef,
 	type ColumnFiltersState,
 	type SortingState,
+	type Table as TanStackTable,
 	type VisibilityState,
 	flexRender,
 	getCoreRowModel,
@@ -10,32 +24,18 @@ import {
 	getFilteredRowModel,
 	getPaginationRowModel,
 	getSortedRowModel,
-	useReactTable,
-	type Table as TanStackTable
+	useReactTable
 } from '@tanstack/react-table'
-import {
-	Table,
-	TableBody,
-	TableCell,
-	TableHead,
-	TableHeader,
-	TableRow
-} from '@/components/ui/table'
+import { AxiosError } from 'axios'
+import { type ComponentType, useEffect, useId, useState } from 'react'
+import { toast } from 'sonner'
+import { Button } from '../ui/button'
 import { DataTablePagination } from './data-table-pagination'
 import {
 	DataTableToolbar,
 	type DataTableToolbarProps
 } from './data-table-toolbar'
-import { type ComponentType, useEffect, useId, useState } from 'react'
-import type { QueryObserverResult } from '@tanstack/react-query'
-import type { DataTableExportHook } from '@/hooks/useDataTableExport'
-import useDataTableExport from '@/hooks/useDataTableExport'
-import { toast } from 'sonner'
-import { AxiosError } from 'axios'
 import { BaseSchema } from './data/schema'
-import { Button } from '../ui/button'
-import type { FacetedFilterConfig } from '@/types'
-import { cn } from '@/lib/utils'
 
 type ToolbarProps<TData> = Omit<DataTableToolbarProps<TData>, 'table'>
 
@@ -121,8 +121,21 @@ export function DataTable<TData, TValue>({
 		getFilteredRowModel: getFilteredRowModel(),
 		getPaginationRowModel: getPaginationRowModel(),
 		getSortedRowModel: getSortedRowModel(),
-		getFacetedRowModel: getFacetedRowModel(),
-		getFacetedUniqueValues: getFacetedUniqueValues(),
+		// Faceted unique-value maps are only ever read by
+		// DataTableFacetedFilter, which only renders for columns listed in
+		// `facetedFilters`. Computing them unconditionally means every
+		// column's unique-value map gets rebuilt across every row on every
+		// table recompute (e.g. on every `data` identity change), even for
+		// callers that never use faceted filtering - for a table like the
+		// student import review grid, where `data` gets a new reference on
+		// every field edit, that's what made picking a select option feel
+		// like it locked up the tab. TanStack Table falls back to an empty
+		// Map when these options are omitted, so skipping them here is safe
+		// for every caller that doesn't pass `facetedFilters`.
+		getFacetedRowModel:
+			facetedFilters.length > 0 ? getFacetedRowModel() : undefined,
+		getFacetedUniqueValues:
+			facetedFilters.length > 0 ? getFacetedUniqueValues() : undefined,
 		getRowId
 	})
 

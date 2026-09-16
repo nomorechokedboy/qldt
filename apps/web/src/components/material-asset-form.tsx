@@ -1,16 +1,14 @@
-import { useState } from 'react'
-import { Plus } from 'lucide-react'
-import { toast } from 'sonner'
+import { MaterialImagesUpload } from '@/components/material-images-upload'
+import { Button } from '@/components/ui/button'
 import {
 	Dialog,
-	DialogHeader,
-	DialogTrigger,
-	DialogContent,
-	DialogTitle,
 	DialogClose,
-	DialogFooter
+	DialogContent,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger
 } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
@@ -23,6 +21,9 @@ import {
 import { useCreateMaterialAsset } from '@/hooks/useCreateMaterialAsset'
 import { getErrorMessage } from '@/lib/utils'
 import type { MaterialType, Room, Student, Unit } from '@/types'
+import { Plus } from 'lucide-react'
+import { useState } from 'react'
+import { toast } from 'sonner'
 
 const NONE = 'none'
 
@@ -51,6 +52,7 @@ export default function MaterialAssetForm({
 	const [roomId, setRoomId] = useState<string>(NONE)
 	const [serialNumber, setSerialNumber] = useState('')
 	const [assignedTrooperId, setAssignedTrooperId] = useState<string>(NONE)
+	const [images, setImages] = useState<string[]>([])
 
 	const createMutation = useCreateMaterialAsset()
 
@@ -60,6 +62,7 @@ export default function MaterialAssetForm({
 		setRoomId(NONE)
 		setSerialNumber('')
 		setAssignedTrooperId(NONE)
+		setImages([])
 	}
 
 	const roomsForUnit = roomOptions.filter((r) => String(r.unitId) === unitId)
@@ -76,7 +79,8 @@ export default function MaterialAssetForm({
 				assignedTrooperId:
 					assignedTrooperId === NONE
 						? undefined
-						: Number(assignedTrooperId)
+						: Number(assignedTrooperId),
+				images
 			})
 			toast.success('Thêm mới khí tài thành công')
 			onSuccess?.()
@@ -201,6 +205,14 @@ export default function MaterialAssetForm({
 								))}
 							</SelectContent>
 						</Select>
+					</div>
+
+					<div className='space-y-2'>
+						<Label>Hình ảnh</Label>
+						<MaterialImagesUpload
+							value={images}
+							onChange={setImages}
+						/>
 					</div>
 
 					<DialogFooter>

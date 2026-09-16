@@ -1372,6 +1372,7 @@ export namespace materials {
 		condition?: schema.MaterialConditionName
 		status?: schema.MaterialAssetStatus
 		assignedTrooperId?: number | null
+		images?: string[]
 	}
 
 	export interface MaterialAssetDB {
@@ -1382,6 +1383,7 @@ export namespace materials {
 		condition?: schema.MaterialConditionName
 		status?: schema.MaterialAssetStatus
 		assignedTrooperId?: number | null
+		images?: string[]
 		id: number
 		createdAt: string
 		updatedAt: string
@@ -1426,6 +1428,7 @@ export namespace materials {
 		category: schema.MaterialCategoryName
 		unitOfMeasure?: string
 		isSerialized: boolean
+		images?: string[]
 	}
 
 	export interface MaterialTypeDB {
@@ -1433,6 +1436,7 @@ export namespace materials {
 		category: schema.MaterialCategoryName
 		unitOfMeasure?: string
 		isSerialized: boolean
+		images?: string[]
 		id: number
 		createdAt: string
 		updatedAt: string
@@ -1451,6 +1455,7 @@ export namespace materials {
 		condition?: schema.MaterialConditionName
 		status?: schema.MaterialAssetStatus
 		assignedTrooperId?: number | null
+		images?: string[]
 	}
 
 	export interface UpdateMaterialStockBody {
@@ -1476,6 +1481,7 @@ export namespace materials {
 		category?: schema.MaterialCategoryName
 		unitOfMeasure?: string
 		isSerialized?: boolean
+		images?: string[]
 	}
 
 	export class ServiceClient {
@@ -1797,10 +1803,6 @@ export namespace notifications {
 		}
 	}
 
-	export interface Handshake {
-		userId: number
-	}
-
 	export interface MarkAsReadRequest {
 		ids: string[]
 	}
@@ -1899,18 +1901,8 @@ export namespace notifications {
 			)
 		}
 
-		public async NotificationStream(
-			params: Handshake
-		): Promise<StreamIn<Message>> {
-			// Convert our params into the objects we need for the request
-			const query = makeRecord<string, string | string[]>({
-				userId: String(params.userId)
-			})
-
-			return await this.baseClient.createStreamIn(
-				`/notifications/stream`,
-				{ query }
-			)
+		public async NotificationStream(): Promise<StreamIn<Message>> {
+			return await this.baseClient.createStreamIn(`/notifications/stream`)
 		}
 	}
 }
@@ -4251,8 +4243,8 @@ export namespace schema {
 	export type UnitLevelName =
 		| 'corps'
 		| 'division'
-		| 'regiment'
 		| 'brigade'
+		| 'regiment'
 		| 'battalion'
 		| 'company'
 		| 'platoon'

@@ -1,19 +1,18 @@
-import { useState } from 'react'
-import { Plus } from 'lucide-react'
-import { toast } from 'sonner'
+import type { materials } from '@/api/client'
+import { MaterialImagesUpload } from '@/components/material-images-upload'
+import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
 	Dialog,
-	DialogHeader,
-	DialogTrigger,
-	DialogContent,
-	DialogTitle,
 	DialogClose,
-	DialogFooter
+	DialogContent,
+	DialogFooter,
+	DialogHeader,
+	DialogTitle,
+	DialogTrigger
 } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Checkbox } from '@/components/ui/checkbox'
 import {
 	Select,
 	SelectContent,
@@ -21,10 +20,12 @@ import {
 	SelectTrigger,
 	SelectValue
 } from '@/components/ui/select'
-import { useCreateMaterialType } from '@/hooks/useCreateMaterialType'
 import { materialCategoryOptions } from '@/data/material-categories'
-import type { materials } from '@/api/client'
+import { useCreateMaterialType } from '@/hooks/useCreateMaterialType'
 import { getErrorMessage } from '@/lib/utils'
+import { Plus } from 'lucide-react'
+import { useState } from 'react'
+import { toast } from 'sonner'
 
 export interface MaterialTypeFormProps {
 	onSuccess?: () => void
@@ -37,6 +38,7 @@ export default function MaterialTypeForm({ onSuccess }: MaterialTypeFormProps) {
 		useState<materials.MaterialTypeBody['category']>('furniture')
 	const [unitOfMeasure, setUnitOfMeasure] = useState('')
 	const [isSerialized, setIsSerialized] = useState(false)
+	const [images, setImages] = useState<string[]>([])
 
 	const createMutation = useCreateMaterialType()
 
@@ -45,6 +47,7 @@ export default function MaterialTypeForm({ onSuccess }: MaterialTypeFormProps) {
 		setCategory('furniture')
 		setUnitOfMeasure('')
 		setIsSerialized(false)
+		setImages([])
 	}
 
 	const handleSubmit = async (e: React.FormEvent) => {
@@ -55,7 +58,8 @@ export default function MaterialTypeForm({ onSuccess }: MaterialTypeFormProps) {
 				name,
 				category,
 				unitOfMeasure: unitOfMeasure || undefined,
-				isSerialized
+				isSerialized,
+				images
 			})
 			toast.success('Thêm mới danh mục vật tư thành công')
 			onSuccess?.()
@@ -148,6 +152,14 @@ export default function MaterialTypeForm({ onSuccess }: MaterialTypeFormProps) {
 						<Label htmlFor='material-type-serialized'>
 							Quản lý theo số sê-ri riêng lẻ (vũ khí, xe, ...)
 						</Label>
+					</div>
+
+					<div className='space-y-2'>
+						<Label>Hình ảnh</Label>
+						<MaterialImagesUpload
+							value={images}
+							onChange={setImages}
+						/>
 					</div>
 
 					<DialogFooter>

@@ -1,9 +1,10 @@
-import type { ColumnDef } from '@tanstack/react-table'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
+import { Checkbox } from '@/components/ui/checkbox'
 import { materialCategoryLabels } from '@/data/material-categories'
-import { MaterialTypeRowActions } from './material-type-row-actions'
+import { getMediaUri } from '@/lib/utils'
 import type { MaterialType } from '@/types'
+import type { ColumnDef } from '@tanstack/react-table'
+import { MaterialTypeRowActions } from './material-type-row-actions'
 
 export function buildMaterialTypeColumns(
 	onChanged?: () => void
@@ -34,6 +35,22 @@ export function buildMaterialTypeColumns(
 			),
 			enableSorting: false,
 			enableHiding: false
+		},
+		{
+			id: 'images',
+			header: 'Hình ảnh',
+			cell: ({ row }) => {
+				const images = row.original.images
+				if (!images || images.length === 0) return '—'
+				return (
+					<img
+						src={getMediaUri(images[0])}
+						alt=''
+						className='size-10 rounded-md object-cover'
+					/>
+				)
+			},
+			enableSorting: false
 		},
 		{
 			accessorKey: 'name',

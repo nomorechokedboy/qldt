@@ -1,10 +1,8 @@
-import { useState } from 'react'
-import { X } from 'lucide-react'
-import { toast } from 'sonner'
+import { MaterialImagesUpload } from '@/components/material-images-upload'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Checkbox } from '@/components/ui/checkbox'
 import {
 	Select,
 	SelectContent,
@@ -12,10 +10,13 @@ import {
 	SelectTrigger,
 	SelectValue
 } from '@/components/ui/select'
-import { useUpdateMaterialType } from '@/hooks/useUpdateMaterialType'
 import { materialCategoryOptions } from '@/data/material-categories'
-import type { MaterialType } from '@/types'
+import { useUpdateMaterialType } from '@/hooks/useUpdateMaterialType'
 import { getErrorMessage } from '@/lib/utils'
+import type { MaterialType } from '@/types'
+import { X } from 'lucide-react'
+import { useState } from 'react'
+import { toast } from 'sonner'
 
 interface MaterialTypeEditFormProps {
 	data: MaterialType
@@ -32,6 +33,7 @@ export default function MaterialTypeEditForm({
 	const [category, setCategory] = useState(data.category)
 	const [unitOfMeasure, setUnitOfMeasure] = useState(data.unitOfMeasure ?? '')
 	const [isSerialized, setIsSerialized] = useState(data.isSerialized)
+	const [images, setImages] = useState<string[]>(data.images ?? [])
 
 	const updateMutation = useUpdateMaterialType()
 
@@ -46,7 +48,8 @@ export default function MaterialTypeEditForm({
 						name,
 						category,
 						unitOfMeasure: unitOfMeasure || undefined,
-						isSerialized
+						isSerialized,
+						images
 					}
 				]
 			})
@@ -125,6 +128,11 @@ export default function MaterialTypeEditForm({
 					<Label htmlFor='edit-material-type-serialized'>
 						Quản lý theo số sê-ri riêng lẻ
 					</Label>
+				</div>
+
+				<div className='space-y-2'>
+					<Label>Hình ảnh</Label>
+					<MaterialImagesUpload value={images} onChange={setImages} />
 				</div>
 
 				<div className='flex justify-end gap-2'>

@@ -1,9 +1,6 @@
-import { useState } from 'react'
-import { X } from 'lucide-react'
-import { toast } from 'sonner'
+import { MaterialImagesUpload } from '@/components/material-images-upload'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
-import { Textarea } from '@/components/ui/textarea'
 import {
 	Select,
 	SelectContent,
@@ -11,13 +8,17 @@ import {
 	SelectTrigger,
 	SelectValue
 } from '@/components/ui/select'
-import { useUpdateMaterialAsset } from '@/hooks/useUpdateMaterialAsset'
+import { Textarea } from '@/components/ui/textarea'
 import {
 	materialAssetStatusOptions,
 	materialConditionOptions
 } from '@/data/material-categories'
-import type { MaterialAsset, MaterialAssetStatus, Room, Student } from '@/types'
+import { useUpdateMaterialAsset } from '@/hooks/useUpdateMaterialAsset'
 import { getErrorMessage } from '@/lib/utils'
+import type { MaterialAsset, MaterialAssetStatus, Room, Student } from '@/types'
+import { X } from 'lucide-react'
+import { useState } from 'react'
+import { toast } from 'sonner'
 
 const NONE = 'none'
 
@@ -51,6 +52,7 @@ export default function MaterialAssetEditForm({
 			: NONE
 	)
 	const [note, setNote] = useState('')
+	const [images, setImages] = useState<string[]>(data.images ?? [])
 
 	const updateMutation = useUpdateMaterialAsset()
 
@@ -70,7 +72,8 @@ export default function MaterialAssetEditForm({
 						assignedTrooperId === NONE
 							? null
 							: Number(assignedTrooperId),
-					note: note || undefined
+					note: note || undefined,
+					images
 				}
 			])
 			toast.success('Cập nhật khí tài thành công')
@@ -188,6 +191,11 @@ export default function MaterialAssetEditForm({
 						onChange={(e) => setNote(e.target.value)}
 						placeholder='Lý do thay đổi (tuỳ chọn)'
 					/>
+				</div>
+
+				<div className='space-y-2'>
+					<Label>Hình ảnh</Label>
+					<MaterialImagesUpload value={images} onChange={setImages} />
 				</div>
 
 				<div className='flex justify-end gap-2'>
