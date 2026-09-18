@@ -68,7 +68,12 @@ export function GetStudents(
 	params?: students.GetStudentsQuery
 ): Promise<Student[]> {
 	return requestClient.students
-		.GetStudents(params ?? {})
+		.GetStudents({
+			...params,
+			unitAlias: params?.unitAlias
+				? encodeURIComponent(params?.unitAlias)
+				: undefined
+		})
 		.then((resp) => resp.data.map((s) => ({ ...s }) as unknown as Student))
 }
 
@@ -155,7 +160,9 @@ export function GetUnit({
 	alias,
 	...params
 }: units.GetUnitRequest & { alias: string }) {
-	return requestClient.units.GetUnit(alias, params).then((resp) => resp.data)
+	return requestClient.units
+		.GetUnit(encodeURIComponent(alias), params)
+		.then((resp) => resp.data)
 }
 
 export function GetUnitStats(alias: string) {

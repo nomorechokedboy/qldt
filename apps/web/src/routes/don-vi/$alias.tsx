@@ -64,6 +64,7 @@ function RouteComponent() {
 					onDeleteRows={handleDeleteStudents}
 					onCreateSuccess={refetchStudents}
 					unitsById={unitsById}
+					unitId={id}
 				/>
 			</div>
 		</ProtectedRoute>

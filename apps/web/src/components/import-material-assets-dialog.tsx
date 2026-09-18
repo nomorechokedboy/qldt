@@ -15,7 +15,6 @@ import {
 	Loader2
 } from 'lucide-react'
 import useImportMaterialAssets from '@/hooks/useImportMaterialAssets'
-import useUnitsData from '@/hooks/useUnitsData'
 import useRoomsData from '@/hooks/useRoomsData'
 import useMaterialTypesData from '@/hooks/useMaterialTypesData'
 import useStudentData from '@/hooks/useStudents'
@@ -38,9 +37,14 @@ import { DataTable } from '@/components/data-table'
 import { reviewInputClass } from '@/components/import-students-dialog'
 import type { ColumnDef } from '@tanstack/react-table'
 import type { materials } from '@/api/client'
-import type { Room, Student } from '@/types'
+import type { Room, Student, UnitLevel } from '@/types'
+import useUnitData from '@/hooks/useUnitData'
+import useUnitsData from '@/hooks/useUnitsData'
 
 export interface ImportMaterialAssetsDialogProps {
+	unitLevel: UnitLevel
+	unitAlias: string
+	unitId: number
 	isOpen: boolean
 	onClose: () => void
 	onSuccess?: (results: {
@@ -68,9 +72,14 @@ interface MaterialAssetImportRow {
 
 export function ImportMaterialAssetsDialog({
 	isOpen,
+	unitId,
+	unitAlias,
+	unitLevel,
 	onClose,
 	onSuccess
 }: ImportMaterialAssetsDialogProps) {
+	console.log({ unitLevel, unitId, unitAlias })
+
 	const { data: units = [] } = useUnitsData(undefined, { enabled: isOpen })
 	const { data: rooms = [] } = useRoomsData(undefined, { enabled: isOpen })
 	const { data: materialTypes = [] } = useMaterialTypesData({
@@ -83,7 +92,7 @@ export function ImportMaterialAssetsDialog({
 	const unitsById = useMemo(() => buildUnitsById(units), [units])
 	const unitOptions = useMemo(
 		() =>
-			units.map((u) => ({
+			units?.map((u) => ({
 				id: u.id,
 				label: unitLabelWithAncestry(u, unitsById)
 			})),
@@ -103,7 +112,7 @@ export function ImportMaterialAssetsDialog({
 
 	const unitLabelToId = useMemo(() => {
 		const map = new Map<string, number>()
-		unitOptions.forEach((o) => map.set(o.label.trim().toLowerCase(), o.id))
+		unitOptions?.forEach((o) => map.set(o.label.trim().toLowerCase(), o.id))
 		return map
 	}, [unitOptions])
 
@@ -248,7 +257,7 @@ export function ImportMaterialAssetsDialog({
 			const sampleData = [
 				materialTypeOptions.length ? materialTypeOptions[0].label : '',
 				'AK-000001',
-				unitOptions.length ? unitOptions[0].label : '',
+				unitOptions?.length ? unitOptions[0].label : '',
 				'',
 				'Tốt',
 				'Đang sử dụng',
@@ -285,7 +294,7 @@ export function ImportMaterialAssetsDialog({
 			// below resolve through) =====
 			const unitSheet = workbook.addWorksheet('Danh sách đơn vị')
 			unitSheet.addRow(['ID', 'Tên đơn vị'])
-			unitOptions.forEach((u) => unitSheet.addRow([u.id, u.label]))
+			unitOptions?.forEach((u) => unitSheet.addRow([u.id, u.label]))
 			unitSheet.getColumn(1).width = 10
 			unitSheet.getColumn(2).width = 50
 			const lastUnitRow = unitOptions.length + 1

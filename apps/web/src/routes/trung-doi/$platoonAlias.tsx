@@ -44,7 +44,11 @@ function RouteComponent() {
 					</TabsContent>
 
 					<TabsContent value='weapons'>
-						<CompanyWeaponsTab unitAlias={platoonAlias} />
+						<CompanyWeaponsTab
+							unitAlias={platoonAlias}
+							unitLevel='platoon'
+							unitId={id}
+						/>
 					</TabsContent>
 				</Tabs>
 			</div>

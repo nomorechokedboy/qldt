@@ -22,6 +22,7 @@ interface UnitTabsProps {
 	onDeleteRows: (rows: Trooper[]) => void
 	onCreateSuccess: () => void
 	unitsById: Map<number, Unit>
+	unitId: number
 }
 
 export default function UnitTabs({
@@ -36,7 +37,8 @@ export default function UnitTabs({
 	actionColumn,
 	onDeleteRows,
 	onCreateSuccess,
-	unitsById
+	unitsById,
+	unitId
 }: UnitTabsProps) {
 	const filename = `danh-sach-quan-nhan-${alias}`
 
@@ -85,7 +87,11 @@ export default function UnitTabs({
 			</TabsContent>
 
 			<TabsContent value='weapons'>
-				<CompanyWeaponsTab unitAlias={alias} />
+				<CompanyWeaponsTab
+					unitAlias={alias}
+					unitLevel={level}
+					unitId={unitId}
+				/>
 			</TabsContent>
 		</Tabs>
 	)
