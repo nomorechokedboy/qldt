@@ -43,7 +43,7 @@ import unitRepo from '../units/repo'
 import unitStatsRepo from '../units/stats-repo'
 import positionRepo from '../positions/repo'
 import locationsRepo from '../locations/repo'
-import { Unit, UnitDB, UnitLevelName } from '../schema/units'
+import { Unit, UnitLevelName } from '../schema/units'
 import log from 'encore.dev/log'
 import dayjs from 'dayjs'
 import quarterOfYear from 'dayjs/plugin/quarterOfYear.js'
@@ -53,7 +53,6 @@ import { APIError } from 'encore.dev/api'
 import { readFile } from 'fs/promises'
 import { createImageInjector, ImageProvider } from './img-provider'
 import { ObjectStorageImageAdapter } from './minio-img-provider'
-import { getAuthData } from '~encore/auth'
 
 dayjs.extend(quarterOfYear)
 
