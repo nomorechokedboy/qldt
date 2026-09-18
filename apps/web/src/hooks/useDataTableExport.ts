@@ -97,7 +97,7 @@ export default function useDataTableExport<TData>({
 			totalCount: table.getPrePaginationRowModel().rows.length,
 			hasSelection
 		}
-	}, [table, excludeKeys])
+	}, [table, table.options.data, table.getState(), excludeKeys])
 
 	const exporTableDataStatically = useMemo((): ExportableData => {
 		const selectedRows = table.getSelectedRowModel().rows
@@ -119,7 +119,7 @@ export default function useDataTableExport<TData>({
 			totalCount: table.getPrePaginationRowModel().rows.length,
 			hasSelection
 		}
-	}, [table, excludeKeys])
+	}, [table, table.options.data, table.getState(), excludeKeys])
 
 	return {
 		exportableData: isDynamic
