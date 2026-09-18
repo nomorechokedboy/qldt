@@ -38,7 +38,6 @@ import { reviewInputClass } from '@/components/import-students-dialog'
 import type { ColumnDef } from '@tanstack/react-table'
 import type { materials } from '@/api/client'
 import type { Room, Student, UnitLevel } from '@/types'
-import useUnitData from '@/hooks/useUnitData'
 import useUnitsData from '@/hooks/useUnitsData'
 
 export interface ImportMaterialAssetsDialogProps {
@@ -78,8 +77,6 @@ export function ImportMaterialAssetsDialog({
 	onClose,
 	onSuccess
 }: ImportMaterialAssetsDialogProps) {
-	console.log({ unitLevel, unitId, unitAlias })
-
 	const { data: units = [] } = useUnitsData(undefined, { enabled: isOpen })
 	const { data: rooms = [] } = useRoomsData(undefined, { enabled: isOpen })
 	const { data: materialTypes = [] } = useMaterialTypesData({
@@ -317,7 +314,6 @@ export function ImportMaterialAssetsDialog({
 			let roomCol = 0
 			unitOptions.forEach((u) => {
 				const unitRooms = roomsByUnitId.get(u.id) ?? []
-				if (unitRooms.length === 0) return
 				roomCol += 1
 				roomSheet.getCell(1, roomCol).value = u.label
 				unitRooms.forEach((r, rowIdx) => {
@@ -325,9 +321,10 @@ export function ImportMaterialAssetsDialog({
 				})
 				roomSheet.getColumn(roomCol).width = 30
 				const colLetter = roomSheet.getColumn(roomCol).letter
+				const lastRow = Math.max(unitRooms.length, 1) + 1
 				workbook.definedNames.add(
-					`'Danh sách phòng'!$${colLetter}$2:$${colLetter}$${unitRooms.length + 1}`,
-					`R${u.id}`
+					`'Danh sách phòng'!$${colLetter}$2:$${colLetter}$${lastRow}`,
+					`Room${u.id}`
 				)
 			})
 
@@ -337,7 +334,6 @@ export function ImportMaterialAssetsDialog({
 			let studentCol = 0
 			unitOptions.forEach((u) => {
 				const unitStudents = studentsByUnitId.get(u.id) ?? []
-				if (unitStudents.length === 0) return
 				studentCol += 1
 				studentSheet.getCell(1, studentCol).value = u.label
 				unitStudents.forEach((s, rowIdx) => {
@@ -346,9 +342,10 @@ export function ImportMaterialAssetsDialog({
 				})
 				studentSheet.getColumn(studentCol).width = 30
 				const colLetter = studentSheet.getColumn(studentCol).letter
+				const lastRow = Math.max(unitStudents.length, 1) + 1
 				workbook.definedNames.add(
-					`'Danh sách quân nhân'!$${colLetter}$2:$${colLetter}$${unitStudents.length + 1}`,
-					`S${u.id}`
+					`'Danh sách quân nhân'!$${colLetter}$2:$${colLetter}$${lastRow}`,
+					`Trooper${u.id}`
 				)
 			})
 
@@ -383,7 +380,7 @@ export function ImportMaterialAssetsDialog({
 						type: 'list',
 						allowBlank: true,
 						formulae: [
-							`INDIRECT("R"&INDEX('Danh sách đơn vị'!$A$2:$A$${lastUnitRow},MATCH(${unitColLetter}4,'Danh sách đơn vị'!$B$2:$B$${lastUnitRow},0)))`
+							`INDIRECT("Room"&INDEX('Danh sách đơn vị'!$A$2:$A$${lastUnitRow},MATCH(${unitColLetter}4,'Danh sách đơn vị'!$B$2:$B$${lastUnitRow},0)))`
 						]
 					}
 				)
@@ -399,7 +396,7 @@ export function ImportMaterialAssetsDialog({
 						type: 'list',
 						allowBlank: true,
 						formulae: [
-							`INDIRECT("S"&INDEX('Danh sách đơn vị'!$A$2:$A$${lastUnitRow},MATCH(${unitColLetter}4,'Danh sách đơn vị'!$B$2:$B$${lastUnitRow},0)))`
+							`INDIRECT("Trooper"&INDEX('Danh sách đơn vị'!$A$2:$A$${lastUnitRow},MATCH(${unitColLetter}4,'Danh sách đơn vị'!$B$2:$B$${lastUnitRow},0)))`
 						]
 					}
 				)
@@ -477,7 +474,7 @@ export function ImportMaterialAssetsDialog({
 
 			const link = document.createElement('a')
 			link.href = url
-			link.download = 'Mau_Import_Vu_Khi_Trang_Bi.xlsx'
+			link.download = `Mau_Import_Vu_Khi_Trang_Bi_${unitAlias}.xlsx`
 			link.click()
 			URL.revokeObjectURL(url)
 		} catch (err) {
