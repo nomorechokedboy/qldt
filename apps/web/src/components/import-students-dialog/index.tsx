@@ -424,7 +424,7 @@ export function ImportStudentsDialog({
 				if (!open) handleClose()
 			}}
 		>
-			<DialogContent>
+			<DialogContent className='max-w-9/10'>
 				<DialogHeader>
 					<DialogTitle>Import danh sách quân nhân</DialogTitle>
 					{!isReviewing && (

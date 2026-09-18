@@ -222,6 +222,7 @@ export function useReviewColumns({
 			{
 				accessorKey: 'activityStatus',
 				header: 'Tình trạng',
+				enableHiding: true,
 				cell: ({ row }) => (
 					<form.Field name={`rows[${row.index}].activityStatus`}>
 						{(field) => (
@@ -240,6 +241,7 @@ export function useReviewColumns({
 				)
 			},
 			{
+				accessorKey: 'birthPlaceProvinceCode',
 				id: 'birthPlaceProvinceCode',
 				header: 'Tỉnh/Thành (Quê quán)',
 				enableHiding: true,
@@ -267,6 +269,7 @@ export function useReviewColumns({
 				)
 			},
 			{
+				accessorKey: 'birthPlaceWardCode',
 				id: 'birthPlaceWardCode',
 				header: 'Phường/Xã (Quê quán)',
 				enableHiding: true,
@@ -336,6 +339,7 @@ export function useReviewColumns({
 				)
 			},
 			{
+				accessorKey: 'addressProvinceCode',
 				id: 'addressProvinceCode',
 				header: 'Tỉnh/Thành (Trú quán)',
 				enableHiding: true,
@@ -361,6 +365,7 @@ export function useReviewColumns({
 				)
 			},
 			{
+				accessorKey: 'addressWardCode',
 				id: 'addressWardCode',
 				header: 'Phường/Xã (Trú quán)',
 				enableHiding: true,

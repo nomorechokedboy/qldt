@@ -27,7 +27,8 @@ const REVIEW_DEFAULT_COLUMN_VISIBILITY = {
 	birthPlace: false,
 	addressProvinceCode: false,
 	addressWardCode: false,
-	address: false
+	address: false,
+	activityStatus: false
 }
 
 export interface ReviewStepProps {
