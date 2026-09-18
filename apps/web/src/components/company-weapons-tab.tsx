@@ -105,8 +105,7 @@ export default function CompanyWeaponsTab({
 				)}
 				data={companyAssets}
 				toolbarProps={{
-					searchConfig,
-					facetedFilters
+					searchConfig
 				}}
 				withDynamicColsData={false}
 				renderToolbarActions={({ exportHook }) => (

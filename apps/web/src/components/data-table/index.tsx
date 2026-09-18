@@ -102,6 +102,7 @@ export function DataTable<TData, TValue>({
 	const [viewMode, setViewMode] = useState<ViewMode>(defaultViewMode)
 	const [isDeleting, setIsDeleting] = useState(false)
 	const deleteDataToastId = `selection-toast-${useId()}`
+	const toolbarFacetedFilter = toolbarProps?.facetedFilters
 
 	const table = useReactTable({
 		data,
@@ -133,9 +134,17 @@ export function DataTable<TData, TValue>({
 		// Map when these options are omitted, so skipping them here is safe
 		// for every caller that doesn't pass `facetedFilters`.
 		getFacetedRowModel:
-			facetedFilters.length > 0 ? getFacetedRowModel() : undefined,
+			facetedFilters.length > 0 ||
+			(toolbarFacetedFilter?.length !== undefined &&
+				toolbarFacetedFilter.length > 0)
+				? getFacetedRowModel()
+				: undefined,
 		getFacetedUniqueValues:
-			facetedFilters.length > 0 ? getFacetedUniqueValues() : undefined,
+			facetedFilters.length > 0 ||
+			(toolbarFacetedFilter?.length !== undefined &&
+				toolbarFacetedFilter.length > 0)
+				? getFacetedUniqueValues()
+				: undefined,
 		getRowId
 	})
 
