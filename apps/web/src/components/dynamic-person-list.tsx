@@ -11,6 +11,7 @@ export interface DynamicPersonListProps {
 		addButtonText: string
 		fullNameLabel: string
 		fullNamePlaceholder: string
+		emptyText?: string
 	}
 }
 
@@ -30,6 +31,13 @@ export default function DynamicPersonList({
 				return (
 					<div className='space-y-6'>
 						<div className='space-y-4'>
+							{items.length === 0 && config.emptyText && (
+								<div className='text-center py-6 text-muted-foreground border-2 border-dashed rounded-md'>
+									<p className='text-sm'>
+										{config.emptyText}
+									</p>
+								</div>
+							)}
 							{items.map((item: ChildrenInfo, index: number) => (
 								<Card key={index} className='relative'>
 									<CardHeader className='pb-3'>
@@ -68,10 +76,7 @@ export default function DynamicPersonList({
 											name={`${fieldName}[${index}].dob`}
 										>
 											{(subField: any) => (
-												<subField.TextField
-													placeholder='Ngày/tháng/năm'
-													label='Ngày sinh'
-												/>
+												<subField.DatePicker label='Ngày sinh' />
 											)}
 										</form.AppField>
 									</CardContent>

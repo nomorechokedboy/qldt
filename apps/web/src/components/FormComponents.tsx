@@ -84,7 +84,7 @@ export function TextField({ label, className, ...inputProps }: TextFieldProps) {
 
 	return (
 		<div className={className}>
-			<Label htmlFor={label} className='mb-2 text-xl font-bold'>
+			<Label htmlFor={field.name} className='mb-2 text-xl font-bold'>
 				{label}
 			</Label>
 			{inputProps.type === 'password' ? (
@@ -122,11 +122,11 @@ export function TextArea({
 
 	return (
 		<div>
-			<Label htmlFor={label} className='mb-2 text-xl font-bold'>
+			<Label htmlFor={field.name} className='mb-2 text-xl font-bold'>
 				{label}
 			</Label>
 			<ShadcnTextarea
-				id={label}
+				id={field.name}
 				value={field.state.value}
 				onBlur={field.handleBlur}
 				rows={rows}
@@ -155,7 +155,7 @@ export function Select({
 
 	return (
 		<div>
-			<Label htmlFor={label} className='mb-2 text-xl font-bold'>
+			<Label htmlFor={field.name} className='mb-2 text-xl font-bold'>
 				{label}
 			</Label>
 			<ShadcnSelect.Select
@@ -168,7 +168,7 @@ export function Select({
 				// defaultValue={defaultValue}
 				// defaultValue={values[0].value}
 			>
-				<ShadcnSelect.SelectTrigger className='w-full'>
+				<ShadcnSelect.SelectTrigger id={field.name} className='w-full'>
 					<ShadcnSelect.SelectValue placeholder={placeholder} />
 				</ShadcnSelect.SelectTrigger>
 				<ShadcnSelect.SelectContent>
@@ -211,12 +211,12 @@ export function Switch({ label }: { label: string }) {
 		<div>
 			<div className='flex items-center gap-2'>
 				<ShadcnSwitch
-					id={label}
+					id={field.name}
 					onBlur={field.handleBlur}
 					checked={field.state.value}
 					onCheckedChange={(checked) => field.handleChange(checked)}
 				/>
-				<Label htmlFor={label}>{label}</Label>
+				<Label htmlFor={field.name}>{label}</Label>
 			</div>
 			{field.state.meta.isTouched && <ErrorMessages errors={errors} />}
 		</div>
