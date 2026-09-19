@@ -12,21 +12,15 @@ import useMaterialTypesData from '@/hooks/useMaterialTypesData'
 import useRoomsData from '@/hooks/useRoomsData'
 import useStudentData from '@/hooks/useStudents'
 import useUnitData from '@/hooks/useUnitData'
-import type { MaterialAsset, UnitLevel } from '@/types'
+import type { MaterialAsset } from '@/types'
 import { ArrowDownToLine, Settings, Upload } from 'lucide-react'
 import { useState } from 'react'
 
 type CompanyWeaponsTabProps = {
-	unitAlias: string
-	unitLevel: UnitLevel
 	unitId: number
 }
 
-export default function CompanyWeaponsTab({
-	unitAlias,
-	unitLevel,
-	unitId
-}: CompanyWeaponsTabProps) {
+export default function CompanyWeaponsTab({ unitId }: CompanyWeaponsTabProps) {
 	const { data: company, refetch: refetchUnit } = useUnitData({ id: unitId })
 	const { data: assets, refetch: refetchAssets } = useMaterialAssetsData(
 		undefined,
@@ -91,8 +85,6 @@ export default function CompanyWeaponsTab({
 
 			<ImportMaterialAssetsDialog
 				unitId={unitId}
-				unitAlias={unitAlias}
-				unitLevel={unitLevel}
 				isOpen={importAssetsOpen}
 				onClose={() => setImportAssetsOpen(false)}
 				onSuccess={handleChanged}

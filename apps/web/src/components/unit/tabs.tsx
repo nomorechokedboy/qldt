@@ -6,12 +6,11 @@ import CompanyFacilitiesTab from '@/components/company-facilities-tab'
 import CompanyWeaponsTab from '@/components/company-weapons-tab'
 import type { ColumnDef } from '@tanstack/react-table'
 import type { QueryObserverResult } from '@tanstack/react-query'
-import type { Student as Trooper, Unit, UnitLevel } from '@/types'
+import type { Student as Trooper, Unit } from '@/types'
 import type useUnitFacetedFilters from '@/hooks/useUnitFacetedFilter'
 
 interface UnitTabsProps {
 	alias: string
-	level: UnitLevel
 	unitName?: string
 	parentUnitName?: string
 	data: Trooper[]
@@ -27,7 +26,6 @@ interface UnitTabsProps {
 
 export default function UnitTabs({
 	alias,
-	level,
 	unitName,
 	parentUnitName,
 	data,
@@ -87,11 +85,7 @@ export default function UnitTabs({
 			</TabsContent>
 
 			<TabsContent value='weapons'>
-				<CompanyWeaponsTab
-					unitAlias={alias}
-					unitLevel={level}
-					unitId={unitId}
-				/>
+				<CompanyWeaponsTab unitId={unitId} />
 			</TabsContent>
 		</Tabs>
 	)

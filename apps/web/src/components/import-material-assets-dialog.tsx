@@ -37,12 +37,10 @@ import { DataTable } from '@/components/data-table'
 import { reviewInputClass } from '@/components/import-students-dialog'
 import type { ColumnDef } from '@tanstack/react-table'
 import type { materials } from '@/api/client'
-import type { Room, Student, UnitLevel } from '@/types'
+import type { Room, Student } from '@/types'
 import useUnitsData from '@/hooks/useUnitsData'
 
 export interface ImportMaterialAssetsDialogProps {
-	unitLevel: UnitLevel
-	unitAlias: string
 	unitId: number
 	isOpen: boolean
 	onClose: () => void
@@ -72,8 +70,6 @@ interface MaterialAssetImportRow {
 export function ImportMaterialAssetsDialog({
 	isOpen,
 	unitId,
-	unitAlias,
-	unitLevel,
 	onClose,
 	onSuccess
 }: ImportMaterialAssetsDialogProps) {
@@ -474,7 +470,8 @@ export function ImportMaterialAssetsDialog({
 
 			const link = document.createElement('a')
 			link.href = url
-			link.download = `Mau_Import_Vu_Khi_Trang_Bi_${unitAlias}.xlsx`
+			const templateSuffix = unitsById.get(unitId)?.alias ?? unitId
+			link.download = `Mau_Import_Vu_Khi_Trang_Bi_${templateSuffix}.xlsx`
 			link.click()
 			URL.revokeObjectURL(url)
 		} catch (err) {

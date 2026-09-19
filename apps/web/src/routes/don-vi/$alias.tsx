@@ -7,7 +7,6 @@ import useUnitData from '@/hooks/useUnitData'
 import useUnitsData from '@/hooks/useUnitsData'
 import useUnitTroopersData from '@/hooks/useUnitTroopersData'
 import { createFileRoute } from '@tanstack/react-router'
-import type { UnitLevel } from '@/types'
 import z from 'zod'
 import UnitPageHeader from '@/components/unit/page-header'
 import UnitTabs from '@/components/unit/tabs'
@@ -27,8 +26,7 @@ export const Route = createFileRoute('/don-vi/$alias')({
 
 function RouteComponent() {
 	const { alias } = Route.useParams()
-	const { level: rawLevel, id } = Route.useSearch()
-	const level = rawLevel as UnitLevel
+	const { id } = Route.useSearch()
 
 	const {
 		data: troopers = [],
@@ -53,7 +51,6 @@ function RouteComponent() {
 				<UnitPageHeader title={unit?.name} />
 				<UnitTabs
 					alias={alias}
-					level={level}
 					unitName={unit?.name}
 					parentUnitName={unit?.parent?.name}
 					data={troopers}
