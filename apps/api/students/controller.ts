@@ -847,70 +847,79 @@ export class Controller {
 	async handleExportUnitRosterExtract(
 		req: ExportUnitRosterExtractRequest
 	): Promise<Uint8Array> {
-		try {
-			log.info('ExportUnitRosterExtract starting')
-			const {
-				unitName,
-				underUnitName,
-				city,
-				commanderName,
-				commanderPosition,
-				commanderRank,
-				date,
-				reportTitle,
-				unitId
-			} = req
+		log.info('ExportUnitRosterExtract starting')
+		const {
+			unitName,
+			underUnitName,
+			city,
+			commanderName,
+			commanderPosition,
+			commanderRank,
+			date,
+			reportTitle,
+			unitId
+		} = req
 
-			// findDescendantUnitIds includes the root itself, so this one
-			// lookup yields both the root and every descendant (a unit
-			// is addressed by id here, never by alias/level, which repeats
-			// across the tree).
-			const descendantIds =
-				await unitStatsRepo.findDescendantUnitIds(unitId)
-			const unitList = await this.unitRepo.find({ ids: descendantIds })
-			const rosterUnits: RosterUnitNode[] = unitList.map((u) => ({
-				id: u.id,
-				name: u.name,
-				parentId: u.parentId,
-				level: u.level
-			}))
-			const rosterRootUnit = rosterUnits.find((u) => u.id === unitId)
-			if (rosterRootUnit === undefined) {
-				throw AppError.handleAppErr(
-					AppError.notFound(`unit with id: ${unitId} not found`)
-				)
-			}
-
-			const students = await this.repo.find({ unitIds: descendantIds })
-			const rosterStudents: RosterStudent[] = students.map((s) => ({
-				fullName: s.fullName ?? '',
-				rank: s.rank ?? '',
-				position: s.position ?? '',
-				enlistmentPeriod: s.enlistmentPeriod ?? '',
-				unitId: s.unit?.id
-			}))
-
-			const positionRows = await positionRepo.find({})
-			const rosterPositions: RosterPosition[] = positionRows.map((p) => ({
-				level: p.level,
-				code: p.code,
-				priority: p.priority,
-				category: p.group
-			}))
-
-			const rows = buildRosterRows(
-				rosterRootUnit,
-				rosterUnits,
-				rosterStudents,
-				rosterPositions
+		// findDescendantUnitIds includes the root itself, so this one
+		// lookup yields both the root and every descendant (a unit
+		// is addressed by id here, never by alias/level, which repeats
+		// across the tree).
+		const descendantIds = await unitStatsRepo
+			.findDescendantUnitIds(unitId)
+			.catch(AppError.handleAppErr)
+		const unitList = await this.unitRepo
+			.find({ ids: descendantIds })
+			.catch(AppError.handleAppErr)
+		const rosterUnits: RosterUnitNode[] = unitList.map((u) => ({
+			id: u.id,
+			name: u.name,
+			parentId: u.parentId,
+			level: u.level
+		}))
+		const rosterRootUnit = rosterUnits.find((u) => u.id === unitId)
+		if (rosterRootUnit === undefined) {
+			throw AppError.handleAppErr(
+				AppError.notFound(`unit with id: ${unitId} not found`)
 			)
-			const summary = buildRosterSummary(rosterStudents, rosterPositions)
+		}
 
-			const dateObj = dayjs(date)
-			const day = dateObj.format('DD')
-			const month = dateObj.format('MM')
-			const year = dateObj.year()
+		const students = await this.repo
+			.find({ unitIds: descendantIds })
+			.catch(AppError.handleAppErr)
+		const rosterStudents: RosterStudent[] = students.map((s) => ({
+			fullName: s.fullName ?? '',
+			rank: s.rank ?? '',
+			position: s.position ?? '',
+			enlistmentPeriod: s.enlistmentPeriod ?? '',
+			unitId: s.unit?.id
+		}))
 
+		const positionRows = await positionRepo
+			.find({})
+			.catch(AppError.handleAppErr)
+		const rosterPositions: RosterPosition[] = positionRows.map((p) => ({
+			level: p.level,
+			code: p.code,
+			priority: p.priority,
+			category: p.group
+		}))
+
+		const rows = buildRosterRows(
+			rosterRootUnit,
+			rosterUnits,
+			rosterStudents,
+			rosterPositions
+		)
+		const summary = buildRosterSummary(rosterStudents, rosterPositions)
+
+		const dateObj = dayjs(date)
+		const day = dateObj.format('DD')
+		const month = dateObj.format('MM')
+		const year = dateObj.year()
+
+		// Only the document rendering needs a try/catch: file and template
+		// failures aren't AppErrors, so they are reported as internal errors.
+		try {
 			const template = await readFile(
 				path.join('./templates', 'unit-roster-extract-templ.docx')
 			)
@@ -940,10 +949,6 @@ export class Controller {
 		} catch (err) {
 			console.error('handleExportUnitRosterExtract error', err)
 			log.error('handleExportUnitRosterExtract error', { err })
-
-			if (err instanceof AppError) {
-				throw err
-			}
 
 			throw APIError.internal('Internal error for exporting file')
 		}

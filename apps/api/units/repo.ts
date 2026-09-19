@@ -12,7 +12,35 @@ import {
 	UpdateUnitMap
 } from '../schema/units'
 import { handleDatabaseErr } from '../utils'
-import { and, asc, eq, inArray, isNull, like, or, SQL } from 'drizzle-orm'
+import {
+	and,
+	asc,
+	eq,
+	getTableColumns,
+	inArray,
+	isNull,
+	or,
+	SQL,
+	sql
+} from 'drizzle-orm'
+import { AppError } from '../errors'
+
+const UNIT_COLUMN_NAMES = new Set(Object.keys(getTableColumns(units)))
+
+function toLimitOffset(page?: number, pageSize?: number) {
+	if (pageSize === undefined) {
+		return { limit: undefined, offset: undefined }
+	}
+	if (!Number.isInteger(pageSize) || pageSize < 1) {
+		throw AppError.invalidArgument('pageSize must be a positive integer')
+	}
+	const currentPage = page ?? 1
+	if (!Number.isInteger(currentPage) || currentPage < 1) {
+		throw AppError.invalidArgument('page must be a positive integer')
+	}
+
+	return { limit: pageSize, offset: (currentPage - 1) * pageSize }
+}
 
 function relationsToWith(relations?: UnitRelations) {
 	const withClause: Record<string, unknown> = {}
@@ -103,25 +131,23 @@ class repo implements Repository {
 		}
 		const search = query.search?.trim()
 		if (search) {
-			const pattern = `%${search}%`
+			const pattern = `%${search.replace(/[\\%_]/g, '\\$&')}%`
 			conditions.push(
-				or(like(units.alias, pattern), like(units.name, pattern))!
+				or(
+					sql`${units.alias} LIKE ${pattern} ESCAPE '\\'`,
+					sql`${units.name} LIKE ${pattern} ESCAPE '\\'`
+				)!
 			)
 		}
 
-		const paginate = query.pageSize !== undefined
-		const pageSize = paginate ? Math.max(1, query.pageSize!) : undefined
-		const offset =
-			pageSize !== undefined
-				? (Math.max(1, query.page ?? 1) - 1) * pageSize
-				: undefined
+		const { limit, offset } = toLimitOffset(query.page, query.pageSize)
 
 		return this.db.query.units
 			.findMany({
 				where: and(...conditions),
 				with: relationsToWith(query.with) as never,
 				orderBy: asc(units.id),
-				limit: pageSize,
+				limit,
 				offset
 			})
 			.catch(handleDatabaseErr) as unknown as Promise<Unit[]>
@@ -134,6 +160,9 @@ class repo implements Repository {
 		const conditions = Object.entries(filter)
 			.filter(([, value]) => value !== undefined)
 			.map(([key, value]) => {
+				if (!UNIT_COLUMN_NAMES.has(key)) {
+					throw AppError.invalidArgument(`Unknown unit field: ${key}`)
+				}
 				const column = units[key as keyof UnitFilter]
 
 				return value === null
@@ -142,8 +171,8 @@ class repo implements Repository {
 			})
 
 		if (conditions.length === 0) {
-			throw new Error(
-				'UnitRepo.findOne: at least one filter field is required'
+			throw AppError.invalidArgument(
+				'At least one unit filter field is required'
 			)
 		}
 

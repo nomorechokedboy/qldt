@@ -9,6 +9,7 @@ import { students } from '../schema/student'
 import { positions } from '../schema/positions'
 import { UnitDB, UnitLevelName, units } from '../schema/units'
 import { buildRosterSummary, RosterSummary } from '../export/roster-utils'
+import { handleDatabaseErr } from '../utils'
 import { UnitStatsRepository } from '.'
 
 export interface UnitStatsSummary {
@@ -41,6 +42,7 @@ class repo implements UnitStatsRepository {
 				level: units.level
 			})
 			.from(units)
+			.catch(handleDatabaseErr)
 	}
 
 	async findDescendantUnitIds(rootId: number): Promise<number[]> {

@@ -120,6 +120,13 @@ export function mapAppErrorToAPIError(error: AppError): APIError {
 export function handleDatabaseErr(err: unknown): never {
 	log.error(err, 'handleDatabaseErr: ')
 
+	// Already-classified errors (e.g. an invalid unit level rejected while
+	// drizzle maps a query parameter) keep their type instead of being
+	// flattened into an internal error.
+	if (err instanceof AppError) {
+		throw err
+	}
+
 	if (!(err instanceof DrizzleQueryError)) {
 		throw AppError.internal('Internal error')
 	}
