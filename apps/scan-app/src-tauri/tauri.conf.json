@@ -1,8 +1,8 @@
 {
 	"$schema": "https://schema.tauri.app/config/2",
-	"productName": "scan-app",
+	"productName": "Qldt QR Scan",
 	"version": "0.1.0",
-	"identifier": "com.hadius.scan_app",
+	"identifier": "com.hadius.qldt-scan-app",
 	"build": {
 		"beforeDevCommand": "pnpm dev",
 		"devUrl": "http://localhost:1420",
@@ -12,7 +12,7 @@
 	"app": {
 		"windows": [
 			{
-				"title": "scan-app",
+				"title": "Qldt QR Scan",
 				"width": 800,
 				"height": 600
 			}
