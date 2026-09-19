@@ -8,7 +8,7 @@ import {
 	DialogTrigger,
 	DialogTitle
 } from '@/components/ui/dialog'
-import StudentEditForm from './StudentEditForm'
+import StudentEditForm from './student-edit-form'
 import type { Student } from '@/types'
 import { politicalOptions } from '@/data/political-status'
 import { getMediaUri, isSuperAdmin } from '@/lib/utils'

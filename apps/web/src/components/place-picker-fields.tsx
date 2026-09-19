@@ -6,7 +6,7 @@ import useWards from '@/hooks/useWards'
 // Renders the province/ward combobox pair plus the narrowed detail text
 // field for one place ("birthPlace" = quê quán, "address" = trú quán) of a
 // student. Shared by the create wizard (personal-step.tsx) and the edit
-// form (StudentEditForm.tsx) since both use the same useAppForm()-produced
+// form (student-edit-form) since both use the same useAppForm()-produced
 // `form`, so `form.AppField`/`field.Combobox` behave identically in either
 // place.
 export default function PlacePickerFields({

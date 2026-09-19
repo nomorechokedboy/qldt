@@ -143,6 +143,10 @@ function applyDateEdit(
 	prevValue: string,
 	inputValue: string
 ): { value: string; cursor: number } {
+	// Select-all + delete spans every segment, which the per-segment editing
+	// below would only partly clear.
+	if (inputValue === '') return { value: '', cursor: 0 }
+
 	const { d, m, y } = parseSegments(prevValue)
 	const { joined, mRange, yRange } = segmentBoundaries(d, m, y)
 	const { start, endPrev, endNext } = diffRange(joined, inputValue)
@@ -342,13 +346,13 @@ export default function DatePicker({ label, placeholder }: DatePickerProps) {
 
 	return (
 		<div className='flex flex-col gap-2'>
-			<Label htmlFor={label} className='text-xl font-bold'>
+			<Label htmlFor={field.name} className='text-xl font-bold'>
 				{label}
 			</Label>
 			<div className='relative flex gap-2'>
 				<Input
 					ref={inputRef}
-					id={label}
+					id={field.name}
 					value={field.state.value}
 					placeholder={placeholder || 'Ngày/tháng/năm'}
 					className='bg-background pr-10'

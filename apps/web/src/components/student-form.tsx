@@ -127,7 +127,7 @@ export default function StudentForm({
 			disciplinaryHistory: '',
 			phone: '',
 			unitId: undefined,
-			cpvOfficialAt: null,
+			cpvOfficialAt: '',
 			avatar: null as File | null,
 			siblings: [],
 			contactPerson: {} as ContactPerson,
@@ -159,13 +159,9 @@ export default function StudentForm({
 					value.isMarried = true
 				}
 
-				if (
-					value.cpvOfficialAt !== null &&
-					value.cpvOfficialAt !== undefined
-				) {
-					const cpvOfficialAt = value.cpvOfficialAt
-					value.cpvOfficialAt = convertToIso(cpvOfficialAt)
-				}
+				value.cpvOfficialAt = value.cpvOfficialAt
+					? convertToIso(value.cpvOfficialAt)
+					: null
 				let avatarUri: string | undefined = undefined
 				if (avatar !== null) {
 					const formData = new FormData()

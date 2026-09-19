@@ -1,28 +1,9 @@
 import { rankOptions } from '@/data/ranks'
-import usePositionsData from '@/hooks/usePositionsData'
-import { unitLevelLabels, unitLevelOrder } from '@/data/unit-levels'
+import usePositionOptions from '@/hooks/usePositionOptions'
 import { activityStatusOptions } from '@/data/activity-statuses'
 
 export default function MilitaryStep({ form }: { form: any }) {
-	const { data: positions } = usePositionsData(undefined, { enabled: true })
-
-	const positionOptions = [...(positions ?? [])]
-		.sort((a, b) => {
-			const levelDiff =
-				unitLevelOrder.indexOf(a.level as any) -
-				unitLevelOrder.indexOf(b.level as any)
-			if (levelDiff !== 0) return levelDiff
-
-			const groupDiff = (a.group ?? '').localeCompare(b.group ?? '')
-			if (groupDiff !== 0) return groupDiff
-
-			return a.priority - b.priority
-		})
-		.map((p) => ({
-			label: p.name,
-			value: String(p.id),
-			group: p.group ?? unitLevelLabels[p.level as never] ?? p.level
-		}))
+	const positionOptions = usePositionOptions()
 
 	return (
 		<div className='space-y-6 py-2'>
@@ -79,7 +60,7 @@ export default function MilitaryStep({ form }: { form: any }) {
 					)}
 				</form.AppField>
 				<form.AppField name='politicalOrgOfficialDate'>
-					{(field: any) => <field.TextField label='Ngày vào Đoàn' />}
+					{(field: any) => <field.DatePicker label='Ngày vào Đoàn' />}
 				</form.AppField>
 			</div>
 
@@ -89,7 +70,7 @@ export default function MilitaryStep({ form }: { form: any }) {
 				</form.AppField>
 
 				<form.AppField name='cpvOfficialAt'>
-					{(field: any) => <field.TextField label='Ngày vào Đảng' />}
+					{(field: any) => <field.DatePicker label='Ngày vào Đảng' />}
 				</form.AppField>
 			</div>
 
