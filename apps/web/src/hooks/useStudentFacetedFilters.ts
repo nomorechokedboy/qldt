@@ -40,19 +40,9 @@ export function useStudentFacetedFilters(students: Student[]) {
 		return { label, value: u.name }
 	})
 
-	// Previous Unit Options
-	const previousUnitSet = new Set(
-		students.filter((s) => !!s.previousUnit).map((s) => s.previousUnit)
-	)
-	const previousUnitOptions = Array.from(previousUnitSet).map((pu) => ({
-		label: pu,
-		value: pu
-	}))
-
 	return [
 		createFacetedFilter('unit.name', 'Đơn vị', unitOptions),
 		createFacetedFilter('rank', 'Cấp bậc', militaryRankOptions),
-		createFacetedFilter('previousUnit', 'Đơn vị cũ', previousUnitOptions),
 		createFacetedFilter('ethnic', 'Dân tộc', EhtnicOptions),
 		createFacetedFilter(
 			'educationLevel',

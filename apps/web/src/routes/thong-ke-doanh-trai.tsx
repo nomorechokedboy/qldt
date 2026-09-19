@@ -5,7 +5,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import z from 'zod'
 
 const searchSchema = z.object({
-	unit: z.string().optional()
+	unit: z.number().optional()
 })
 
 export const Route = createFileRoute('/thong-ke-doanh-trai')({

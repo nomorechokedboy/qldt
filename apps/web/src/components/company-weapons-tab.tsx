@@ -27,9 +27,7 @@ export default function CompanyWeaponsTab({
 	unitLevel,
 	unitId
 }: CompanyWeaponsTabProps) {
-	const { data: company, refetch: refetchUnit } = useUnitData({
-		alias: unitAlias
-	})
+	const { data: company, refetch: refetchUnit } = useUnitData({ id: unitId })
 	const { data: assets, refetch: refetchAssets } = useMaterialAssetsData(
 		undefined,
 		{ enabled: true }
@@ -39,10 +37,7 @@ export default function CompanyWeaponsTab({
 		{ enabled: true }
 	)
 	const { data: materialTypes } = useMaterialTypesData({ enabled: true })
-	const { data: students } = useStudentData({
-		unitAlias,
-		unitLevel: company?.level
-	})
+	const { data: students } = useStudentData({ unitId })
 	const { createSearchConfig, createFacetedFilter } =
 		useDataTableToolbarConfig()
 	const [importAssetsOpen, setImportAssetsOpen] = useState(false)

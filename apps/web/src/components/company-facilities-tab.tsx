@@ -19,15 +19,13 @@ import { ArrowDownToLine, Settings, Upload } from 'lucide-react'
 import { useState } from 'react'
 
 type CompanyFacilitiesTabProps = {
-	unitAlias: string
+	unitId: number
 }
 
 export default function CompanyFacilitiesTab({
-	unitAlias
+	unitId
 }: CompanyFacilitiesTabProps) {
-	const { data: company, refetch: refetchUnit } = useUnitData({
-		alias: unitAlias
-	})
+	const { data: company, refetch: refetchUnit } = useUnitData({ id: unitId })
 	const { data: buildings, refetch: refetchBuildings } = useBuildingsData({
 		enabled: true
 	})

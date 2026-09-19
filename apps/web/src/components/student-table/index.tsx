@@ -6,7 +6,6 @@ import {
 	type FacetedFilterConfig,
 	type Student,
 	type TemplType,
-	type UnitLevel,
 	defaultStudentColumnVisibility
 } from '@/types'
 import type { QueryObserverResult } from '@tanstack/react-query'
@@ -57,7 +56,7 @@ interface StudentTableProps {
 			underUnitName?: string
 			unitName?: string
 		}
-		unitRoster?: { alias: string; level: UnitLevel }
+		unitRoster?: { id: number }
 	}
 
 	// UI configuration
@@ -293,13 +292,9 @@ export default function StudentTable({
 													onOpenChange={
 														setExportRosterOpen
 													}
-													unitAlias={
+													unitId={
 														exportConfig.unitRoster
-															.alias
-													}
-													unitLevel={
-														exportConfig.unitRoster
-															.level
+															.id
 													}
 													defaultFilename={`bien-che-${exportConfig.filename}`}
 													defaultValues={

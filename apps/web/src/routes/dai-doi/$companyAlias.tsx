@@ -33,11 +33,7 @@ function RouteComponent() {
 		isLoading: isLoadingStudents,
 		refetch: refetchTroopers
 	} = useUnitTroopersData({ id })
-	const { data: unit } = useUnitData({
-		alias: companyAlias,
-		level: 'company',
-		id
-	})
+	const { data: unit } = useUnitData({ id })
 	const { data: units = [] } = useUnitsData()
 	const unitsById = buildUnitsById(units)
 	const battalionStudentColumnsWithoutAction =
@@ -69,11 +65,11 @@ function RouteComponent() {
 					</TabsList>
 
 					<TabsContent value='platoons'>
-						<CompanyPlatoonTable companyAlias={companyAlias} />
+						<CompanyPlatoonTable companyId={id} />
 					</TabsContent>
 
 					<TabsContent value='squads'>
-						<CompanySquadTable companyAlias={companyAlias} />
+						<CompanySquadTable companyId={id} />
 					</TabsContent>
 
 					<TabsContent value='students'>
@@ -103,10 +99,7 @@ function RouteComponent() {
 											unit?.parent?.name?.toUpperCase(),
 										underUnitName: unit?.name?.toUpperCase()
 									},
-									unitRoster: {
-										alias: companyAlias,
-										level: 'company'
-									}
+									unitRoster: { id }
 								}}
 								onDeleteRows={handleDeleteTroopers}
 								onCreateSuccess={refetchTroopers}
@@ -117,7 +110,7 @@ function RouteComponent() {
 					</TabsContent>
 
 					<TabsContent value='facilities'>
-						<CompanyFacilitiesTab unitAlias={companyAlias} />
+						<CompanyFacilitiesTab unitId={id} />
 					</TabsContent>
 
 					<TabsContent value='weapons'>

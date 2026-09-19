@@ -53,12 +53,9 @@ export default function UnitEditForm({
 	// unitData may have come from a nested list (e.g. a platoon read off its
 	// company's `children`, or a squad off a platoon's), where `.parent`
 	// isn't populated past the first level of nesting. Re-fetch this exact
-	// unit by its own alias so `.parent` is always correct regardless of how
+	// unit by its own id so `.parent` is always correct regardless of how
 	// deeply it was nested when the caller found it.
-	const { data: freshUnit, isLoading } = useUnitData({
-		alias: unitData.alias,
-		level: unitData.level
-	})
+	const { data: freshUnit, isLoading } = useUnitData({ id: unitData.id })
 
 	if (isLoading || freshUnit === undefined) {
 		return (

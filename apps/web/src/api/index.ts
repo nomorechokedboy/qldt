@@ -22,9 +22,7 @@ import {
 	Role,
 	type Student,
 	type StudentBody,
-	type Unit,
 	type UnitBody,
-	type UnitLevel,
 	type UpdateRoleBody,
 	type UpdateStudentsBody,
 	type UpdateUnitBody,
@@ -43,8 +41,7 @@ import Client, {
 	type positions,
 	type rank_promotion_proposals,
 	type students,
-	type transfer_requests,
-	type units
+	type transfer_requests
 } from './client'
 
 export const requestClient = new Client(ApiUrl, {
@@ -68,12 +65,7 @@ export function GetStudents(
 	params?: students.GetStudentsQuery
 ): Promise<Student[]> {
 	return requestClient.students
-		.GetStudents({
-			...params,
-			unitAlias: params?.unitAlias
-				? encodeURIComponent(params?.unitAlias)
-				: undefined
-		})
+		.GetStudents(params ?? {})
 		.then((resp) => resp.data.map((s) => ({ ...s }) as unknown as Student))
 }
 
@@ -121,12 +113,6 @@ export function MarkAsRead(params: MarkAsReadNotificationParams) {
 	return requestClient.notifications.MarkAsRead(params)
 }
 
-export function GetStudentByLevel(level: UnitLevel): Promise<Unit[]> {
-	return requestClient.students
-		.GetStudents({ unitLevel: level })
-		.then((resp) => resp.data)
-}
-
 export function GetUnits(params?: GetUnitQuery) {
 	return requestClient.units.GetUnits(params ?? {}).then((resp) => resp.data)
 }
@@ -156,34 +142,29 @@ export function UpdateUnits(body: UpdateUnitBody) {
 	return requestClient.units.UpdateUnits(body).then((resp) => resp)
 }
 
-export function GetUnit({
-	alias,
-	...params
-}: units.GetUnitRequest & { alias: string }) {
+export function GetUnit(id: number) {
+	return requestClient.units.GetUnit(id).then((resp) => resp.data)
+}
+
+export function GetUnitStats(id: number) {
+	return requestClient.units.GetUnitStats(id)
+}
+
+export function GetUnitStatsStudents(id: number) {
 	return requestClient.units
-		.GetUnit(encodeURIComponent(alias), params)
+		.GetUnitStatsStudents(id)
 		.then((resp) => resp.data)
 }
 
-export function GetUnitStats(alias: string) {
-	return requestClient.units.GetUnitStats(alias)
-}
-
-export function GetUnitStatsStudents(alias: string) {
+export function GetUnitStatsMaterialStocks(id: number) {
 	return requestClient.units
-		.GetUnitStatsStudents(alias)
+		.GetUnitStatsMaterialStocks(id)
 		.then((resp) => resp.data)
 }
 
-export function GetUnitStatsMaterialStocks(alias: string) {
+export function GetUnitStatsMaterialAssets(id: number) {
 	return requestClient.units
-		.GetUnitStatsMaterialStocks(alias)
-		.then((resp) => resp.data)
-}
-
-export function GetUnitStatsMaterialAssets(alias: string) {
-	return requestClient.units
-		.GetUnitStatsMaterialAssets(alias)
+		.GetUnitStatsMaterialAssets(id)
 		.then((resp) => resp.data)
 }
 

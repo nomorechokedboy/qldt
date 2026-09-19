@@ -73,7 +73,7 @@ export default function UnitTabs({
 							unitName: parentUnitName?.toUpperCase(),
 							underUnitName: unitName?.toUpperCase()
 						},
-						unitRoster: { alias, level }
+						unitRoster: { id: unitId }
 					}}
 					onDeleteRows={onDeleteRows}
 					onCreateSuccess={onCreateSuccess}
@@ -83,7 +83,7 @@ export default function UnitTabs({
 			</TabsContent>
 
 			<TabsContent value='facilities'>
-				<CompanyFacilitiesTab unitAlias={alias} />
+				<CompanyFacilitiesTab unitId={unitId} />
 			</TabsContent>
 
 			<TabsContent value='weapons'>

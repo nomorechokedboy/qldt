@@ -168,8 +168,7 @@ export interface StudentQueryParams {
 	politicalOrg?: PoliticalOrg
 	isEthnicMinority?: boolean
 	hasReligion?: boolean
-	unitAlias?: string
-	unitLevel?: string
+	unitId?: number
 	isCpvOfficialThisWeek?: boolean
 	cpvOfficialInMonth?: Month
 	cpvOfficialInQuarter?: Quarter
@@ -375,8 +374,7 @@ export type ExportStudentDataDynamicData = ExportMaterialAssetsData & {
 }
 
 export type ExportUnitRosterExtractData = {
-	unitAlias: string
-	unitLevel: string
+	unitId: number
 	unitName: string
 	underUnitName: string
 	city: string

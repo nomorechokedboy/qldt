@@ -376,7 +376,7 @@ export function ImportMaterialStocksDialog({
 
 			const link = document.createElement('a')
 			link.href = url
-			link.download = 'Mau_Import_Vat_Tu_Sinh_Hoat.xlsx'
+			link.download = `Mau_Import_Vat_Tu_Sinh_Hoat_${units?.at(0)?.alias}.xlsx`
 			link.click()
 			URL.revokeObjectURL(url)
 		} catch (err) {

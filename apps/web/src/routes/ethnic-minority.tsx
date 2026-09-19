@@ -86,22 +86,19 @@ function RouteComponent() {
 		if (selectedBattalion && !selectedCompanyId && !selectedClassId) {
 			return {
 				isEthnicMinority: true,
-				unitAlias: selectedBattalion.alias,
-				unitLevel: 'battalion'
+				unitId: selectedBattalion.id
 			}
 		}
 		if (selectedBattalion && selectedCompany && !selectedClassId) {
 			return {
 				isEthnicMinority: true,
-				unitAlias: selectedCompany.alias,
-				unitLevel: 'company'
+				unitId: selectedCompany.id
 			}
 		}
 		if (selectedBattalion && selectedCompany && selectedClass) {
 			return {
 				isEthnicMinority: true,
-				unitAlias: selectedClass.alias,
-				unitLevel: 'squad'
+				unitId: selectedClass.id
 			}
 		}
 		return { isEthnicMinority: true }

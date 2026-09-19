@@ -18,8 +18,7 @@ import { toast } from 'sonner'
 export interface ExportUnitRosterExtractDialogProps {
 	open: boolean
 	onOpenChange: (open: boolean) => void
-	unitAlias: string
-	unitLevel: string
+	unitId: number
 	defaultFilename: string
 	defaultValues?: {
 		unitName?: string
@@ -30,9 +29,8 @@ export interface ExportUnitRosterExtractDialogProps {
 
 export function ExportUnitRosterExtractDialog({
 	open,
+	unitId,
 	onOpenChange,
-	unitAlias,
-	unitLevel,
 	defaultFilename,
 	defaultValues,
 	id = 'exportUnitRosterExtractForm'
@@ -56,8 +54,7 @@ export function ExportUnitRosterExtractDialog({
 		onSubmit: async ({ value, formApi }) => {
 			try {
 				const resp = await ExportUnitRosterExtract({
-					unitAlias,
-					unitLevel,
+					unitId,
 					city: value.city,
 					commanderName: value.commanderName,
 					commanderPosition: value.commanderPosition,

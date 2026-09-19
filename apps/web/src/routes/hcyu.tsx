@@ -51,8 +51,7 @@ function RouteComponent() {
 		if (selectedBattalion && !selectedCompanyId && !selectedClassId) {
 			setStudentParams({
 				politicalOrg: 'hcyu',
-				unitAlias: selectedBattalion.alias,
-				unitLevel: 'battalion'
+				unitId: selectedBattalion.id
 			})
 			return
 		}
@@ -60,8 +59,7 @@ function RouteComponent() {
 		if (selectedBattalion && selectedCompany && !selectedClassId) {
 			setStudentParams({
 				politicalOrg: 'hcyu',
-				unitAlias: selectedCompany.alias,
-				unitLevel: 'company'
+				unitId: selectedCompany.id
 			})
 			return
 		}
@@ -69,8 +67,7 @@ function RouteComponent() {
 		if (selectedBattalion && selectedCompany && selectedClass) {
 			setStudentParams({
 				politicalOrg: 'hcyu',
-				unitAlias: selectedClass.alias,
-				unitLevel: 'squad'
+				unitId: selectedClass.id
 			})
 			return
 		}

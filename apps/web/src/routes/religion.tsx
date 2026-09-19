@@ -49,8 +49,7 @@ function RouteComponent() {
 		if (selectedBattalion && !selectedCompanyId && !selectedClassId) {
 			setStudentParams({
 				hasReligion: true,
-				unitAlias: selectedBattalion.alias,
-				unitLevel: 'battalion'
+				unitId: selectedBattalion.id
 			})
 			return
 		}
@@ -58,8 +57,7 @@ function RouteComponent() {
 		if (selectedBattalion && selectedCompany && !selectedClassId) {
 			setStudentParams({
 				hasReligion: true,
-				unitAlias: selectedCompany.alias,
-				unitLevel: 'company'
+				unitId: selectedCompany.id
 			})
 			return
 		}
@@ -67,8 +65,7 @@ function RouteComponent() {
 		if (selectedBattalion && selectedCompany && selectedClass) {
 			setStudentParams({
 				hasReligion: true,
-				unitAlias: selectedClass.alias,
-				unitLevel: 'squad'
+				unitId: selectedClass.id
 			})
 			return
 		}

@@ -86,7 +86,7 @@ function GroupUnits({
 			<SelectGroup key={level}>
 				<SelectLabel>{unitLevelLabels[level]}</SelectLabel>
 				{units.map((u) => (
-					<SelectItem key={u.id} value={u.alias}>
+					<SelectItem key={u.id} value={String(u.id)}>
 						{unitLabelWithAncestry(u, unitsById)}
 					</SelectItem>
 				))}
@@ -98,17 +98,17 @@ function GroupUnits({
 
 export default function BaseStatsDashboard() {
 	const navigate = useNavigate({ from: Route.fullPath })
-	const { unit: unitAliasParam } = Route.useSearch()
+	const { unit: unitIdParam } = Route.useSearch()
 	const { user } = useAuth()
 	const { data: units = [], isLoading: isLoadingUnits } = useUnitsData()
 
 	const rootUnit = units.find((u) => !u.parent)
-	const selectedAlias = unitAliasParam ?? user?.unit?.alias ?? rootUnit?.alias
+	const selectedUnitId = unitIdParam ?? user?.unit?.id ?? rootUnit?.id
 
 	const { data: stats, isLoading: isLoadingStats } =
-		useUnitStats(selectedAlias)
+		useUnitStats(selectedUnitId)
 
-	const selectedUnit = units.find((u) => u.alias === selectedAlias)
+	const selectedUnit = units.find((u) => u.id === selectedUnitId)
 	const { data: politicsQualityData, isLoading: isLoadingPoliticsQuality } =
 		useQuery({
 			enabled: selectedUnit !== undefined,
@@ -127,19 +127,19 @@ export default function BaseStatsDashboard() {
 	const showRollupTabs = stats !== undefined && stats.unit.level !== 'squad'
 
 	const { data: rollupStudents, isLoading: isLoadingRollupStudents } =
-		useUnitStatsStudents(showRollupTabs ? selectedAlias : undefined)
+		useUnitStatsStudents(showRollupTabs ? selectedUnitId : undefined)
 	const { data: rollupStocks, isLoading: isLoadingRollupStocks } =
-		useUnitStatsMaterialStocks(showRollupTabs ? selectedAlias : undefined)
+		useUnitStatsMaterialStocks(showRollupTabs ? selectedUnitId : undefined)
 	const { data: rollupAssets, isLoading: isLoadingRollupAssets } =
-		useUnitStatsMaterialAssets(showRollupTabs ? selectedAlias : undefined)
+		useUnitStatsMaterialAssets(showRollupTabs ? selectedUnitId : undefined)
 	const studentFacetedFilters = useStudentFacetedFilters(rollupStudents ?? [])
 
 	if (isLoadingUnits) {
 		return <TableSkeleton />
 	}
 
-	const handleUnitChange = (alias: string) => {
-		navigate({ search: (prev) => ({ ...prev, unit: alias }) })
+	const handleUnitChange = (id: string) => {
+		navigate({ search: (prev) => ({ ...prev, unit: Number(id) }) })
 	}
 
 	const unitsById = buildUnitsById(units)
@@ -608,7 +608,14 @@ export default function BaseStatsDashboard() {
 					</p>
 				</div>
 
-				<Select value={selectedAlias} onValueChange={handleUnitChange}>
+				<Select
+					value={
+						selectedUnitId === undefined
+							? undefined
+							: String(selectedUnitId)
+					}
+					onValueChange={handleUnitChange}
+				>
 					<SelectTrigger className='w-full md:w-[280px]'>
 						<SelectValue placeholder='Chọn đơn vị' />
 					</SelectTrigger>
@@ -621,13 +628,15 @@ export default function BaseStatsDashboard() {
 				</Select>
 			</div>
 
-			{selectedAlias === undefined && (
+			{selectedUnitId === undefined && (
 				<p className='text-muted-foreground'>
 					Bạn chưa được phân công đơn vị nào để xem thống kê.
 				</p>
 			)}
 
-			{selectedAlias !== undefined && isLoadingStats && <TableSkeleton />}
+			{selectedUnitId !== undefined && isLoadingStats && (
+				<TableSkeleton />
+			)}
 
 			{stats !== undefined &&
 				(showRollupTabs ? (

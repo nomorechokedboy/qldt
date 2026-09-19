@@ -35,7 +35,7 @@ function RouteComponent() {
 		isLoading: isLoadingStudents,
 		refetch: refetchStudents
 	} = useUnitTroopersData({ id })
-	const { data: unit } = useUnitData({ alias, level, id })
+	const { data: unit } = useUnitData({ id })
 	const { data: units = [] } = useUnitsData()
 	const unitsById = buildUnitsById(units)
 
