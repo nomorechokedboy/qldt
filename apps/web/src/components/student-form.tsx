@@ -21,7 +21,8 @@ import type { ContactPerson, Student, StudentBody } from '@/types'
 import MilitaryStep from '@/components/military-step'
 import { toast } from 'sonner'
 import type { VariantProps } from 'class-variance-authority'
-import { convertToIso, getErrorMessage } from '@/lib/utils'
+import { getErrorMessage } from '@/lib/utils'
+import { withIsoDates } from './student-form-dates'
 import { StudentFormSchema } from './student-form-schema'
 import type { StudentFormSchemaType } from './student-form-schema'
 import useUploadFiles from '@/hooks/useUploadFiles'
@@ -153,15 +154,10 @@ export default function StudentForm({
 				const familySize = value.familySize
 				value.familySize = Number(familySize)
 
-				const dob = value.dob
-				value.dob = convertToIso(dob)
 				if (value.spouseName !== '') {
 					value.isMarried = true
 				}
 
-				value.cpvOfficialAt = value.cpvOfficialAt
-					? convertToIso(value.cpvOfficialAt)
-					: null
 				let avatarUri: string | undefined = undefined
 				if (avatar !== null) {
 					const formData = new FormData()
@@ -170,7 +166,7 @@ export default function StudentForm({
 					avatarUri = resp.uris[0]
 				}
 
-				await mutateAsync({ ...value, avatar: avatarUri })
+				await mutateAsync({ ...withIsoDates(value), avatar: avatarUri })
 				toast.success('Thêm mới quân nhân thành công!', {})
 				formApi.reset()
 				handleResetStep()
