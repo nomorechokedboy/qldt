@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/select'
 import { materialCategoryOptions } from '@/data/material-categories'
 import { useUpdateMaterialType } from '@/hooks/useUpdateMaterialType'
+import { MAX_MATERIAL_TYPE_NAME_LENGTH } from '@/lib/material-limits'
 import { getErrorMessage } from '@/lib/utils'
 import type { MaterialType } from '@/types'
 import { X } from 'lucide-react'
@@ -81,6 +82,7 @@ export default function MaterialTypeEditForm({
 					<Label htmlFor='edit-material-type-name'>Tên vật tư</Label>
 					<Input
 						id='edit-material-type-name'
+						maxLength={MAX_MATERIAL_TYPE_NAME_LENGTH}
 						value={name}
 						onChange={(e) => setName(e.target.value)}
 						required

@@ -104,7 +104,7 @@ export default function InventorySessionDialog({
 			return
 		}
 		if (
-			payload?.v !== 2 ||
+			payload?.v !== 3 ||
 			typeof payload?.sid !== 'number' ||
 			!Array.isArray(payload?.results) ||
 			!Array.isArray(payload?.stockResults)

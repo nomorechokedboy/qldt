@@ -2,10 +2,16 @@ import { describe, expect, it } from 'vitest'
 import {
 	buildChallengePayload,
 	buildResultsPayload,
+	decodeChallengePayload,
+	decodeResultsPayload,
 	verifyResultsPayload,
 	InventorySessionChallengeAsset,
 	InventorySessionChallengeStock
 } from './payload'
+import {
+	MAX_MATERIAL_ASSET_SERIAL_LENGTH,
+	MAX_MATERIAL_TYPE_NAME_LENGTH
+} from '../materials/limits'
 import { computeInventorySessionDiff } from './diff'
 import { InventorySessionExpectedAssetDB } from '../schema/inventory-session-inspected-assets'
 import { InventorySessionScanDB } from '../schema/inventory-session-scans'
@@ -60,18 +66,27 @@ describe('inventory session challenge/results round trip', () => {
 	// qr-code-canvas.tsx render at errorCorrectionLevel 'L'.
 	const QR_LEVEL_L_BYTE_CAPACITY = 2953
 
+	// Real-length Vietnamese names, every one within the type-name cap.
 	const REALISTIC_MATERIAL_NAMES = [
 		'Súng tiểu liên AK-47 cải tiến',
-		'Súng trường tiến công M79 phóng lựu',
-		'Súng máy hạng nhẹ RPD cỡ nòng 7.62mm',
-		'Súng ngắn ổ quay K59 quân dụng',
-		'Đạn súng bộ binh cỡ nòng 7.62x39mm',
-		'Đạn súng ngắn cỡ nòng 9x19mm Parabellum',
+		'Súng trường M79 phóng lựu',
+		'Súng máy hạng nhẹ RPD 7.62mm',
+		'Súng ngắn ổ quay K59',
+		'Đạn súng bộ binh 7.62x39mm',
+		'Đạn súng ngắn 9x19mm',
 		'Lựu đạn cầm tay phòng ngự F1',
 		'Mặt nạ phòng độc cá nhân M17',
 		'Áo giáp chống đạn cấp độ IIIA',
 		'Ống nhòm quân sự đo xa laser'
 	]
+
+	it('keeps every fixture name within the material type name cap', () => {
+		for (const name of REALISTIC_MATERIAL_NAMES) {
+			expect(name.length).toBeLessThanOrEqual(
+				MAX_MATERIAL_TYPE_NAME_LENGTH
+			)
+		}
+	})
 
 	function buildRealisticRoom() {
 		const expectedAssets: InventorySessionChallengeAsset[] = Array.from(
@@ -131,6 +146,97 @@ describe('inventory session challenge/results round trip', () => {
 		expect(bytes).toBeLessThan(QR_LEVEL_L_BYTE_CAPACITY)
 	})
 
+	// The caps exist so that the QR always fits: a full room whose serials and
+	// type names are all as long (and as multi-byte) as allowed must still fit.
+	function buildWorstCaseRoom() {
+		const wideName = (i: number) =>
+			`${i}`.padEnd(MAX_MATERIAL_TYPE_NAME_LENGTH, 'ộ')
+		const serial = (i: number) =>
+			`${i}`.padStart(MAX_MATERIAL_ASSET_SERIAL_LENGTH, 'X')
+
+		const expectedAssets: InventorySessionChallengeAsset[] = Array.from(
+			{ length: 40 },
+			(_, i) => ({
+				serial: serial(i),
+				materialTypeName: wideName(i % 10),
+				condition: 'needs_maintenance' as const
+			})
+		)
+		const expectedStocks: InventorySessionChallengeStock[] = Array.from(
+			{ length: 10 },
+			(_, i) => ({
+				materialTypeId: i + 1,
+				materialTypeName: wideName(i),
+				condition: 'needs_maintenance' as const,
+				expectedQuantity: 100000 + i
+			})
+		)
+		return { expectedAssets, expectedStocks }
+	}
+
+	it('fits a 40-asset/10-stock-line room at the maximum serial and name length', () => {
+		const { expectedAssets, expectedStocks } = buildWorstCaseRoom()
+
+		const challenge = buildChallengePayload(
+			1,
+			42,
+			expectedAssets,
+			expectedStocks
+		)
+		const results = buildResultsPayload(
+			1,
+			expectedAssets.map((a) => ({
+				serial: a.serial,
+				observedCondition: a.condition
+			})),
+			expectedStocks.map((s) => ({
+				materialTypeId: s.materialTypeId,
+				condition: s.condition,
+				observedQuantity: s.expectedQuantity
+			}))
+		)
+
+		expect(
+			Buffer.byteLength(JSON.stringify(challenge), 'utf8')
+		).toBeLessThan(QR_LEVEL_L_BYTE_CAPACITY)
+		expect(Buffer.byteLength(JSON.stringify(results), 'utf8')).toBeLessThan(
+			QR_LEVEL_L_BYTE_CAPACITY
+		)
+	})
+
+	it('reads back the same expected assets and stock lines that went into the challenge', () => {
+		const { expectedAssets, expectedStocks } = buildRealisticRoom()
+		const challenge = buildChallengePayload(
+			1,
+			42,
+			expectedAssets,
+			expectedStocks
+		)
+
+		expect(decodeChallengePayload(challenge)).toEqual({
+			expected: expectedAssets,
+			expectedStocks
+		})
+	})
+
+	it('reads back the same results that went into the results payload', () => {
+		const results = [
+			{ serial: 'A1', observedCondition: 'damaged' as const },
+			{ serial: 'A2' }
+		]
+		const stockResults = [
+			{
+				materialTypeId: 3,
+				condition: 'fair' as const,
+				observedQuantity: 7
+			}
+		]
+
+		const payload = buildResultsPayload(1, results, stockResults)
+
+		expect(decodeResultsPayload(payload)).toEqual({ results, stockResults })
+	})
+
 	it('signs and verifies a session with no stock lines (a room with no material_stocks rows)', () => {
 		const challenge = buildChallengePayload(1, 42, expectedAssets, [])
 
@@ -169,9 +275,7 @@ describe('inventory session challenge/results round trip', () => {
 
 		const tampered = {
 			...results,
-			results: [
-				{ serial: 'A808834', observedCondition: 'damaged' as const }
-			]
+			results: [['A808834', 3]]
 		}
 
 		expect(verifyResultsPayload(tampered)).toBe(false)
@@ -186,13 +290,7 @@ describe('inventory session challenge/results round trip', () => {
 
 		const tampered = {
 			...results,
-			stockResults: [
-				{
-					materialTypeId: 1,
-					condition: 'good' as const,
-					observedQuantity: 999
-				}
-			]
+			stockResults: [[1, 0, 999]]
 		}
 
 		expect(verifyResultsPayload(tampered)).toBe(false)

@@ -9,7 +9,7 @@ import { InventorySessionExpectedAssetDB } from '../schema/inventory-session-ins
 import { InventorySessionScanDB } from '../schema/inventory-session-scans'
 import { InventorySessionDB } from '../schema/inventory-sessions'
 import { InventorySessionController } from './inventory-sessions-controller'
-import { buildResultsPayload } from './payload'
+import { buildResultsPayload, decodeChallengePayload } from './payload'
 
 // Controller tests exercise the authorization and status-transition guards
 // called out in docs/superpowers/specs/2026-09-09-scan-reconciliation-design.md's
@@ -145,8 +145,9 @@ describe('InventorySessionController.createChallenge', () => {
 			validUnitIds: [100]
 		})
 
-		expect(payload.expected).toEqual([])
-		expect(payload.expectedStocks).toEqual([
+		const decoded = decodeChallengePayload(payload)
+		expect(decoded.expected).toEqual([])
+		expect(decoded.expectedStocks).toEqual([
 			{
 				materialTypeId: 5,
 				materialTypeName: 'Đạn AK',
@@ -287,7 +288,7 @@ describe('InventorySessionController.submitResults', () => {
 		)
 		const tampered = {
 			...results,
-			results: [{ serial: 'A1', observedCondition: 'damaged' as const }]
+			results: [['A1', 3]]
 		}
 
 		await expect(controller.submitResults(tampered)).rejects.toThrow()

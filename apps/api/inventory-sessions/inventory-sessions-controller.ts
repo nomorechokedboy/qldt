@@ -17,6 +17,7 @@ import {
 import inventorySessionRepo from './inventory-sessions-repo'
 import {
 	buildChallengePayload,
+	decodeResultsPayload,
 	INVENTORY_SESSION_PAYLOAD_VERSION,
 	InventorySessionChallengeAsset,
 	InventorySessionChallengeStock,
@@ -320,7 +321,9 @@ export class InventorySessionController {
 			)
 		}
 
-		const serials = payload.results.map((r) => r.serial)
+		const { results, stockResults } = decodeResultsPayload(payload)
+
+		const serials = results.map((r) => r.serial)
 		const matchedAssets = await this.repo.findAssetsBySerials(serials)
 		const assetIdBySerial = new Map(
 			matchedAssets.map((a) => [a.serialNumber, a.id])
@@ -329,16 +332,14 @@ export class InventorySessionController {
 		// Extras (a serial with no matching material_assets row) get assetId:
 		// null and are still recorded - they never block completion, they just
 		// surface in the diff for the reviewer to act on.
-		const scanParams: InventorySessionScanParams[] = payload.results.map(
-			(r) => ({
-				sessionId: payload.sid,
-				serialNumber: r.serial,
-				assetId: assetIdBySerial.get(r.serial) ?? null,
-				observedCondition: r.observedCondition ?? null
-			})
-		)
+		const scanParams: InventorySessionScanParams[] = results.map((r) => ({
+			sessionId: payload.sid,
+			serialNumber: r.serial,
+			assetId: assetIdBySerial.get(r.serial) ?? null,
+			observedCondition: r.observedCondition ?? null
+		}))
 		const stockCountParams: InventorySessionStockCountParams[] =
-			payload.stockResults.map((r) => ({
+			stockResults.map((r) => ({
 				sessionId: payload.sid,
 				materialTypeId: r.materialTypeId,
 				condition: r.condition,

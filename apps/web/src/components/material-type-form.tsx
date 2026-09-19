@@ -12,6 +12,7 @@ import {
 	DialogTrigger
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import { MAX_MATERIAL_TYPE_NAME_LENGTH } from '@/lib/material-limits'
 import { Label } from '@/components/ui/label'
 import {
 	Select,
@@ -98,6 +99,7 @@ export default function MaterialTypeForm({ onSuccess }: MaterialTypeFormProps) {
 							id='material-type-name'
 							value={name}
 							onChange={(e) => setName(e.target.value)}
+							maxLength={MAX_MATERIAL_TYPE_NAME_LENGTH}
 							placeholder='vd: Súng AK, Ghế, Giường'
 							required
 						/>

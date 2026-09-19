@@ -8,6 +8,7 @@ import {
 	MaterialTypeQuery,
 	UpdateMaterialTypeMap
 } from '../schema/material-types'
+import { assertMaxLength, MAX_MATERIAL_TYPE_NAME_LENGTH } from './limits'
 import materialTypeRepo from './material-types-repo'
 
 class controller {
@@ -22,6 +23,10 @@ class controller {
 			)
 		}
 
+		for (const p of params) {
+			assertMaxLength('name', p.name, MAX_MATERIAL_TYPE_NAME_LENGTH)
+		}
+
 		return this.repo.create(params).catch(AppError.handleAppErr)
 	}
 
@@ -33,6 +38,14 @@ class controller {
 		if (params.length === 0) {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument('No record IDs provided')
+			)
+		}
+
+		for (const p of params) {
+			assertMaxLength(
+				'name',
+				p.updatePayload.name,
+				MAX_MATERIAL_TYPE_NAME_LENGTH
 			)
 		}
 

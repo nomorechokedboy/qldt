@@ -189,6 +189,19 @@ describe('studentController.find by unit', () => {
 	})
 })
 
+describe('studentController.find outside the callers scope', () => {
+	it('refuses to list another companys students', async () => {
+		await expectApiError(
+			studentController.find({ unitId: ids.c2 }, [
+				ids.c1,
+				ids.c1bch,
+				ids.c1p1
+			]),
+			ErrCode.PermissionDenied
+		)
+	})
+})
+
 describe('studentController.find without a unit', () => {
 	it('is limited to the units the caller may see', async () => {
 		const students = await studentController.find({}, [ids.c2bch, ids.c2p1])
@@ -321,5 +334,81 @@ describe('studentController.handleExportStudentDataDynamic', () => {
 			studentController.handleExportStudentDataDynamic(request(999999)),
 			ErrCode.NotFound
 		)
+	})
+})
+
+// What the authz middleware computes for the leader of company 1: the unit
+// itself and everything below it.
+describe('studentController.create scope', () => {
+	const c1Scope = () => [ids.c1, ids.c1bch, ids.c1p1]
+
+	const newStudent = (fullName: string, unitId: number): StudentParam => ({
+		fullName,
+		rank: 'Binh nhat',
+		position: 'Chien si',
+		politicalOrg: 'hcyu',
+		unitId,
+		birthPlaceProvinceCode: '11',
+		birthPlaceWardCode: '267',
+		addressProvinceCode: '11',
+		addressWardCode: '267'
+	})
+
+	const stored = async (fullName: string) =>
+		(await studentRepo.find({ unitIds: allUnitIds() })).filter(
+			(s) => s.fullName === fullName
+		)
+
+	it('creates students in the callers own unit and its descendants', async () => {
+		const created = await studentController.create(
+			[
+				newStudent('Hotel Own', ids.c1),
+				newStudent('India Child', ids.c1p1)
+			],
+			c1Scope()
+		)
+
+		expect(created).toHaveLength(2)
+		expect(await stored('Hotel Own')).toHaveLength(1)
+		expect(await stored('India Child')).toHaveLength(1)
+	})
+
+	it('rejects a student addressed to another company and stores nothing', async () => {
+		await expectApiError(
+			studentController.create(
+				[
+					newStudent('Juliet Own', ids.c1),
+					newStudent('Kilo Foreign', ids.c2p1)
+				],
+				c1Scope()
+			),
+			ErrCode.PermissionDenied
+		)
+
+		expect(await stored('Juliet Own')).toHaveLength(0)
+		expect(await stored('Kilo Foreign')).toHaveLength(0)
+	})
+
+	it('rejects a student without a unit', async () => {
+		await expectApiError(
+			studentController.create(
+				[{ ...newStudent('Lima Nowhere', ids.c1), unitId: undefined }],
+				c1Scope()
+			),
+			ErrCode.InvalidArgument
+		)
+	})
+
+	it('does not let an update move a student into another company', async () => {
+		const [own] = await studentController.create(
+			[newStudent('Mike Mover', ids.c1)],
+			c1Scope()
+		)
+
+		await expectApiError(
+			studentController.update([{ ...own, unitId: ids.c2 }], c1Scope()),
+			ErrCode.PermissionDenied
+		)
+		expect((await stored('Mike Mover'))[0].unitId).toBe(ids.c1)
 	})
 })

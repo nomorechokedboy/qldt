@@ -36,7 +36,13 @@ export const AddMaterialStock = api(
 	async (
 		body: AddMaterialStockRequest
 	): Promise<AddMaterialStockResponse> => {
-		const created = await materialStockController.create(body.data)
+		const callMeta = currentRequest() as APICallMeta
+		const validUnitIds = callMeta.middlewareData?.validUnitIds || []
+
+		const created = await materialStockController.create(
+			body.data,
+			validUnitIds
+		)
 
 		setAuditContext({
 			resourceIds: created.map((s) => s.id),

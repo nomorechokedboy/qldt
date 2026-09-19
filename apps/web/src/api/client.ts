@@ -936,18 +936,24 @@ export namespace inventory_sessions {
 		action: 'apply' | 'ignore'
 	}
 
-	export interface InventorySessionChallengeAsset {
-		serial: string
-		materialTypeName: string
-		condition: schema.MaterialConditionName
-	}
-
+	/**
+	 * Wire shapes (what travels in the QR codes and the results request body).
+	 * Rows are positional arrays:
+	 * expected:       [serial, typeIndex, conditionCode]
+	 * expectedStocks: [materialTypeId, typeIndex, conditionCode, expectedQuantity]
+	 * results:        [serial, observedConditionCode | null]
+	 * stockResults:   [materialTypeId, conditionCode, observedQuantity]
+	 * typeIndex points into `types`. They are typed as loose arrays because
+	 * Encore's schema parser has no tuple support; the decode* functions below
+	 * check each row's shape.
+	 */
 	export interface InventorySessionChallengePayload {
-		v: 2
+		v: 3
 		sid: number
 		roomId: number
-		expected: InventorySessionChallengeAsset[]
-		expectedStocks: InventorySessionChallengeStock[]
+		types: string[]
+		expected: (string | number)[][]
+		expectedStocks: number[][]
 		/**
 		 * Per-session HMAC key, derived from appConfig.HASH_SECRET (see
 		 * deriveSessionKey below) and included here so the phone - which never
@@ -959,13 +965,6 @@ export namespace inventory_sessions {
 		key: string
 
 		sig: string
-	}
-
-	export interface InventorySessionChallengeStock {
-		materialTypeId: number
-		materialTypeName: string
-		condition: schema.MaterialConditionName
-		expectedQuantity: number
 	}
 
 	export interface InventorySessionDiffItem {
@@ -1002,24 +1001,11 @@ export namespace inventory_sessions {
 		updatedAt: string
 	}
 
-	/**
-	 * InventorySessionResultItem/InventorySessionStockResultItem must not gain
-	 * new fields without updating canonicalResults() below AND
-	 * apps/scan-app/src/lib/payload.ts's hand-mirrored canonicalResults() in
-	 * lockstep - this function's explicit key-order rebuild silently drops any
-	 * field not listed here, while the phone's pass-through silently keeps it,
-	 * producing a signature mismatch instead of an obvious error.
-	 */
-	export interface InventorySessionResultItem {
-		serial: string
-		observedCondition?: schema.MaterialConditionName
-	}
-
 	export interface InventorySessionResultsPayload {
-		v: 2
+		v: 3
 		sid: number
-		results: InventorySessionResultItem[]
-		stockResults: InventorySessionStockResultItem[]
+		results: (string | number | null)[][]
+		stockResults: number[][]
 		sig: string
 	}
 
@@ -1054,12 +1040,6 @@ export namespace inventory_sessions {
 		materialTypeId: number
 		condition: string
 		action: 'apply' | 'ignore'
-	}
-
-	export interface InventorySessionStockResultItem {
-		materialTypeId: number
-		condition: schema.MaterialConditionName
-		observedQuantity: number
 	}
 
 	export class ServiceClient {

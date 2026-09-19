@@ -17,6 +17,8 @@ import {
 import { MaterialAssetEventParams } from '../schema/material-asset-events'
 import materialAssetRepo from './material-assets-repo'
 import materialAssetEventRepo from './material-asset-events-repo'
+import { assertMaxLength, MAX_MATERIAL_ASSET_SERIAL_LENGTH } from './limits'
+import { assertRefsInUnitScope, refsAfterUpdate } from './unit-scope'
 import type { ExportMaterialAssetsRequest } from './material-assets'
 
 class controller {
@@ -27,6 +29,7 @@ class controller {
 
 	async create(
 		params: MaterialAssetParams[],
+		validUnitIds: number[],
 		actorUserId?: number
 	): Promise<MaterialAssetDB[]> {
 		log.trace('MaterialAssetController.create params', { params })
@@ -36,6 +39,15 @@ class controller {
 				AppError.invalidArgument('Empty request data')
 			)
 		}
+
+		for (const p of params) {
+			assertMaxLength(
+				'serialNumber',
+				p.serialNumber,
+				MAX_MATERIAL_ASSET_SERIAL_LENGTH
+			)
+		}
+		await assertRefsInUnitScope(params, validUnitIds)
 
 		const created = await this.repo
 			.create(params)
@@ -88,6 +100,18 @@ class controller {
 				)
 			)
 		}
+
+		for (const p of params) {
+			assertMaxLength(
+				'serialNumber',
+				p.updatePayload.serialNumber,
+				MAX_MATERIAL_ASSET_SERIAL_LENGTH
+			)
+		}
+		await assertRefsInUnitScope(
+			refsAfterUpdate(params, existing),
+			validUnitIds
+		)
 
 		const beforeById = new Map<number, MaterialAsset | undefined>()
 		for (const id of ids) {

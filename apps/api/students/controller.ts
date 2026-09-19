@@ -352,7 +352,7 @@ export class Controller {
 			)
 
 			if (isAuthorized === false) {
-				AppError.handleAppErr(
+				throw AppError.handleAppErr(
 					AppError.unauthorized(
 						"You don't have permission to read one of those studentId"
 					)

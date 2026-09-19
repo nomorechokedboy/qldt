@@ -15,12 +15,16 @@ import {
 	UpdateMaterialStockMap
 } from '../schema/material-stocks'
 import materialStockRepo from './material-stocks-repo'
+import { assertRefsInUnitScope, refsAfterUpdate } from './unit-scope'
 import type { ExportMaterialStocksRequest } from './material-stocks'
 
 class controller {
 	constructor(private readonly repo: MaterialStockRepository) {}
 
-	async create(params: MaterialStockParams[]): Promise<MaterialStockDB[]> {
+	async create(
+		params: MaterialStockParams[],
+		validUnitIds: number[]
+	): Promise<MaterialStockDB[]> {
 		log.trace('MaterialStockController.create params', { params })
 
 		if (params.length === 0) {
@@ -28,6 +32,8 @@ class controller {
 				AppError.invalidArgument('Empty request data')
 			)
 		}
+
+		await assertRefsInUnitScope(params, validUnitIds)
 
 		return this.repo.create(params).catch(AppError.handleAppErr)
 	}
@@ -54,6 +60,11 @@ class controller {
 				)
 			)
 		}
+
+		await assertRefsInUnitScope(
+			refsAfterUpdate(params, existing),
+			validUnitIds
+		)
 
 		return this.repo
 			.update(params as UpdateMaterialStockMap)

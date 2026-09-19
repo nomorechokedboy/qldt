@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/select'
 import { useCreateMaterialAsset } from '@/hooks/useCreateMaterialAsset'
 import { getErrorMessage } from '@/lib/utils'
+import { MAX_MATERIAL_ASSET_SERIAL_LENGTH } from '@/lib/material-limits'
 import type { MaterialType, Room, Student, Unit } from '@/types'
 import { Plus } from 'lucide-react'
 import { useState } from 'react'
@@ -136,6 +137,7 @@ export default function MaterialAssetForm({
 						<Label htmlFor='asset-serial'>Số sê-ri</Label>
 						<Input
 							id='asset-serial'
+							maxLength={MAX_MATERIAL_ASSET_SERIAL_LENGTH}
 							value={serialNumber}
 							onChange={(e) => setSerialNumber(e.target.value)}
 							required
