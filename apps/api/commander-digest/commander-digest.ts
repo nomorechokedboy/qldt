@@ -48,7 +48,7 @@ export const ExportCommanderDigest = api.raw(
 			const validUnitIds = callMeta.middlewareData?.validUnitIds || []
 			const recipientId = Number(getAuthData()!.userID)
 
-			const unit = await unitRepo.getOne({ id })
+			const unit = await unitRepo.findOne({ id })
 			if (unit === undefined) {
 				throw APIError.invalidArgument(`Unit not found: ${id}`)
 			}

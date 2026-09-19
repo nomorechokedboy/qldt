@@ -7,11 +7,28 @@ import {
 	Unit,
 	units,
 	UnitQuery,
-	UnitLevelName,
+	UnitFilter,
+	UnitRelations,
 	UpdateUnitMap
 } from '../schema/units'
 import { handleDatabaseErr } from '../utils'
-import { and, eq, inArray, isNull, SQL } from 'drizzle-orm'
+import { and, asc, eq, inArray, isNull, like, or, SQL } from 'drizzle-orm'
+
+function relationsToWith(relations?: UnitRelations) {
+	const withClause: Record<string, unknown> = {}
+	if (relations?.parent) {
+		withClause.parent = true
+	}
+	if (relations?.children === 'deep') {
+		withClause.children = {
+			with: { children: { with: { parent: true } }, parent: true }
+		}
+	} else if (relations?.children) {
+		withClause.children = true
+	}
+
+	return Object.keys(withClause).length > 0 ? withClause : undefined
+}
 
 class repo implements Repository {
 	constructor(private readonly db: DrizzleDatabase) {}
@@ -60,93 +77,83 @@ class repo implements Repository {
 			.catch(handleDatabaseErr)
 	}
 
-	async find(query: UnitQuery): Promise<Unit[]> {
-		const baseQuery = this.db.query.units
+	async find(query: UnitQuery = {}): Promise<Unit[]> {
+		// An explicit empty id list matches nothing, it must not silently
+		// widen into "every unit".
+		if (query.ids !== undefined && query.ids.length === 0) {
+			return []
+		}
+
 		const conditions: SQL[] = []
+		if (query.ids !== undefined) {
+			conditions.push(inArray(units.id, query.ids))
+		}
+		if (query.alias !== undefined) {
+			conditions.push(eq(units.alias, query.alias))
+		}
 		if (query.level !== undefined) {
 			conditions.push(eq(units.level, query.level))
 		}
-
-		if (query.ids !== undefined && query.ids.length > 0) {
-			conditions.push(inArray(units.id, query.ids))
+		if (query.parentId !== undefined) {
+			conditions.push(
+				query.parentId === null
+					? isNull(units.parentId)
+					: eq(units.parentId, query.parentId)
+			)
+		}
+		const search = query.search?.trim()
+		if (search) {
+			const pattern = `%${search}%`
+			conditions.push(
+				or(like(units.alias, pattern), like(units.name, pattern))!
+			)
 		}
 
-		return baseQuery
-			.findMany({
-				where:
-					conditions.length === 1
-						? conditions[0]
-						: and(...conditions),
-				with: {
-					children: true,
-					parent: true
-				}
-			})
-			.catch(handleDatabaseErr) as unknown as Array<Unit>
-	}
-	async findAll(): Promise<Unit[]> {
+		const paginate = query.pageSize !== undefined
+		const pageSize = paginate ? Math.max(1, query.pageSize!) : undefined
+		const offset =
+			pageSize !== undefined
+				? (Math.max(1, query.page ?? 1) - 1) * pageSize
+				: undefined
+
 		return this.db.query.units
 			.findMany({
-				with: {
-					children: true,
-					parent: true
-				}
+				where: and(...conditions),
+				with: relationsToWith(query.with) as never,
+				orderBy: asc(units.id),
+				limit: pageSize,
+				offset
 			})
-			.catch(handleDatabaseErr)
+			.catch(handleDatabaseErr) as unknown as Promise<Unit[]>
 	}
 
-	findOne(params: {
-		alias: string
-		level: UnitLevelName
-	}): Promise<Unit | undefined> {
+	async findOne(
+		filter: UnitFilter,
+		opts?: { with?: UnitRelations }
+	): Promise<Unit | undefined> {
+		const conditions = Object.entries(filter)
+			.filter(([, value]) => value !== undefined)
+			.map(([key, value]) => {
+				const column = units[key as keyof UnitFilter]
+
+				return value === null
+					? isNull(column)
+					: eq(column, value as never)
+			})
+
+		if (conditions.length === 0) {
+			throw new Error(
+				'UnitRepo.findOne: at least one filter field is required'
+			)
+		}
+
 		return this.db.query.units
 			.findFirst({
-				where: and(
-					eq(units.alias, params.alias),
-					eq(units.level, params.level)
-				),
-				with: {
-					children: true,
-					parent: true
-				}
+				where: and(...conditions),
+				with: relationsToWith(opts?.with) as never,
+				orderBy: asc(units.id)
 			})
 			.catch(handleDatabaseErr) as unknown as Promise<Unit | undefined>
-	}
-
-	findByIds(ids: number[]): Promise<UnitDB[]> {
-		return this.db.query.units
-			.findMany({ where: inArray(units.id, ids) })
-			.catch(handleDatabaseErr)
-	}
-
-	findById(
-		id: number,
-		opts?: {
-			with: { children?: boolean; parent?: boolean }
-		}
-	): Promise<UnitDB | undefined> {
-		const withClause: Record<string, boolean> = {}
-
-		if (opts?.with?.children) {
-			withClause.children = true
-		}
-
-		if (opts?.with?.parent) {
-			withClause.parent = true
-		}
-
-		return this.db.query.units
-			.findFirst({
-				where: eq(units.id, id),
-				with: withClause
-			})
-			.catch(handleDatabaseErr)
-	}
-
-	findRoot(): Promise<UnitDB | undefined> {
-		return this.db.query.units
-			.findFirst({ where: isNull(units.parentId) })
-			.catch(handleDatabaseErr)
 	}
 
 	// Returns the unit itself plus every ancestor up to the root, nearest
@@ -168,45 +175,6 @@ class repo implements Repository {
 		}
 
 		return chain
-	}
-
-	getOne(params: Partial<Unit>): Promise<Unit | undefined> {
-		// Check if params is empty or has no valid fields
-		if (!params || Object.keys(params).length === 0) {
-			throw new Error(
-				'Invalid parameters: at least one field must be provided'
-			)
-		}
-
-		// Dynamically build where conditions based on provided fields
-		const conditions = Object.entries(params)
-			.filter(([_, value]) => value !== undefined && value !== null)
-			.map(([key, value]) => eq(units[key as keyof typeof units], value))
-
-		// If no valid conditions were built, throw error
-		if (conditions.length === 0) {
-			throw new Error('Invalid parameters: no valid fields provided')
-		}
-
-		const baseQuery = this.db.query.units
-
-		return baseQuery
-			.findFirst({
-				where:
-					conditions.length === 1
-						? conditions[0]
-						: and(...conditions),
-				with: {
-					children: {
-						with: {
-							children: { with: { parent: true } },
-							parent: true
-						}
-					},
-					parent: true
-				}
-			})
-			.catch(handleDatabaseErr)
 	}
 }
 

@@ -43,7 +43,7 @@ import unitRepo from '../units/repo'
 import unitStatsRepo from '../units/stats-repo'
 import positionRepo from '../positions/repo'
 import locationsRepo from '../locations/repo'
-import { Unit, UnitLevelName } from '../schema/units'
+import { Unit } from '../schema/units'
 import log from 'encore.dev/log'
 import dayjs from 'dayjs'
 import quarterOfYear from 'dayjs/plugin/quarterOfYear.js'
@@ -328,29 +328,16 @@ export class Controller {
 	}
 
 	async find(
-		{ unitAlias, unitLevel, ...q }: GetStudentsQuery,
+		{ unitId, ...q }: GetStudentsQuery,
 		validUnitIds: number[]
 	): Promise<Student[]> {
-		const isUnitAliasExist = unitAlias !== undefined
-		const isUnitLevelExist = unitLevel !== undefined
-		const isUnitQueryParamsValid = isUnitAliasExist && isUnitLevelExist
-
-		if (
-			(isUnitAliasExist && !isUnitLevelExist) ||
-			(!isUnitAliasExist && isUnitLevelExist)
-		) {
-			throw AppError.invalidArgument('missing unitAlias or unitLevel')
-		}
-
-		if (isUnitQueryParamsValid) {
+		if (unitId !== undefined) {
 			const u = await this.unitRepo
-				.findOne({ alias: unitAlias, level: unitLevel })
+				.findOne({ id: unitId })
 				.catch(AppError.handleAppErr)
 			if (u === undefined) {
 				throw AppError.handleAppErr(
-					AppError.notFound(
-						`unit with alias: ${unitAlias} and level: ${unitLevel} not found`
-					)
+					AppError.notFound(`unit with id: ${unitId} not found`)
 				)
 			}
 
@@ -558,9 +545,9 @@ export class Controller {
 		const descendantIdsPerUnit = await Promise.all(
 			unitIds.map((id) => unitStatsRepo.findDescendantUnitIds(id))
 		)
-		const descendantUnits = await this.unitRepo.findByIds(
-			Array.from(new Set(descendantIdsPerUnit.flat()))
-		)
+		const descendantUnits = await this.unitRepo.find({
+			ids: Array.from(new Set(descendantIdsPerUnit.flat()))
+		})
 		if (descendantUnits.length === 0) {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument('Invalid unitIds')
@@ -586,7 +573,7 @@ export class Controller {
 			if (u.parentId !== null) {
 				unitNodeById
 					.get(u.parentId)
-					?.children.push(unitNodeById.get(u.id) as Unit)
+					?.children?.push(unitNodeById.get(u.id) as Unit)
 			}
 		}
 		const units = unitIds
@@ -863,8 +850,6 @@ export class Controller {
 		try {
 			log.info('ExportUnitRosterExtract starting')
 			const {
-				unitAlias,
-				unitLevel,
 				unitName,
 				underUnitName,
 				city,
@@ -872,34 +857,31 @@ export class Controller {
 				commanderPosition,
 				commanderRank,
 				date,
-				reportTitle
+				reportTitle,
+				unitId
 			} = req
 
-			const rootUnit = await this.unitRepo.findOne({
-				alias: unitAlias,
-				level: unitLevel as UnitLevelName
-			})
-			if (rootUnit === undefined) {
-				AppError.handleAppErr(
-					AppError.notFound(
-						`unit with alias: ${unitAlias} and level: ${unitLevel} not found`
-					)
-				)
-			}
-
-			const unitIds = await unitStatsRepo.findDescendantUnitIds(
-				rootUnit.id
-			)
-			const unitList = await unitRepo.findByIds(unitIds)
-
-			const students = await this.repo.find({ unitIds })
-
+			// findDescendantUnitIds includes the root itself, so this one
+			// lookup yields both the root and every descendant (a unit
+			// is addressed by id here, never by alias/level, which repeats
+			// across the tree).
+			const descendantIds =
+				await unitStatsRepo.findDescendantUnitIds(unitId)
+			const unitList = await this.unitRepo.find({ ids: descendantIds })
 			const rosterUnits: RosterUnitNode[] = unitList.map((u) => ({
 				id: u.id,
 				name: u.name,
 				parentId: u.parentId,
 				level: u.level
 			}))
+			const rosterRootUnit = rosterUnits.find((u) => u.id === unitId)
+			if (rosterRootUnit === undefined) {
+				throw AppError.handleAppErr(
+					AppError.notFound(`unit with id: ${unitId} not found`)
+				)
+			}
+
+			const students = await this.repo.find({ unitIds: descendantIds })
 			const rosterStudents: RosterStudent[] = students.map((s) => ({
 				fullName: s.fullName ?? '',
 				rank: s.rank ?? '',
@@ -915,13 +897,6 @@ export class Controller {
 				priority: p.priority,
 				category: p.group
 			}))
-
-			const rosterRootUnit = {
-				id: rootUnit.id,
-				name: rootUnit.name,
-				parentId: undefined,
-				level: rootUnit.level
-			}
 
 			const rows = buildRosterRows(
 				rosterRootUnit,

@@ -50,7 +50,7 @@ class repo {
 
 	async getDigestUnits(): Promise<Unit[]> {
 		return this.unitRepo
-			.find({})
+			.find()
 			.then((units) =>
 				units.filter(
 					(u) =>

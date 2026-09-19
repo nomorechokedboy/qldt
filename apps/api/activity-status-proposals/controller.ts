@@ -34,7 +34,7 @@ class controller {
 	}
 
 	private async assertUnitIsBattalionOrAbove(unitId: number): Promise<void> {
-		const unit = (await unitRepo.findByIds([unitId]))[0]
+		const unit = await unitRepo.findOne({ id: unitId })
 		if (unit === undefined) {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(`Unit not found: ${unitId}`)

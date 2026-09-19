@@ -18,7 +18,6 @@ import dayjs from 'dayjs'
 import { readFile } from 'fs/promises'
 import path from 'path'
 import { AppError } from '../errors/index.js'
-import { UnitLevelName } from '../schema/units.js'
 import { Unit } from '../units/units.js'
 import { notiTopic } from '../topics/index.js'
 import * as v from 'valibot'
@@ -196,8 +195,6 @@ export interface GetStudentsQuery {
 	isEthnicMinority?: boolean
 	isMarried?: boolean
 	politicalOrg?: 'hcyu' | 'cpv'
-	unitAlias?: string
-	unitLevel?: UnitLevelName
 	isCpvOfficialThisWeek?: boolean
 	cpvOfficialInMonth?: Month
 	cpvOfficialInQuarter?: Quarter
@@ -489,8 +486,7 @@ export const ExportStudentDataDynamic = api.raw(
 )
 
 const ExportUnitRosterExtractRequestSchema = v.object({
-	unitAlias: v.string(),
-	unitLevel: v.string(),
+	unitId: v.number(),
 	unitName: v.string(),
 	underUnitName: v.string(),
 	city: v.string(),

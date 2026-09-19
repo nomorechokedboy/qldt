@@ -17,7 +17,7 @@ export async function buildCommanderDigestExport(
 	id: number,
 	recipientId: number
 ): Promise<Uint8Array> {
-	const unit = await unitRepo.getOne({ id })
+	const unit = await unitRepo.findOne({ id })
 	if (unit === undefined) {
 		throw AppError.handleAppErr(
 			AppError.invalidArgument(`Unit not found: ${id}`)

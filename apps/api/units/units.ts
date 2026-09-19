@@ -1,4 +1,4 @@
-import { api, Query } from 'encore.dev/api'
+import { api } from 'encore.dev/api'
 import { UnitDB as SchemaUnitDB, UnitLevelName, UnitParams } from '../schema'
 import unitController from './controller'
 import unitRepo from './repo'
@@ -205,7 +205,7 @@ export const UpdateUnits = api(
 			(u) => ({ ...u }) as SchemaUnitDB
 		)
 		const ids = units.map((u) => u.id)
-		const previous = await unitRepo.findByIds(ids)
+		const previous = await unitRepo.find({ ids })
 		const updated = await unitController.update(units, validUnitIds, actor)
 
 		setAuditContext({
@@ -219,13 +219,7 @@ export const UpdateUnits = api(
 )
 
 interface GetUnitRequest {
-	id?: Query<number>
-
-	alias: string
-	name?: Query<string>
-	level?: Query<UnitLevelName>
-
-	parentId?: Query<number> | null
+	id: number
 }
 
 interface GetUnitResponse {
@@ -233,17 +227,13 @@ interface GetUnitResponse {
 }
 
 export const GetUnit = api(
-	{ auth: true, expose: true, method: 'GET', path: '/units/:alias' },
-	async ({ level, ...params }: GetUnitRequest): Promise<GetUnitResponse> => {
+	{ auth: true, expose: true, method: 'GET', path: '/units/:id' },
+	async ({ id }: GetUnitRequest): Promise<GetUnitResponse> => {
 		const callMeta = currentRequest() as APICallMeta
 		const validUnitIds = callMeta.middlewareData?.validUnitIds || []
 
 		const data = await unitController
-			.findOne({
-				...params,
-				level: level as UnitLevelName | undefined,
-				validUnitIds
-			})
+			.findOne(id, validUnitIds)
 			.then((resp) => (resp === undefined ? resp : ({ ...resp } as Unit)))
 		return { data }
 	}
