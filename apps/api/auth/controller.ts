@@ -46,54 +46,43 @@ class controller {
 	) {}
 
 	async genTokens(user: UserDB): Promise<TokenResponse> {
-		try {
-			// Get user permissions from RBAC system
-			const permissions = await authzController.getUserPermissions(
-				user.id
-			)
+		// Get user permissions from RBAC system
+		const permissions = await authzController.getUserPermissions(user.id)
 
-			const accessPayload: Omit<TokenPayload, 'iat' | 'exp'> = {
-				userId: user.id,
-				isSuperUser: user.isSuperUser,
-				status: user.status,
-				permissions,
-				type: 'access'
-				// validUnitIds computed dynamically in middleware
-			}
-
-			const refreshPayload: Omit<TokenPayload, 'iat' | 'exp'> = {
-				userId: user.id,
-				isSuperUser: user.isSuperUser,
-				status: user.status,
-				permissions: [], // Refresh tokens don't need permissions
-				type: 'refresh'
-			}
-
-			const accessToken = await this.genToken(
-				accessPayload,
-				appConfig.JWT_PRIVATE_KEY,
-				{
-					expiresIn: '30m'
-				}
-			)
-
-			const refreshToken = await this.genToken(
-				refreshPayload,
-				appConfig.JWT_PRIVATE_KEY,
-				{
-					expiresIn: '7d'
-				}
-			)
-
-			return { accessToken, refreshToken }
-		} catch (error) {
-			console.error('Test', error)
-			log.error('AuthController.genTokens Error generating tokens', {
-				error,
-				userId: user.id
-			})
-			throw AppError.internal('Failed to generate tokens')
+		const accessPayload: Omit<TokenPayload, 'iat' | 'exp'> = {
+			userId: user.id,
+			isSuperUser: user.isSuperUser,
+			status: user.status,
+			permissions,
+			type: 'access'
+			// validUnitIds computed dynamically in middleware
 		}
+
+		const refreshPayload: Omit<TokenPayload, 'iat' | 'exp'> = {
+			userId: user.id,
+			isSuperUser: user.isSuperUser,
+			status: user.status,
+			permissions: [], // Refresh tokens don't need permissions
+			type: 'refresh'
+		}
+
+		const accessToken = await this.genToken(
+			accessPayload,
+			appConfig.JWT_PRIVATE_KEY,
+			{
+				expiresIn: '30m'
+			}
+		)
+
+		const refreshToken = await this.genToken(
+			refreshPayload,
+			appConfig.JWT_PRIVATE_KEY,
+			{
+				expiresIn: '7d'
+			}
+		)
+
+		return { accessToken, refreshToken }
 	}
 
 	async genToken(
@@ -110,13 +99,13 @@ class controller {
 
 			return token
 		} catch (error) {
-			console.error('Test', error)
-
 			log.error('AuthController.genToken error generating tokens', {
 				error,
 				userId: payload.userId
 			})
-			throw AppError.internal('Failed to generate tokens')
+			throw AppError.handleAppErr(
+				AppError.internal('Failed to generate tokens')
+			)
 		}
 	}
 
@@ -128,12 +117,18 @@ class controller {
 			}) as TokenPayload
 		} catch (err) {
 			if (err instanceof jwt.JsonWebTokenError) {
-				throw AppError.unauthenticated('Invalid token')
+				throw AppError.handleAppErr(
+					AppError.unauthenticated('Invalid token')
+				)
 			}
 			if (err instanceof jwt.TokenExpiredError) {
-				throw AppError.unauthenticated('Token expired')
+				throw AppError.handleAppErr(
+					AppError.unauthenticated('Token expired')
+				)
 			}
-			throw AppError.internal('Token verification failed')
+			throw AppError.handleAppErr(
+				AppError.internal('Token verification failed')
+			)
 		}
 	}
 
@@ -147,92 +142,100 @@ class controller {
 		log.trace('AuthController.login request', { req })
 		const { username, password } = req
 
-		try {
-			const user = await this.userRepo
-				.findOne({ username } as UserDB)
-				.catch(AppError.handleAppErr)
-
-			const isPasswordMatch = await this.verifyPwd(
-				user.password,
-				password
+		const user = await this.userRepo
+			.findOne({ username } as UserDB)
+			.catch(AppError.handleAppErr)
+		if (user === undefined) {
+			throw AppError.handleAppErr(
+				AppError.invalidArgument('username or password is incorrect')
 			)
-			if (isPasswordMatch === false) {
-				throw AppError.invalidArgument(
-					'username or password is incorrect'
-				)
-			}
-
-			const tokens = await this.genTokens(user)
-			log.info('User logged in successfully', {
-				userId: user.id,
-				username: user.username
-			})
-
-			return { ...tokens }
-		} catch (err) {
-			log.error('AuthController.login error', { err })
-			AppError.handleAppErr(err)
 		}
+
+		const isPasswordMatch = await this.verifyPwd(user.password, password)
+		if (isPasswordMatch === false) {
+			throw AppError.handleAppErr(
+				AppError.invalidArgument('username or password is incorrect')
+			)
+		}
+
+		const tokens = await this.genTokens(user)
+		log.info('User logged in successfully', {
+			userId: user.id,
+			username: user.username
+		})
+
+		return { ...tokens }
 	}
 
 	async refreshToken(req: RefreshTokenRequest): Promise<TokenResponse> {
-		try {
-			const { userId, isSuperUser, type } = this.verifyToken(req.token)
-			if (type !== 'refresh') {
-				throw AppError.unauthenticated('Invalid token type')
-			}
-
-			const user = await this.userRepo
-				.findOne({ id: userId } as UserDB)
-				.catch(AppError.handleAppErr)
-
-			const permissions = await authzController.getUserPermissions(userId)
-
-			const accessToken = await this.genToken(
-				{
-					userId,
-					permissions,
-					type: 'access',
-					isSuperUser,
-					status: user.status
-				},
-				appConfig.JWT_PRIVATE_KEY,
-				{
-					expiresIn: '30m'
-				}
+		const { userId, isSuperUser, type } = this.verifyToken(req.token)
+		if (type !== 'refresh') {
+			throw AppError.handleAppErr(
+				AppError.unauthenticated('Invalid token type')
 			)
-
-			return { accessToken, refreshToken: req.token }
-		} catch (err) {
-			log.error('AuthController.refreshToken err', { err })
-			AppError.handleAppErr(err)
 		}
+
+		const user = await this.userRepo
+			.findOne({ id: userId } as UserDB)
+			.catch(AppError.handleAppErr)
+		if (user === undefined) {
+			throw AppError.handleAppErr(
+				AppError.unauthenticated('Invalid token')
+			)
+		}
+
+		const permissions = await authzController.getUserPermissions(userId)
+
+		const accessToken = await this.genToken(
+			{
+				userId,
+				permissions,
+				type: 'access',
+				isSuperUser,
+				status: user.status
+			},
+			appConfig.JWT_PRIVATE_KEY,
+			{
+				expiresIn: '30m'
+			}
+		)
+
+		return { accessToken, refreshToken: req.token }
 	}
 
 	async changePassword(params: ChangePasswordRequest) {
 		log.trace('AuthController.changePassword params', { params })
 
-		try {
-			const user = await this.userRepo.findOne({
-				id: params.userId
-			} as UserDB)
-			const isOldPwdMatchPwd = await this.verifyPwd(
-				user.password,
-				params.prevPassword
-			)
-			if (isOldPwdMatchPwd === false) {
-				throw AppError.invalidArgument('Incorrect password')
-			}
+		const user = await this.userRepo
+			.findOne({ id: params.userId } as UserDB)
+			.catch(AppError.handleAppErr)
+		if (user === undefined) {
+			throw AppError.handleAppErr(AppError.notFound('User not found'))
+		}
 
-			const hashPwd = await argon2.hash(params.password, {
+		const isOldPwdMatchPwd = await this.verifyPwd(
+			user.password,
+			params.prevPassword
+		)
+		if (isOldPwdMatchPwd === false) {
+			throw AppError.handleAppErr(
+				AppError.invalidArgument('Incorrect password')
+			)
+		}
+
+		let hashPwd: string
+		try {
+			hashPwd = await argon2.hash(params.password, {
 				secret: Buffer.from(appConfig.HASH_SECRET)
 			})
-
-			await this.userRepo.update({ id: user.id, password: hashPwd })
 		} catch (err) {
-			log.error('AuthController.changePassword error', { err })
-			AppError.handleAppErr(err)
+			log.error('AuthController.changePassword hash error', { err })
+			throw AppError.handleAppErr(AppError.internal('Internal error'))
 		}
+
+		await this.userRepo
+			.update({ id: user.id, password: hashPwd })
+			.catch(AppError.handleAppErr)
 	}
 }
 

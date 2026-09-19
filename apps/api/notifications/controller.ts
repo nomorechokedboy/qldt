@@ -129,24 +129,27 @@ export class Controller {
 			async ([type, idSet]) => {
 				const ids = Array.from(idSet)
 
-				try {
-					switch (type) {
-						case 'students': {
-							const studentData = await this.studentRepo.find({
-								ids
+				switch (type) {
+					case 'students': {
+						// A failed lookup only drops this enrichment, not the
+						// whole notification list.
+						const studentData = await this.studentRepo
+							.find({ ids })
+							.catch((error) => {
+								console.error(
+									`Error loading ${type} data:`,
+									error
+								)
+								return []
 							})
-							return {
-								type,
-								data: studentData || []
-							}
+						return {
+							type,
+							data: studentData || []
 						}
-						default:
-							console.warn(`Unknown notifiable type: ${type}`)
-							return { type, data: [] }
 					}
-				} catch (error) {
-					console.error(`Error loading ${type} data:`, error)
-					return { type, data: [] }
+					default:
+						console.warn(`Unknown notifiable type: ${type}`)
+						return { type, data: [] }
 				}
 			}
 		)

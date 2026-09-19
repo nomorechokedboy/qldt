@@ -629,130 +629,141 @@ export class Controller {
 		return { data, units }
 	}
 
-	getTemplate(templateType: TemplateType): Promise<Buffer> {
-		if (this.templateMap[templateType] === undefined || '') {
-			throw AppError.invalidArgument('Invalid template file')
+	async getTemplate(templateType: TemplateType): Promise<Buffer> {
+		const templateFile = this.templateMap[templateType]
+		if (templateFile === undefined || templateFile === '') {
+			throw AppError.handleAppErr(
+				AppError.invalidArgument('Invalid template file')
+			)
 		}
 
-		const templateFile = this.templateMap[templateType]
-		const templatePath = path.join('./templates', templateFile)
-		return readFile(templatePath)
+		try {
+			return await readFile(path.join('./templates', templateFile))
+		} catch (err) {
+			log.error('StudentController.getTemplate error', {
+				err,
+				templateType
+			})
+			throw AppError.handleAppErr(
+				AppError.internal('Internal error for exporting file')
+			)
+		}
 	}
 
 	async handleExportStudentData(
 		req: ExportStudentDataRequest
 	): Promise<Uint8Array> {
-		try {
-			log.info('ExportStudentData starting')
-			const {
-				city,
-				data,
-				date,
-				underUnitName,
-				unitName,
-				commanderPosition,
-				commanderName,
-				commanderRank,
-				templateType
-			} = req
+		log.info('ExportStudentData starting')
+		const {
+			city,
+			data,
+			date,
+			underUnitName,
+			unitName,
+			commanderPosition,
+			commanderName,
+			commanderRank,
+			templateType
+		} = req
 
-			// Prepare rows data
-			const rows: Record<string, any>[] = data.map((student, idx) => {
-				Object.keys(student).forEach((col) => {
-					let cellValue = student[col]
+		// Prepare rows data
+		const rows: Record<string, any>[] = data.map((student, idx) => {
+			Object.keys(student).forEach((col) => {
+				let cellValue = student[col]
 
-					if (cellValue === null || cellValue === undefined) {
-						cellValue = ''
-					} else if (typeof cellValue === 'boolean') {
-						cellValue = cellValue ? 'Có' : 'Không'
-					} else if (Array.isArray(cellValue)) {
-						cellValue =
-							cellValue.length > 0 ? cellValue.join(', ') : ''
-					} else {
-						cellValue = String(cellValue)
-					}
-
-					return cellValue
-				})
-
-				if (templateType === 'CpvTempl') {
-					const ethnic = student['ethnic']
-					const isKinh = ethnic === 'Kinh'
-					const isTay = ethnic === 'Tày'
-					const isNung = ethnic === 'Nùng '
-					if (isKinh || isTay || isNung) {
-						student['ethnic'] = 'Không'
-					}
+				if (cellValue === null || cellValue === undefined) {
+					cellValue = ''
+				} else if (typeof cellValue === 'boolean') {
+					cellValue = cellValue ? 'Có' : 'Không'
+				} else if (Array.isArray(cellValue)) {
+					cellValue = cellValue.length > 0 ? cellValue.join(', ') : ''
+				} else {
+					cellValue = String(cellValue)
 				}
 
-				return { idx: ++idx, ...student }
+				return cellValue
 			})
 
-			const dateObj = dayjs(date)
-			const day = dateObj.format('DD')
-			const month = dateObj.format('MM')
-			const year = dateObj.year()
-
-			const templateData: ExcelTemplateData = {
-				city,
-				commanderName,
-				commanderPosition,
-				commanderRank,
-				day,
-				month,
-				rows,
-				underUnitName,
-				unitName,
-				year
+			if (templateType === 'CpvTempl') {
+				const ethnic = student['ethnic']
+				const isKinh = ethnic === 'Kinh'
+				const isTay = ethnic === 'Tày'
+				const isNung = ethnic === 'Nùng '
+				if (isKinh || isTay || isNung) {
+					student['ethnic'] = 'Không'
+				}
 			}
 
-			const template = await this.getTemplate(templateType!)
+			return { idx: ++idx, ...student }
+		})
 
-			let templData: any = {}
-			if (templateType === 'StudentEnrollmentFormTempl') {
-				const stu = rows.at(0)
-				if (stu === undefined) {
-					AppError.handleAppErr(
-						AppError.invalidArgument('Student data is empty')
-					)
-				}
+		const dateObj = dayjs(date)
+		const day = dateObj.format('DD')
+		const month = dateObj.format('MM')
+		const year = dateObj.year()
 
-				const leafUnitId: number | undefined = stu.unit?.id
-				if (leafUnitId === undefined) {
-					AppError.handleAppErr(
-						AppError.internal('Student has no unit assigned')
-					)
-				}
+		const templateData: ExcelTemplateData = {
+			city,
+			commanderName,
+			commanderPosition,
+			commanderRank,
+			day,
+			month,
+			rows,
+			underUnitName,
+			unitName,
+			year
+		}
 
-				// Nearest-first ancestor chain, e.g. [squad, platoon, company,
-				// battalion] - always shown in full, root included.
-				const chain = await this.unitRepo
-					.findAncestorChain(leafUnitId)
-					.catch(AppError.handleAppErr)
-				stu.donVi = chain
-					.map((u) => u.name)
-					.reverse()
-					.join(', ')
+		const template = await this.getTemplate(templateType!)
 
-				const { rows: _, ...templateDataWithoutRows } = templateData
-				templData = {
-					stu,
-					unit: {
-						name: unitName,
-						parentName: underUnitName
-					},
-					...templateDataWithoutRows
-				}
-			} else {
-				templData = { ...templateData }
+		let templData: any = {}
+		if (templateType === 'StudentEnrollmentFormTempl') {
+			const stu = rows.at(0)
+			if (stu === undefined) {
+				throw AppError.handleAppErr(
+					AppError.invalidArgument('Student data is empty')
+				)
 			}
 
-			// Get the student's avatar key from storage
-			// Assuming the avatar key is stored in the student data
-			const studentAvatarKey = rows[0]?.avatar || 'default-avatar.png'
+			const leafUnitId: number | undefined = stu.unit?.id
+			if (leafUnitId === undefined) {
+				throw AppError.handleAppErr(
+					AppError.internal('Student has no unit assigned')
+				)
+			}
 
+			// Nearest-first ancestor chain, e.g. [squad, platoon, company,
+			// battalion] - always shown in full, root included.
+			const chain = await this.unitRepo
+				.findAncestorChain(leafUnitId)
+				.catch(AppError.handleAppErr)
+			stu.donVi = chain
+				.map((u) => u.name)
+				.reverse()
+				.join(', ')
+
+			const { rows: _, ...templateDataWithoutRows } = templateData
+			templData = {
+				stu,
+				unit: {
+					name: unitName,
+					parentName: underUnitName
+				},
+				...templateDataWithoutRows
+			}
+		} else {
+			templData = { ...templateData }
+		}
+
+		// Get the student's avatar key from storage
+		// Assuming the avatar key is stored in the student data
+		const studentAvatarKey = rows[0]?.avatar || 'default-avatar.png'
+
+		// Rendering failures are not AppErrors, so only this step is wrapped.
+		try {
 			// Generate the report with image from object storage
-			const buffer = await createReport({
+			return await createReport({
 				template,
 				data: templData,
 				cmdDelimiter: ['{', '}'],
@@ -765,8 +776,6 @@ export class Controller {
 					)
 				}
 			})
-
-			return buffer
 		} catch (err) {
 			console.error('handleExportStudentData error', err)
 			log.error('handleExportStudentData error', { err })
@@ -778,44 +787,46 @@ export class Controller {
 	async handleExportStudentDataDynamic(
 		req: ExportStudentDataDynamicRequest
 	): Promise<Uint8Array> {
+		log.info('ExportStudentDataDynamic starting')
+		const {
+			city,
+			commanderName,
+			commanderPosition,
+			commanderRank,
+			data,
+			rawData,
+			date,
+			reportTitle,
+			underUnitName,
+			unitName,
+			templateId
+		} = req
+
+		const rows = data.map(normalizeRowForDocx)
+		const columns = deriveColumns(rows)
+		// Raw, unflattened records for custom templates that need nested
+		// {FOR} loops (e.g. childrenInfos/siblings) instead of the
+		// flattened rows/columns table, which only supports one string
+		// value per cell.
+		const troopers = (rawData ?? []).map(normalizeRawForDocx)
+
+		const dateObj = dayjs(date)
+		const day = dateObj.format('DD')
+		const month = dateObj.format('MM')
+		const year = dateObj.year()
+
+		const customTemplate =
+			templateId !== undefined
+				? await exportTemplateController.getTemplateFile(templateId)
+				: undefined
+
+		// File and rendering failures are not AppErrors, so only they are wrapped.
 		try {
-			log.info('ExportStudentDataDynamic starting')
-			const {
-				city,
-				commanderName,
-				commanderPosition,
-				commanderRank,
-				data,
-				rawData,
-				date,
-				reportTitle,
-				underUnitName,
-				unitName,
-				templateId
-			} = req
-
-			const rows = data.map(normalizeRowForDocx)
-			const columns = deriveColumns(rows)
-			// Raw, unflattened records for custom templates that need nested
-			// {FOR} loops (e.g. childrenInfos/siblings) instead of the
-			// flattened rows/columns table, which only supports one string
-			// value per cell.
-			const troopers = (rawData ?? []).map(normalizeRawForDocx)
-
-			const dateObj = dayjs(date)
-			const day = dateObj.format('DD')
-			const month = dateObj.format('MM')
-			const year = dateObj.year()
-
 			const template =
-				templateId !== undefined
-					? await exportTemplateController.getTemplateFile(templateId)
-					: await readFile(
-							path.join(
-								'./templates',
-								'dynamic-docx-template.docx'
-							)
-						)
+				customTemplate ??
+				(await readFile(
+					path.join('./templates', 'dynamic-docx-template.docx')
+				))
 
 			return await createReport({
 				template,
