@@ -42,11 +42,15 @@ jobs:
               with:
                   distribution: temurin
                   java-version: 17
-            - name: Setup Android SDK
-              uses: android-actions/setup-android@v3
+            # The runner image already ships the Android SDK; only the NDK
+            # version Tauri builds against and the platform are pinned here.
+            # (android-actions/setup-android fails on this image: it tries to
+            # install the removed 'tools' package.)
             - name: Install Android platform and NDK
               run: |
-                  sdkmanager "platforms;android-36" "build-tools;36.0.0" "ndk;27.2.12479018"
+                  SDKMANAGER=$(ls "$ANDROID_HOME"/cmdline-tools/*/bin/sdkmanager | head -1)
+                  yes | "$SDKMANAGER" --licenses > /dev/null || true
+                  "$SDKMANAGER" "platforms;android-36" "build-tools;36.0.0" "ndk;27.2.12479018"
                   echo "NDK_HOME=$ANDROID_HOME/ndk/27.2.12479018" >> $GITHUB_ENV
             - name: Setup Rust
               uses: dtolnay/rust-toolchain@stable
@@ -73,24 +77,26 @@ jobs:
                   PROPS
             - name: Build signed release (APK and AAB)
               if: env.ANDROID_KEYSTORE_BASE64 != ''
-              working-directory: ${{ env.APP_DIR }}
-              run: pnpm tauri android build --apk --aab
+              uses: tauri-apps/tauri-action@v0
+              with:
+                  projectPath: ${{ env.APP_DIR }}
+                  tauriScript: pnpm tauri
+                  mobile: android
+                  args: --apk --aab
+                  uploadWorkflowArtifacts: true
+                  workflowArtifactNamePattern: scan-app-android-[bundle]
             # An unsigned release APK cannot be installed, so without a
             # keystore secret fall back to an installable debug build.
             - name: Build debug APK (no keystore configured)
               if: env.ANDROID_KEYSTORE_BASE64 == ''
-              working-directory: ${{ env.APP_DIR }}
-              run: |
-                  echo "::warning::ANDROID_KEYSTORE_BASE64 is not set - building a debug APK instead of a signed release"
-                  pnpm tauri android build --debug --apk
-            - name: Upload Android artifacts
-              uses: actions/upload-artifact@v4
+              uses: tauri-apps/tauri-action@v0
               with:
-                  name: scan-app-android
-                  path: |
-                      ${{ env.APP_DIR }}/src-tauri/gen/android/app/build/outputs/apk/**/*.apk
-                      ${{ env.APP_DIR }}/src-tauri/gen/android/app/build/outputs/bundle/**/*.aab
-                  if-no-files-found: error
+                  projectPath: ${{ env.APP_DIR }}
+                  tauriScript: pnpm tauri
+                  mobile: android
+                  args: --debug --apk
+                  uploadWorkflowArtifacts: true
+                  workflowArtifactNamePattern: scan-app-android-debug
     build-ios:
         if: inputs.platform == 'all' || inputs.platform == 'ios'
         runs-on: macos-latest
@@ -100,6 +106,21 @@ jobs:
         steps:
             - name: Checkout repository
               uses: actions/checkout@v4
+            # Tauri needs the team id even to generate the Xcode project, and
+            # an IPA needs the certificate.
+            - name: Require Apple credentials
+              run: |
+                  missing=0
+                  for name in APPLE_DEVELOPMENT_TEAM APPLE_CERTIFICATE APPLE_CERTIFICATE_PASSWORD APPLE_PROVISIONING_PROFILE; do
+                      if [ -z "${!name}" ]; then
+                          echo "::error::Secret $name is not set"
+                          missing=1
+                      fi
+                  done
+                  exit $missing
+              env:
+                  APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+                  APPLE_PROVISIONING_PROFILE: ${{ secrets.APPLE_PROVISIONING_PROFILE }}
             - name: Setup Node.js
               uses: actions/setup-node@v4
               with:
@@ -132,7 +153,6 @@ jobs:
               working-directory: ${{ env.APP_DIR }}
               run: pnpm tauri ios init
             - name: Import signing certificate and provisioning profile
-              if: env.APPLE_CERTIFICATE != ''
               env:
                   APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
                   APPLE_PROVISIONING_PROFILE: ${{ secrets.APPLE_PROVISIONING_PROFILE }}
@@ -149,21 +169,11 @@ jobs:
                   mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
                   echo "$APPLE_PROVISIONING_PROFILE" | base64 --decode > "$HOME/Library/MobileDevice/Provisioning Profiles/build.mobileprovision"
             - name: Build signed IPA
-              if: env.APPLE_CERTIFICATE != ''
-              working-directory: ${{ env.APP_DIR }}
-              run: pnpm tauri ios build --export-method ${{ vars.APPLE_EXPORT_METHOD || 'release-testing' }}
-            # Without Apple credentials an IPA cannot be produced, but the
-            # Rust and iOS project can still be checked for compile errors.
-            - name: Build for simulator (no Apple credentials configured)
-              if: env.APPLE_CERTIFICATE == ''
-              working-directory: ${{ env.APP_DIR }}
-              run: |
-                  echo "::warning::APPLE_CERTIFICATE is not set - building for the simulator instead of a signed IPA"
-                  pnpm tauri ios build --debug --target aarch64-sim
-            - name: Upload iOS artifacts
-              if: env.APPLE_CERTIFICATE != ''
-              uses: actions/upload-artifact@v4
+              uses: tauri-apps/tauri-action@v0
               with:
-                  name: scan-app-ios
-                  path: ${{ env.APP_DIR }}/src-tauri/gen/apple/build/arm64/*.ipa
-                  if-no-files-found: error
+                  projectPath: ${{ env.APP_DIR }}
+                  tauriScript: pnpm tauri
+                  mobile: ios
+                  args: --export-method ${{ vars.APPLE_EXPORT_METHOD || 'release-testing' }}
+                  uploadWorkflowArtifacts: true
+                  workflowArtifactNamePattern: scan-app-ios-[bundle]

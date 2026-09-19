@@ -39,6 +39,9 @@ jobs:
         runs-on: ubuntu-latest
         env:
             CI: 'true'
+            # Keep in step with the encore.dev version in pnpm-lock.yaml. A
+            # newer CLI tries to re-run `pnpm install` to sync it and fails.
+            ENCORE_VERSION: 1.58.4
             # The API refuses to start without these; the tests only need
             # some value, they never reach a real service.
             HASH_SECRET: ci-hash-secret
@@ -50,7 +53,7 @@ jobs:
               uses: actions/checkout@v4
             - name: Install Encore
               run: |
-                  curl -L https://encore.dev/install.sh | bash
+                  curl -L https://encore.dev/install.sh | bash -s -- "$ENCORE_VERSION"
                   echo "$HOME/.encore/bin" >> $GITHUB_PATH
             - name: Setup Node.js
               uses: actions/setup-node@v4
