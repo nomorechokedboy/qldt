@@ -293,3 +293,33 @@ describe('studentController.handleExportUnitRosterExtract', () => {
 		)
 	})
 })
+
+describe('studentController.handleExportStudentDataDynamic', () => {
+	const request = (templateId?: number) => ({
+		city: 'Ha Noi',
+		commanderName: 'Commander',
+		commanderPosition: 'CT',
+		commanderRank: '1/',
+		data: [{ fullName: 'Alpha C1Bch' }],
+		date: '2026-01-15',
+		reportTitle: 'Roster',
+		underUnitName: 'Under unit',
+		unitName: 'Unit name',
+		templateId
+	})
+
+	it('renders the default template when no custom template is chosen', async () => {
+		const text = await docxText(
+			await studentController.handleExportStudentDataDynamic(request())
+		)
+
+		expect(text).toContain('Alpha C1Bch')
+	})
+
+	it('reports an unknown custom template as not_found', async () => {
+		await expectApiError(
+			studentController.handleExportStudentDataDynamic(request(999999)),
+			ErrCode.NotFound
+		)
+	})
+})
