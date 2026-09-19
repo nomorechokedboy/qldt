@@ -3,136 +3,116 @@ import { religionOptions } from '@/data/religions'
 import { eduLevelOptions } from '@/data/education-levels'
 import useUnitOptions from '@/hooks/useUnitOptions'
 import PlacePickerFields from '@/components/place-picker-fields'
+import { RecordGrid, RecordSection, StepBody } from './record-section'
 
 export default function PersonalStep({ form }: { form: any }) {
 	const { options: unitOptions } = useUnitOptions()
 
 	return (
-		<div className='space-y-6 py-2'>
-			{/* Full Name - Full Width */}
-			<div className='grid grid-cols-2 gap-6'>
-				<form.AppField name='fullName'>
-					{(field: any) => <field.TextField label='Họ và tên' />}
-				</form.AppField>
+		<StepBody>
+			<RecordSection title='Họ tên và nhận dạng'>
+				<RecordGrid>
+					<form.AppField name='fullName'>
+						{(field: any) => <field.TextField label='Họ và tên' />}
+					</form.AppField>
+					<form.AppField name='studentId'>
+						{(field: any) => (
+							<field.TextField label='Mã số quân nhân' />
+						)}
+					</form.AppField>
+					<form.AppField name='dob'>
+						{(field: any) => (
+							<field.DatePicker
+								label='Ngày sinh'
+								placeholder='Ngày/tháng/năm'
+							/>
+						)}
+					</form.AppField>
+					<form.AppField name='phone'>
+						{(field: any) => (
+							<field.TextField
+								label='Số điện thoại'
+								placeholder='0912 345 678'
+							/>
+						)}
+					</form.AppField>
+				</RecordGrid>
+			</RecordSection>
 
-				<form.AppField name='avatar'>
-					{(field: any) => (
-						<field.UploadField
-							label='Ảnh quân nhân'
-							accept='image/*'
-							maxSize={10 * 1024 * 1024}
-							dragDropSize='small'
-							showBrowseButton={false}
+			<RecordSection title='Đơn vị công tác'>
+				<RecordGrid>
+					<form.AppField name='unitId'>
+						{(field: any) => (
+							<field.Select
+								values={unitOptions}
+								label='Đơn vị'
+								placeholder='Chọn đơn vị'
+							/>
+						)}
+					</form.AppField>
+				</RecordGrid>
+			</RecordSection>
+
+			<RecordSection title='Quê quán và trú quán'>
+				<RecordGrid>
+					<div className='space-y-4'>
+						<PlacePickerFields
+							form={form}
+							prefix='birthPlace'
+							label='quê quán'
 						/>
-					)}
-				</form.AppField>
-			</div>
-
-			<div className='grid grid-cols-2 gap-6'>
-				<form.AppField name='studentId'>
-					{(field: any) => (
-						<field.TextField label='Mã số quân nhân' />
-					)}
-				</form.AppField>
-			</div>
-
-			<div className='grid grid-cols-2 gap-6'>
-				<form.AppField name='unitId'>
-					{(field: any) => (
-						<field.Select
-							values={unitOptions}
-							label='Đơn vị'
-							placeholder='Chọn đơn vị'
+					</div>
+					<div className='space-y-4'>
+						<PlacePickerFields
+							form={form}
+							prefix='address'
+							label='trú quán'
 						/>
-					)}
-				</form.AppField>
-			</div>
+					</div>
+				</RecordGrid>
+			</RecordSection>
 
-			{/* Birth Place and Address - each a province/ward picker
-			    plus a narrowed street/detail text field */}
-			<div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-				<div className='space-y-4'>
-					<PlacePickerFields
-						form={form}
-						prefix='birthPlace'
-						label='quê quán'
-					/>
-				</div>
-
-				<div className='space-y-4'>
-					<PlacePickerFields
-						form={form}
-						prefix='address'
-						label='trú quán'
-					/>
-				</div>
-			</div>
-
-			<div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-				<form.AppField name='ethnic'>
-					{(field: any) => (
-						<field.Combobox
-							values={EhtnicOptions}
-							label='Dân tộc'
-							placeholder='Chọn dân tộc'
-							defaultValue={eduLevelOptions[0].value}
-							className=''
-						/>
-					)}
-				</form.AppField>
-
-				<form.AppField name='religion'>
-					{(field: any) => (
-						<field.Select
-							values={religionOptions}
-							label='Tôn giáo'
-							placeholder='Chọn tôn giáo'
-							defaultValue={religionOptions[0].value}
-						/>
-					)}
-				</form.AppField>
-			</div>
-
-			{/* School Name and Major - Two Columns */}
-			<div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
-				<form.AppField name='educationLevel'>
-					{(field: any) => (
-						<field.Select
-							label='Trình độ học vấn'
-							placeholder='Chọn trình độ học vấn'
-							values={eduLevelOptions}
-							defaultValue={eduLevelOptions[5].value}
-						/>
-					)}
-				</form.AppField>
-				<form.AppField name='schoolName'>
-					{(field: any) => <field.TextField label='Tên trường' />}
-				</form.AppField>
-
-				<form.AppField name='major'>
-					{(field: any) => <field.TextField label='Ngành' />}
-				</form.AppField>
-			</div>
-
-			{/* Phone - Full Width */}
-			<div className='grid grid-cols-2 gap-6'>
-				<form.AppField name='phone'>
-					{(field: any) => (
-						<field.TextField
-							label='Số điện thoại'
-							placeholder='123-456-7890'
-						/>
-					)}
-				</form.AppField>
-				<form.AppField name='dob'>
-					{(field: any) => (
-						<field.DatePicker
-							label='Ngày sinh'
-							placeholder='Ngày/tháng/năm'
-						/>
-					)}
-				</form.AppField>
-			</div>
-		</div>
+			<RecordSection title='Dân tộc, tôn giáo và học vấn'>
+				<RecordGrid>
+					<form.AppField name='ethnic'>
+						{(field: any) => (
+							<field.Combobox
+								values={EhtnicOptions}
+								label='Dân tộc'
+								placeholder='Chọn dân tộc'
+								defaultValue={eduLevelOptions[0].value}
+								className=''
+							/>
+						)}
+					</form.AppField>
+					<form.AppField name='religion'>
+						{(field: any) => (
+							<field.Select
+								values={religionOptions}
+								label='Tôn giáo'
+								placeholder='Chọn tôn giáo'
+								defaultValue={religionOptions[0].value}
+							/>
+						)}
+					</form.AppField>
+					<form.AppField name='educationLevel'>
+						{(field: any) => (
+							<field.Select
+								label='Trình độ học vấn'
+								placeholder='Chọn trình độ học vấn'
+								values={eduLevelOptions}
+								defaultValue={eduLevelOptions[5].value}
+							/>
+						)}
+					</form.AppField>
+					<form.AppField name='schoolName'>
+						{(field: any) => <field.TextField label='Tên trường' />}
+					</form.AppField>
+					<form.AppField name='major'>
+						{(field: any) => <field.TextField label='Ngành' />}
+					</form.AppField>
+				</RecordGrid>
+			</RecordSection>
+		</StepBody>
 	)
 }

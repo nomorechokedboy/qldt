@@ -1,14 +1,42 @@
 import SiblingInfo from './sibling-info'
+import { RecordGrid, RecordSection, StepBody } from './record-section'
+
+function ParentColumn({
+	form,
+	prefix,
+	title,
+	labels
+}: {
+	form: any
+	prefix: 'father' | 'mother'
+	title: string
+	labels: { name: string; dob: string; job: string; phone: string }
+}) {
+	return (
+		<RecordSection title={title}>
+			<RecordGrid columns={1}>
+				<form.AppField name={`${prefix}Name`}>
+					{(field: any) => <field.TextField label={labels.name} />}
+				</form.AppField>
+				<form.AppField name={`${prefix}Dob`}>
+					{(field: any) => <field.DatePicker label={labels.dob} />}
+				</form.AppField>
+				<form.AppField name={`${prefix}Job`}>
+					{(field: any) => <field.TextField label={labels.job} />}
+				</form.AppField>
+				<form.AppField name={`${prefix}PhoneNumber`}>
+					{(field: any) => <field.TextField label={labels.phone} />}
+				</form.AppField>
+			</RecordGrid>
+		</RecordSection>
+	)
+}
 
 export default function ParentInfoStep({ form }: { form: any }) {
 	return (
-		<div className='space-y-8 py-2'>
-			<div className='space-y-6'>
-				<h3 className='text-lg font-semibold border-b border-border pb-2'>
-					Thông tin chung về gia cảnh
-				</h3>
-
-				<div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+		<StepBody>
+			<RecordSection title='Gia cảnh'>
+				<RecordGrid>
 					<form.AppField name='familySize'>
 						{(field: any) => (
 							<field.TextField
@@ -17,93 +45,49 @@ export default function ParentInfoStep({ form }: { form: any }) {
 							/>
 						)}
 					</form.AppField>
-
 					<form.AppField name='familyBirthOrder'>
 						{(field: any) => (
 							<field.TextField label='Con thứ bao nhiêu' />
 						)}
 					</form.AppField>
-				</div>
-
-				<div className='grid grid-cols-1 gap-6'>
+				</RecordGrid>
+				<div className='mt-4'>
 					<form.AppField name='familyBackground'>
 						{(field: any) => (
 							<field.TextArea label='Sơ lược hoàn cảnh gia đình' />
 						)}
 					</form.AppField>
 				</div>
-			</div>
+			</RecordSection>
 
-			{/* Father Information */}
-			<div className='space-y-6'>
-				<h3 className='text-lg font-semibold border-b border-border pb-2'>
-					Thông tin về cha
-				</h3>
+			<RecordGrid>
+				<ParentColumn
+					form={form}
+					prefix='father'
+					title='Cha'
+					labels={{
+						name: 'Tên cha',
+						dob: 'Ngày sinh của cha',
+						job: 'Nghề nghiệp cha',
+						phone: 'Số điện thoại cha'
+					}}
+				/>
+				<ParentColumn
+					form={form}
+					prefix='mother'
+					title='Mẹ'
+					labels={{
+						name: 'Tên mẹ',
+						dob: 'Ngày sinh mẹ',
+						job: 'Nghề nghiệp mẹ',
+						phone: 'Số điện thoại mẹ'
+					}}
+				/>
+			</RecordGrid>
 
-				{/* Father Name and Phone - Two Columns */}
-				<div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-					<form.AppField name='fatherName'>
-						{(field: any) => <field.TextField label='Tên cha' />}
-					</form.AppField>
-					<form.AppField name='fatherDob'>
-						{(field: any) => (
-							<field.DatePicker label='Ngày sinh của cha' />
-						)}
-					</form.AppField>
-				</div>
-
-				{/* Father Job - Full Width */}
-				<div className='grid grid-cols-2 gap-6'>
-					<form.AppField name='fatherJob'>
-						{(field: any) => (
-							<field.TextField label='Nghề nghiệp cha' />
-						)}
-					</form.AppField>
-					<form.AppField name='fatherPhoneNumber'>
-						{(field: any) => (
-							<field.TextField label='Số điện thoại cha' />
-						)}
-					</form.AppField>
-				</div>
-			</div>
-
-			{/* Mother Information */}
-			<div className='space-y-6'>
-				<h3 className='text-lg font-semibold border-b border-border pb-2'>
-					Thông tin về mẹ
-				</h3>
-
-				{/* Mother Name and Phone - Two Columns */}
-				<div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-					<form.AppField name='motherName'>
-						{(field: any) => <field.TextField label='Tên mẹ' />}
-					</form.AppField>
-
-					<form.AppField name='motherDob'>
-						{(field: any) => (
-							<field.DatePicker label='Ngày sinh mẹ' />
-						)}
-					</form.AppField>
-				</div>
-
-				{/* Mother Job - Full Width */}
-				<div className='grid grid-cols-2 gap-6'>
-					<form.AppField name='motherJob'>
-						{(field: any) => (
-							<field.TextField label='Nghề nghiệp mẹ' />
-						)}
-					</form.AppField>
-					<form.AppField name='motherPhoneNumber'>
-						{(field: any) => (
-							<field.TextField label='Số điện thoại mẹ' />
-						)}
-					</form.AppField>
-				</div>
-			</div>
-
-			<div className='space-y-6'>
+			<RecordSection title='Anh, chị, em ruột'>
 				<SiblingInfo form={form} />
-			</div>
-		</div>
+			</RecordSection>
+		</StepBody>
 	)
 }

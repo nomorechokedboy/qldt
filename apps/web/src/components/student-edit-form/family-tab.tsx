@@ -1,24 +1,25 @@
-import { Heart, Users } from 'lucide-react'
 import { useStore } from '@tanstack/react-form'
 import ChildrenInfo from '@/components/children-info'
+import {
+	RecordGrid,
+	RecordSection,
+	StepBody
+} from '@/components/record-section'
 import SiblingInfo from '@/components/sibling-info'
-import { FieldGrid, FormSection } from './form-section'
 import type { StudentFormValues } from './form-values'
 import StudentField from './student-field'
 import { useStudentForm } from './student-form-context'
 
 function ParentSection({
 	title,
-	tone,
 	prefix
 }: {
 	title: string
-	tone: 'purple' | 'pink'
 	prefix: 'father' | 'mother'
 }) {
 	return (
-		<FormSection title={title} icon={Users} tone={tone}>
-			<FieldGrid columns={1}>
+		<RecordSection title={title}>
+			<RecordGrid columns={1}>
 				<StudentField name={`${prefix}Name`} label='Họ tên' />
 				<StudentField
 					name={`${prefix}Dob`}
@@ -30,8 +31,8 @@ function ParentSection({
 					name={`${prefix}PhoneNumber`}
 					label='Số điện thoại'
 				/>
-			</FieldGrid>
-		</FormSection>
+			</RecordGrid>
+		</RecordSection>
 	)
 }
 
@@ -52,14 +53,14 @@ export default function FamilyTab() {
 	)
 
 	return (
-		<div className='space-y-6'>
-			<div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-				<ParentSection title='Cha' tone='purple' prefix='father' />
-				<ParentSection title='Mẹ' tone='pink' prefix='mother' />
-			</div>
+		<StepBody>
+			<RecordGrid>
+				<ParentSection title='Cha' prefix='father' />
+				<ParentSection title='Mẹ' prefix='mother' />
+			</RecordGrid>
 
-			<FormSection title='Hôn nhân' icon={Heart} tone='orange'>
-				<FieldGrid>
+			<RecordSection title='Vợ/chồng'>
+				<RecordGrid>
 					<StudentField
 						name='isMarried'
 						label='Đã kết hôn'
@@ -69,7 +70,7 @@ export default function FamilyTab() {
 						<>
 							<StudentField
 								name='spouseName'
-								label='Họ tên Vợ/Chồng'
+								label='Họ tên vợ/chồng'
 							/>
 							<StudentField
 								name='spouseDob'
@@ -82,27 +83,23 @@ export default function FamilyTab() {
 							/>
 							<StudentField
 								name='spousePhoneNumber'
-								label='SĐT Vợ/Chồng'
+								label='SĐT vợ/chồng'
 							/>
 						</>
 					)}
-				</FieldGrid>
-			</FormSection>
+				</RecordGrid>
+			</RecordSection>
 
-			<FormSection title={`Con (${childCount})`} icon={Users} tone='cyan'>
+			<RecordSection title={`Con (${childCount})`}>
 				<ChildrenInfo form={form} />
-			</FormSection>
+			</RecordSection>
 
-			<FormSection
-				title={`Anh chị em ruột (${siblingCount})`}
-				icon={Users}
-				tone='teal'
-			>
+			<RecordSection title={`Anh, chị, em ruột (${siblingCount})`}>
 				<SiblingInfo form={form} />
-			</FormSection>
+			</RecordSection>
 
-			<FormSection title='Hoàn cảnh gia đình' icon={Users} tone='indigo'>
-				<FieldGrid>
+			<RecordSection title='Hoàn cảnh gia đình'>
+				<RecordGrid columns={3}>
 					<StudentField
 						name='familyBackground'
 						label='Hoàn cảnh gia đình'
@@ -113,8 +110,8 @@ export default function FamilyTab() {
 						kind='number'
 					/>
 					<StudentField name='familyBirthOrder' label='Con thứ mấy' />
-				</FieldGrid>
-			</FormSection>
-		</div>
+				</RecordGrid>
+			</RecordSection>
+		</StepBody>
 	)
 }

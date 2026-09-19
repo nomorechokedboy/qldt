@@ -1,10 +1,13 @@
-import { Shield, Star } from 'lucide-react'
+import {
+	RecordGrid,
+	RecordSection,
+	StepBody
+} from '@/components/record-section'
 import { activityStatusOptions } from '@/data/activity-statuses'
 import { politicalOptions } from '@/data/political-status'
 import { rankOptions } from '@/data/ranks'
 import usePositionOptions from '@/hooks/usePositionOptions'
 import useUnitOptions from '@/hooks/useUnitOptions'
-import { FieldGrid, FormSection } from './form-section'
 import StudentField from './student-field'
 
 export default function MilitaryTab() {
@@ -12,9 +15,9 @@ export default function MilitaryTab() {
 	const { options: unitOptions } = useUnitOptions()
 
 	return (
-		<div className='space-y-6'>
-			<FormSection title='Quân sự' icon={Shield} tone='green'>
-				<FieldGrid>
+		<StepBody>
+			<RecordSection title='Quân sự'>
+				<RecordGrid columns={3}>
 					<StudentField
 						name='rank'
 						label='Cấp bậc'
@@ -45,11 +48,11 @@ export default function MilitaryTab() {
 						kind='select'
 						options={activityStatusOptions}
 					/>
-				</FieldGrid>
-			</FormSection>
+				</RecordGrid>
+			</RecordSection>
 
-			<FormSection title='Chính trị' icon={Star} tone='yellow'>
-				<FieldGrid>
+			<RecordSection title='Chính trị'>
+				<RecordGrid columns={3}>
 					<StudentField
 						name='politicalOrg'
 						label='Tổ chức'
@@ -67,8 +70,8 @@ export default function MilitaryTab() {
 						kind='date'
 					/>
 					<StudentField name='cpvId' label='Số thẻ Đảng' />
-				</FieldGrid>
-			</FormSection>
-		</div>
+				</RecordGrid>
+			</RecordSection>
+		</StepBody>
 	)
 }
