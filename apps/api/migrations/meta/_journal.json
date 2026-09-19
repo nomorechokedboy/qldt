@@ -225,6 +225,13 @@
 			"when": 1789516674170,
 			"tag": "0031_tiny_wolfpack",
 			"breakpoints": true
+		},
+		{
+			"idx": 32,
+			"version": "6",
+			"when": 1789810988437,
+			"tag": "0032_material_types_name_unit_unique",
+			"breakpoints": true
 		}
 	]
 }
