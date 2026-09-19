@@ -1,44 +1,28 @@
 name: Continuous Integration
 on:
-    push:
-        branches:
-            - main
+    workflow_dispatch:
+        inputs:
+            component:
+                description: What to test and build
+                type: choice
+                options:
+                    - all
+                    - api
+                    - web
+                    - cron
+                default: all
 env:
     REGISTRY: ghcr.io
     IMAGE_PREFIX: ${{ github.repository_owner }}
 jobs:
-    detect-changes:
-        runs-on: ubuntu-latest
-        outputs:
-            api: ${{ steps.filter.outputs.api }}
-            web: ${{ steps.filter.outputs.web }}
-            cron: ${{ steps.filter.outputs.cron }}
-        steps:
-            - name: Checkout repository
-              uses: actions/checkout@v4
-            - name: Check for changes
-              uses: dorny/paths-filter@v3
-              id: filter
-              with:
-                  filters: |
-                      api:
-                        - 'apps/api/**'
-                        - 'packages/eslint-config/**'
-                        - 'package.json'
-                        - 'pnpm-lock.yaml'
-                      web:
-                        - 'apps/web/**'
-                        - 'packages/eslint-config/**'
-                        - 'package.json'
-                        - 'pnpm-lock.yaml'
-                      cron:
-                        - 'deploy/cron/**'
     test-api:
-        needs: detect-changes
-        if: needs.detect-changes.outputs.api == 'true'
+        if: inputs.component == 'all' || inputs.component == 'api'
         runs-on: ubuntu-latest
         env:
             CI: 'true'
+            # Keep in step with the encore.dev version in pnpm-lock.yaml. A
+            # newer CLI tries to re-run `pnpm install` to sync it and fails.
+            ENCORE_VERSION: 1.58.4
             # The API refuses to start without these; the tests only need
             # some value, they never reach a real service.
             HASH_SECRET: ci-hash-secret
@@ -50,7 +34,7 @@ jobs:
               uses: actions/checkout@v4
             - name: Install Encore
               run: |
-                  curl -L https://encore.dev/install.sh | bash
+                  curl -L https://encore.dev/install.sh | bash -s -- "$ENCORE_VERSION"
                   echo "$HOME/.encore/bin" >> $GITHUB_PATH
             - name: Setup Node.js
               uses: actions/setup-node@v4
@@ -75,8 +59,7 @@ jobs:
               working-directory: apps/api
               run: encore test --run
     test-web:
-        needs: detect-changes
-        if: needs.detect-changes.outputs.web == 'true'
+        if: inputs.component == 'all' || inputs.component == 'web'
         runs-on: ubuntu-latest
         steps:
             - name: Checkout repository
@@ -103,8 +86,8 @@ jobs:
               working-directory: apps/web
               run: pnpm test
     build-api:
-        needs: [detect-changes, test-api]
-        if: needs.detect-changes.outputs.api == 'true'
+        needs: test-api
+        if: inputs.component == 'all' || inputs.component == 'api'
         runs-on: ubuntu-latest
         permissions:
             contents: read
@@ -171,8 +154,8 @@ jobs:
             - name: Image digest
               run: echo "API image pushed successfully"
     build-web:
-        needs: [detect-changes, test-web]
-        if: needs.detect-changes.outputs.web == 'true'
+        needs: test-web
+        if: inputs.component == 'all' || inputs.component == 'web'
         runs-on: ubuntu-latest
         permissions:
             contents: read
@@ -209,8 +192,7 @@ jobs:
                   build-args: |
                       VITE_API_URL=${{ vars.WEB_VITE_API_URL }}
     build-cron:
-        needs: detect-changes
-        if: needs.detect-changes.outputs.cron == 'true'
+        if: inputs.component == 'all' || inputs.component == 'cron'
         runs-on: ubuntu-latest
         permissions:
             contents: read
