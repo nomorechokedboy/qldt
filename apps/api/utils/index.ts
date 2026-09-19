@@ -27,7 +27,7 @@ export type SQLiteErrorCode =
 // so the end user knows exactly what to change.
 const UNIQUE_FIELD_LABELS: Record<string, string> = {
 	'material_assets.serialNumber': 'Số hiệu (serial) này',
-	'material_types.name': 'Tên loại vật tư này',
+	'material_types.name': 'Tên loại vật tư cùng đơn vị tính này',
 	'units.alias': 'Mã đơn vị này',
 	'units.name': 'Tên đơn vị này',
 	'users.username': 'Tên đăng nhập này',

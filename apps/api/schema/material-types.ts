@@ -33,16 +33,20 @@ const MaterialCategoryEnum = sqlite.customType<{
 	}
 })
 
-export const materialTypes = sqlite.sqliteTable('material_types', {
-	...baseSchema,
-	name: sqlite.text().unique().notNull(),
-	category: MaterialCategoryEnum('category')
-		.$type<MaterialCategoryName>()
-		.notNull(),
-	unitOfMeasure: sqlite.text().default('cái'),
-	isSerialized: sqlite.int({ mode: 'boolean' }).default(false).notNull(),
-	images: sqlite.text({ mode: 'json' }).default(sql`'[]'`)
-})
+export const materialTypes = sqlite.sqliteTable(
+	'material_types',
+	{
+		...baseSchema,
+		name: sqlite.text().notNull(),
+		category: MaterialCategoryEnum('category')
+			.$type<MaterialCategoryName>()
+			.notNull(),
+		unitOfMeasure: sqlite.text().default('cái'),
+		isSerialized: sqlite.int({ mode: 'boolean' }).default(false).notNull(),
+		images: sqlite.text({ mode: 'json' }).default(sql`'[]'`)
+	},
+	(t) => [sqlite.unique().on(t.name, t.unitOfMeasure)]
+)
 
 export const materialTypesRelations = relations(materialTypes, () => ({}))
 

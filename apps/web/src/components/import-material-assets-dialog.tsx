@@ -39,6 +39,7 @@ import type { materials } from '@/api/client'
 import type { Room, Student } from '@/types'
 import useUnitOptions from '@/hooks/useUnitOptions'
 import { MAX_MATERIAL_ASSET_SERIAL_LENGTH } from '@/lib/material-limits'
+import { buildMaterialTypeOptions } from '@/lib/material-type-options'
 
 export interface ImportMaterialAssetsDialogProps {
 	unitId: number
@@ -89,9 +90,9 @@ export function ImportMaterialAssetsDialog({
 	// ImportMaterialStocksDialog instead.
 	const materialTypeOptions = useMemo(
 		() =>
-			materialTypes
-				.filter((t) => t.isSerialized)
-				.map((t) => ({ id: t.id, label: t.name })),
+			buildMaterialTypeOptions(
+				materialTypes.filter((t) => t.isSerialized)
+			),
 		[materialTypes]
 	)
 

@@ -16,6 +16,7 @@ import {
 } from 'lucide-react'
 import useImportMaterialStocks from '@/hooks/useImportMaterialStocks'
 import useUnitOptions from '@/hooks/useUnitOptions'
+import { buildMaterialTypeOptions } from '@/lib/material-type-options'
 import useRoomsData from '@/hooks/useRoomsData'
 import useMaterialTypesData from '@/hooks/useMaterialTypesData'
 import { materialConditionOptions } from '@/data/material-categories'
@@ -75,9 +76,9 @@ export function ImportMaterialStocksDialog({
 	// types (weapons etc.) go through ImportMaterialAssetsDialog instead.
 	const materialTypeOptions = useMemo(
 		() =>
-			materialTypes
-				.filter((t) => !t.isSerialized)
-				.map((t) => ({ id: t.id, label: t.name })),
+			buildMaterialTypeOptions(
+				materialTypes.filter((t) => !t.isSerialized)
+			),
 		[materialTypes]
 	)
 
