@@ -12,7 +12,9 @@ import {
 	SelectValue
 } from '@/components/ui/select'
 import { useUpdateUnits } from '@/hooks/useUpdateUnits'
-import useUnitsData from '@/hooks/useUnitsData'
+import UnitSelect from '@/components/unit/select'
+import useUnitOptions from '@/hooks/useUnitOptions'
+import { buildUnitOptions } from '@/lib/unit-options'
 import useUnitData from '@/hooks/useUnitData'
 import useAuth from '@/hooks/useAuth'
 import {
@@ -96,7 +98,7 @@ function UnitEditFormBody({ unitData, onUpdate, onClose }: UnitEditFormProps) {
 		commanderValuesFromUnit(unitData)
 	)
 
-	const { data: allUnits } = useUnitsData()
+	const { units: allUnits, unitsById } = useUnitOptions()
 	const updateUnitMutation = useUpdateUnits()
 	const { user } = useAuth()
 
@@ -116,10 +118,10 @@ function UnitEditFormBody({ unitData, onUpdate, onClose }: UnitEditFormProps) {
 		? rootUnitLevelOptions
 		: levelOptionsUnderRoot(rootUnit?.level)
 
-	const parentOptions =
-		allUnits?.filter(
-			(u) => u.id !== unitData.id && isLargerUnitLevel(u.level, level)
-		) ?? []
+	const parentOptions = allUnits.filter(
+		(u) => u.id !== unitData.id && isLargerUnitLevel(u.level, level)
+	)
+	const parentSelectOptions = buildUnitOptions(parentOptions, { unitsById })
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
@@ -226,21 +228,17 @@ function UnitEditFormBody({ unitData, onUpdate, onClose }: UnitEditFormProps) {
 				<div className='space-y-2'>
 					<Label htmlFor='edit-unit-parent'>Thuộc đơn vị</Label>
 					{isSuperAdmin ? (
-						<Select value={parentId} onValueChange={setParentId}>
-							<SelectTrigger id='edit-unit-parent'>
-								<SelectValue placeholder='Chọn đơn vị cấp trên' />
-							</SelectTrigger>
-							<SelectContent>
-								<SelectItem value={NO_PARENT}>
-									Không có (đơn vị gốc)
-								</SelectItem>
-								{parentOptions.map((u) => (
-									<SelectItem key={u.id} value={String(u.id)}>
-										{u.name}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
+						<UnitSelect
+							id='edit-unit-parent'
+							options={parentSelectOptions}
+							value={parentId}
+							onValueChange={setParentId}
+							placeholder='Chọn đơn vị cấp trên'
+							noneOption={{
+								value: NO_PARENT,
+								label: 'Không có (đơn vị gốc)'
+							}}
+						/>
 					) : (
 						<>
 							<Input

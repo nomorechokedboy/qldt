@@ -11,9 +11,8 @@ import { unitLevelLabels, unitLevelOrder } from '@/data/unit-levels'
 import useCreateStudents from '@/hooks/useCreateStudents'
 import usePositionsData from '@/hooks/usePositionsData'
 import useProvinces from '@/hooks/useProvinces'
-import useUnitsData from '@/hooks/useUnitsData'
+import useUnitOptions from '@/hooks/useUnitOptions'
 import useWards from '@/hooks/useWards'
-import { buildUnitsById, unitLabelWithAncestry } from '@/lib/unit-labels'
 import {
 	AlertCircle,
 	ArrowRight,
@@ -49,7 +48,7 @@ export function ImportStudentsDialog({
 	onClose,
 	onSuccess
 }: ImportStudentsDialogProps) {
-	const { data: units = [] } = useUnitsData(undefined, { enabled: isOpen })
+	const { options: unitOptions } = useUnitOptions({ enabled: isOpen })
 	const { data: positions = [] } = usePositionsData(undefined, {
 		enabled: isOpen
 	})
@@ -58,20 +57,6 @@ export function ImportStudentsDialog({
 	// per-province cascading dropdown sheet and the name->code lookup used
 	// when parsing the uploaded file back.
 	const { data: wards = [] } = useWards(undefined, { enabled: isOpen })
-
-	// `units` is already a flat list of every unit the caller is
-	// authorized for (each row also carries a shallow `children`
-	// relation), so mapping directly avoids re-adding non-root units
-	// a second time via `.children`.
-	const unitsById = useMemo(() => buildUnitsById(units), [units])
-	const unitOptions = useMemo(
-		() =>
-			units.map((u) => ({
-				id: u.id,
-				label: unitLabelWithAncestry(u, unitsById)
-			})),
-		[units, unitsById]
-	)
 
 	const positionOptions = useMemo(
 		() =>

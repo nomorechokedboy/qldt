@@ -24,12 +24,12 @@ import {
 import { Textarea } from '@/components/ui/textarea'
 import { isDirectPromotion } from '@/data/rank-order'
 import { rankOptions } from '@/data/ranks'
-import { isBattalionOrAboveLevel } from '@/data/unit-levels'
 import { useCreateRankPromotionProposal } from '@/hooks/useCreateRankPromotionProposal'
 import useRankPromotionProposalEligibleApprovers from '@/hooks/useRankPromotionProposalEligibleApprovers'
 import useRankPromotionProposals from '@/hooks/useRankPromotionProposals'
 import useStudentData from '@/hooks/useStudents'
-import useUnitsData from '@/hooks/useUnitsData'
+import UnitSelect from '@/components/unit/select'
+import useUnitOptions from '@/hooks/useUnitOptions'
 import { getErrorMessage } from '@/lib/utils'
 import type { rank_promotion_proposals } from '@/api/client'
 import RankPromotionDateField from './date-field'
@@ -73,7 +73,12 @@ export default function CreateRankPromotionProposalForm({
 		Map<number, TrooperOverride>
 	>(new Map())
 
-	const { data: units } = useUnitsData(undefined, { enabled: open })
+	// Proposals require a Battalion level unit or larger (matches the backend
+	// constraint), scoped to the units the current user can access.
+	const { units, options: unitOptions } = useUnitOptions({
+		enabled: open,
+		minLevel: 'battalion'
+	})
 	const { data: students } = useStudentData(undefined, {
 		enabled: open && !!unitId
 	})
@@ -176,14 +181,6 @@ export default function CreateRankPromotionProposalForm({
 			normalizeForSearch(s.fullName ?? '').includes(query)
 		)
 	}, [eligibleStudents, trooperSearch])
-
-	// Rank promotion proposals require the unit to be Battalion level or
-	// larger (matches the backend constraint). Scoped to units the current
-	// user can access.
-	const eligibleUnits = useMemo(
-		() => (units ?? []).filter((u) => isBattalionOrAboveLevel(u.level)),
-		[units]
-	)
 
 	const resetForm = () => {
 		setUnitId('')
@@ -326,7 +323,8 @@ export default function CreateRankPromotionProposalForm({
 				>
 					<div className='space-y-2'>
 						<Label>Đơn vị</Label>
-						<Select
+						<UnitSelect
+							options={unitOptions}
 							value={unitId}
 							onValueChange={(v) => {
 								setUnitId(v)
@@ -334,18 +332,7 @@ export default function CreateRankPromotionProposalForm({
 								setApproverUserId('')
 								setTrooperSearch('')
 							}}
-						>
-							<SelectTrigger>
-								<SelectValue placeholder='Chọn đơn vị' />
-							</SelectTrigger>
-							<SelectContent>
-								{eligibleUnits.map((u) => (
-									<SelectItem key={u.id} value={String(u.id)}>
-										{u.name}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
+						/>
 					</div>
 
 					<div className='grid grid-cols-2 gap-4'>

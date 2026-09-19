@@ -13,7 +13,7 @@ import { CreateUser } from '@/api'
 import { useMutation } from '@tanstack/react-query'
 import type { User, UserBody, UserFormData } from '@/types'
 import { toast } from 'sonner'
-import useUnitsData from '@/hooks/useUnitsData'
+import useUnitOptions from '@/hooks/useUnitOptions'
 import { userRankOptions } from '@/data/ranks'
 import { userPositionOptions } from '@/data/positions'
 import { getErrorMessage } from '@/lib/utils'
@@ -41,7 +41,7 @@ export interface UserFormProps {
 }
 
 export default function UserForm({ onSuccess, open, setOpen }: UserFormProps) {
-	const { data: unitsData, isLoading, isError } = useUnitsData()
+	const { options: unitOptions } = useUnitOptions()
 
 	const { mutateAsync } = useMutation({
 		mutationFn: CreateUser,
@@ -80,17 +80,6 @@ export default function UserForm({ onSuccess, open, setOpen }: UserFormProps) {
 			onBlur: schema
 		}
 	})
-	// Hàm flatten mảng unit
-	function flattenUnits(units: any[]): any[] {
-		const result: any[] = []
-
-		units.forEach((unit) => {
-			result.push({ label: unit.name, value: unit.id.toString() })
-		})
-
-		return result
-	}
-
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogContent className='sm:max-w-md h-auto'>
@@ -140,9 +129,7 @@ export default function UserForm({ onSuccess, open, setOpen }: UserFormProps) {
 										<field.Select
 											label='Chọn đơn vị'
 											placeholder='Chọn đơn vị'
-											values={flattenUnits(
-												unitsData || []
-											)}
+											values={unitOptions}
 										/>
 									</>
 								)}

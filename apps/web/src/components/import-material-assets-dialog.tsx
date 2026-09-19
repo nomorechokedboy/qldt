@@ -18,7 +18,6 @@ import useImportMaterialAssets from '@/hooks/useImportMaterialAssets'
 import useRoomsData from '@/hooks/useRoomsData'
 import useMaterialTypesData from '@/hooks/useMaterialTypesData'
 import useStudentData from '@/hooks/useStudents'
-import { buildUnitsById, unitLabelWithAncestry } from '@/lib/unit-labels'
 import {
 	materialConditionOptions,
 	materialAssetStatusOptions
@@ -38,7 +37,8 @@ import { reviewInputClass } from '@/components/import-students-dialog'
 import type { ColumnDef } from '@tanstack/react-table'
 import type { materials } from '@/api/client'
 import type { Room, Student } from '@/types'
-import useUnitsData from '@/hooks/useUnitsData'
+import useUnitOptions from '@/hooks/useUnitOptions'
+import { MAX_MATERIAL_ASSET_SERIAL_LENGTH } from '@/lib/material-limits'
 
 export interface ImportMaterialAssetsDialogProps {
 	unitId: number
@@ -73,7 +73,9 @@ export function ImportMaterialAssetsDialog({
 	onClose,
 	onSuccess
 }: ImportMaterialAssetsDialogProps) {
-	const { data: units = [] } = useUnitsData(undefined, { enabled: isOpen })
+	const { unitsById, options: unitOptions } = useUnitOptions({
+		enabled: isOpen
+	})
 	const { data: rooms = [] } = useRoomsData(undefined, { enabled: isOpen })
 	const { data: materialTypes = [] } = useMaterialTypesData({
 		enabled: isOpen
@@ -81,16 +83,6 @@ export function ImportMaterialAssetsDialog({
 	const { data: allStudents = [] } = useStudentData(undefined, {
 		enabled: isOpen
 	})
-
-	const unitsById = useMemo(() => buildUnitsById(units), [units])
-	const unitOptions = useMemo(
-		() =>
-			units?.map((u) => ({
-				id: u.id,
-				label: unitLabelWithAncestry(u, unitsById)
-			})),
-		[units, unitsById]
-	)
 
 	// Bulk asset import only ever creates serialized items (weapons,
 	// vehicles, etc.) - non-serialized supplies go through
@@ -576,6 +568,14 @@ export function ImportMaterialAssetsDialog({
 										row: rowIndex + 4,
 										message: 'Vui lòng nhập số sê-ri'
 									})
+								} else if (
+									[...serial.normalize('NFC')].length >
+									MAX_MATERIAL_ASSET_SERIAL_LENGTH
+								) {
+									rowErrors.push({
+										row: rowIndex + 4,
+										message: `Số sê-ri tối đa ${MAX_MATERIAL_ASSET_SERIAL_LENGTH} ký tự`
+									})
 								} else {
 									asset.serialNumber = serial
 								}
@@ -953,6 +953,7 @@ export function ImportMaterialAssetsDialog({
 						type='text'
 						className={reviewInputClass}
 						value={row.original.serialNumber}
+						maxLength={MAX_MATERIAL_ASSET_SERIAL_LENGTH}
 						onChange={(e) =>
 							updateAssetField(
 								row.index,

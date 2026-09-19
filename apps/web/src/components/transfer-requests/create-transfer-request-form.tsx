@@ -31,8 +31,9 @@ import useRoomsData from '@/hooks/useRoomsData'
 import useStudentData from '@/hooks/useStudents'
 import useTransferDestinationUnits from '@/hooks/useTransferDestinationUnits'
 import useTransferEligibleApprovers from '@/hooks/useTransferEligibleApprovers'
-import useUnitsData from '@/hooks/useUnitsData'
-import { isCompanyOrAboveLevel } from '@/data/unit-levels'
+import UnitSelect from '@/components/unit/select'
+import { buildUnitOptions } from '@/lib/unit-options'
+import useUnitOptions from '@/hooks/useUnitOptions'
 import { getErrorMessage } from '@/lib/utils'
 import type { transfer_requests } from '@/api/client'
 
@@ -54,7 +55,13 @@ export default function CreateTransferRequestForm({
 		new Map()
 	)
 
-	const { data: units } = useUnitsData(undefined, { enabled: open })
+	// The source unit must be Company level or larger (matches the backend
+	// constraint), scoped to the units the current user can access.
+	const {
+		units,
+		unitsById,
+		options: sourceUnitOptions
+	} = useUnitOptions({ enabled: open, minLevel: 'company' })
 	const { data: rooms } = useRoomsData(undefined, { enabled: open })
 	const { data: materialTypes } = useMaterialTypesData({ enabled: open })
 	const { data: students } = useStudentData(undefined, {
@@ -150,18 +157,20 @@ export default function CreateTransferRequestForm({
 		[rooms, destinationUnitId]
 	)
 
-	// Transfer requests require the source unit to be Company level or
-	// larger (matches the backend constraint). Scoped to units the current
-	// user can access.
-	const eligibleUnits = useMemo(
-		() => (units ?? []).filter((u) => isCompanyOrAboveLevel(u.level)),
-		[units]
-	)
-
 	// Destination unit is not restricted to the requester's own command
 	// chain, so it's sourced from the dedicated org-wide endpoint rather
-	// than the scoped `units` list above.
-	const eligibleDestinationUnits = destinationUnits ?? []
+	// than the scoped `units` list above. Units outside the caller's scope
+	// have no known ancestry, so they are labelled by name alone.
+	const destinationUnitOptions = useMemo(
+		() =>
+			buildUnitOptions(
+				(destinationUnits ?? []).filter(
+					(u) => String(u.id) !== sourceUnitId
+				),
+				{ unitsById }
+			),
+		[destinationUnits, sourceUnitId, unitsById]
+	)
 
 	const materialTypeName = (id: number) =>
 		materialTypes?.find((t) => t.id === id)?.name ?? `#${id}`
@@ -261,8 +270,10 @@ export default function CreateTransferRequestForm({
 					<div className='grid grid-cols-2 gap-4'>
 						<div className='space-y-2'>
 							<Label>Đơn vị nguồn</Label>
-							<Select
+							<UnitSelect
+								options={sourceUnitOptions}
 								value={sourceUnitId}
+								placeholder='Chọn đơn vị nguồn'
 								onValueChange={(v) => {
 									setSourceUnitId(v)
 									setTrooperIds(new Set())
@@ -270,51 +281,21 @@ export default function CreateTransferRequestForm({
 									setStockQuantities(new Map())
 									setApproverUserId('')
 								}}
-							>
-								<SelectTrigger>
-									<SelectValue placeholder='Chọn đơn vị nguồn' />
-								</SelectTrigger>
-								<SelectContent>
-									{eligibleUnits.map((u) => (
-										<SelectItem
-											key={u.id}
-											value={String(u.id)}
-										>
-											{u.name}
-										</SelectItem>
-									))}
-								</SelectContent>
-							</Select>
+							/>
 						</div>
 
 						<div className='space-y-2'>
 							<Label>Đơn vị đích</Label>
-							<Select
+							<UnitSelect
+								options={destinationUnitOptions}
 								value={destinationUnitId}
+								placeholder='Chọn đơn vị đích'
 								onValueChange={(v) => {
 									setDestinationUnitId(v)
 									setDestinationRoomId(NONE)
 									setApproverUserId('')
 								}}
-							>
-								<SelectTrigger>
-									<SelectValue placeholder='Chọn đơn vị đích' />
-								</SelectTrigger>
-								<SelectContent>
-									{eligibleDestinationUnits
-										.filter(
-											(u) => String(u.id) !== sourceUnitId
-										)
-										.map((u) => (
-											<SelectItem
-												key={u.id}
-												value={String(u.id)}
-											>
-												{u.name}
-											</SelectItem>
-										))}
-								</SelectContent>
-							</Select>
+							/>
 						</div>
 					</div>
 

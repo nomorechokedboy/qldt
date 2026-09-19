@@ -21,7 +21,9 @@ import {
 	SelectValue
 } from '@/components/ui/select'
 import { useCreateUnit } from '@/hooks/useCreateUnit'
-import useUnitsData from '@/hooks/useUnitsData'
+import UnitSelect from '@/components/unit/select'
+import useUnitOptions from '@/hooks/useUnitOptions'
+import { buildUnitOptions } from '@/lib/unit-options'
 import useAuth from '@/hooks/useAuth'
 import {
 	isCompanyOrAboveLevel,
@@ -54,7 +56,7 @@ export default function UnitForm({ onSuccess }: UnitFormProps) {
 	const [commanders, setCommanders] =
 		useState<UnitCommanderValues>(emptyCommanderValues)
 
-	const { data: allUnits } = useUnitsData()
+	const { units: allUnits, unitsById } = useUnitOptions()
 	const createUnitMutation = useCreateUnit()
 	const { user } = useAuth()
 
@@ -78,8 +80,10 @@ export default function UnitForm({ onSuccess }: UnitFormProps) {
 				unitLevelOrder.indexOf(myUnit.level)
 	)
 
-	const parentOptions =
-		allUnits?.filter((u) => isLargerUnitLevel(u.level, level)) ?? []
+	const parentOptions = allUnits.filter((u) =>
+		isLargerUnitLevel(u.level, level)
+	)
+	const parentSelectOptions = buildUnitOptions(parentOptions, { unitsById })
 
 	// Keep the selected level valid whenever the allowed set narrows (e.g.
 	// once myUnit resolves for a non-super-admin).
@@ -197,23 +201,21 @@ export default function UnitForm({ onSuccess }: UnitFormProps) {
 
 					<div className='space-y-2'>
 						<Label htmlFor='unit-parent'>Thuộc đơn vị</Label>
-						<Select value={parentId} onValueChange={setParentId}>
-							<SelectTrigger id='unit-parent'>
-								<SelectValue placeholder='Chọn đơn vị cấp trên' />
-							</SelectTrigger>
-							<SelectContent>
-								{isSuperAdmin && (
-									<SelectItem value={NO_PARENT}>
-										Không có (đơn vị gốc)
-									</SelectItem>
-								)}
-								{parentOptions.map((u) => (
-									<SelectItem key={u.id} value={String(u.id)}>
-										{u.name}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
+						<UnitSelect
+							id='unit-parent'
+							options={parentSelectOptions}
+							value={parentId}
+							onValueChange={setParentId}
+							placeholder='Chọn đơn vị cấp trên'
+							noneOption={
+								isSuperAdmin
+									? {
+											value: NO_PARENT,
+											label: 'Không có (đơn vị gốc)'
+										}
+									: undefined
+							}
+						/>
 					</div>
 
 					{isCompanyOrAboveLevel(level) ? (

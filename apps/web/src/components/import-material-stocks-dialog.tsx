@@ -15,10 +15,9 @@ import {
 	Loader2
 } from 'lucide-react'
 import useImportMaterialStocks from '@/hooks/useImportMaterialStocks'
-import useUnitsData from '@/hooks/useUnitsData'
+import useUnitOptions from '@/hooks/useUnitOptions'
 import useRoomsData from '@/hooks/useRoomsData'
 import useMaterialTypesData from '@/hooks/useMaterialTypesData'
-import { buildUnitsById, unitLabelWithAncestry } from '@/lib/unit-labels'
 import { materialConditionOptions } from '@/data/material-categories'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -64,21 +63,13 @@ export function ImportMaterialStocksDialog({
 	onClose,
 	onSuccess
 }: ImportMaterialStocksDialogProps) {
-	const { data: units = [] } = useUnitsData(undefined, { enabled: isOpen })
+	const { units, options: unitOptions } = useUnitOptions({
+		enabled: isOpen
+	})
 	const { data: rooms = [] } = useRoomsData(undefined, { enabled: isOpen })
 	const { data: materialTypes = [] } = useMaterialTypesData({
 		enabled: isOpen
 	})
-
-	const unitsById = useMemo(() => buildUnitsById(units), [units])
-	const unitOptions = useMemo(
-		() =>
-			units.map((u) => ({
-				id: u.id,
-				label: unitLabelWithAncestry(u, unitsById)
-			})),
-		[units, unitsById]
-	)
 
 	// Bulk stock import only ever creates non-serialized supplies - serialized
 	// types (weapons etc.) go through ImportMaterialAssetsDialog instead.

@@ -26,21 +26,10 @@ import {
 	ChartTooltip,
 	ChartTooltipContent
 } from '@/components/ui/chart'
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-	SelectSeparator,
-	SelectGroup,
-	SelectLabel
-} from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { DataTable } from '@/components/data-table'
 import TableSkeleton from '@/components/table-skeleton'
 import useAuth from '@/hooks/useAuth'
-import useUnitsData from '@/hooks/useUnitsData'
 import useUnitStats from '@/hooks/useUnitStats'
 import useUnitStatsStudents from '@/hooks/useUnitStatsStudents'
 import useUnitStatsMaterialStocks from '@/hooks/useUnitStatsMaterialStocks'
@@ -57,11 +46,11 @@ import {
 	politicalOrgNameMapping
 } from '@/components/politics-quality-report/charts-section'
 import { unitLevelLabels, unitLevelOrder } from '@/data/unit-levels'
-import { buildUnitsById, unitLabelWithAncestry } from '@/lib/unit-labels'
+import UnitSelect from '@/components/unit/select'
+import useUnitOptions from '@/hooks/useUnitOptions'
 import { materialAssetStatusLabels } from '@/data/material-categories'
 import { GetPoliticsQualityReport } from '@/api'
 import { transformPoliticsQualityData } from '@/lib/utils'
-import type { Unit, UnitLevel } from '@/types'
 import type { units } from '@/api/client'
 
 const readOnlyMaterialStockColumns = buildMaterialStockColumns([]).filter(
@@ -73,34 +62,16 @@ const readOnlyMaterialAssetColumns = buildMaterialAssetColumns([], []).filter(
 
 const TROOP_CHART_COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042']
 
-function GroupUnits({
-	unitsMap,
-	unitsById
-}: {
-	unitsMap: Map<UnitLevel, Unit[]>
-	unitsById: Map<number, Unit>
-}) {
-	const flatUnitsMapEntries = [...unitsMap.entries()]
-	return flatUnitsMapEntries.map(([level, units], idx) => (
-		<>
-			<SelectGroup key={level}>
-				<SelectLabel>{unitLevelLabels[level]}</SelectLabel>
-				{units.map((u) => (
-					<SelectItem key={u.id} value={String(u.id)}>
-						{unitLabelWithAncestry(u, unitsById)}
-					</SelectItem>
-				))}
-			</SelectGroup>
-			{idx !== flatUnitsMapEntries.length - 1 && <SelectSeparator />}
-		</>
-	))
-}
-
 export default function BaseStatsDashboard() {
 	const navigate = useNavigate({ from: Route.fullPath })
 	const { unit: unitIdParam } = Route.useSearch()
 	const { user } = useAuth()
-	const { data: units = [], isLoading: isLoadingUnits } = useUnitsData()
+	const {
+		units,
+		unitsById,
+		options: unitOptions,
+		isLoading: isLoadingUnits
+	} = useUnitOptions({ minLevel: 'platoon' })
 
 	const rootUnit = units.find((u) => !u.parent)
 	const selectedUnitId = unitIdParam ?? user?.unit?.id ?? rootUnit?.id
@@ -142,22 +113,8 @@ export default function BaseStatsDashboard() {
 		navigate({ search: (prev) => ({ ...prev, unit: Number(id) }) })
 	}
 
-	const unitsById = buildUnitsById(units)
 	const battalionStudentColumnsWithoutAction =
 		buildBattalionStudentColumnsWithoutAction(unitsById)
-	const groupedUnits: Map<UnitLevel, units.Unit[]> = new Map()
-	units.forEach((u) => {
-		if (u.level === 'squad') {
-			return
-		}
-
-		if (!groupedUnits.has(u.level)) {
-			groupedUnits.set(u.level, [u])
-			return
-		}
-
-		groupedUnits.get(u.level)?.push(u)
-	})
 
 	const kpiCards = [
 		{
@@ -608,24 +565,16 @@ export default function BaseStatsDashboard() {
 					</p>
 				</div>
 
-				<Select
+				<UnitSelect
+					options={unitOptions}
 					value={
 						selectedUnitId === undefined
 							? undefined
 							: String(selectedUnitId)
 					}
 					onValueChange={handleUnitChange}
-				>
-					<SelectTrigger className='w-full md:w-[280px]'>
-						<SelectValue placeholder='Chọn đơn vị' />
-					</SelectTrigger>
-					<SelectContent>
-						<GroupUnits
-							unitsMap={groupedUnits}
-							unitsById={unitsById}
-						/>
-					</SelectContent>
-				</Select>
+					className='md:w-[280px]'
+				/>
 			</div>
 
 			{selectedUnitId === undefined && (

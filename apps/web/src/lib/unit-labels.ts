@@ -11,7 +11,7 @@ export function buildUnitsById(units: Unit[]): Map<number, Unit> {
 // walk arbitrarily deep without any backend change.
 export function unitAncestorNames(
 	unit: { parent?: Pick<Unit, 'id' | 'name'> | null },
-	unitsById: Map<number, Unit>
+	unitsById: Map<number, { parent?: Pick<Unit, 'id' | 'name'> | null }>
 ): string[] {
 	const names: string[] = []
 	let current = unit.parent
@@ -28,8 +28,8 @@ export function unitAncestorNames(
 // company) by including the full ancestor chain instead of just one
 // level.
 export function unitLabelWithAncestry(
-	unit: Unit,
-	unitsById: Map<number, Unit>
+	unit: { name: string; parent?: Pick<Unit, 'id' | 'name'> | null },
+	unitsById: Map<number, { parent?: Pick<Unit, 'id' | 'name'> | null }>
 ): string {
 	const ancestry = unitAncestorNames(unit, unitsById)
 	return ancestry.length ? `${unit.name} (${ancestry.join(', ')})` : unit.name

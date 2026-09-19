@@ -14,7 +14,7 @@ import { eduLevelOptions } from '@/data/education-levels'
 import { politicalOptions } from '@/data/political-status'
 import { activityStatusOptions } from '@/data/activity-statuses'
 import { rankOptions } from '@/data/ranks'
-import useUnitsData from '@/hooks/useUnitsData'
+import useUnitOptions from '@/hooks/useUnitOptions'
 import usePositionsData from '@/hooks/usePositionsData'
 import { unitLevelLabels, unitLevelOrder } from '@/data/unit-levels'
 import { getMediaUri } from '../lib/utils'
@@ -22,7 +22,6 @@ import { useAppForm } from '@/hooks/use-app-form'
 import { toast } from 'sonner'
 import useUploadFiles from '@/hooks/useUploadFiles'
 import { getErrorMessage } from '@/lib/utils'
-import { buildUnitsById, unitLabelWithAncestry } from '@/lib/unit-labels'
 import {
 	Plus,
 	Trash2,
@@ -47,23 +46,7 @@ export default function StudentEditForm({
 	const { handlePatchStudentInfo, isPending } = usePatchStudentInfo(student)
 	const { mutateAsync: uploadFilesMutate } = useUploadFiles()
 
-	const { data: units = [] } = useUnitsData()
-	// `units` from GetUnits() is already a flat list of every unit the
-	// caller is authorized for - each row also carries a shallow `children`
-	// relation (Drizzle `with: { children: true }`), but those children are
-	// already present as their own top-level entries in this same array.
-	// Recursing into `.children` here re-added every non-root unit a
-	// second time, so map directly instead.
-	const unitsById = useMemo(() => buildUnitsById(units), [units])
-	const unitOptions = useMemo(
-		() =>
-			units.map((u) => ({
-				value: u.id.toString(),
-				label: unitLabelWithAncestry(u, unitsById),
-				group: unitLevelLabels[u.level]
-			})),
-		[units, unitsById]
-	)
+	const { options: unitOptions } = useUnitOptions()
 	const { data: positions = [] } = usePositionsData()
 	const positionOptions = useMemo(
 		() =>
