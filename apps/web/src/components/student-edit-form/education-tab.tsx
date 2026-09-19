@@ -1,13 +1,16 @@
-import { Award, GraduationCap } from 'lucide-react'
+import {
+	RecordGrid,
+	RecordSection,
+	StepBody
+} from '@/components/record-section'
 import { eduLevelOptions } from '@/data/education-levels'
-import { FieldGrid, FormSection } from './form-section'
 import StudentField from './student-field'
 
 export default function EducationTab() {
 	return (
-		<div className='space-y-6'>
-			<FormSection title='Học vấn' icon={GraduationCap} tone='yellow'>
-				<FieldGrid>
+		<StepBody>
+			<RecordSection title='Học vấn'>
+				<RecordGrid columns={3}>
 					<StudentField name='schoolName' label='Trường' />
 					<StudentField name='major' label='Chuyên ngành' />
 					<StudentField
@@ -21,23 +24,19 @@ export default function EducationTab() {
 						label='Đã tốt nghiệp'
 						kind='switch'
 					/>
-				</FieldGrid>
-			</FormSection>
+				</RecordGrid>
+			</RecordSection>
 
-			<FormSection
-				title='Kỹ năng & Chính sách'
-				icon={Award}
-				tone='emerald'
-			>
-				<FieldGrid>
+			<RecordSection title='Kỹ năng và chính sách'>
+				<RecordGrid columns={3}>
 					<StudentField name='talent' label='Sở trường' />
 					<StudentField name='shortcoming' label='Sở đoản' />
 					<StudentField
 						name='policyBeneficiaryGroup'
 						label='Đối tượng chính sách'
 					/>
-				</FieldGrid>
-			</FormSection>
-		</div>
+				</RecordGrid>
+			</RecordSection>
+		</StepBody>
 	)
 }

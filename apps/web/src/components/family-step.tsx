@@ -1,4 +1,5 @@
 import ChildrenInfo from './children-info'
+import { RecordGrid, RecordSection, StepBody } from './record-section'
 
 export interface FamilyStepProps {
 	form: any
@@ -6,14 +7,12 @@ export interface FamilyStepProps {
 
 export default function FamilyStep({ form }: FamilyStepProps) {
 	return (
-		<div className='space-y-8 py-2'>
-			<div className='space-y-6'>
-				<h3 className='text-lg font-semibold border-b border-border pb-2'>
-					Thông tin về vợ/chồng
-				</h3>
-
-				{/* Spouse Name and Phone - Two Columns */}
-				<div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+		<StepBody>
+			<RecordSection
+				title='Vợ/chồng'
+				hint='Bỏ trống nếu quân nhân chưa kết hôn.'
+			>
+				<RecordGrid>
 					<form.AppField name='spouseName'>
 						{(field: any) => (
 							<field.TextField label='Tên vợ/chồng' />
@@ -24,10 +23,6 @@ export default function FamilyStep({ form }: FamilyStepProps) {
 							<field.DatePicker label='Ngày sinh của vợ/chồng' />
 						)}
 					</form.AppField>
-				</div>
-
-				{/* spouse Job - Full Width */}
-				<div className='grid grid-cols-2 gap-6'>
 					<form.AppField name='spousePhoneNumber'>
 						{(field: any) => (
 							<field.TextField label='Số điện thoại vợ/chồng' />
@@ -38,12 +33,12 @@ export default function FamilyStep({ form }: FamilyStepProps) {
 							<field.TextField label='Nghề nghiệp vợ/chồng' />
 						)}
 					</form.AppField>
-				</div>
-			</div>
+				</RecordGrid>
+			</RecordSection>
 
-			<div className='space-y-6'>
+			<RecordSection title='Con'>
 				<ChildrenInfo form={form} />
-			</div>
-		</div>
+			</RecordSection>
+		</StepBody>
 	)
 }

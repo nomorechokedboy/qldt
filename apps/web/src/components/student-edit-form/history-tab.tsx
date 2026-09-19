@@ -1,19 +1,25 @@
-import { Award, FileText, Phone } from 'lucide-react'
-import { FieldGrid, FormSection } from './form-section'
+import {
+	RecordGrid,
+	RecordSection,
+	StepBody
+} from '@/components/record-section'
 import StudentField from './student-field'
 
 export default function HistoryTab() {
 	return (
-		<div className='space-y-6'>
-			<FormSection title='Lịch sử' icon={Award} tone='amber'>
-				<FieldGrid columns={1}>
+		<StepBody>
+			<RecordSection title='Lịch sử'>
+				<RecordGrid>
 					<StudentField name='achievement' label='Khen thưởng' />
 					<StudentField name='disciplinaryHistory' label='Kỷ luật' />
-				</FieldGrid>
-			</FormSection>
+				</RecordGrid>
+			</RecordSection>
 
-			<FormSection title='Người báo tin' icon={Phone} tone='rose'>
-				<FieldGrid>
+			<RecordSection
+				title='Người báo tin'
+				hint='Người cần liên lạc khi có việc của quân nhân.'
+			>
+				<RecordGrid columns={3}>
 					<StudentField name='contactPerson.name' label='Họ tên' />
 					<StudentField
 						name='contactPerson.phoneNumber'
@@ -23,17 +29,17 @@ export default function HistoryTab() {
 						name='contactPerson.address'
 						label='Địa chỉ'
 					/>
-				</FieldGrid>
-			</FormSection>
+				</RecordGrid>
+			</RecordSection>
 
-			<FormSection title='Tài liệu' icon={FileText} tone='slate'>
-				<FieldGrid columns={1}>
+			<RecordSection title='Tài liệu'>
+				<RecordGrid columns={1}>
 					<StudentField
 						name='relatedDocumentations'
 						label='Hồ sơ đi kèm'
 					/>
-				</FieldGrid>
-			</FormSection>
-		</div>
+				</RecordGrid>
+			</RecordSection>
+		</StepBody>
 	)
 }

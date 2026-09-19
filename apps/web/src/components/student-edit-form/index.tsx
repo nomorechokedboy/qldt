@@ -1,118 +1,117 @@
-import * as Tabs from '@radix-ui/react-tabs'
-import {
-	Award,
-	GraduationCap,
-	Shield,
-	User,
-	Users,
-	type LucideIcon
-} from 'lucide-react'
-import type { ComponentType } from 'react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
+import {
+	CompactHeader,
+	CoverShell
+} from '@/components/student-record/cover-shell'
+import { getMediaUri } from '@/lib/utils'
 import type { Student } from '@/types'
-import EducationTab from './education-tab'
-import FamilyTab from './family-tab'
-import HistoryTab from './history-tab'
-import MilitaryTab from './military-tab'
-import PersonalTab from './personal-tab'
+import { useEffect, useRef, useState } from 'react'
+import {
+	SectionList,
+	SectionPills
+} from '@/components/student-record/section-nav'
+import {
+	RECORD_SECTIONS,
+	type SectionId
+} from '@/components/student-record/sections'
+import { PANELS } from './sections'
 import { StudentFormProvider } from './student-form-context'
-import StudentSummaryHeader from './student-summary-header'
 import useStudentEditForm from './use-student-edit-form'
-
-const TABS: {
-	value: string
-	label: string
-	icon: LucideIcon
-	Panel: ComponentType
-}[] = [
-	{
-		value: 'personal',
-		label: 'Thông tin cá nhân',
-		icon: User,
-		Panel: PersonalTab
-	},
-	{
-		value: 'military',
-		label: 'Quân sự & Chính trị',
-		icon: Shield,
-		Panel: MilitaryTab
-	},
-	{
-		value: 'education',
-		label: 'Học vấn & Kỹ năng',
-		icon: GraduationCap,
-		Panel: EducationTab
-	},
-	{ value: 'family', label: 'Gia đình', icon: Users, Panel: FamilyTab },
-	{
-		value: 'history',
-		label: 'Lịch sử & Khác',
-		icon: Award,
-		Panel: HistoryTab
-	}
-]
 
 interface StudentEditFormProps {
 	student: Student
 	onClose?: () => void
 }
 
+const FORM_ID = 'studentEditForm'
+
+// Fills the two-pane dialog: the record cover on the left, one section of
+// the form on the right.
 export default function StudentEditForm({
 	student,
 	onClose
 }: StudentEditFormProps) {
 	const { form, isPending } = useStudentEditForm(student, onClose)
+	const [sectionId, setSectionId] = useState<SectionId>(RECORD_SECTIONS[0].id)
+	const scrollRef = useRef<HTMLFormElement>(null)
+	const section =
+		RECORD_SECTIONS.find((s) => s.id === sectionId) ?? RECORD_SECTIONS[0]
+
+	useEffect(() => {
+		if (scrollRef.current) scrollRef.current.scrollTop = 0
+	}, [sectionId])
+
+	const Panel = PANELS[section.id]
+
+	const cover = {
+		form,
+		photoField: 'avatarFile',
+		currentSrc: student.avatar ? getMediaUri(student.avatar) : undefined,
+		fallback: { position: student.position, unit: student.unit?.name }
+	}
 
 	return (
 		<StudentFormProvider value={form}>
-			<form
-				onSubmit={(e) => {
-					e.preventDefault()
-					form.handleSubmit()
-				}}
-				className='w-full'
-			>
-				<Card>
-					<StudentSummaryHeader student={student} />
+			<div className='grid h-full min-h-0 grid-cols-1 grid-rows-[minmax(0,1fr)] lg:grid-cols-[18rem_minmax(0,1fr)]'>
+				<CoverShell {...cover}>
+					<SectionList current={sectionId} onSelect={setSectionId} />
+				</CoverShell>
 
-					<CardContent>
-						<Tabs.Root defaultValue='personal' className='w-full'>
-							<Tabs.List className='flex border-b mb-4 space-x-4 px-2 overflow-x-auto'>
-								{TABS.map(({ value, label, icon: Icon }) => (
-									<Tabs.Trigger
-										key={value}
-										value={value}
-										className='pb-2 text-sm font-medium border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:text-primary whitespace-nowrap'
-									>
-										<Icon className='h-4 w-4 inline mr-1' />
-										{label}
-									</Tabs.Trigger>
-								))}
-							</Tabs.List>
+				<div className='flex min-h-0 flex-col bg-card'>
+					<CompactHeader
+						{...cover}
+						title={student.fullName ?? 'Chỉnh sửa quân nhân'}
+						subtitle={section.label}
+					>
+						<SectionPills
+							current={sectionId}
+							onSelect={setSectionId}
+						/>
+					</CompactHeader>
 
-							{TABS.map(({ value, Panel }) => (
-								<Tabs.Content key={value} value={value}>
-									<Panel />
-								</Tabs.Content>
-							))}
-						</Tabs.Root>
-
-						<div className='flex justify-end mt-6 gap-2'>
-							<Button
-								type='button'
-								variant='outline'
-								onClick={onClose}
-							>
-								Hủy
-							</Button>
-							<Button type='submit' disabled={isPending}>
-								{isPending ? 'Đang lưu...' : 'Lưu thay đổi'}
-							</Button>
+					<form
+						ref={scrollRef}
+						id={FORM_ID}
+						onSubmit={(e) => {
+							e.preventDefault()
+							form.handleSubmit()
+						}}
+						className='min-h-0 flex-1 overflow-y-auto px-4 py-5 no-scrollbar lg:px-8 lg:py-6 [&_label]:text-sm [&_label]:font-medium'
+					>
+						<div className='mb-6 hidden lg:block'>
+							<h2 className='font-serif text-2xl font-semibold'>
+								{section.label}
+							</h2>
+							<p className='text-sm text-muted-foreground'>
+								{section.hint}
+							</p>
 						</div>
-					</CardContent>
-				</Card>
-			</form>
+						<div
+							key={section.id}
+							className='animate-in fade-in-0 duration-200 motion-reduce:animate-none'
+						>
+							<Panel />
+						</div>
+					</form>
+
+					<footer className='flex items-center justify-end gap-2 border-t px-4 py-3 lg:px-8'>
+						<Button
+							type='button'
+							variant='outline'
+							onClick={onClose}
+						>
+							Hủy
+						</Button>
+						<Button
+							type='submit'
+							form={FORM_ID}
+							disabled={isPending}
+						>
+							{isPending ? 'Đang lưu...' : 'Lưu thay đổi'}
+						</Button>
+					</footer>
+				</div>
+			</div>
 		</StudentFormProvider>
 	)
 }

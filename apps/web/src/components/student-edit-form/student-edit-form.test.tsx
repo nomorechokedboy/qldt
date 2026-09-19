@@ -74,8 +74,9 @@ function setup(current: Student = student) {
 	return { ...mock, onClose }
 }
 
+// The desktop list and the mobile pills both render, so take the first.
 const openTab = (name: RegExp) =>
-	fireEvent.mouseDown(screen.getByRole('tab', { name }), { button: 0 })
+	fireEvent.click(screen.getAllByRole('button', { name })[0])
 
 const selectTexts = () =>
 	screen.getAllByRole('combobox').map((c) => c.textContent ?? '')
@@ -193,5 +194,19 @@ describe('StudentEditForm', () => {
 		const saved = (patch?.body as { data: Record<string, unknown>[] })
 			.data[0]
 		expect(saved.cpvOfficialAt).toBeNull()
+	})
+
+	it('marks the open section and shows the record on the cover', async () => {
+		setup()
+		expect(screen.getAllByText('Nguyen Van A').length).toBeGreaterThan(0)
+
+		openTab(/Gia đình/)
+
+		const current = (name: RegExp) =>
+			screen
+				.getAllByRole('button', { name })[0]
+				.getAttribute('aria-current')
+		await waitFor(() => expect(current(/Gia đình/)).toBe('page'))
+		expect(current(/Thông tin cá nhân/)).toBeNull()
 	})
 })

@@ -12,11 +12,12 @@ import {
 import type { OnDeleteRows, Student } from '@/types'
 import {
 	Dialog,
+	DialogDescription,
 	DialogHeader,
 	DialogTitle,
 	DialogContent
 } from '@/components/ui/dialog'
-import StudentInfoTabs from '../student-info-tabs'
+import StudentInfo from '../student-info'
 import { useState, type MouseEvent } from 'react'
 import useDeleteStudents from '@/hooks/useDeleteStudents'
 import { toast } from 'sonner'
@@ -96,12 +97,15 @@ export function DataTableRowActions<TData>({
 				</DropdownMenuContent>
 			</DropdownMenu>
 			<Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-				<DialogContent className='max-w-7xl h-[90vh] overflow-y-auto p-6'>
-					<DialogHeader className='flex items-center justify-between'>
+				<DialogContent className='grid-cols-1 grid-rows-[minmax(0,1fr)] gap-0 overflow-hidden p-0 lg:h-[85vh] lg:max-w-5xl'>
+					<DialogHeader className='sr-only'>
 						<DialogTitle>Thông tin quân nhân</DialogTitle>
+						<DialogDescription>
+							Hồ sơ của {student.fullName}.
+						</DialogDescription>
 					</DialogHeader>
 
-					<StudentInfoTabs student={student} />
+					<StudentInfo student={student} />
 				</DialogContent>
 			</Dialog>
 		</>
