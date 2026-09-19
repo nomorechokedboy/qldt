@@ -77,7 +77,7 @@ jobs:
                   PROPS
             - name: Build signed release (APK and AAB)
               if: env.ANDROID_KEYSTORE_BASE64 != ''
-              uses: tauri-apps/tauri-action@v0
+              uses: tauri-apps/tauri-action@v1
               with:
                   projectPath: ${{ env.APP_DIR }}
                   tauriScript: pnpm tauri
@@ -89,7 +89,7 @@ jobs:
             # keystore secret fall back to an installable debug build.
             - name: Build debug APK (no keystore configured)
               if: env.ANDROID_KEYSTORE_BASE64 == ''
-              uses: tauri-apps/tauri-action@v0
+              uses: tauri-apps/tauri-action@v1
               with:
                   projectPath: ${{ env.APP_DIR }}
                   tauriScript: pnpm tauri
@@ -169,7 +169,7 @@ jobs:
                   mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
                   echo "$APPLE_PROVISIONING_PROFILE" | base64 --decode > "$HOME/Library/MobileDevice/Provisioning Profiles/build.mobileprovision"
             - name: Build signed IPA
-              uses: tauri-apps/tauri-action@v0
+              uses: tauri-apps/tauri-action@v1
               with:
                   projectPath: ${{ env.APP_DIR }}
                   tauriScript: pnpm tauri
