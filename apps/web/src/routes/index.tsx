@@ -23,13 +23,13 @@ function RouteComponent() {
 							className='w-35 h-35 drop-shadow-md animate-fadeInUp'
 						/>
 						<h1 className='text-4xl font-extrabold text-foreground animate-fadeInUp delay-100'>
-							Hệ thống Quản lý doanh trại
+							Hệ thống Quản lý đơn vị & VKTBKT
 						</h1>
 						<p className='text-muted-foreground max-w-2xl animate-fadeInUp delay-200'>
-							Nền tảng giúp quản lý thông tin doanh trại nhanh
-							chóng, dễ dàng và chính xác. Bạn có thể thêm mới,
-							chỉnh sửa, tìm kiếm và thống kê quân số, vật tư và
-							VKTBKT của đơn vị.
+							Nền tảng giúp quản lý thông tin đơn vị nhanh chóng,
+							dễ dàng và chính xác. Bạn có thể thêm mới, chỉnh
+							sửa, tìm kiếm và thống kê quân số, vật tư và VKTBKT
+							của đơn vị.
 						</p>
 						<div className='flex gap-4 animate-fadeInUp delay-300'>
 							<Button
@@ -50,7 +50,7 @@ function RouteComponent() {
 							>
 								<Link to='/thong-ke-doanh-trai'>
 									<PieChart className='w-5 h-5' />
-									Thống kê doanh trại
+									Thống kê đơn vị
 								</Link>
 							</Button>
 						</div>

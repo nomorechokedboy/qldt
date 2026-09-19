@@ -21,15 +21,6 @@ const COMMANDER_FIELDS = [
 	'deputyPoliticalCommanderId'
 ] as const
 
-type findOneRequest = {
-	id?: number
-	alias: string
-	name?: string
-	level?: UnitLevelName
-
-	parentId?: number | null
-	validUnitIds: number[]
-}
 class controller {
 	constructor(private readonly repo: Repository) {}
 
@@ -56,7 +47,7 @@ class controller {
 			)
 		}
 
-		const parent = await this.repo.getOne({ id: parentId })
+		const parent = await this.repo.findOne({ id: parentId })
 		if (parent === undefined) {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(`Parent unit not found: ${parentId}`)
@@ -144,7 +135,7 @@ class controller {
 		params: UnitParams[],
 		scope: { validUnitIds: number[]; actorUnitId: number }
 	): Promise<void> {
-		const actorUnit = await this.repo.getOne({ id: scope.actorUnitId })
+		const actorUnit = await this.repo.findOne({ id: scope.actorUnitId })
 		if (actorUnit === undefined) {
 			throw AppError.handleAppErr(
 				AppError.unauthorized('Your unit could not be found')
@@ -180,7 +171,9 @@ class controller {
 		initialized: boolean
 		rootUnitId?: number
 	}> {
-		const root = await this.repo.findRoot().catch(AppError.handleAppErr)
+		const root = await this.repo
+			.findOne({ parentId: null })
+			.catch(AppError.handleAppErr)
 		if (root === undefined) {
 			return { initialized: false }
 		}
@@ -229,7 +222,7 @@ class controller {
 			)
 		}
 
-		const existingUnits = await this.repo.findByIds(ids)
+		const existingUnits = await this.repo.find({ ids })
 		const rootUnits = existingUnits.filter(
 			(u) => u.parentId === null || u.parentId === undefined
 		)
@@ -272,7 +265,7 @@ class controller {
 			)
 		}
 
-		const existingUnits = await this.repo.findByIds(ids)
+		const existingUnits = await this.repo.find({ ids })
 		const existingById = new Map(existingUnits.map((u) => [u.id, u]))
 
 		for (const param of params) {
@@ -355,7 +348,8 @@ class controller {
 			return Promise.resolve([])
 		}
 		const getUnitsQuery: UnitQuery = {
-			ids: unitIds
+			ids: unitIds,
+			with: { children: true, parent: true }
 		}
 
 		if (q.level !== undefined) {
@@ -365,32 +359,15 @@ class controller {
 		return this.repo.find(getUnitsQuery)
 	}
 
-	findAll(): Promise<Unit[]> {
-		return this.repo.findAll()
-	}
+	async findOne(
+		id: number,
+		validUnitIds: number[]
+	): Promise<Unit | undefined> {
+		log.trace('UnitController.findOne params', { id, validUnitIds })
 
-	findById(id: number): Promise<Unit | undefined> {
-		log.trace('UnitController.findById params', { params: { id } })
-
-		return this.repo
-			.findById(id, {
-				with: { parent: true, children: true }
-			})
+		const unit = await this.repo
+			.findOne({ id }, { with: { children: 'deep', parent: true } })
 			.catch(AppError.handleAppErr)
-	}
-
-	async findOne({
-		validUnitIds,
-		...p
-	}: findOneRequest): Promise<Unit | undefined> {
-		const params = { ...p } as InteralUnitDB
-		log.trace('UnitController.findOne params', {
-			params,
-			id: params.id,
-			validUnitIds
-		})
-
-		const unit = await this.repo.getOne(params).catch(AppError.handleAppErr)
 		if (unit === undefined) {
 			AppError.handleAppErr(AppError.invalidArgument('Invalid unit'))
 		}

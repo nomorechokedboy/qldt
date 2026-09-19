@@ -19,7 +19,7 @@ export default function AssetQrDialog({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className='flex max-w-md flex-col items-center gap-4'>
+			<DialogContent className='flex h-auto max-w-md flex-col items-center gap-4'>
 				<DialogTitle>Mã QR khí tài - {data.serialNumber}</DialogTitle>
 				<QrCodeCanvas
 					value={JSON.stringify(payload)}

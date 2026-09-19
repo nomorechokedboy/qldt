@@ -58,7 +58,7 @@ export default function ExportPoliticsQualityDialog({
 				}}
 			>
 				<DialogTrigger asChild>{children}</DialogTrigger>
-				<DialogContent className='sm:max-w-[425px]'>
+				<DialogContent className='sm:max-w-[425px] h-auto'>
 					<DialogHeader>
 						<DialogTitle>Xuất dữ liệu</DialogTitle>
 						<DialogDescription>

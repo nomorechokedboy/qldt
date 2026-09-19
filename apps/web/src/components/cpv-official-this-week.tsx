@@ -1,5 +1,6 @@
-import { battalionStudentColumnsWithoutAction } from '@/components/student-table/columns'
+import { buildBattalionStudentColumnsWithoutAction } from '@/components/student-table/columns'
 import useStudentData from '@/hooks/useStudents'
+import useUnitsData from '@/hooks/useUnitsData'
 import { defaultCpvOfficialColumnVisibility } from './student-table/default-columns-visibility'
 import { getCurrentWeekNumber } from '@/lib/utils'
 import StudentTable from './student-table'
@@ -7,9 +8,13 @@ import { useStudentFacetedFilters } from '@/hooks/useStudentFacetedFilters'
 import UnitFacetedFilter, { useFilteredClassIds } from './unit-filter'
 import { useCallback, useState } from 'react'
 import type { Student, StudentQueryParams } from '@/types'
+import { buildUnitsById } from '@/lib/unit-labels'
 
 export default function CpvOfficialThisWeek() {
 	const [selectedUnits, setSelectedUnits] = useState<number[]>([])
+	const { data: units = [] } = useUnitsData()
+	const battalionStudentColumnsWithoutAction =
+		buildBattalionStudentColumnsWithoutAction(buildUnitsById(units))
 	const filteredUnitIds = useFilteredClassIds(selectedUnits)
 	const studentQueryParams: StudentQueryParams = {
 		isCpvOfficialThisWeek: true

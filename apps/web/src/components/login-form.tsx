@@ -34,7 +34,7 @@ export function LoginForm() {
 						Lữ đoàn 75, Quân khu 7
 					</h1>
 					<p className='text-muted-foreground font-medium uppercase'>
-						PHẦN MỀM QUẢN LÝ DOANH TRẠI
+						phần mềm quản lý đơn vị & vktb
 					</p>
 				</div>
 

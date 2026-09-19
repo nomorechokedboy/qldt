@@ -1,10 +1,10 @@
 import { GetUnitStatsMaterialAssets } from '@/api'
 import { useQuery } from '@tanstack/react-query'
 
-export default function useUnitStatsMaterialAssets(alias: string | undefined) {
+export default function useUnitStatsMaterialAssets(id: number | undefined) {
 	return useQuery({
-		queryKey: ['unit-stats-material-assets', alias],
-		queryFn: () => GetUnitStatsMaterialAssets(alias!),
-		enabled: alias !== undefined
+		queryKey: ['unit-stats-material-assets', id],
+		queryFn: () => GetUnitStatsMaterialAssets(id!),
+		enabled: id !== undefined
 	})
 }

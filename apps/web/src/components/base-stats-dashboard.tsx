@@ -26,27 +26,16 @@ import {
 	ChartTooltip,
 	ChartTooltipContent
 } from '@/components/ui/chart'
-import {
-	Select,
-	SelectContent,
-	SelectItem,
-	SelectTrigger,
-	SelectValue,
-	SelectSeparator,
-	SelectGroup,
-	SelectLabel
-} from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { DataTable } from '@/components/data-table'
 import TableSkeleton from '@/components/table-skeleton'
 import useAuth from '@/hooks/useAuth'
-import useUnitsData from '@/hooks/useUnitsData'
 import useUnitStats from '@/hooks/useUnitStats'
 import useUnitStatsStudents from '@/hooks/useUnitStatsStudents'
 import useUnitStatsMaterialStocks from '@/hooks/useUnitStatsMaterialStocks'
 import useUnitStatsMaterialAssets from '@/hooks/useUnitStatsMaterialAssets'
 import useProvinces from '@/hooks/useProvinces'
-import { battalionStudentColumnsWithoutAction } from '@/components/student-table/columns'
+import { buildBattalionStudentColumnsWithoutAction } from '@/components/student-table/columns'
 import { defaultBirthdayColumnVisibility } from '@/components/student-table/default-columns-visibility'
 import { useStudentFacetedFilters } from '@/hooks/useStudentFacetedFilters'
 import { buildMaterialStockColumns } from '@/components/material-stock-table/columns'
@@ -57,10 +46,11 @@ import {
 	politicalOrgNameMapping
 } from '@/components/politics-quality-report/charts-section'
 import { unitLevelLabels, unitLevelOrder } from '@/data/unit-levels'
+import UnitSelect from '@/components/unit/select'
+import useUnitOptions from '@/hooks/useUnitOptions'
 import { materialAssetStatusLabels } from '@/data/material-categories'
 import { GetPoliticsQualityReport } from '@/api'
 import { transformPoliticsQualityData } from '@/lib/utils'
-import type { Unit, UnitLevel } from '@/types'
 import type { units } from '@/api/client'
 
 const readOnlyMaterialStockColumns = buildMaterialStockColumns([]).filter(
@@ -72,39 +62,24 @@ const readOnlyMaterialAssetColumns = buildMaterialAssetColumns([], []).filter(
 
 const TROOP_CHART_COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042']
 
-function GroupUnits({ unitsMap }: { unitsMap: Map<UnitLevel, Unit[]> }) {
-	const flatUnitsMapEntries = [...unitsMap.entries()]
-	return flatUnitsMapEntries.map(([level, units], idx) => (
-		<>
-			<SelectGroup key={level}>
-				<SelectLabel>{unitLevelLabels[level]}</SelectLabel>
-				{units.map((u) => (
-					<SelectItem key={u.id} value={u.alias}>
-						{u.name}
-						{u?.parent?.name !== undefined
-							? ` (${u?.parent?.name})`
-							: ''}
-					</SelectItem>
-				))}
-			</SelectGroup>
-			{idx !== flatUnitsMapEntries.length - 1 && <SelectSeparator />}
-		</>
-	))
-}
-
 export default function BaseStatsDashboard() {
 	const navigate = useNavigate({ from: Route.fullPath })
-	const { unit: unitAliasParam } = Route.useSearch()
+	const { unit: unitIdParam } = Route.useSearch()
 	const { user } = useAuth()
-	const { data: units = [], isLoading: isLoadingUnits } = useUnitsData()
+	const {
+		units,
+		unitsById,
+		options: unitOptions,
+		isLoading: isLoadingUnits
+	} = useUnitOptions({ minLevel: 'platoon' })
 
 	const rootUnit = units.find((u) => !u.parent)
-	const selectedAlias = unitAliasParam ?? user?.unit?.alias ?? rootUnit?.alias
+	const selectedUnitId = unitIdParam ?? user?.unit?.id ?? rootUnit?.id
 
 	const { data: stats, isLoading: isLoadingStats } =
-		useUnitStats(selectedAlias)
+		useUnitStats(selectedUnitId)
 
-	const selectedUnit = units.find((u) => u.alias === selectedAlias)
+	const selectedUnit = units.find((u) => u.id === selectedUnitId)
 	const { data: politicsQualityData, isLoading: isLoadingPoliticsQuality } =
 		useQuery({
 			enabled: selectedUnit !== undefined,
@@ -123,34 +98,23 @@ export default function BaseStatsDashboard() {
 	const showRollupTabs = stats !== undefined && stats.unit.level !== 'squad'
 
 	const { data: rollupStudents, isLoading: isLoadingRollupStudents } =
-		useUnitStatsStudents(showRollupTabs ? selectedAlias : undefined)
+		useUnitStatsStudents(showRollupTabs ? selectedUnitId : undefined)
 	const { data: rollupStocks, isLoading: isLoadingRollupStocks } =
-		useUnitStatsMaterialStocks(showRollupTabs ? selectedAlias : undefined)
+		useUnitStatsMaterialStocks(showRollupTabs ? selectedUnitId : undefined)
 	const { data: rollupAssets, isLoading: isLoadingRollupAssets } =
-		useUnitStatsMaterialAssets(showRollupTabs ? selectedAlias : undefined)
+		useUnitStatsMaterialAssets(showRollupTabs ? selectedUnitId : undefined)
 	const studentFacetedFilters = useStudentFacetedFilters(rollupStudents ?? [])
 
 	if (isLoadingUnits) {
 		return <TableSkeleton />
 	}
 
-	const handleUnitChange = (alias: string) => {
-		navigate({ search: (prev) => ({ ...prev, unit: alias }) })
+	const handleUnitChange = (id: string) => {
+		navigate({ search: (prev) => ({ ...prev, unit: Number(id) }) })
 	}
 
-	const groupedUnits: Map<UnitLevel, units.Unit[]> = new Map()
-	units.forEach((u) => {
-		if (u.level === 'squad') {
-			return
-		}
-
-		if (!groupedUnits.has(u.level)) {
-			groupedUnits.set(u.level, [u])
-			return
-		}
-
-		groupedUnits.get(u.level)?.push(u)
-	})
+	const battalionStudentColumnsWithoutAction =
+		buildBattalionStudentColumnsWithoutAction(unitsById)
 
 	const kpiCards = [
 		{
@@ -593,7 +557,7 @@ export default function BaseStatsDashboard() {
 			<div className='flex flex-col gap-4 md:flex-row md:items-center md:justify-between'>
 				<div>
 					<h2 className='text-2xl font-bold tracking-tight'>
-						Thống kê doanh trại
+						Thống kê đơn vị
 					</h2>
 					<p className='text-muted-foreground'>
 						Tổng hợp quân số, cơ sở vật chất và vũ khí/trang bị của
@@ -601,23 +565,27 @@ export default function BaseStatsDashboard() {
 					</p>
 				</div>
 
-				<Select value={selectedAlias} onValueChange={handleUnitChange}>
-					<SelectTrigger className='w-full md:w-[280px]'>
-						<SelectValue placeholder='Chọn đơn vị' />
-					</SelectTrigger>
-					<SelectContent>
-						<GroupUnits unitsMap={groupedUnits} />
-					</SelectContent>
-				</Select>
+				<UnitSelect
+					options={unitOptions}
+					value={
+						selectedUnitId === undefined
+							? undefined
+							: String(selectedUnitId)
+					}
+					onValueChange={handleUnitChange}
+					className='md:w-[280px]'
+				/>
 			</div>
 
-			{selectedAlias === undefined && (
+			{selectedUnitId === undefined && (
 				<p className='text-muted-foreground'>
 					Bạn chưa được phân công đơn vị nào để xem thống kê.
 				</p>
 			)}
 
-			{selectedAlias !== undefined && isLoadingStats && <TableSkeleton />}
+			{selectedUnitId !== undefined && isLoadingStats && (
+				<TableSkeleton />
+			)}
 
 			{stats !== undefined &&
 				(showRollupTabs ? (

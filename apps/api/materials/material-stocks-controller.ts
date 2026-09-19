@@ -15,12 +15,16 @@ import {
 	UpdateMaterialStockMap
 } from '../schema/material-stocks'
 import materialStockRepo from './material-stocks-repo'
+import { assertRefsInUnitScope, refsAfterUpdate } from './unit-scope'
 import type { ExportMaterialStocksRequest } from './material-stocks'
 
 class controller {
 	constructor(private readonly repo: MaterialStockRepository) {}
 
-	async create(params: MaterialStockParams[]): Promise<MaterialStockDB[]> {
+	async create(
+		params: MaterialStockParams[],
+		validUnitIds: number[]
+	): Promise<MaterialStockDB[]> {
 		log.trace('MaterialStockController.create params', { params })
 
 		if (params.length === 0) {
@@ -28,6 +32,8 @@ class controller {
 				AppError.invalidArgument('Empty request data')
 			)
 		}
+
+		await assertRefsInUnitScope(params, validUnitIds)
 
 		return this.repo.create(params).catch(AppError.handleAppErr)
 	}
@@ -54,6 +60,11 @@ class controller {
 				)
 			)
 		}
+
+		await assertRefsInUnitScope(
+			refsAfterUpdate(params, existing),
+			validUnitIds
+		)
 
 		return this.repo
 			.update(params as UpdateMaterialStockMap)
@@ -103,38 +114,40 @@ class controller {
 	async handleExportMaterialStocks(
 		req: ExportMaterialStocksRequest
 	): Promise<Uint8Array> {
+		log.info('ExportMaterialStocks starting')
+		const {
+			city,
+			commanderName,
+			commanderPosition,
+			commanderRank,
+			data,
+			date,
+			reportTitle,
+			underUnitName,
+			unitName,
+			templateId
+		} = req
+
+		const rows = data.map(normalizeRowForDocx)
+		const columns = deriveColumns(rows)
+
+		const dateObj = dayjs(date)
+		const day = dateObj.format('DD')
+		const month = dateObj.format('MM')
+		const year = dateObj.year()
+
+		const customTemplate =
+			templateId !== undefined
+				? await exportTemplateController.getTemplateFile(templateId)
+				: undefined
+
+		// File and rendering failures are not AppErrors, so only they are wrapped.
 		try {
-			log.info('ExportMaterialStocks starting')
-			const {
-				city,
-				commanderName,
-				commanderPosition,
-				commanderRank,
-				data,
-				date,
-				reportTitle,
-				underUnitName,
-				unitName,
-				templateId
-			} = req
-
-			const rows = data.map(normalizeRowForDocx)
-			const columns = deriveColumns(rows)
-
-			const dateObj = dayjs(date)
-			const day = dateObj.format('DD')
-			const month = dateObj.format('MM')
-			const year = dateObj.year()
-
 			const template =
-				templateId !== undefined
-					? await exportTemplateController.getTemplateFile(templateId)
-					: await readFile(
-							path.join(
-								'./templates',
-								'dynamic-docx-template.docx'
-							)
-						)
+				customTemplate ??
+				(await readFile(
+					path.join('./templates', 'dynamic-docx-template.docx')
+				))
 
 			return await createReport({
 				template,
@@ -159,9 +172,7 @@ class controller {
 			log.error('handleExportMaterialStocks error', { err })
 
 			throw AppError.handleAppErr(
-				err instanceof AppError
-					? err
-					: AppError.internal('Internal error for exporting file')
+				AppError.internal('Internal error for exporting file')
 			)
 		}
 	}

@@ -14,7 +14,7 @@ declare module 'encore.dev/api' {
 }
 
 async function getValidIdsFromUnit(unitId: number) {
-	const unit = await unitRepo.getOne({ id: unitId })
+	const unit = await unitRepo.findOne({ id: unitId })
 
 	if (!unit) {
 		return { unitIds: [] }
@@ -26,7 +26,7 @@ async function getValidIdsFromUnit(unitId: number) {
 }
 
 async function getAllValidIds() {
-	const units = await unitRepo.findAll()
+	const units = await unitRepo.find({ with: { children: true } })
 
 	const unitIds = units.flatMap((u) => {
 		const ids = [u.id]

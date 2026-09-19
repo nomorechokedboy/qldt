@@ -8,8 +8,8 @@ export const unitLevelOrder: UnitLevel[] = [
 	'company',
 	'battalion',
 	'department',
-	'regiment',
 	'brigade',
+	'regiment',
 	'division',
 	'corps'
 ]
@@ -39,6 +39,22 @@ export const rootUnitLevelOptions = unitLevelOptions.filter(
 
 export function isLargerUnitLevel(a: UnitLevel, b: UnitLevel): boolean {
 	return unitLevelOrder.indexOf(a) > unitLevelOrder.indexOf(b)
+}
+
+// Level options for a non-root unit, given the system's actual root unit's
+// level - nothing can be created or edited to be at or above the root's
+// level, since the root sits at the top of the hierarchy and every other
+// unit needs a strictly larger parent. Pass undefined when the root isn't
+// known yet (falls back to the unrestricted list).
+export function levelOptionsUnderRoot(rootLevel: UnitLevel | undefined) {
+	if (rootLevel === undefined) {
+		return unitLevelOptions
+	}
+
+	return unitLevelOptions.filter(
+		(opt) =>
+			opt.value !== rootLevel && !isLargerUnitLevel(opt.value, rootLevel)
+	)
 }
 
 export function isCompanyOrAboveLevel(level: UnitLevel): boolean {

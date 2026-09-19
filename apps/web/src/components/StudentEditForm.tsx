@@ -2,7 +2,6 @@ import React, { useMemo, useState, useEffect } from 'react'
 import * as Tabs from '@radix-ui/react-tabs'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import type { Student, ChildrenInfo } from '@/types'
@@ -15,7 +14,7 @@ import { eduLevelOptions } from '@/data/education-levels'
 import { politicalOptions } from '@/data/political-status'
 import { activityStatusOptions } from '@/data/activity-statuses'
 import { rankOptions } from '@/data/ranks'
-import useUnitsData from '@/hooks/useUnitsData'
+import useUnitOptions from '@/hooks/useUnitOptions'
 import usePositionsData from '@/hooks/usePositionsData'
 import { unitLevelLabels, unitLevelOrder } from '@/data/unit-levels'
 import { getMediaUri } from '../lib/utils'
@@ -40,31 +39,6 @@ interface StudentEditFormProps {
 	onClose?: () => void
 }
 
-// True group-by (not consecutive-clustering): merges every item sharing
-// the same group key into one bucket regardless of where it falls in the
-// array, so two same-named groups that aren't adjacent (e.g. the same
-// fallback/explicit label used by two different `level`s) never produce
-// two separate buckets with the same key - which would be a duplicate
-// React key on the rendered <optgroup> below.
-function groupConsecutive<T>(
-	items: T[],
-	getGroup: (item: T) => string | undefined
-) {
-	const groups: { key: string | undefined; items: T[] }[] = []
-	const bucketByKey = new Map<string | undefined, number>()
-	for (const item of items) {
-		const key = getGroup(item)
-		const bucketIdx = bucketByKey.get(key)
-		if (bucketIdx !== undefined) {
-			groups[bucketIdx].items.push(item)
-		} else {
-			bucketByKey.set(key, groups.length)
-			groups.push({ key, items: [item] })
-		}
-	}
-	return groups
-}
-
 export default function StudentEditForm({
 	student,
 	onClose
@@ -72,21 +46,7 @@ export default function StudentEditForm({
 	const { handlePatchStudentInfo, isPending } = usePatchStudentInfo(student)
 	const { mutateAsync: uploadFilesMutate } = useUploadFiles()
 
-	const { data: units = [] } = useUnitsData()
-	// `units` from GetUnits() is already a flat list of every unit the
-	// caller is authorized for - each row also carries a shallow `children`
-	// relation (Drizzle `with: { children: true }`), but those children are
-	// already present as their own top-level entries in this same array.
-	// Recursing into `.children` here re-added every non-root unit a
-	// second time, so map directly instead.
-	const unitOptions = useMemo(
-		() =>
-			units.map((u) => ({
-				value: u.id.toString(),
-				label: `${u.name}${u?.parent?.name !== undefined ? ` (${u?.parent?.name})` : ''}`
-			})),
-		[units]
-	)
+	const { options: unitOptions } = useUnitOptions()
 	const { data: positions = [] } = usePositionsData()
 	const positionOptions = useMemo(
 		() =>
@@ -232,69 +192,17 @@ export default function StudentEditForm({
 		type?: string
 		options?: { label: string; value: string; group?: string }[]
 	}) => (
-		<form.Field
-			name={name as any}
-			children={(field) => (
-				<div className='flex flex-col gap-1'>
-					<Label>{label}</Label>
-
-					{typeof field.state.value === 'boolean' ? (
-						<Checkbox
-							checked={field.state.value}
-							onCheckedChange={(val) =>
-								field.handleChange(Boolean(val))
-							}
-						/>
-					) : options && options.length > 0 ? (
-						<select
-							className='border rounded px-2 py-1'
-							value={String(field.state.value ?? '')}
-							onChange={(e) => field.handleChange(e.target.value)}
-						>
-							{options.some((opt) => opt.group)
-								? groupConsecutive(
-										options,
-										(opt) => opt.group
-									).map((group, idx) => (
-										<optgroup
-											key={group.key ?? idx}
-											label={group.key ?? label}
-										>
-											{group.items.map((opt) => (
-												<option
-													key={opt.value}
-													value={opt.value}
-												>
-													{opt.label}
-												</option>
-											))}
-										</optgroup>
-									))
-								: options.map((opt) => (
-										<option
-											key={opt.value}
-											value={opt.value}
-										>
-											{opt.label}
-										</option>
-									))}
-						</select>
-					) : (
-						<Input
-							type={type}
-							value={field.state.value as string}
-							onChange={(e) => field.handleChange(e.target.value)}
-						/>
-					)}
-
-					{field.state.meta.errors.length > 0 && (
-						<span className='text-destructive text-sm'>
-							{field.state.meta.errors.join(', ')}
-						</span>
-					)}
-				</div>
-			)}
-		/>
+		<form.AppField name={name as any}>
+			{(field: any) =>
+				typeof field.state.value === 'boolean' ? (
+					<field.Switch label={label} />
+				) : options && options.length > 0 ? (
+					<field.Select label={label} values={options} />
+				) : (
+					<field.TextField label={label} type={type} />
+				)
+			}
+		</form.AppField>
 	)
 	const avatarUri =
 		student.avatar === undefined || student.avatar === ''

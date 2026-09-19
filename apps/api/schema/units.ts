@@ -16,8 +16,8 @@ export class UnitLevel {
 	// level's `value` ever has to change.
 	static readonly CORPS = new UnitLevel(-4, 'corps')
 	static readonly DIVISION = new UnitLevel(-3, 'division')
-	static readonly BRIGADE = new UnitLevel(-2, 'brigade')
 	static readonly REGIMENT = new UnitLevel(-1, 'regiment')
+	static readonly BRIGADE = new UnitLevel(-2, 'brigade')
 	static readonly DEPARTMENT = new UnitLevel(4, 'department')
 	static readonly BATTALION = new UnitLevel(0, 'battalion')
 	static readonly COMPANY = new UnitLevel(1, 'company')
@@ -29,8 +29,8 @@ export class UnitLevel {
 	private static readonly values = [
 		UnitLevel.CORPS,
 		UnitLevel.DIVISION,
-		UnitLevel.BRIGADE,
 		UnitLevel.REGIMENT,
+		UnitLevel.BRIGADE,
 		UnitLevel.DEPARTMENT,
 		UnitLevel.BATTALION,
 		UnitLevel.COMPANY,
@@ -178,14 +178,35 @@ export type UnitDB = InferSelectModel<typeof units>
 
 export type UnitParams = InferInsertModel<typeof units>
 
-type unit = Omit<UnitDB, 'parentId'>
+// Relations are only present when the query asked for them (see
+// UnitRelations), so both are optional.
+export type Unit = UnitDB & { parent?: Unit | null; children?: Unit[] }
 
-export type Unit = unit & { parent?: Unit; children: Unit[] }
+// `children: 'deep'` also hydrates grandchildren (with their own parent),
+// which is what the unit detail page needs; `true` is a single level.
+export type UnitRelations = {
+	parent?: boolean
+	children?: boolean | 'deep'
+}
 
 export type UnitQuery = {
-	level?: UnitLevelName
 	ids?: number[]
+	alias?: string
+	level?: UnitLevelName
+	// `null` matches root units (no parent).
+	parentId?: number | null
+	// Case-insensitive substring match on alias or name.
+	search?: string
+	// 1-based. Pagination only applies when `pageSize` is given, so callers
+	// that need every match (permission scoping, roster export) omit both.
+	page?: number
+	pageSize?: number
+	with?: UnitRelations
 }
+
+// Partial unit row used to look up exactly one unit. `undefined` fields are
+// ignored, `null` fields match SQL NULL.
+export type UnitFilter = Partial<UnitDB>
 
 export type UpdateUnitMap = {
 	id: number

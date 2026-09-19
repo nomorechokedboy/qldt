@@ -19,6 +19,7 @@ export type MaterialAssetBody = {
 	condition?: MaterialConditionName
 	status?: MaterialAssetStatus
 	assignedTrooperId?: number | null
+	images?: string[]
 }
 
 export type MaterialAssetDB = MaterialAssetBody & {
@@ -45,8 +46,12 @@ export const CreateMaterialAsset = api(
 			? Number(authData.userID)
 			: undefined
 
+		const callMeta = currentRequest() as APICallMeta
+		const validUnitIds = callMeta.middlewareData?.validUnitIds || []
+
 		const created = await materialAssetController.create(
 			body.data,
+			validUnitIds,
 			actorUserId
 		)
 		const resp = created.map((a) => ({ ...a }) as MaterialAssetDB)

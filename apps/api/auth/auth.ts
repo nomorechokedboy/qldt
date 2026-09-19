@@ -2,7 +2,6 @@ import { api, APIError, Gateway, Header } from 'encore.dev/api'
 import { authHandler } from 'encore.dev/auth'
 import log from 'encore.dev/log'
 import authController from './controller'
-import { AppError } from '../errors'
 import { getAuthData } from '~encore/auth'
 import userController from '../users/controller'
 import { UserDB } from '../schema'
@@ -25,22 +24,17 @@ export const auth = authHandler<AuthParams, AuthData>(async (params) => {
 		throw APIError.unauthenticated('no token provided')
 	}
 
-	try {
-		const payload = authController.verifyToken(token)
+	const payload = authController.verifyToken(token)
 
-		if (payload.type !== 'access') {
-			throw new Error('Invalid token type')
-		}
+	if (payload.type !== 'access') {
+		throw APIError.unauthenticated('Invalid token type')
+	}
 
-		// Return simplified auth data - validUnitIds computed in middleware
-		return {
-			userID: payload.userId.toString(),
-			permissions: payload.permissions || [],
-			isSuperAdmin: payload.isSuperUser
-		}
-	} catch (err) {
-		log.error('authHandler error', { err })
-		AppError.handleAppErr(err)
+	// Return simplified auth data - validUnitIds computed in middleware
+	return {
+		userID: payload.userId.toString(),
+		permissions: payload.permissions || [],
+		isSuperAdmin: payload.isSuperUser
 	}
 })
 

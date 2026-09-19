@@ -50,16 +50,6 @@ export function buildPositionColumns(
 			header: 'Tên chức vụ'
 		},
 		{
-			accessorKey: 'group',
-			header: 'HSQ',
-			cell: ({ row }) =>
-				row.getValue('group') === 'HSQ' ? (
-					<Badge>HSQ</Badge>
-				) : (
-					<span className='text-muted-foreground'>—</span>
-				)
-		},
-		{
 			id: 'actions',
 			cell: ({ row }) => (
 				<PositionRowActions data={row.original} onChanged={onChanged} />

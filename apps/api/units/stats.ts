@@ -33,12 +33,12 @@ interface GetUnitStatsResponse {
 }
 
 export const GetUnitStats = api(
-	{ auth: true, expose: true, method: 'GET', path: '/units/:alias/stats' },
-	async ({ alias }: { alias: string }): Promise<GetUnitStatsResponse> => {
+	{ auth: true, expose: true, method: 'GET', path: '/units/:id/stats' },
+	async ({ id }: { id: number }): Promise<GetUnitStatsResponse> => {
 		const callMeta = currentRequest() as APICallMeta
 		const validUnitIds = callMeta.middlewareData?.validUnitIds || []
 
-		const stats = await unitStatsController.getStats(alias, validUnitIds)
+		const stats = await unitStatsController.getStats(id, validUnitIds)
 
 		return { ...stats, unit: stats.unit as unknown as Unit }
 	}
@@ -53,17 +53,13 @@ export const GetUnitStatsStudents = api(
 		auth: true,
 		expose: true,
 		method: 'GET',
-		path: '/units/:alias/stats/students'
+		path: '/units/:id/stats/students'
 	},
-	async ({
-		alias
-	}: {
-		alias: string
-	}): Promise<GetUnitStatsStudentsResponse> => {
+	async ({ id }: { id: number }): Promise<GetUnitStatsStudentsResponse> => {
 		const callMeta = currentRequest() as APICallMeta
 		const validUnitIds = callMeta.middlewareData?.validUnitIds || []
 
-		const data = await unitStatsController.getStudents(alias, validUnitIds)
+		const data = await unitStatsController.getStudents(id, validUnitIds)
 
 		return { data: data.map((s) => ({ ...s })) }
 	}
@@ -78,18 +74,18 @@ export const GetUnitStatsMaterialStocks = api(
 		auth: true,
 		expose: true,
 		method: 'GET',
-		path: '/units/:alias/stats/material-stocks'
+		path: '/units/:id/stats/material-stocks'
 	},
 	async ({
-		alias
+		id
 	}: {
-		alias: string
+		id: number
 	}): Promise<GetUnitStatsMaterialStocksResponse> => {
 		const callMeta = currentRequest() as APICallMeta
 		const validUnitIds = callMeta.middlewareData?.validUnitIds || []
 
 		const data = await unitStatsController.getMaterialStocks(
-			alias,
+			id,
 			validUnitIds
 		)
 
@@ -106,18 +102,18 @@ export const GetUnitStatsMaterialAssets = api(
 		auth: true,
 		expose: true,
 		method: 'GET',
-		path: '/units/:alias/stats/material-assets'
+		path: '/units/:id/stats/material-assets'
 	},
 	async ({
-		alias
+		id
 	}: {
-		alias: string
+		id: number
 	}): Promise<GetUnitStatsMaterialAssetsResponse> => {
 		const callMeta = currentRequest() as APICallMeta
 		const validUnitIds = callMeta.middlewareData?.validUnitIds || []
 
 		const data = await unitStatsController.getMaterialAssets(
-			alias,
+			id,
 			validUnitIds
 		)
 

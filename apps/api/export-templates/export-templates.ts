@@ -1,6 +1,6 @@
 import { readFile } from 'fs/promises'
 import path from 'path'
-import { api, Query } from 'encore.dev/api'
+import { api, APIError, Query } from 'encore.dev/api'
 import log from 'encore.dev/log'
 import { getAuthData } from '~encore/auth'
 import { AppError } from '../errors'
@@ -32,8 +32,10 @@ export const UploadExportTemplate = api.raw(
 					form.resourceType as ExportResourceType
 				)
 			) {
-				throw AppError.invalidArgument(
-					`resourceType must be one of ${exportResourceTypes.join(', ')}`
+				throw AppError.handleAppErr(
+					AppError.invalidArgument(
+						`resourceType must be one of ${exportResourceTypes.join(', ')}`
+					)
 				)
 			}
 
@@ -52,12 +54,9 @@ export const UploadExportTemplate = api.raw(
 		} catch (err) {
 			log.error('UploadExportTemplate error', { err })
 
-			if (err instanceof AppError) {
-				res.writeHead(400, { 'Content-Type': 'application/json' })
-				res.end(JSON.stringify({ error: err.message }))
-				return
+			if (err instanceof APIError) {
+				throw err
 			}
-
 			res.writeHead(500, { Connection: 'close' })
 			res.end('Internal error uploading export template')
 		}

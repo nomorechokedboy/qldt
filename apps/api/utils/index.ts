@@ -120,6 +120,13 @@ export function mapAppErrorToAPIError(error: AppError): APIError {
 export function handleDatabaseErr(err: unknown): never {
 	log.error(err, 'handleDatabaseErr: ')
 
+	// Already-classified errors (e.g. an invalid unit level rejected while
+	// drizzle maps a query parameter) keep their type instead of being
+	// flattened into an internal error.
+	if (err instanceof AppError) {
+		throw err
+	}
+
 	if (!(err instanceof DrizzleQueryError)) {
 		throw AppError.internal('Internal error')
 	}
@@ -153,26 +160,28 @@ export async function getTypedRequestBody<T>(
 
 	const body = Buffer.concat(chunks).toString('utf-8')
 
+	let rawBody: unknown
 	try {
-		const rawBody = JSON.parse(body)
+		rawBody = JSON.parse(body)
+	} catch (error) {
+		log.error('Invalid JSON in request body', { error, body })
+		throw AppError.handleAppErr(
+			AppError.invalidArgument('Invalid JSON body')
+		)
+	}
 
-		const result = v.safeParse(schema, rawBody)
+	const result = v.safeParse(schema, rawBody)
 
-		if (!result.success) {
-			log.error('Request body validation failed', {
-				issues: result.issues
-			})
-			throw AppError.invalidArgument(
+	if (!result.success) {
+		log.error('Request body validation failed', {
+			issues: result.issues
+		})
+		throw AppError.handleAppErr(
+			AppError.invalidArgument(
 				`Invalid request body: ${result.issues.map((issue) => issue.message).join(', ')}`
 			)
-		}
-
-		return result.output
-	} catch (error) {
-		if (error instanceof SyntaxError) {
-			log.error('Invalid JSON in request body', { error, body })
-			throw AppError.invalidArgument('Invalid JSON body')
-		}
-		throw error
+		)
 	}
+
+	return result.output
 }

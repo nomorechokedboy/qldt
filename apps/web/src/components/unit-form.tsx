@@ -21,12 +21,14 @@ import {
 	SelectValue
 } from '@/components/ui/select'
 import { useCreateUnit } from '@/hooks/useCreateUnit'
-import useUnitsData from '@/hooks/useUnitsData'
+import UnitSelect from '@/components/unit/select'
+import useUnitOptions from '@/hooks/useUnitOptions'
+import { buildUnitOptions } from '@/lib/unit-options'
 import useAuth from '@/hooks/useAuth'
 import {
 	isCompanyOrAboveLevel,
 	isLargerUnitLevel,
-	unitLevelOptions,
+	levelOptionsUnderRoot,
 	unitLevelOrder
 } from '@/data/unit-levels'
 import type { UnitLevel } from '@/types'
@@ -34,6 +36,7 @@ import { getErrorMessage } from '@/lib/utils'
 import UnitCommanderFields, {
 	emptyCommanderValues,
 	commanderValuesToPayload,
+	SingleCommanderField,
 	type UnitCommanderValues,
 	type CommanderFieldKey
 } from '@/components/unit-commander-fields'
@@ -53,32 +56,34 @@ export default function UnitForm({ onSuccess }: UnitFormProps) {
 	const [commanders, setCommanders] =
 		useState<UnitCommanderValues>(emptyCommanderValues)
 
-	const { data: allUnits } = useUnitsData()
+	const { units: allUnits, unitsById } = useUnitOptions()
 	const createUnitMutation = useCreateUnit()
 	const { user } = useAuth()
 
 	const isSuperAdmin = !!user?.isSuperAdmin
+	// Nothing can be created above the system's actual root unit - there is
+	// no parent left to attach it to (mirrors the backend's root-level check
+	// in units/controller.ts#validateHierarchy). This ceiling applies to
+	// every user, super admin included.
+	const rootUnit = allUnits?.find((u) => !u.parent)
 	// Non-super-admins are scoped to their own unit's chain of command -
 	// GetUnits already only returns units in that subtree, so filtering
 	// against allUnits is enough for the parent picker. The level picker
 	// still needs an explicit floor: they can only stand up units below
 	// their own unit's level (mirrors the backend check in units/controller.ts).
 	const myUnit = allUnits?.find((u) => u.id === user?.unitId)
-	// Platoon and squad units are managed from the company's own page (by
-	// the company commander), not from the general unit management page -
-	// see company-platoon-table.tsx / company-squad-table.tsx.
-	const levelOptions = (
-		isSuperAdmin || !myUnit
-			? unitLevelOptions
-			: unitLevelOptions.filter(
-					(opt) =>
-						unitLevelOrder.indexOf(opt.value) <
-						unitLevelOrder.indexOf(myUnit.level)
-				)
-	).filter((opt) => isCompanyOrAboveLevel(opt.value))
+	const levelOptions = levelOptionsUnderRoot(rootUnit?.level).filter(
+		(opt) =>
+			isSuperAdmin ||
+			!myUnit ||
+			unitLevelOrder.indexOf(opt.value) <
+				unitLevelOrder.indexOf(myUnit.level)
+	)
 
-	const parentOptions =
-		allUnits?.filter((u) => isLargerUnitLevel(u.level, level)) ?? []
+	const parentOptions = allUnits.filter((u) =>
+		isLargerUnitLevel(u.level, level)
+	)
+	const parentSelectOptions = buildUnitOptions(parentOptions, { unitsById })
 
 	// Keep the selected level valid whenever the allowed set narrows (e.g.
 	// once myUnit resolves for a non-super-admin).
@@ -143,7 +148,7 @@ export default function UnitForm({ onSuccess }: UnitFormProps) {
 					Thêm đơn vị
 				</Button>
 			</DialogTrigger>
-			<DialogContent className='sm:max-w-md'>
+			<DialogContent className='sm:max-w-md h-auto'>
 				<DialogHeader>
 					<DialogTitle>Biểu mẫu thêm đơn vị</DialogTitle>
 				</DialogHeader>
@@ -196,35 +201,54 @@ export default function UnitForm({ onSuccess }: UnitFormProps) {
 
 					<div className='space-y-2'>
 						<Label htmlFor='unit-parent'>Thuộc đơn vị</Label>
-						<Select value={parentId} onValueChange={setParentId}>
-							<SelectTrigger id='unit-parent'>
-								<SelectValue placeholder='Chọn đơn vị cấp trên' />
-							</SelectTrigger>
-							<SelectContent>
-								{isSuperAdmin && (
-									<SelectItem value={NO_PARENT}>
-										Không có (đơn vị gốc)
-									</SelectItem>
-								)}
-								{parentOptions.map((u) => (
-									<SelectItem key={u.id} value={String(u.id)}>
-										{u.name}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
+						<UnitSelect
+							id='unit-parent'
+							options={parentSelectOptions}
+							value={parentId}
+							onValueChange={setParentId}
+							placeholder='Chọn đơn vị cấp trên'
+							noneOption={
+								isSuperAdmin
+									? {
+											value: NO_PARENT,
+											label: 'Không có (đơn vị gốc)'
+										}
+									: undefined
+							}
+						/>
 					</div>
 
-					<UnitCommanderFields
-						idPrefix='unit'
-						values={commanders}
-						onChange={(field: CommanderFieldKey, value: string) =>
-							setCommanders((prev) => ({
-								...prev,
-								[field]: value
-							}))
-						}
-					/>
+					{isCompanyOrAboveLevel(level) ? (
+						<UnitCommanderFields
+							idPrefix='unit'
+							values={commanders}
+							onChange={(
+								field: CommanderFieldKey,
+								value: string
+							) =>
+								setCommanders((prev) => ({
+									...prev,
+									[field]: value
+								}))
+							}
+						/>
+					) : (
+						<SingleCommanderField
+							idPrefix='unit'
+							label={
+								level === 'squad'
+									? 'Tiểu đội trưởng'
+									: 'Trung đội trưởng'
+							}
+							value={commanders.commanderId}
+							onChange={(value) =>
+								setCommanders((prev) => ({
+									...prev,
+									commanderId: value
+								}))
+							}
+						/>
+					)}
 
 					<DialogFooter>
 						<DialogClose asChild>

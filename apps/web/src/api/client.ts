@@ -936,18 +936,24 @@ export namespace inventory_sessions {
 		action: 'apply' | 'ignore'
 	}
 
-	export interface InventorySessionChallengeAsset {
-		serial: string
-		materialTypeName: string
-		condition: schema.MaterialConditionName
-	}
-
+	/**
+	 * Wire shapes (what travels in the QR codes and the results request body).
+	 * Rows are positional arrays:
+	 * expected:       [serial, typeIndex, conditionCode]
+	 * expectedStocks: [materialTypeId, typeIndex, conditionCode, expectedQuantity]
+	 * results:        [serial, observedConditionCode | null]
+	 * stockResults:   [materialTypeId, conditionCode, observedQuantity]
+	 * typeIndex points into `types`. They are typed as loose arrays because
+	 * Encore's schema parser has no tuple support; the decode* functions below
+	 * check each row's shape.
+	 */
 	export interface InventorySessionChallengePayload {
-		v: 2
+		v: 3
 		sid: number
 		roomId: number
-		expected: InventorySessionChallengeAsset[]
-		expectedStocks: InventorySessionChallengeStock[]
+		types: string[]
+		expected: (string | number)[][]
+		expectedStocks: number[][]
 		/**
 		 * Per-session HMAC key, derived from appConfig.HASH_SECRET (see
 		 * deriveSessionKey below) and included here so the phone - which never
@@ -959,13 +965,6 @@ export namespace inventory_sessions {
 		key: string
 
 		sig: string
-	}
-
-	export interface InventorySessionChallengeStock {
-		materialTypeId: number
-		materialTypeName: string
-		condition: schema.MaterialConditionName
-		expectedQuantity: number
 	}
 
 	export interface InventorySessionDiffItem {
@@ -1002,24 +1001,11 @@ export namespace inventory_sessions {
 		updatedAt: string
 	}
 
-	/**
-	 * InventorySessionResultItem/InventorySessionStockResultItem must not gain
-	 * new fields without updating canonicalResults() below AND
-	 * apps/scan-app/src/lib/payload.ts's hand-mirrored canonicalResults() in
-	 * lockstep - this function's explicit key-order rebuild silently drops any
-	 * field not listed here, while the phone's pass-through silently keeps it,
-	 * producing a signature mismatch instead of an obvious error.
-	 */
-	export interface InventorySessionResultItem {
-		serial: string
-		observedCondition?: schema.MaterialConditionName
-	}
-
 	export interface InventorySessionResultsPayload {
-		v: 2
+		v: 3
 		sid: number
-		results: InventorySessionResultItem[]
-		stockResults: InventorySessionStockResultItem[]
+		results: (string | number | null)[][]
+		stockResults: number[][]
 		sig: string
 	}
 
@@ -1054,12 +1040,6 @@ export namespace inventory_sessions {
 		materialTypeId: number
 		condition: string
 		action: 'apply' | 'ignore'
-	}
-
-	export interface InventorySessionStockResultItem {
-		materialTypeId: number
-		condition: schema.MaterialConditionName
-		observedQuantity: number
 	}
 
 	export class ServiceClient {
@@ -1372,6 +1352,7 @@ export namespace materials {
 		condition?: schema.MaterialConditionName
 		status?: schema.MaterialAssetStatus
 		assignedTrooperId?: number | null
+		images?: string[]
 	}
 
 	export interface MaterialAssetDB {
@@ -1382,6 +1363,7 @@ export namespace materials {
 		condition?: schema.MaterialConditionName
 		status?: schema.MaterialAssetStatus
 		assignedTrooperId?: number | null
+		images?: string[]
 		id: number
 		createdAt: string
 		updatedAt: string
@@ -1426,6 +1408,7 @@ export namespace materials {
 		category: schema.MaterialCategoryName
 		unitOfMeasure?: string
 		isSerialized: boolean
+		images?: string[]
 	}
 
 	export interface MaterialTypeDB {
@@ -1433,6 +1416,7 @@ export namespace materials {
 		category: schema.MaterialCategoryName
 		unitOfMeasure?: string
 		isSerialized: boolean
+		images?: string[]
 		id: number
 		createdAt: string
 		updatedAt: string
@@ -1451,6 +1435,7 @@ export namespace materials {
 		condition?: schema.MaterialConditionName
 		status?: schema.MaterialAssetStatus
 		assignedTrooperId?: number | null
+		images?: string[]
 	}
 
 	export interface UpdateMaterialStockBody {
@@ -1476,6 +1461,7 @@ export namespace materials {
 		category?: schema.MaterialCategoryName
 		unitOfMeasure?: string
 		isSerialized?: boolean
+		images?: string[]
 	}
 
 	export class ServiceClient {
@@ -1797,10 +1783,6 @@ export namespace notifications {
 		}
 	}
 
-	export interface Handshake {
-		userId: number
-	}
-
 	export interface MarkAsReadRequest {
 		ids: string[]
 	}
@@ -1899,18 +1881,8 @@ export namespace notifications {
 			)
 		}
 
-		public async NotificationStream(
-			params: Handshake
-		): Promise<StreamIn<Message>> {
-			// Convert our params into the objects we need for the request
-			const query = makeRecord<string, string | string[]>({
-				userId: String(params.userId)
-			})
-
-			return await this.baseClient.createStreamIn(
-				`/notifications/stream`,
-				{ query }
-			)
+		public async NotificationStream(): Promise<StreamIn<Message>> {
+			return await this.baseClient.createStreamIn(`/notifications/stream`)
 		}
 	}
 }
@@ -2470,8 +2442,6 @@ export namespace students {
 		isEthnicMinority?: boolean
 		isMarried?: boolean
 		politicalOrg?: 'hcyu' | 'cpv'
-		unitAlias?: string
-		unitLevel?: schema.UnitLevelName
 		isCpvOfficialThisWeek?: boolean
 		cpvOfficialInMonth?: Month
 		cpvOfficialInQuarter?: Quarter
@@ -3097,15 +3067,10 @@ export namespace students {
 					params.politicalOrg === undefined
 						? undefined
 						: String(params.politicalOrg),
-				unitAlias: params.unitAlias,
 				unitId:
 					params.unitId === undefined
 						? undefined
 						: String(params.unitId),
-				unitLevel:
-					params.unitLevel === undefined
-						? undefined
-						: String(params.unitLevel),
 				withAdversity:
 					params.withAdversity === undefined
 						? undefined
@@ -3487,13 +3452,6 @@ export namespace units {
 		ids: number[]
 	}
 
-	export interface GetUnitRequest {
-		id?: number
-		name?: string
-		level?: schema.UnitLevelName
-		parentId?: number | null
-	}
-
 	export interface GetUnitResponse {
 		data?: Unit
 	}
@@ -3694,74 +3652,53 @@ export namespace units {
 			return (await resp.json()) as DeleteUnitResponse
 		}
 
-		public async GetUnit(
-			alias: string,
-			params: GetUnitRequest
-		): Promise<GetUnitResponse> {
-			// Convert our params into the objects we need for the request
-			const query = makeRecord<string, string | string[]>({
-				id: params.id === undefined ? undefined : String(params.id),
-				level:
-					params.level === undefined
-						? undefined
-						: String(params.level),
-				name: params.name,
-				parentId:
-					params.parentId === undefined
-						? undefined
-						: String(params.parentId)
-			})
-
+		public async GetUnit(id: number): Promise<GetUnitResponse> {
 			// Now make the actual call to the API
 			const resp = await this.baseClient.callTypedAPI(
 				'GET',
-				`/units/${encodeURIComponent(alias)}`,
-				undefined,
-				{ query }
+				`/units/${encodeURIComponent(id)}`
 			)
 			return (await resp.json()) as GetUnitResponse
 		}
 
-		public async GetUnitStats(
-			alias: string
-		): Promise<GetUnitStatsResponse> {
+		public async GetUnitStats(id: number): Promise<GetUnitStatsResponse> {
 			// Now make the actual call to the API
 			const resp = await this.baseClient.callTypedAPI(
 				'GET',
-				`/units/${encodeURIComponent(alias)}/stats`
+				`/units/${encodeURIComponent(id)}/stats`
 			)
 			return (await resp.json()) as GetUnitStatsResponse
 		}
 
 		public async GetUnitStatsMaterialAssets(
-			alias: string
+			id: number
 		): Promise<GetUnitStatsMaterialAssetsResponse> {
 			// Now make the actual call to the API
 			const resp = await this.baseClient.callTypedAPI(
 				'GET',
-				`/units/${encodeURIComponent(alias)}/stats/material-assets`
+				`/units/${encodeURIComponent(id)}/stats/material-assets`
 			)
 			return (await resp.json()) as GetUnitStatsMaterialAssetsResponse
 		}
 
 		public async GetUnitStatsMaterialStocks(
-			alias: string
+			id: number
 		): Promise<GetUnitStatsMaterialStocksResponse> {
 			// Now make the actual call to the API
 			const resp = await this.baseClient.callTypedAPI(
 				'GET',
-				`/units/${encodeURIComponent(alias)}/stats/material-stocks`
+				`/units/${encodeURIComponent(id)}/stats/material-stocks`
 			)
 			return (await resp.json()) as GetUnitStatsMaterialStocksResponse
 		}
 
 		public async GetUnitStatsStudents(
-			alias: string
+			id: number
 		): Promise<GetUnitStatsStudentsResponse> {
 			// Now make the actual call to the API
 			const resp = await this.baseClient.callTypedAPI(
 				'GET',
-				`/units/${encodeURIComponent(alias)}/stats/students`
+				`/units/${encodeURIComponent(id)}/stats/students`
 			)
 			return (await resp.json()) as GetUnitStatsStudentsResponse
 		}

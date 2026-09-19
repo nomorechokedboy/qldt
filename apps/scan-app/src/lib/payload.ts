@@ -3,10 +3,21 @@
 // same JSON key order in the signed canonical string) since the two sides
 // never share code - this app runs in a Tauri webview (Web Crypto), the
 // backend runs in Node (`crypto`). v2 adds bulk stock counting alongside
-// serialized assets. See
+// serialized assets. v3 is the compact wire format: items are positional
+// arrays, material type names are sent once in `types`, and conditions are
+// sent as codes, so a full room fits in one QR code. See
 // docs/superpowers/specs/2026-09-09-scan-reconciliation-design.md and
 // docs/superpowers/specs/2026-09-10-inventory-session-stock-counts-design.md.
-export const INVENTORY_SESSION_PAYLOAD_VERSION = 2 as const
+export const INVENTORY_SESSION_PAYLOAD_VERSION = 3 as const
+
+// Positions in this list ARE the wire codes - keep identical to
+// CONDITION_CODES in apps/api/inventory-sessions/payload.ts.
+const CONDITION_CODES: readonly MaterialConditionName[] = [
+	'good',
+	'fair',
+	'needs_maintenance',
+	'damaged'
+]
 
 export type MaterialConditionName =
 	| 'good'
@@ -27,6 +38,8 @@ export interface ChallengeStock {
 	expectedQuantity: number
 }
 
+// What the rest of the app works with (and what is kept in localStorage):
+// the challenge QR expanded back into readable items.
 export interface ChallengePayload {
 	v: typeof INVENTORY_SESSION_PAYLOAD_VERSION
 	sid: number
@@ -40,12 +53,20 @@ export interface ChallengePayload {
 	sig: string
 }
 
-// ResultItem/StockResultItem must not gain new fields without updating
-// canonicalResults() here AND apps/api/inventory-sessions/payload.ts's
-// canonicalResults() in lockstep - the server's explicit key-order rebuild
-// silently drops any field it doesn't list, while this pass-through
-// silently keeps it, so an unmatched field addition produces a signature
-// mismatch instead of an obvious error.
+// Rows of the challenge QR, as scanned:
+//   expected:       [serial, typeIndex, conditionCode]
+//   expectedStocks: [materialTypeId, typeIndex, conditionCode, expectedQuantity]
+interface ChallengeWire {
+	v: typeof INVENTORY_SESSION_PAYLOAD_VERSION
+	sid: number
+	roomId: number
+	types: string[]
+	expected: unknown[]
+	expectedStocks: unknown[]
+	key: string
+	sig: string
+}
+
 export interface ResultItem {
 	serial: string
 	observedCondition?: MaterialConditionName
@@ -57,12 +78,42 @@ export interface StockResultItem {
 	observedQuantity: number
 }
 
+// The results QR, as sent. Rows are positional arrays, matching the API:
+//   results:      [serial, observedConditionCode | null]
+//   stockResults: [materialTypeId, conditionCode, observedQuantity]
 export interface ResultsPayload {
 	v: typeof INVENTORY_SESSION_PAYLOAD_VERSION
 	sid: number
-	results: ResultItem[]
-	stockResults: StockResultItem[]
+	results: (string | number | null)[][]
+	stockResults: number[][]
 	sig: string
+}
+
+function conditionToCode(condition: MaterialConditionName): number {
+	return CONDITION_CODES.indexOf(condition)
+}
+
+function codeToCondition(code: unknown): MaterialConditionName | null {
+	return typeof code === 'number' ? (CONDITION_CODES[code] ?? null) : null
+}
+
+function encodeResults(
+	results: ResultItem[],
+	stockResults: StockResultItem[]
+): Pick<ResultsPayload, 'results' | 'stockResults'> {
+	return {
+		results: results.map((r) => [
+			r.serial,
+			r.observedCondition === undefined
+				? null
+				: conditionToCode(r.observedCondition)
+		]),
+		stockResults: stockResults.map((r) => [
+			r.materialTypeId,
+			conditionToCode(r.condition),
+			r.observedQuantity
+		])
+	}
 }
 
 function bytesToHex(bytes: Uint8Array): string {
@@ -72,16 +123,12 @@ function bytesToHex(bytes: Uint8Array): string {
 }
 
 // Same canonicalization as canonicalResults() in
-// apps/api/inventory-sessions/payload.ts - key order matters, it's part of
-// what gets hashed. Unlike the server side, this doesn't need to rebuild
-// each item with an explicit key order: these objects are constructed by
-// this app right before signing (never round-tripped through Encore's
-// alphabetizing request parser), so JSON.stringify's insertion-order
-// behavior is already exactly the order these interfaces declare.
+// apps/api/inventory-sessions/payload.ts - key order and row layout are part
+// of what gets hashed.
 function canonicalResults(
 	sid: number,
-	results: ResultItem[],
-	stockResults: StockResultItem[]
+	results: ResultsPayload['results'],
+	stockResults: ResultsPayload['stockResults']
 ): string {
 	return JSON.stringify({
 		v: INVENTORY_SESSION_PAYLOAD_VERSION,
@@ -104,8 +151,8 @@ function canonicalResults(
 async function signResults(
 	key: string,
 	sid: number,
-	results: ResultItem[],
-	stockResults: StockResultItem[]
+	results: ResultsPayload['results'],
+	stockResults: ResultsPayload['stockResults']
 ): Promise<string> {
 	const cryptoKey = await crypto.subtle.importKey(
 		'raw',
@@ -128,12 +175,17 @@ export async function buildResultsPayload(
 	results: ResultItem[],
 	stockResults: StockResultItem[]
 ): Promise<ResultsPayload> {
-	const sig = await signResults(key, sid, results, stockResults)
+	const encoded = encodeResults(results, stockResults)
+	const sig = await signResults(
+		key,
+		sid,
+		encoded.results,
+		encoded.stockResults
+	)
 	return {
 		v: INVENTORY_SESSION_PAYLOAD_VERSION,
 		sid,
-		results,
-		stockResults,
+		...encoded,
 		sig
 	}
 }
@@ -142,10 +194,9 @@ export async function buildResultsPayload(
 // storage.ts's loadSession (a session resumed from localStorage after an
 // app kill) - a resumed session is just as untrustworthy as a scanned QR
 // until checked. Without this, a session persisted by an older build (e.g.
-// a v1 session, from before `expectedStocks`/`key` existed) gets silently
-// resumed with a broken/missing shape, producing a results signature the
-// backend correctly rejects - the bug this was added to catch. The `v`
-// check alone already rejects any pre-stock-counts (v1) session.
+// a v2 session, from before the compact format) gets silently resumed with
+// a broken/missing shape, producing a results signature the backend
+// correctly rejects. The `v` check rejects those.
 export function isValidChallengePayload(obj: unknown): obj is ChallengePayload {
 	if (typeof obj !== 'object' || obj === null) return false
 	const o = obj as Record<string, unknown>
@@ -160,12 +211,79 @@ export function isValidChallengePayload(obj: unknown): obj is ChallengePayload {
 	)
 }
 
+function expandChallenge(wire: ChallengeWire): ChallengePayload | null {
+	if (
+		wire.v !== INVENTORY_SESSION_PAYLOAD_VERSION ||
+		typeof wire.sid !== 'number' ||
+		typeof wire.roomId !== 'number' ||
+		typeof wire.key !== 'string' ||
+		typeof wire.sig !== 'string' ||
+		!Array.isArray(wire.types) ||
+		!Array.isArray(wire.expected) ||
+		!Array.isArray(wire.expectedStocks)
+	) {
+		return null
+	}
+
+	const nameOf = (index: unknown) =>
+		typeof index === 'number' ? wire.types[index] : undefined
+
+	const expected: ChallengeAsset[] = []
+	for (const row of wire.expected) {
+		if (!Array.isArray(row)) return null
+		const [serial, type, code] = row
+		const materialTypeName = nameOf(type)
+		const condition = codeToCondition(code)
+		if (
+			typeof serial !== 'string' ||
+			materialTypeName === undefined ||
+			condition === null
+		) {
+			return null
+		}
+		expected.push({ serial, materialTypeName, condition })
+	}
+
+	const expectedStocks: ChallengeStock[] = []
+	for (const row of wire.expectedStocks) {
+		if (!Array.isArray(row)) return null
+		const [materialTypeId, type, code, expectedQuantity] = row
+		const materialTypeName = nameOf(type)
+		const condition = codeToCondition(code)
+		if (
+			typeof materialTypeId !== 'number' ||
+			typeof expectedQuantity !== 'number' ||
+			materialTypeName === undefined ||
+			condition === null
+		) {
+			return null
+		}
+		expectedStocks.push({
+			materialTypeId,
+			materialTypeName,
+			condition,
+			expectedQuantity
+		})
+	}
+
+	return {
+		v: wire.v,
+		sid: wire.sid,
+		roomId: wire.roomId,
+		expected,
+		expectedStocks,
+		key: wire.key,
+		sig: wire.sig
+	}
+}
+
 // Best-effort validation of a scanned challenge QR - malformed/foreign QR
 // codes should re-prompt "couldn't read that", not crash the app.
 export function parseChallengePayload(text: string): ChallengePayload | null {
 	try {
 		const obj = JSON.parse(text)
-		return isValidChallengePayload(obj) ? obj : null
+		if (typeof obj !== 'object' || obj === null) return null
+		return expandChallenge(obj as ChallengeWire)
 	} catch {
 		return null
 	}

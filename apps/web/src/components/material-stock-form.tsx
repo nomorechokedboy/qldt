@@ -98,7 +98,7 @@ export default function MaterialStockForm({
 					Thêm vật tư
 				</Button>
 			</DialogTrigger>
-			<DialogContent className='sm:max-w-md'>
+			<DialogContent className='sm:max-w-md h-auto'>
 				<DialogHeader>
 					<DialogTitle>Biểu mẫu thêm vật tư</DialogTitle>
 				</DialogHeader>

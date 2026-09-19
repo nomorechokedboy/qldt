@@ -47,7 +47,7 @@ export default function RejectDialog({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className='sm:max-w-md'>
+			<DialogContent className='sm:max-w-md h-auto'>
 				<DialogHeader>
 					<DialogTitle>Từ chối đề xuất thăng quân hàm</DialogTitle>
 				</DialogHeader>

@@ -3,7 +3,6 @@ import { columnsWithoutAction } from '@/components/student-table/columns'
 import { SidebarInset } from '@/components/ui/sidebar'
 import { EhtnicOptions } from '@/data/ethnicities'
 import useDataTableToolbarConfig from '@/hooks/useDataTableToolbarConfig'
-import type { UnitLevel } from '@/types'
 import { defaultCompanyTrooperColumnVisibility } from './student-table/default-columns-visibility'
 import useOnDeleteStudents from '@/hooks/useOnDeleteStudents'
 import TableSkeleton from './table-skeleton'
@@ -12,11 +11,10 @@ import useUnitData from '@/hooks/useUnitData'
 import useActionColumn from '@/hooks/useActionColumn'
 import useUnitTroopersData from '@/hooks/useUnitTroopersData'
 
-type CompanyStudentTableProps = { alias: string; level: UnitLevel; id: number }
+type CompanyStudentTableProps = { alias: string; id: number }
 
 export default function CompanyStudentTable({
 	alias,
-	level,
 	id
 }: CompanyStudentTableProps) {
 	const { createFacetedFilter } = useDataTableToolbarConfig()
@@ -29,7 +27,7 @@ export default function CompanyStudentTable({
 		refetchStudents()
 	}
 	const handleDeleteStudents = useOnDeleteStudents(refetchStudents)
-	const { data: unit } = useUnitData({ alias, level })
+	const { data: unit } = useUnitData({ id })
 	const filename = `danh-sach-quan-nhan-${alias}`
 	const actionColumn = useActionColumn(() => {
 		return refetchStudents()
@@ -97,7 +95,8 @@ export default function CompanyStudentTable({
 						defaultExportValues: {
 							underUnitName: unit?.name.toUpperCase(),
 							unitName: unit?.parent?.name.toUpperCase()
-						}
+						},
+						unitRoster: { id }
 					}}
 					onDeleteRows={handleDeleteStudents}
 					onCreateSuccess={handleFormSuccess}

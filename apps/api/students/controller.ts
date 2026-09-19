@@ -43,7 +43,7 @@ import unitRepo from '../units/repo'
 import unitStatsRepo from '../units/stats-repo'
 import positionRepo from '../positions/repo'
 import locationsRepo from '../locations/repo'
-import { Unit, UnitDB, UnitLevelName } from '../schema/units'
+import { Unit } from '../schema/units'
 import log from 'encore.dev/log'
 import dayjs from 'dayjs'
 import quarterOfYear from 'dayjs/plugin/quarterOfYear.js'
@@ -53,7 +53,6 @@ import { APIError } from 'encore.dev/api'
 import { readFile } from 'fs/promises'
 import { createImageInjector, ImageProvider } from './img-provider'
 import { ObjectStorageImageAdapter } from './minio-img-provider'
-import { getAuthData } from '~encore/auth'
 
 dayjs.extend(quarterOfYear)
 
@@ -329,29 +328,16 @@ export class Controller {
 	}
 
 	async find(
-		{ unitAlias, unitLevel, ...q }: GetStudentsQuery,
+		{ unitId, ...q }: GetStudentsQuery,
 		validUnitIds: number[]
 	): Promise<Student[]> {
-		const isUnitAliasExist = unitAlias !== undefined
-		const isUnitLevelExist = unitLevel !== undefined
-		const isUnitQueryParamsValid = isUnitAliasExist && isUnitLevelExist
-
-		if (
-			(isUnitAliasExist && !isUnitLevelExist) ||
-			(!isUnitAliasExist && isUnitLevelExist)
-		) {
-			throw AppError.invalidArgument('missing unitAlias or unitLevel')
-		}
-
-		if (isUnitQueryParamsValid) {
+		if (unitId !== undefined) {
 			const u = await this.unitRepo
-				.findOne({ alias: unitAlias, level: unitLevel })
+				.findOne({ id: unitId })
 				.catch(AppError.handleAppErr)
 			if (u === undefined) {
 				throw AppError.handleAppErr(
-					AppError.notFound(
-						`unit with alias: ${unitAlias} and level: ${unitLevel} not found`
-					)
+					AppError.notFound(`unit with id: ${unitId} not found`)
 				)
 			}
 
@@ -366,7 +352,7 @@ export class Controller {
 			)
 
 			if (isAuthorized === false) {
-				AppError.handleAppErr(
+				throw AppError.handleAppErr(
 					AppError.unauthorized(
 						"You don't have permission to read one of those studentId"
 					)
@@ -559,9 +545,9 @@ export class Controller {
 		const descendantIdsPerUnit = await Promise.all(
 			unitIds.map((id) => unitStatsRepo.findDescendantUnitIds(id))
 		)
-		const descendantUnits = await this.unitRepo.findByIds(
-			Array.from(new Set(descendantIdsPerUnit.flat()))
-		)
+		const descendantUnits = await this.unitRepo.find({
+			ids: Array.from(new Set(descendantIdsPerUnit.flat()))
+		})
 		if (descendantUnits.length === 0) {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument('Invalid unitIds')
@@ -587,7 +573,7 @@ export class Controller {
 			if (u.parentId !== null) {
 				unitNodeById
 					.get(u.parentId)
-					?.children.push(unitNodeById.get(u.id) as Unit)
+					?.children?.push(unitNodeById.get(u.id) as Unit)
 			}
 		}
 		const units = unitIds
@@ -643,130 +629,141 @@ export class Controller {
 		return { data, units }
 	}
 
-	getTemplate(templateType: TemplateType): Promise<Buffer> {
-		if (this.templateMap[templateType] === undefined || '') {
-			throw AppError.invalidArgument('Invalid template file')
+	async getTemplate(templateType: TemplateType): Promise<Buffer> {
+		const templateFile = this.templateMap[templateType]
+		if (templateFile === undefined || templateFile === '') {
+			throw AppError.handleAppErr(
+				AppError.invalidArgument('Invalid template file')
+			)
 		}
 
-		const templateFile = this.templateMap[templateType]
-		const templatePath = path.join('./templates', templateFile)
-		return readFile(templatePath)
+		try {
+			return await readFile(path.join('./templates', templateFile))
+		} catch (err) {
+			log.error('StudentController.getTemplate error', {
+				err,
+				templateType
+			})
+			throw AppError.handleAppErr(
+				AppError.internal('Internal error for exporting file')
+			)
+		}
 	}
 
 	async handleExportStudentData(
 		req: ExportStudentDataRequest
 	): Promise<Uint8Array> {
-		try {
-			log.info('ExportStudentData starting')
-			const {
-				city,
-				data,
-				date,
-				underUnitName,
-				unitName,
-				commanderPosition,
-				commanderName,
-				commanderRank,
-				templateType
-			} = req
+		log.info('ExportStudentData starting')
+		const {
+			city,
+			data,
+			date,
+			underUnitName,
+			unitName,
+			commanderPosition,
+			commanderName,
+			commanderRank,
+			templateType
+		} = req
 
-			// Prepare rows data
-			const rows: Record<string, any>[] = data.map((student, idx) => {
-				Object.keys(student).forEach((col) => {
-					let cellValue = student[col]
+		// Prepare rows data
+		const rows: Record<string, any>[] = data.map((student, idx) => {
+			Object.keys(student).forEach((col) => {
+				let cellValue = student[col]
 
-					if (cellValue === null || cellValue === undefined) {
-						cellValue = ''
-					} else if (typeof cellValue === 'boolean') {
-						cellValue = cellValue ? 'Có' : 'Không'
-					} else if (Array.isArray(cellValue)) {
-						cellValue =
-							cellValue.length > 0 ? cellValue.join(', ') : ''
-					} else {
-						cellValue = String(cellValue)
-					}
-
-					return cellValue
-				})
-
-				if (templateType === 'CpvTempl') {
-					const ethnic = student['ethnic']
-					const isKinh = ethnic === 'Kinh'
-					const isTay = ethnic === 'Tày'
-					const isNung = ethnic === 'Nùng '
-					if (isKinh || isTay || isNung) {
-						student['ethnic'] = 'Không'
-					}
+				if (cellValue === null || cellValue === undefined) {
+					cellValue = ''
+				} else if (typeof cellValue === 'boolean') {
+					cellValue = cellValue ? 'Có' : 'Không'
+				} else if (Array.isArray(cellValue)) {
+					cellValue = cellValue.length > 0 ? cellValue.join(', ') : ''
+				} else {
+					cellValue = String(cellValue)
 				}
 
-				return { idx: ++idx, ...student }
+				return cellValue
 			})
 
-			const dateObj = dayjs(date)
-			const day = dateObj.format('DD')
-			const month = dateObj.format('MM')
-			const year = dateObj.year()
-
-			const templateData: ExcelTemplateData = {
-				city,
-				commanderName,
-				commanderPosition,
-				commanderRank,
-				day,
-				month,
-				rows,
-				underUnitName,
-				unitName,
-				year
+			if (templateType === 'CpvTempl') {
+				const ethnic = student['ethnic']
+				const isKinh = ethnic === 'Kinh'
+				const isTay = ethnic === 'Tày'
+				const isNung = ethnic === 'Nùng '
+				if (isKinh || isTay || isNung) {
+					student['ethnic'] = 'Không'
+				}
 			}
 
-			const template = await this.getTemplate(templateType!)
+			return { idx: ++idx, ...student }
+		})
 
-			let templData: any = {}
-			if (templateType === 'StudentEnrollmentFormTempl') {
-				const stu = rows.at(0)
-				if (stu === undefined) {
-					AppError.handleAppErr(
-						AppError.invalidArgument('Student data is empty')
-					)
-				}
+		const dateObj = dayjs(date)
+		const day = dateObj.format('DD')
+		const month = dateObj.format('MM')
+		const year = dateObj.year()
 
-				const leafUnitId: number | undefined = stu.unit?.id
-				if (leafUnitId === undefined) {
-					AppError.handleAppErr(
-						AppError.internal('Student has no unit assigned')
-					)
-				}
+		const templateData: ExcelTemplateData = {
+			city,
+			commanderName,
+			commanderPosition,
+			commanderRank,
+			day,
+			month,
+			rows,
+			underUnitName,
+			unitName,
+			year
+		}
 
-				// Nearest-first ancestor chain, e.g. [squad, platoon, company,
-				// battalion] - always shown in full, root included.
-				const chain = await this.unitRepo
-					.findAncestorChain(leafUnitId)
-					.catch(AppError.handleAppErr)
-				stu.donVi = chain
-					.map((u) => u.name)
-					.reverse()
-					.join(', ')
+		const template = await this.getTemplate(templateType!)
 
-				const { rows: _, ...templateDataWithoutRows } = templateData
-				templData = {
-					stu,
-					unit: {
-						name: unitName,
-						parentName: underUnitName
-					},
-					...templateDataWithoutRows
-				}
-			} else {
-				templData = { ...templateData }
+		let templData: any = {}
+		if (templateType === 'StudentEnrollmentFormTempl') {
+			const stu = rows.at(0)
+			if (stu === undefined) {
+				throw AppError.handleAppErr(
+					AppError.invalidArgument('Student data is empty')
+				)
 			}
 
-			// Get the student's avatar key from storage
-			// Assuming the avatar key is stored in the student data
-			const studentAvatarKey = rows[0]?.avatar || 'default-avatar.png'
+			const leafUnitId: number | undefined = stu.unit?.id
+			if (leafUnitId === undefined) {
+				throw AppError.handleAppErr(
+					AppError.internal('Student has no unit assigned')
+				)
+			}
 
+			// Nearest-first ancestor chain, e.g. [squad, platoon, company,
+			// battalion] - always shown in full, root included.
+			const chain = await this.unitRepo
+				.findAncestorChain(leafUnitId)
+				.catch(AppError.handleAppErr)
+			stu.donVi = chain
+				.map((u) => u.name)
+				.reverse()
+				.join(', ')
+
+			const { rows: _, ...templateDataWithoutRows } = templateData
+			templData = {
+				stu,
+				unit: {
+					name: unitName,
+					parentName: underUnitName
+				},
+				...templateDataWithoutRows
+			}
+		} else {
+			templData = { ...templateData }
+		}
+
+		// Get the student's avatar key from storage
+		// Assuming the avatar key is stored in the student data
+		const studentAvatarKey = rows[0]?.avatar || 'default-avatar.png'
+
+		// Rendering failures are not AppErrors, so only this step is wrapped.
+		try {
 			// Generate the report with image from object storage
-			const buffer = await createReport({
+			return await createReport({
 				template,
 				data: templData,
 				cmdDelimiter: ['{', '}'],
@@ -779,8 +776,6 @@ export class Controller {
 					)
 				}
 			})
-
-			return buffer
 		} catch (err) {
 			console.error('handleExportStudentData error', err)
 			log.error('handleExportStudentData error', { err })
@@ -792,44 +787,46 @@ export class Controller {
 	async handleExportStudentDataDynamic(
 		req: ExportStudentDataDynamicRequest
 	): Promise<Uint8Array> {
+		log.info('ExportStudentDataDynamic starting')
+		const {
+			city,
+			commanderName,
+			commanderPosition,
+			commanderRank,
+			data,
+			rawData,
+			date,
+			reportTitle,
+			underUnitName,
+			unitName,
+			templateId
+		} = req
+
+		const rows = data.map(normalizeRowForDocx)
+		const columns = deriveColumns(rows)
+		// Raw, unflattened records for custom templates that need nested
+		// {FOR} loops (e.g. childrenInfos/siblings) instead of the
+		// flattened rows/columns table, which only supports one string
+		// value per cell.
+		const troopers = (rawData ?? []).map(normalizeRawForDocx)
+
+		const dateObj = dayjs(date)
+		const day = dateObj.format('DD')
+		const month = dateObj.format('MM')
+		const year = dateObj.year()
+
+		const customTemplate =
+			templateId !== undefined
+				? await exportTemplateController.getTemplateFile(templateId)
+				: undefined
+
+		// File and rendering failures are not AppErrors, so only they are wrapped.
 		try {
-			log.info('ExportStudentDataDynamic starting')
-			const {
-				city,
-				commanderName,
-				commanderPosition,
-				commanderRank,
-				data,
-				rawData,
-				date,
-				reportTitle,
-				underUnitName,
-				unitName,
-				templateId
-			} = req
-
-			const rows = data.map(normalizeRowForDocx)
-			const columns = deriveColumns(rows)
-			// Raw, unflattened records for custom templates that need nested
-			// {FOR} loops (e.g. childrenInfos/siblings) instead of the
-			// flattened rows/columns table, which only supports one string
-			// value per cell.
-			const troopers = (rawData ?? []).map(normalizeRawForDocx)
-
-			const dateObj = dayjs(date)
-			const day = dateObj.format('DD')
-			const month = dateObj.format('MM')
-			const year = dateObj.year()
-
 			const template =
-				templateId !== undefined
-					? await exportTemplateController.getTemplateFile(templateId)
-					: await readFile(
-							path.join(
-								'./templates',
-								'dynamic-docx-template.docx'
-							)
-						)
+				customTemplate ??
+				(await readFile(
+					path.join('./templates', 'dynamic-docx-template.docx')
+				))
 
 			return await createReport({
 				template,
@@ -861,82 +858,79 @@ export class Controller {
 	async handleExportUnitRosterExtract(
 		req: ExportUnitRosterExtractRequest
 	): Promise<Uint8Array> {
+		log.info('ExportUnitRosterExtract starting')
+		const {
+			unitName,
+			underUnitName,
+			city,
+			commanderName,
+			commanderPosition,
+			commanderRank,
+			date,
+			reportTitle,
+			unitId
+		} = req
+
+		// findDescendantUnitIds includes the root itself, so this one
+		// lookup yields both the root and every descendant (a unit
+		// is addressed by id here, never by alias/level, which repeats
+		// across the tree).
+		const descendantIds = await unitStatsRepo
+			.findDescendantUnitIds(unitId)
+			.catch(AppError.handleAppErr)
+		const unitList = await this.unitRepo
+			.find({ ids: descendantIds })
+			.catch(AppError.handleAppErr)
+		const rosterUnits: RosterUnitNode[] = unitList.map((u) => ({
+			id: u.id,
+			name: u.name,
+			parentId: u.parentId,
+			level: u.level
+		}))
+		const rosterRootUnit = rosterUnits.find((u) => u.id === unitId)
+		if (rosterRootUnit === undefined) {
+			throw AppError.handleAppErr(
+				AppError.notFound(`unit with id: ${unitId} not found`)
+			)
+		}
+
+		const students = await this.repo
+			.find({ unitIds: descendantIds })
+			.catch(AppError.handleAppErr)
+		const rosterStudents: RosterStudent[] = students.map((s) => ({
+			fullName: s.fullName ?? '',
+			rank: s.rank ?? '',
+			position: s.position ?? '',
+			enlistmentPeriod: s.enlistmentPeriod ?? '',
+			unitId: s.unit?.id
+		}))
+
+		const positionRows = await positionRepo
+			.find({})
+			.catch(AppError.handleAppErr)
+		const rosterPositions: RosterPosition[] = positionRows.map((p) => ({
+			level: p.level,
+			code: p.code,
+			priority: p.priority,
+			category: p.group
+		}))
+
+		const rows = buildRosterRows(
+			rosterRootUnit,
+			rosterUnits,
+			rosterStudents,
+			rosterPositions
+		)
+		const summary = buildRosterSummary(rosterStudents, rosterPositions)
+
+		const dateObj = dayjs(date)
+		const day = dateObj.format('DD')
+		const month = dateObj.format('MM')
+		const year = dateObj.year()
+
+		// Only the document rendering needs a try/catch: file and template
+		// failures aren't AppErrors, so they are reported as internal errors.
 		try {
-			log.info('ExportUnitRosterExtract starting')
-			const {
-				unitAlias,
-				unitLevel,
-				unitName,
-				underUnitName,
-				city,
-				commanderName,
-				commanderPosition,
-				commanderRank,
-				date,
-				reportTitle
-			} = req
-
-			const rootUnit = await this.unitRepo.findOne({
-				alias: unitAlias,
-				level: unitLevel as UnitLevelName
-			})
-			if (rootUnit === undefined) {
-				AppError.handleAppErr(
-					AppError.notFound(
-						`unit with alias: ${unitAlias} and level: ${unitLevel} not found`
-					)
-				)
-			}
-
-			const unitIds = await unitStatsRepo.findDescendantUnitIds(
-				rootUnit.id
-			)
-			const unitList = await unitRepo.findByIds(unitIds)
-
-			const students = await this.repo.find({ unitIds })
-
-			const rosterUnits: RosterUnitNode[] = unitList.map((u) => ({
-				id: u.id,
-				name: u.name,
-				parentId: u.parentId,
-				level: u.level
-			}))
-			const rosterStudents: RosterStudent[] = students.map((s) => ({
-				fullName: s.fullName ?? '',
-				rank: s.rank ?? '',
-				position: s.position ?? '',
-				enlistmentPeriod: s.enlistmentPeriod ?? '',
-				unitId: s.unit?.id
-			}))
-
-			const positionRows = await positionRepo.find({})
-			const rosterPositions: RosterPosition[] = positionRows.map((p) => ({
-				level: p.level,
-				code: p.code,
-				priority: p.priority,
-				category: p.group
-			}))
-
-			const rosterRootUnit = {
-				id: rootUnit.id,
-				name: rootUnit.name,
-				parentId: undefined,
-				level: rootUnit.level
-			}
-
-			const rows = buildRosterRows(
-				rosterRootUnit,
-				rosterUnits,
-				rosterStudents,
-				rosterPositions
-			)
-			const summary = buildRosterSummary(rosterStudents, rosterPositions)
-
-			const dateObj = dayjs(date)
-			const day = dateObj.format('DD')
-			const month = dateObj.format('MM')
-			const year = dateObj.year()
-
 			const template = await readFile(
 				path.join('./templates', 'unit-roster-extract-templ.docx')
 			)
@@ -966,10 +960,6 @@ export class Controller {
 		} catch (err) {
 			console.error('handleExportUnitRosterExtract error', err)
 			log.error('handleExportUnitRosterExtract error', { err })
-
-			if (err instanceof AppError) {
-				throw err
-			}
 
 			throw APIError.internal('Internal error for exporting file')
 		}

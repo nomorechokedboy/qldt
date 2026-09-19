@@ -8,7 +8,8 @@ import {
 	TextArea,
 	TextField,
 	UploadField,
-	AvatarField
+	AvatarField,
+	Switch
 } from '@/components/FormComponents'
 import { fieldContext, formContext } from './form-context'
 
@@ -21,7 +22,8 @@ export const { useAppForm } = createFormHook({
 		Combobox,
 		EditableInput,
 		UploadField,
-		AvatarField
+		AvatarField,
+		Switch
 	},
 	formComponents: {
 		SubscribeButton

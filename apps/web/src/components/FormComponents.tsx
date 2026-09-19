@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Textarea as ShadcnTextarea } from '@/components/ui/textarea'
 import * as ShadcnSelect from '@/components/ui/select'
+import { GroupedSelectItems } from '@/components/ui/grouped-select-items'
 import { Slider as ShadcnSlider } from '@/components/ui/slider'
 import { Switch as ShadcnSwitch } from '@/components/ui/switch'
 import { Label } from '@/components/ui/label'
@@ -136,60 +137,6 @@ export function TextArea({
 	)
 }
 
-// True group-by (not consecutive-clustering): merges every item sharing
-// the same group key into one bucket regardless of where it falls in the
-// array, so two same-named groups that aren't adjacent (e.g. the same
-// fallback/explicit label used by two different `level`s) never produce
-// two separate buckets with the same key - which would be a duplicate
-// React key on the rendered group below.
-function groupByField<T>(
-	items: T[],
-	getGroup: (item: T) => string | undefined
-) {
-	const groups: { key: string | undefined; items: T[] }[] = []
-	const bucketByKey = new Map<string | undefined, number>()
-	for (const item of items) {
-		const key = getGroup(item)
-		const bucketIdx = bucketByKey.get(key)
-		if (bucketIdx !== undefined) {
-			groups[bucketIdx].items.push(item)
-		} else {
-			bucketByKey.set(key, groups.length)
-			groups.push({ key, items: [item] })
-		}
-	}
-	return groups
-}
-
-function handleValueWithGroup(
-	values: Array<{ label: string; value: string; group?: string }>,
-	label: string
-) {
-	const groupedValues = groupByField(values, (v) => v.group)
-	return groupedValues.map((group, idx) => {
-		return (
-			<>
-				<ShadcnSelect.SelectGroup key={group.key ?? '__ungrouped__'}>
-					<ShadcnSelect.SelectLabel>
-						{group.key ?? label}
-					</ShadcnSelect.SelectLabel>
-					{group.items.map((value) => (
-						<ShadcnSelect.SelectItem
-							key={value.value}
-							value={value.value}
-						>
-							{value.label}
-						</ShadcnSelect.SelectItem>
-					))}
-				</ShadcnSelect.SelectGroup>
-				{idx !== groupedValues.length - 1 && (
-					<ShadcnSelect.SelectSeparator />
-				)}
-			</>
-		)
-	})
-}
-
 export function Select({
 	label,
 	values,
@@ -225,23 +172,10 @@ export function Select({
 					<ShadcnSelect.SelectValue placeholder={placeholder} />
 				</ShadcnSelect.SelectTrigger>
 				<ShadcnSelect.SelectContent>
-					{values.some((value) => value.group) ? (
-						handleValueWithGroup(values, label)
-					) : (
-						<ShadcnSelect.SelectGroup>
-							<ShadcnSelect.SelectLabel>
-								{label}
-							</ShadcnSelect.SelectLabel>
-							{values.map((value) => (
-								<ShadcnSelect.SelectItem
-									key={value.value}
-									value={value.value}
-								>
-									{value.label}
-								</ShadcnSelect.SelectItem>
-							))}
-						</ShadcnSelect.SelectGroup>
-					)}
+					<GroupedSelectItems
+						options={values}
+						ungroupedLabel={label}
+					/>
 				</ShadcnSelect.SelectContent>
 			</ShadcnSelect.Select>
 			{field.state.meta.isTouched && <ErrorMessages errors={errors} />}

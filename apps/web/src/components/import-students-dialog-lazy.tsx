@@ -1,4 +1,5 @@
 import { lazy, Suspense } from 'react'
+import { ImportDialogSkeleton } from './import-dialog-skeleton'
 import type { ImportStudentsDialogProps } from './import-students-dialog'
 
 // exceljs + xlsx (and their internal chunks) are only needed while this
@@ -18,7 +19,15 @@ export function LazyImportStudentsDialog(props: ImportStudentsDialogProps) {
 	}
 
 	return (
-		<Suspense fallback={null}>
+		<Suspense
+			fallback={
+				<ImportDialogSkeleton
+					isOpen={props.isOpen}
+					onClose={props.onClose}
+					title='Import danh sách quân nhân'
+				/>
+			}
+		>
 			<ImportStudentsDialog {...props} />
 		</Suspense>
 	)

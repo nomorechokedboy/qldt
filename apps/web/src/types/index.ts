@@ -168,8 +168,7 @@ export interface StudentQueryParams {
 	politicalOrg?: PoliticalOrg
 	isEthnicMinority?: boolean
 	hasReligion?: boolean
-	unitAlias?: string
-	unitLevel?: string
+	unitId?: number
 	isCpvOfficialThisWeek?: boolean
 	cpvOfficialInMonth?: Month
 	cpvOfficialInQuarter?: Quarter
@@ -375,8 +374,7 @@ export type ExportStudentDataDynamicData = ExportMaterialAssetsData & {
 }
 
 export type ExportUnitRosterExtractData = {
-	unitAlias: string
-	unitLevel: string
+	unitId: number
 	unitName: string
 	underUnitName: string
 	city: string
@@ -516,6 +514,7 @@ export interface MaterialType extends Base {
 	category: MaterialCategory
 	unitOfMeasure?: string
 	isSerialized: boolean
+	images?: string[]
 }
 
 export interface Position extends Base {
@@ -565,6 +564,7 @@ export interface MaterialAsset extends Base {
 	condition?: string
 	status?: MaterialAssetStatus
 	assignedTrooperId?: number | null
+	images?: string[]
 	materialType?: MaterialType
 	unit?: Unit
 	room?: Room

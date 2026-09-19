@@ -56,7 +56,7 @@ const data = {
 			items: [{ title: 'Trang chủ', url: '/', icon: Home }]
 		},
 		{
-			title: 'Thống kê doanh trại',
+			title: 'Thống kê đơn vị',
 			url: '#',
 			superAdminOnly: false,
 			icon: PieChart,
@@ -407,7 +407,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 					{!isCollapsed && (
 						<div className='flex flex-col'>
 							<span className='text-sm font-serif font-semibold text-sidebar-foreground tracking-wide'>
-								Quản lý doanh trại
+								Quản lý đơn vị
 							</span>
 							<span className='text-xs text-sidebar-foreground/60'>
 								Tiểu đoàn 1, Lữ đoàn 75
@@ -453,7 +453,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 			<SidebarRail />
 			<SidebarFooter>
 				<div className='w-full flex items-center justify-between'>
-					<div className='hidden'>
+					<div></div>
+					<div className=''>
 						<ThemeToggle />
 					</div>
 				</div>

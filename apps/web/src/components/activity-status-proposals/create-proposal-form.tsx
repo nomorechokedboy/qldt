@@ -25,11 +25,11 @@ import {
 } from '@/components/ui/sheet'
 import { Textarea } from '@/components/ui/textarea'
 import { targetActivityStatusOptions } from '@/data/activity-statuses'
-import { isBattalionOrAboveLevel } from '@/data/unit-levels'
 import { useCreateActivityStatusProposal } from '@/hooks/useCreateActivityStatusProposal'
 import useActivityStatusProposalEligibleApprovers from '@/hooks/useActivityStatusProposalEligibleApprovers'
 import useStudentData from '@/hooks/useStudents'
-import useUnitsData from '@/hooks/useUnitsData'
+import UnitSelect from '@/components/unit/select'
+import useUnitOptions from '@/hooks/useUnitOptions'
 import { getErrorMessage } from '@/lib/utils'
 import type { activity_status_proposals } from '@/api/client'
 import DateRangePicker from '@/components/date-range-picker'
@@ -108,7 +108,12 @@ export default function CreateActivityStatusProposalForm({
 		Map<number, TrooperDates>
 	>(new Map())
 
-	const { data: units } = useUnitsData(undefined, { enabled: open })
+	// Proposals require a Battalion level unit or larger (matches the backend
+	// constraint), scoped to the units the current user can access.
+	const { units, options: unitOptions } = useUnitOptions({
+		enabled: open,
+		minLevel: 'battalion'
+	})
 	const { data: students } = useStudentData(undefined, {
 		enabled: open && !!unitId
 	})
@@ -170,14 +175,6 @@ export default function CreateActivityStatusProposalForm({
 			normalizeForSearch(s.fullName ?? '').includes(query)
 		)
 	}, [unitStudents, trooperSearch])
-
-	// Activity status proposals require the unit to be Battalion level or
-	// larger (matches the backend constraint). Scoped to units the current
-	// user can access.
-	const eligibleUnits = useMemo(
-		() => (units ?? []).filter((u) => isBattalionOrAboveLevel(u.level)),
-		[units]
-	)
 
 	const resetForm = () => {
 		setUnitId('')
@@ -341,7 +338,8 @@ export default function CreateActivityStatusProposalForm({
 				>
 					<div className='space-y-2'>
 						<Label>Đơn vị</Label>
-						<Select
+						<UnitSelect
+							options={unitOptions}
 							value={unitId}
 							onValueChange={(v) => {
 								setUnitId(v)
@@ -349,18 +347,7 @@ export default function CreateActivityStatusProposalForm({
 								setApproverUserId('')
 								setTrooperSearch('')
 							}}
-						>
-							<SelectTrigger>
-								<SelectValue placeholder='Chọn đơn vị' />
-							</SelectTrigger>
-							<SelectContent>
-								{eligibleUnits.map((u) => (
-									<SelectItem key={u.id} value={String(u.id)}>
-										{u.name}
-									</SelectItem>
-								))}
-							</SelectContent>
-						</Select>
+						/>
 					</div>
 
 					<div className='grid grid-cols-2 gap-4'>

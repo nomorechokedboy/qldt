@@ -1,5 +1,5 @@
 import type { ColumnDef } from '@tanstack/react-table'
-import type { Student } from '@/types'
+import type { Student, Unit } from '@/types'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
 import { DataTableColumnHeader } from '../data-table/data-table-column-header'
@@ -13,6 +13,8 @@ import {
 	activityStatusColors,
 	activityStatusLabels
 } from '@/data/activity-statuses'
+import { unitLabelWithAncestry } from '@/lib/unit-labels'
+import { EllipsisText } from '../data-table/ellipsis-text'
 
 function isoToDdMmYyyy(isoDate: string): string {
 	const [year, month, day] = isoDate.split('-')
@@ -50,29 +52,44 @@ export const selectColumn: ColumnDef<Student> = {
 	enableHiding: false
 }
 
-// battalionStudentColumnsWithoutAction's unit cell: shows "<unit> - <parent>"
-// when the unit has a parent, unlike the plain badge used elsewhere.
-export const battalionUnitColumnWithParent: ColumnDef<Student> = {
-	id: 'unit.name',
-	accessorFn: (row) => row.unit?.name ?? '',
-	header: 'Đơn vị',
-	cell: ({ row }) => (
-		<div className='w-20'>
-			<Badge
-				className='bg-green-400 text-white font-bold'
-				variant='secondary'
-			>
-				{row.unit?.parent?.name !== undefined
-					? `${row.getValue('unit.name')} - ${row.unit.parent.name}`
-					: row.getValue('unit.name')}
-			</Badge>
-		</div>
-	),
-	filterFn: (row, id, value) => {
-		return value.includes(row.getValue(id))
-	},
-	meta: {
-		label: 'Đơn vị'
+// battalionStudentColumnsWithoutAction's unit cell: shows the unit's full
+// ancestor breadcrumb (e.g. "Tiểu đội Trinh sát (Trung đội Chỉ huy, Đại
+// đội 2)") rather than the plain badge used elsewhere, since this table
+// can span multiple companies whose sub-units share identical names -
+// needs `unitsById` (the full flat unit list keyed by id) to walk the
+// chain. Previously read `row.unit` in the cell renderer, which doesn't
+// exist on tanstack's `Row` wrapper (only `row.original` does) - the
+// parent-name branch was silently dead code.
+export function buildBattalionUnitColumnWithParent(
+	unitsById: Map<number, Unit>
+): ColumnDef<Student> {
+	return {
+		id: 'unit.name',
+		accessorFn: (row) => row.unit?.name ?? '',
+		header: 'Đơn vị',
+		cell: ({ row }) => (
+			<div className='w-20'>
+				<Badge
+					className='bg-green-400 text-white font-bold'
+					variant='secondary'
+				>
+					<EllipsisText maxWidth='120px'>
+						{row.original.unit !== undefined
+							? unitLabelWithAncestry(
+									row.original.unit,
+									unitsById
+								)
+							: row.getValue('unit.name')}
+					</EllipsisText>
+				</Badge>
+			</div>
+		),
+		filterFn: (row, id, value) => {
+			return value.includes(row.getValue(id))
+		},
+		meta: {
+			label: 'Đơn vị'
+		}
 	}
 }
 
@@ -600,7 +617,9 @@ export const baseStudentsColumns: ColumnDef<Student>[] = [
 					className='bg-green-400 text-white font-bold'
 					variant='secondary'
 				>
-					{row.getValue('unit.name')}
+					<EllipsisText maxWidth='120px'>
+						{row.getValue('unit.name')}
+					</EllipsisText>
 				</Badge>
 			</div>
 		),
@@ -625,39 +644,43 @@ export const baseStudentsColumns: ColumnDef<Student>[] = [
 	}
 ]
 
-export const battalionStudentColumnsWithoutAction: ColumnDef<Student>[] = [
-	selectColumn,
-	battalionUnitColumnWithParent,
-	fullNameColumn,
-	dobColumnIso,
-	birthPlaceColumn,
-	addressColumn,
-	enlistmentPeriodColumn,
-	isGraduatedColumn,
-	majorColumn,
-	phoneColumn,
-	policyBeneficiaryGroupColumn,
-	politicalOrgColumn,
-	politicalOrgOfficialDateColumn,
-	cpvIdColumn,
-	cpvOfficialAtColumn,
-	previousPositionColumn,
-	religionColumn,
-	schoolNameColumn,
-	shortcomingColumn,
-	talentColumn,
-	rankColumn,
-	positionColumn,
-	previousUnitColumn,
-	ethnicColumn,
-	educationLevelColumn,
-	fatherNameColumn,
-	fatherJobColumn,
-	fatherPhoneNumberColumn,
-	motherNameColumn,
-	motherJobColumn,
-	motherPhoneNumberColumn
-]
+export function buildBattalionStudentColumnsWithoutAction(
+	unitsById: Map<number, Unit>
+): ColumnDef<Student>[] {
+	return [
+		selectColumn,
+		buildBattalionUnitColumnWithParent(unitsById),
+		fullNameColumn,
+		dobColumnIso,
+		birthPlaceColumn,
+		addressColumn,
+		enlistmentPeriodColumn,
+		isGraduatedColumn,
+		majorColumn,
+		phoneColumn,
+		policyBeneficiaryGroupColumn,
+		politicalOrgColumn,
+		politicalOrgOfficialDateColumn,
+		cpvIdColumn,
+		cpvOfficialAtColumn,
+		previousPositionColumn,
+		religionColumn,
+		schoolNameColumn,
+		shortcomingColumn,
+		talentColumn,
+		rankColumn,
+		positionColumn,
+		previousUnitColumn,
+		ethnicColumn,
+		educationLevelColumn,
+		fatherNameColumn,
+		fatherJobColumn,
+		fatherPhoneNumberColumn,
+		motherNameColumn,
+		motherJobColumn,
+		motherPhoneNumberColumn
+	]
+}
 
 export const columnsWithoutAction: ColumnDef<Student>[] = [
 	selectColumn,
@@ -738,7 +761,11 @@ export const adversityTableColumns: ColumnDef<Student>[] = [
 			<DataTableColumnHeader column={column} title='Hoàn cảnh gia đình' />
 		),
 		cell: ({ row }) => (
-			<div className='min-w-32'>{row.getValue('familyBackground')}</div>
+			<div className='min-w-32'>
+				<EllipsisText maxWidth='300px'>
+					{row.getValue('familyBackground')}
+				</EllipsisText>
+			</div>
 		),
 		enableHiding: true,
 		meta: {

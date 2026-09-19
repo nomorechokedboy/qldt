@@ -1,0 +1,169 @@
+name: Scan App Mobile Build
+on:
+    workflow_dispatch:
+        inputs:
+            platform:
+                description: Platform to build
+                type: choice
+                options:
+                    - all
+                    - android
+                    - ios
+                default: all
+env:
+    APP_DIR: apps/scan-app
+jobs:
+    build-android:
+        if: inputs.platform == 'all' || inputs.platform == 'android'
+        runs-on: ubuntu-latest
+        env:
+            ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 24
+            - name: Install pnpm
+              uses: pnpm/action-setup@v4
+            - name: Setup pnpm store path
+              id: pnpm-store
+              run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+            - name: Cache pnpm store
+              uses: actions/cache@v4
+              with:
+                  path: ${{ steps.pnpm-store.outputs.STORE_PATH }}
+                  key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+                  restore-keys: |
+                      ${{ runner.os }}-pnpm-store-
+            - name: Setup Java
+              uses: actions/setup-java@v4
+              with:
+                  distribution: temurin
+                  java-version: 17
+            - name: Setup Android SDK
+              uses: android-actions/setup-android@v3
+            - name: Install Android platform and NDK
+              run: |
+                  sdkmanager "platforms;android-36" "build-tools;36.0.0" "ndk;27.2.12479018"
+                  echo "NDK_HOME=$ANDROID_HOME/ndk/27.2.12479018" >> $GITHUB_ENV
+            - name: Setup Rust
+              uses: dtolnay/rust-toolchain@stable
+              with:
+                  targets: aarch64-linux-android,armv7-linux-androideabi,i686-linux-android,x86_64-linux-android
+            - name: Cache Rust build
+              uses: swatinem/rust-cache@v2
+              with:
+                  workspaces: ${{ env.APP_DIR }}/src-tauri
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile --filter scan-app...
+            - name: Write signing config
+              if: env.ANDROID_KEYSTORE_BASE64 != ''
+              working-directory: ${{ env.APP_DIR }}/src-tauri/gen/android
+              env:
+                  ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+                  ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+              run: |
+                  echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > release.keystore
+                  cat > key.properties <<PROPS
+                  keyAlias=$ANDROID_KEY_ALIAS
+                  password=$ANDROID_KEY_PASSWORD
+                  storeFile=$GITHUB_WORKSPACE/$APP_DIR/src-tauri/gen/android/release.keystore
+                  PROPS
+            - name: Build signed release (APK and AAB)
+              if: env.ANDROID_KEYSTORE_BASE64 != ''
+              working-directory: ${{ env.APP_DIR }}
+              run: pnpm tauri android build --apk --aab
+            # An unsigned release APK cannot be installed, so without a
+            # keystore secret fall back to an installable debug build.
+            - name: Build debug APK (no keystore configured)
+              if: env.ANDROID_KEYSTORE_BASE64 == ''
+              working-directory: ${{ env.APP_DIR }}
+              run: |
+                  echo "::warning::ANDROID_KEYSTORE_BASE64 is not set - building a debug APK instead of a signed release"
+                  pnpm tauri android build --debug --apk
+            - name: Upload Android artifacts
+              uses: actions/upload-artifact@v4
+              with:
+                  name: scan-app-android
+                  path: |
+                      ${{ env.APP_DIR }}/src-tauri/gen/android/app/build/outputs/apk/**/*.apk
+                      ${{ env.APP_DIR }}/src-tauri/gen/android/app/build/outputs/bundle/**/*.aab
+                  if-no-files-found: error
+    build-ios:
+        if: inputs.platform == 'all' || inputs.platform == 'ios'
+        runs-on: macos-latest
+        env:
+            APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
+            APPLE_DEVELOPMENT_TEAM: ${{ secrets.APPLE_DEVELOPMENT_TEAM }}
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 24
+            - name: Install pnpm
+              uses: pnpm/action-setup@v4
+            - name: Setup pnpm store path
+              id: pnpm-store
+              run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+            - name: Cache pnpm store
+              uses: actions/cache@v4
+              with:
+                  path: ${{ steps.pnpm-store.outputs.STORE_PATH }}
+                  key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+                  restore-keys: |
+                      ${{ runner.os }}-pnpm-store-
+            - name: Setup Rust
+              uses: dtolnay/rust-toolchain@stable
+              with:
+                  targets: aarch64-apple-ios,aarch64-apple-ios-sim,x86_64-apple-ios
+            - name: Cache Rust build
+              uses: swatinem/rust-cache@v2
+              with:
+                  workspaces: ${{ env.APP_DIR }}/src-tauri
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile --filter scan-app...
+            # The Xcode project is not committed (only gen/android is), so
+            # generate it here.
+            - name: Initialize iOS project
+              working-directory: ${{ env.APP_DIR }}
+              run: pnpm tauri ios init
+            - name: Import signing certificate and provisioning profile
+              if: env.APPLE_CERTIFICATE != ''
+              env:
+                  APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+                  APPLE_PROVISIONING_PROFILE: ${{ secrets.APPLE_PROVISIONING_PROFILE }}
+                  KEYCHAIN_PASSWORD: ${{ github.run_id }}-${{ github.run_attempt }}
+              run: |
+                  KEYCHAIN="$RUNNER_TEMP/build.keychain-db"
+                  echo "$APPLE_CERTIFICATE" | base64 --decode > "$RUNNER_TEMP/certificate.p12"
+                  security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+                  security set-keychain-settings -lut 21600 "$KEYCHAIN"
+                  security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+                  security import "$RUNNER_TEMP/certificate.p12" -P "$APPLE_CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$KEYCHAIN"
+                  security set-key-partition-list -S apple-tool:,apple: -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+                  security list-keychain -d user -s "$KEYCHAIN"
+                  mkdir -p "$HOME/Library/MobileDevice/Provisioning Profiles"
+                  echo "$APPLE_PROVISIONING_PROFILE" | base64 --decode > "$HOME/Library/MobileDevice/Provisioning Profiles/build.mobileprovision"
+            - name: Build signed IPA
+              if: env.APPLE_CERTIFICATE != ''
+              working-directory: ${{ env.APP_DIR }}
+              run: pnpm tauri ios build --export-method ${{ vars.APPLE_EXPORT_METHOD || 'release-testing' }}
+            # Without Apple credentials an IPA cannot be produced, but the
+            # Rust and iOS project can still be checked for compile errors.
+            - name: Build for simulator (no Apple credentials configured)
+              if: env.APPLE_CERTIFICATE == ''
+              working-directory: ${{ env.APP_DIR }}
+              run: |
+                  echo "::warning::APPLE_CERTIFICATE is not set - building for the simulator instead of a signed IPA"
+                  pnpm tauri ios build --debug --target aarch64-sim
+            - name: Upload iOS artifacts
+              if: env.APPLE_CERTIFICATE != ''
+              uses: actions/upload-artifact@v4
+              with:
+                  name: scan-app-ios
+                  path: ${{ env.APP_DIR }}/src-tauri/gen/apple/build/arm64/*.ipa
+                  if-no-files-found: error

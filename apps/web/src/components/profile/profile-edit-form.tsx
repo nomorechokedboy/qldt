@@ -81,7 +81,7 @@ export default function ProfileEditForm({
 
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
-			<DialogContent className='sm:max-w-md'>
+			<DialogContent className='sm:max-w-md h-auto'>
 				<DialogHeader>
 					<DialogTitle>Chỉnh sửa thông tin cá nhân</DialogTitle>
 				</DialogHeader>

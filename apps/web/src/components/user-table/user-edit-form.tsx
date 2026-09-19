@@ -14,7 +14,7 @@ import { useMutation } from '@tanstack/react-query'
 import type { UpdateUserBody, User, UserUpdate } from '@/types'
 import { toast } from 'sonner'
 import { useEffect } from 'react'
-import useUnitsData from '@/hooks/useUnitsData'
+import useUnitOptions from '@/hooks/useUnitOptions'
 import { userRankOptions } from '@/data/ranks'
 import { userPositionOptions } from '@/data/positions'
 import { getErrorMessage } from '@/lib/utils'
@@ -88,9 +88,7 @@ export default function UserEditForm({
 	onClose,
 	editingUser
 }: UserFormProps) {
-	const { data: unitsData, isLoading, isError } = useUnitsData()
-	console.log('Render UserForm')
-	console.log('unitdata', unitsData)
+	const { options: unitOptions } = useUnitOptions()
 
 	const { mutateAsync } = useMutation({
 		mutationFn: UpdateUser,
@@ -155,20 +153,9 @@ export default function UserEditForm({
 			})
 		}
 	}, [open, editingUser])
-	// Hàm flatten mảng unit
-	function flattenUnits(units: any[]): any[] {
-		const result: any[] = []
-
-		units.forEach((unit) => {
-			result.push({ label: unit.name, value: unit.id.toString() })
-		})
-
-		return result
-	}
-
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
-			<DialogContent className='sm:max-w-md'>
+			<DialogContent className='sm:max-w-md h-auto'>
 				<DialogHeader>
 					<DialogTitle>Biểu mẫu sửa thông tin người dùng</DialogTitle>
 				</DialogHeader>
@@ -220,9 +207,7 @@ export default function UserEditForm({
 										<field.Select
 											label='Chọn đơn vị'
 											placeholder='Chọn đơn vị'
-											values={flattenUnits(
-												unitsData || []
-											)}
+											values={unitOptions}
 											value={field.state.value?.toString()}
 										/>
 									</>

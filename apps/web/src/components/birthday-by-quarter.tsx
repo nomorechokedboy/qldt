@@ -1,5 +1,6 @@
-import { battalionStudentColumnsWithoutAction } from '@/components/student-table/columns'
+import { buildBattalionStudentColumnsWithoutAction } from '@/components/student-table/columns'
 import useStudentData from '@/hooks/useStudents'
+import useUnitsData from '@/hooks/useUnitsData'
 import type { Quarter, Student, StudentQueryParams } from '@/types'
 import { useCallback, useState } from 'react'
 import {
@@ -15,6 +16,7 @@ import { getCurrentQuarter } from '@/lib/utils'
 import StudentTable from './student-table'
 import UnitFacetedFilter, { useFilteredClassIds } from './unit-filter'
 import { useStudentFacetedFilters } from '@/hooks/useStudentFacetedFilters'
+import { buildUnitsById } from '@/lib/unit-labels'
 
 const quarterOptions = [
 	{
@@ -41,6 +43,9 @@ export default function BirthdayByQuarter() {
 	const [quarter, setQuarter] = useState<Quarter>(
 		`Q${getCurrentQuarter()}` as Quarter
 	)
+	const { data: units = [] } = useUnitsData()
+	const battalionStudentColumnsWithoutAction =
+		buildBattalionStudentColumnsWithoutAction(buildUnitsById(units))
 	const studentQueryParams: StudentQueryParams = {
 		birthdayInQuarter: quarter
 	}

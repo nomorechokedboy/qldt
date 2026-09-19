@@ -18,7 +18,6 @@ import dayjs from 'dayjs'
 import { readFile } from 'fs/promises'
 import path from 'path'
 import { AppError } from '../errors/index.js'
-import { UnitLevelName } from '../schema/units.js'
 import { Unit } from '../units/units.js'
 import { notiTopic } from '../topics/index.js'
 import * as v from 'valibot'
@@ -196,8 +195,6 @@ export interface GetStudentsQuery {
 	isEthnicMinority?: boolean
 	isMarried?: boolean
 	politicalOrg?: 'hcyu' | 'cpv'
-	unitAlias?: string
-	unitLevel?: UnitLevelName
 	isCpvOfficialThisWeek?: boolean
 	cpvOfficialInMonth?: Month
 	cpvOfficialInQuarter?: Quarter
@@ -353,30 +350,30 @@ async function getTypedRequestBody<T>(
 
 	const body = Buffer.concat(chunks).toString('utf-8')
 
+	let rawBody: unknown
 	try {
-		const rawBody = JSON.parse(body)
+		rawBody = JSON.parse(body)
+	} catch (error) {
+		log.error('Invalid JSON in request body', { error, body })
+		throw AppError.handleAppErr(
+			AppError.invalidArgument('Invalid JSON body')
+		)
+	}
 
-		// Validate and parse using valibot schema
-		const result = v.safeParse(schema, rawBody)
+	const result = v.safeParse(schema, rawBody)
 
-		if (!result.success) {
-			log.error('Request body validation failed', {
-				issues: result.issues
-			})
-			throw AppError.invalidArgument(
+	if (!result.success) {
+		log.error('Request body validation failed', {
+			issues: result.issues
+		})
+		throw AppError.handleAppErr(
+			AppError.invalidArgument(
 				`Invalid request body: ${result.issues.map((issue) => issue.message).join(', ')}`
 			)
-		}
-
-		return result.output
-	} catch (error) {
-		if (error instanceof SyntaxError) {
-			log.error('Invalid JSON in request body', { error, body })
-			throw AppError.invalidArgument('Invalid JSON body')
-		}
-		// Re-throw validation errors and other custom errors
-		throw error
+		)
 	}
+
+	return result.output
 }
 
 const ExportStudentDataRequestSchema = v.object({
@@ -489,8 +486,7 @@ export const ExportStudentDataDynamic = api.raw(
 )
 
 const ExportUnitRosterExtractRequestSchema = v.object({
-	unitAlias: v.string(),
-	unitLevel: v.string(),
+	unitId: v.number(),
 	unitName: v.string(),
 	underUnitName: v.string(),
 	city: v.string(),
@@ -755,6 +751,11 @@ export const ExportPoliticsQualityReport = api.raw(
 		} catch (err) {
 			console.error('ExportPoliticsQualityReport errror', err)
 			log.error('ExportPoliticsQualityReport err', { err })
+
+			if (err instanceof APIError) {
+				throw err
+			}
+
 			throw APIError.internal('Internal error for exporting file')
 		}
 	}

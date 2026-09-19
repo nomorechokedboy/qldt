@@ -6,13 +6,13 @@ import { Button } from '@/components/ui/button'
 import { RefreshCw } from 'lucide-react'
 
 type CompanySquadTableProps = {
-	companyAlias: string
+	companyId: number
 }
 
 export default function CompanySquadTable({
-	companyAlias
+	companyId
 }: CompanySquadTableProps) {
-	const { data: company, refetch } = useUnitData({ alias: companyAlias })
+	const { data: company, refetch } = useUnitData({ id: companyId })
 
 	const platoons: Unit[] =
 		company?.children?.filter((u) => u.level === 'platoon') ?? []

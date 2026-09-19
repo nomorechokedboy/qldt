@@ -58,7 +58,7 @@ class controller {
 	async delete(id: number): Promise<ExportTemplateDB> {
 		log.trace('ExportTemplateController.delete', { id })
 
-		const existing = await this.repo.getOne(id)
+		const existing = await this.repo.getOne(id).catch(AppError.handleAppErr)
 		if (existing === undefined) {
 			throw AppError.handleAppErr(
 				AppError.notFound('Export template not found')
@@ -72,7 +72,7 @@ class controller {
 	}
 
 	async getTemplateFile(id: number): Promise<Buffer> {
-		const template = await this.repo.getOne(id)
+		const template = await this.repo.getOne(id).catch(AppError.handleAppErr)
 		if (template === undefined) {
 			throw AppError.handleAppErr(
 				AppError.notFound('Export template not found')

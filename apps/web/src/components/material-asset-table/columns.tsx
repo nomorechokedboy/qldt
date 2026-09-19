@@ -1,12 +1,13 @@
-import type { ColumnDef } from '@tanstack/react-table'
-import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
+import { Checkbox } from '@/components/ui/checkbox'
 import {
 	materialAssetStatusLabels,
 	materialConditionLabels
 } from '@/data/material-categories'
-import { MaterialAssetRowActions } from './material-asset-row-actions'
+import { getMediaUri } from '@/lib/utils'
 import type { MaterialAsset, Room, Student } from '@/types'
+import type { ColumnDef } from '@tanstack/react-table'
+import { MaterialAssetRowActions } from './material-asset-row-actions'
 
 export function buildMaterialAssetColumns(
 	roomOptions: Room[],
@@ -39,6 +40,22 @@ export function buildMaterialAssetColumns(
 			),
 			enableSorting: false,
 			enableHiding: false
+		},
+		{
+			id: 'images',
+			header: 'Hình ảnh',
+			cell: ({ row }) => {
+				const images = row.original.images
+				if (!images || images.length === 0) return '—'
+				return (
+					<img
+						src={getMediaUri(images[0])}
+						alt=''
+						className='size-10 rounded-md object-cover'
+					/>
+				)
+			},
+			enableSorting: false
 		},
 		{
 			accessorKey: 'serialNumber',

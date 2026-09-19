@@ -11,11 +11,14 @@ import unitRepo from './repo'
 import unitStatsRepo, { UnitStatsSummary } from './stats-repo'
 
 class controller {
-	private async getUnitOrThrow(alias: string): Promise<Unit> {
-		const unit = await unitRepo.getOne({ alias })
+	private async getUnitOrThrow(id: number): Promise<Unit> {
+		const unit = await unitRepo.findOne(
+			{ id },
+			{ with: { children: 'deep', parent: true } }
+		)
 		if (unit === undefined) {
 			throw AppError.handleAppErr(
-				AppError.invalidArgument(`Unit not found: ${alias}`)
+				AppError.invalidArgument(`Unit not found: ${id}`)
 			)
 		}
 		return unit
@@ -35,12 +38,12 @@ class controller {
 	}
 
 	async getStats(
-		alias: string,
+		id: number,
 		validUnitIds: number[]
 	): Promise<{ unit: Unit } & UnitStatsSummary> {
-		log.trace('UnitStatsController.getStats', { alias })
+		log.trace('UnitStatsController.getStats', { id })
 
-		const unit = await this.getUnitOrThrow(alias)
+		const unit = await this.getUnitOrThrow(id)
 		await this.validateAccess(unit.id, validUnitIds)
 
 		const descendantUnitIds = await unitStatsRepo.findDescendantUnitIds(
@@ -77,11 +80,8 @@ class controller {
 		}
 	}
 
-	async getStudents(
-		alias: string,
-		validUnitIds: number[]
-	): Promise<Student[]> {
-		const unit = await this.getUnitOrThrow(alias)
+	async getStudents(id: number, validUnitIds: number[]): Promise<Student[]> {
+		const unit = await this.getUnitOrThrow(id)
 		await this.validateAccess(unit.id, validUnitIds)
 
 		const descendantUnitIds = await unitStatsRepo.findDescendantUnitIds(
@@ -94,10 +94,10 @@ class controller {
 	}
 
 	async getMaterialStocks(
-		alias: string,
+		id: number,
 		validUnitIds: number[]
 	): Promise<MaterialStock[]> {
-		const unit = await this.getUnitOrThrow(alias)
+		const unit = await this.getUnitOrThrow(id)
 		await this.validateAccess(unit.id, validUnitIds)
 
 		const descendantUnitIds = await unitStatsRepo.findDescendantUnitIds(
@@ -110,10 +110,10 @@ class controller {
 	}
 
 	async getMaterialAssets(
-		alias: string,
+		id: number,
 		validUnitIds: number[]
 	): Promise<MaterialAsset[]> {
-		const unit = await this.getUnitOrThrow(alias)
+		const unit = await this.getUnitOrThrow(id)
 		await this.validateAccess(unit.id, validUnitIds)
 
 		const descendantUnitIds = await unitStatsRepo.findDescendantUnitIds(

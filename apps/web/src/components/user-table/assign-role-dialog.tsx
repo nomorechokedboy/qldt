@@ -68,7 +68,7 @@ export default function AssignRoleDialog({
 
 	return (
 		<Dialog open={open} onOpenChange={onOpenChange}>
-			<DialogContent className='sm:max-w-[425px]'>
+			<DialogContent className='sm:max-w-[425px] h-auto'>
 				<DialogHeader>
 					<DialogTitle>Phân quyền cho {userName}</DialogTitle>
 				</DialogHeader>

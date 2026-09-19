@@ -27,6 +27,7 @@ import {
 import useAuditLogs from '@/hooks/useAuditLogs'
 import { formatDbTimestamp } from '@/lib/utils'
 import type { audit_logs } from '@/api/client'
+import AuditLogDiff from './diff'
 
 const PAGE_SIZE = 20
 
@@ -274,32 +275,10 @@ export default function AuditLogTab() {
 									{formatDbTimestamp(selectedLog.createdAt)}
 								</span>
 							</div>
-
-							<div>
-								<h4 className='mb-1 text-sm font-medium'>
-									Trước khi thay đổi
-								</h4>
-								<pre className='max-h-64 overflow-auto rounded-md bg-muted p-3 text-xs'>
-									{JSON.stringify(
-										selectedLog.previousValue ?? null,
-										null,
-										2
-									)}
-								</pre>
-							</div>
-
-							<div>
-								<h4 className='mb-1 text-sm font-medium'>
-									Sau khi thay đổi
-								</h4>
-								<pre className='max-h-64 overflow-auto rounded-md bg-muted p-3 text-xs'>
-									{JSON.stringify(
-										selectedLog.newValue ?? null,
-										null,
-										2
-									)}
-								</pre>
-							</div>
+							<AuditLogDiff
+								before={selectedLog.previousValue ?? null}
+								after={selectedLog.newValue ?? null}
+							/>
 						</div>
 					)}
 				</SheetContent>

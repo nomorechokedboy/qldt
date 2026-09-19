@@ -22,9 +22,7 @@ import {
 	Role,
 	type Student,
 	type StudentBody,
-	type Unit,
 	type UnitBody,
-	type UnitLevel,
 	type UpdateRoleBody,
 	type UpdateStudentsBody,
 	type UpdateUnitBody,
@@ -43,8 +41,7 @@ import Client, {
 	type positions,
 	type rank_promotion_proposals,
 	type students,
-	type transfer_requests,
-	type units
+	type transfer_requests
 } from './client'
 
 export const requestClient = new Client(ApiUrl, {
@@ -116,12 +113,6 @@ export function MarkAsRead(params: MarkAsReadNotificationParams) {
 	return requestClient.notifications.MarkAsRead(params)
 }
 
-export function GetStudentByLevel(level: UnitLevel): Promise<Unit[]> {
-	return requestClient.students
-		.GetStudents({ unitLevel: level })
-		.then((resp) => resp.data)
-}
-
 export function GetUnits(params?: GetUnitQuery) {
 	return requestClient.units.GetUnits(params ?? {}).then((resp) => resp.data)
 }
@@ -151,32 +142,29 @@ export function UpdateUnits(body: UpdateUnitBody) {
 	return requestClient.units.UpdateUnits(body).then((resp) => resp)
 }
 
-export function GetUnit({
-	alias,
-	...params
-}: units.GetUnitRequest & { alias: string }) {
-	return requestClient.units.GetUnit(alias, params).then((resp) => resp.data)
+export function GetUnit(id: number) {
+	return requestClient.units.GetUnit(id).then((resp) => resp.data)
 }
 
-export function GetUnitStats(alias: string) {
-	return requestClient.units.GetUnitStats(alias)
+export function GetUnitStats(id: number) {
+	return requestClient.units.GetUnitStats(id)
 }
 
-export function GetUnitStatsStudents(alias: string) {
+export function GetUnitStatsStudents(id: number) {
 	return requestClient.units
-		.GetUnitStatsStudents(alias)
+		.GetUnitStatsStudents(id)
 		.then((resp) => resp.data)
 }
 
-export function GetUnitStatsMaterialStocks(alias: string) {
+export function GetUnitStatsMaterialStocks(id: number) {
 	return requestClient.units
-		.GetUnitStatsMaterialStocks(alias)
+		.GetUnitStatsMaterialStocks(id)
 		.then((resp) => resp.data)
 }
 
-export function GetUnitStatsMaterialAssets(alias: string) {
+export function GetUnitStatsMaterialAssets(id: number) {
 	return requestClient.units
-		.GetUnitStatsMaterialAssets(alias)
+		.GetUnitStatsMaterialAssets(id)
 		.then((resp) => resp.data)
 }
 
@@ -531,6 +519,12 @@ export function AddMaterialStock(body: materials.MaterialStockBody) {
 		.then((resp) => resp.data)
 }
 
+export function AddMaterialStocks(body: materials.MaterialStockBody[]) {
+	return requestClient.materials
+		.AddMaterialStock({ data: body ?? [] })
+		.then((resp) => resp.data)
+}
+
 export function UpdateMaterialStocks(
 	data: materials.UpdateMaterialStockBody['data']
 ) {
@@ -552,6 +546,12 @@ export function GetMaterialAssets(params?: materials.GetMaterialAssetsQuery) {
 export function CreateMaterialAsset(body: materials.MaterialAssetBody) {
 	return requestClient.materials
 		.CreateMaterialAsset({ data: [body] })
+		.then((resp) => resp.data)
+}
+
+export function CreateMaterialAssets(body: materials.MaterialAssetBody[]) {
+	return requestClient.materials
+		.CreateMaterialAsset({ data: body ?? [] })
 		.then((resp) => resp.data)
 }
 

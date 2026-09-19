@@ -99,7 +99,7 @@ class controller {
 		unitId: number,
 		label: string
 	): Promise<void> {
-		const unit = (await unitRepo.findByIds([unitId]))[0]
+		const unit = await unitRepo.findOne({ id: unitId })
 		if (unit === undefined) {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(`${label} unit not found: ${unitId}`)
@@ -121,7 +121,7 @@ class controller {
 	// of the requester's own command). Eligibility of the actual requester/
 	// approver is still enforced separately in create()/approve().
 	async listDestinationCandidateUnits(): Promise<Unit[]> {
-		const all = await unitRepo.findAll()
+		const all = await unitRepo.find()
 		return all.filter((u) => this.isCompanyOrAbove(u.level))
 	}
 
