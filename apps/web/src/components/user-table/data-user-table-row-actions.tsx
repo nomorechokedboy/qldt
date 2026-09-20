@@ -24,6 +24,7 @@ import { useDeleteUsers } from './useDeleteUsers'
 import { isSuperAdmin } from '@/lib/utils'
 import AssignRoleDialog from './assign-role-dialog'
 import useUserData from '@/hooks/useUsers'
+import { useTranslation } from 'react-i18next'
 
 interface DataTableRowActionsProps<TData> {
 	row: Row<TData>
@@ -34,6 +35,7 @@ export function DataTableRowActions<TData>({
 	row,
 	onDeleteRows
 }: DataTableRowActionsProps<TData>) {
+	const { t } = useTranslation('admin')
 	const user = row.original as unknown as User
 	const [dialogOpen, setDialogOpen] = useState(false)
 	const { refetch: refetchStudents } = useUserData()
@@ -49,20 +51,16 @@ export function DataTableRowActions<TData>({
 
 	async function handleDeleteRow(_: MouseEvent<HTMLDivElement>) {
 		try {
-			if (
-				!confirm(
-					'Bạn có chắc chắn muốn xóa người dùng này không? Hành động này không thể hoàn tác.'
-				)
-			) {
+			if (!confirm(t('users.delete.confirm'))) {
 				return
 			}
 			await deleteUserMutate([user.id]).then(() =>
 				onDeleteRows?.([user.id])
 			)
-			toast.success('Xóa dữ liệu thành công!')
+			toast.success(t('users.delete.success'))
 			refetchStudents()
 		} catch (err) {
-			toast.error(err.message ?? 'Lỗi xóa dữ liệu!')
+			toast.error(err.message ?? t('users.delete.failed'))
 			if (err instanceof AxiosError) {
 				console.error('Http error: ', err.response?.data)
 			}
@@ -84,21 +82,21 @@ export function DataTableRowActions<TData>({
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align='end' className='w-[160px]'>
 					<DropdownMenuItem onClick={handleOpenDialog}>
-						Chi tiết
+						{t('common.details')}
 					</DropdownMenuItem>
 					{isSuperAdmin() && (
 						<>
 							<DropdownMenuItem
 								onClick={() => setAssignRoleDialogOpen(true)}
 							>
-								Phân quyền
+								{t('users.actions.assignRoles')}
 							</DropdownMenuItem>
 							<DropdownMenuSeparator />
 							<DropdownMenuItem
 								disabled={isDeletingStudent}
 								onClick={handleDeleteRow}
 							>
-								Xóa
+								{t('common.delete')}
 								<DropdownMenuShortcut>⌘⌫</DropdownMenuShortcut>
 							</DropdownMenuItem>
 						</>
@@ -108,7 +106,7 @@ export function DataTableRowActions<TData>({
 			<Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
 				<DialogContent className='max-w-7xl h-[90vh] overflow-y-auto p-6'>
 					<DialogHeader className='flex items-center justify-between'>
-						<DialogTitle>Thông tin người dùng</DialogTitle>
+						<DialogTitle>{t('users.info.title')}</DialogTitle>
 					</DialogHeader>
 
 					<UserInfoTabs user={user} />

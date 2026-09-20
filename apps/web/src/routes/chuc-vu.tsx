@@ -7,6 +7,7 @@ import { DataTable } from '@/components/data-table'
 import usePositionsData from '@/hooks/usePositionsData'
 import useDataTableToolbarConfig from '@/hooks/useDataTableToolbarConfig'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { useTranslation } from 'react-i18next'
 
 export const Route = createFileRoute('/chuc-vu')({
 	component: RouteComponent
@@ -20,35 +21,39 @@ function RouteComponent() {
 	)
 }
 
+// Level values are what the API stores; labels come from `positions.levels`.
 const LEVELS = [
-	{ value: 'squad', label: 'Tiểu đội' },
-	{ value: 'platoon', label: 'Trung đội' },
-	{ value: 'company', label: 'Đại đội' },
-	{ value: 'battalion', label: 'Tiểu đoàn' },
-	{ value: 'brigade', label: 'Lữ đoàn' },
-	{ value: 'regiment', label: 'Trung đoàn' },
-	{ value: 'division', label: 'Sư đoàn' }
+	'squad',
+	'platoon',
+	'company',
+	'battalion',
+	'brigade',
+	'regiment',
+	'division'
 ] as const
 
 function PositionCatalog() {
+	const { t } = useTranslation('admin')
 	const [level, setLevel] = useState<string>('battalion')
 
 	return (
 		<div className='hidden h-full flex-1 flex-col space-y-8 p-8 md:flex'>
 			<div className='flex items-center justify-between space-y-2'>
-				<h2 className='text-2xl font-bold tracking-tight'>Chức vụ</h2>
+				<h2 className='text-2xl font-bold tracking-tight'>
+					{t('positions.title')}
+				</h2>
 			</div>
 			<Tabs value={level} onValueChange={setLevel}>
 				<TabsList>
 					{LEVELS.map((l) => (
-						<TabsTrigger key={l.value} value={l.value}>
-							{l.label}
+						<TabsTrigger key={l} value={l}>
+							{t(`positions.levels.${l}`)}
 						</TabsTrigger>
 					))}
 				</TabsList>
 				{LEVELS.map((l) => (
-					<TabsContent key={l.value} value={l.value}>
-						<PositionLevelTable level={l.value} />
+					<TabsContent key={l} value={l}>
+						<PositionLevelTable level={l} />
 					</TabsContent>
 				))}
 			</Tabs>
@@ -57,6 +62,7 @@ function PositionCatalog() {
 }
 
 function PositionLevelTable({ level }: { level: string }) {
+	const { t } = useTranslation('admin')
 	const { data: positions, refetch } = usePositionsData(
 		{ level },
 		{ enabled: true }
@@ -64,7 +70,7 @@ function PositionLevelTable({ level }: { level: string }) {
 	const { createSearchConfig } = useDataTableToolbarConfig()
 
 	const searchConfig = [
-		createSearchConfig('name', 'Tìm kiếm theo tên chức vụ...')
+		createSearchConfig('name', t('positions.searchPlaceholder'))
 	]
 
 	const sorted = [...(positions ?? [])].sort(
@@ -73,7 +79,7 @@ function PositionLevelTable({ level }: { level: string }) {
 
 	return (
 		<DataTable
-			placeholder='Chưa có chức vụ nào'
+			placeholder={t('positions.empty')}
 			columns={buildPositionColumns(() => refetch())}
 			data={sorted}
 			onRefresh={() => refetch()}

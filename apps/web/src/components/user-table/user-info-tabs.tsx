@@ -14,12 +14,14 @@ import {
 	Briefcase
 } from 'lucide-react'
 import useUserData from '@/hooks/useUsers'
+import { useTranslation } from 'react-i18next'
 
 interface StudentInfoTabsProps {
 	user: User
 }
 
 export default function StudentInfoTabs({ user }: StudentInfoTabsProps) {
+	const { t } = useTranslation('admin')
 	const [open, setOpen] = useState(false)
 	const { refetch: refetchStudents } = useUserData()
 	console.log('Render UserInfoTabs for user:', user)
@@ -69,7 +71,7 @@ export default function StudentInfoTabs({ user }: StudentInfoTabsProps) {
 								{user?.isSuperUser && (
 									<Badge variant='default'>
 										<Shield className='w-3 h-3 mr-1' />
-										Quản trị viên
+										{t('users.info.adminBadge')}
 									</Badge>
 								)}
 							</div>
@@ -85,22 +87,22 @@ export default function StudentInfoTabs({ user }: StudentInfoTabsProps) {
 							<div className='grid grid-cols-1 md:grid-cols-2 gap-2 pt-2'>
 								<InfoItem
 									icon={UserIcon}
-									label='Tên tài khoản'
+									label={t('users.fields.username')}
 									value={user?.username}
 								/>
 								<InfoItem
 									icon={Building2}
-									label='Đơn vị'
+									label={t('users.fields.unit')}
 									value={user?.unit?.name}
 								/>
 								<InfoItem
 									icon={Award}
-									label='Cấp bậc'
+									label={t('users.fields.rank')}
 									value={user?.rank}
 								/>
 								<InfoItem
 									icon={Briefcase}
-									label='Chức vụ'
+									label={t('users.fields.position')}
 									value={user?.position}
 								/>
 							</div>
@@ -111,9 +113,9 @@ export default function StudentInfoTabs({ user }: StudentInfoTabsProps) {
 									<UserIcon className='w-4 h-4 text-muted-foreground' />
 									<span className='text-muted-foreground'>
 										<span className='font-medium'>
-											Loại tài khoản:
+											{t('users.fields.accountType')}:
 										</span>{' '}
-										Người dùng
+										{t('users.info.regularUser')}
 									</span>
 								</div>
 							)}
@@ -128,7 +130,7 @@ export default function StudentInfoTabs({ user }: StudentInfoTabsProps) {
 									className='w-full sm:w-auto'
 								>
 									<UserPen className='w-4 h-4 mr-2' />
-									Sửa
+									{t('common.edit')}
 								</Button>
 							</div>
 						)}

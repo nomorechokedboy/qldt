@@ -17,10 +17,20 @@ import { userRankOptions } from '@/data/ranks'
 import { userPositionOptions } from '@/data/positions'
 import type { User } from '@/types'
 import { getErrorMessage } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
+import i18n from '@/i18n'
+
+// Zod calls `error` while parsing, so messages follow the language in use at
+// that moment instead of the one the module was loaded in.
+const msg = (key: string) => ({
+	error: () => i18n.t(key as never) as string
+})
 
 const schema = z.object({
 	id: z.number(),
-	displayName: z.string().min(1, 'Họ và tên không được bỏ trống'),
+	displayName: z
+		.string()
+		.min(1, msg('admin:users.validation.displayNameRequired')),
 	rank: z.string().optional(),
 	position: z.string().optional()
 })
@@ -36,6 +46,7 @@ export default function ProfileEditForm({
 	setOpen,
 	user
 }: ProfileEditFormProps) {
+	const { t } = useTranslation('admin')
 	const queryClient = useQueryClient()
 
 	const { mutateAsync } = useMutation({
@@ -43,12 +54,12 @@ export default function ProfileEditForm({
 		onSuccess: () => {
 			// Invalidate auth cache to refetch user data
 			queryClient.invalidateQueries({ queryKey: ['auth', 'user'] })
-			toast.success('Cập nhật thông tin thành công')
+			toast.success(t('profile.edit.success'))
 			setOpen(false)
 		},
 		onError: (error) => {
 			console.error('Failed to update profile:', error)
-			toast.error(getErrorMessage(error, 'Cập nhật thông tin thất bại'))
+			toast.error(getErrorMessage(error, t('profile.edit.failed')))
 		}
 	})
 
@@ -83,7 +94,7 @@ export default function ProfileEditForm({
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogContent className='sm:max-w-md h-auto'>
 				<DialogHeader>
-					<DialogTitle>Chỉnh sửa thông tin cá nhân</DialogTitle>
+					<DialogTitle>{t('profile.edit.title')}</DialogTitle>
 				</DialogHeader>
 				<form
 					onSubmit={(e) => {
@@ -93,14 +104,18 @@ export default function ProfileEditForm({
 					className='space-y-4'
 				>
 					<form.AppField name='displayName'>
-						{(field: any) => <field.TextField label='Họ và tên' />}
+						{(field: any) => (
+							<field.TextField
+								label={t('users.fields.displayName')}
+							/>
+						)}
 					</form.AppField>
 
 					<form.AppField name='rank'>
 						{(field: any) => (
 							<field.Select
-								label='Cấp bậc'
-								placeholder='Chọn cấp bậc'
+								label={t('users.fields.rank')}
+								placeholder={t('users.fields.selectRank')}
 								values={userRankOptions}
 								value={field.state.value}
 							/>
@@ -110,8 +125,8 @@ export default function ProfileEditForm({
 					<form.AppField name='position'>
 						{(field: any) => (
 							<field.Select
-								label='Chức vụ'
-								placeholder='Chọn chức vụ'
+								label={t('users.fields.position')}
+								placeholder={t('users.fields.selectPosition')}
 								values={userPositionOptions}
 								value={field.state.value}
 							/>
@@ -120,7 +135,9 @@ export default function ProfileEditForm({
 
 					{/* Read-only unit display */}
 					<div className='space-y-2'>
-						<label className='text-sm font-medium'>Đơn vị</label>
+						<label className='text-sm font-medium'>
+							{t('users.fields.unit')}
+						</label>
 						<div className='border rounded-md px-3 py-2 bg-muted'>
 							{user.unitName || '—'}
 						</div>
@@ -128,10 +145,14 @@ export default function ProfileEditForm({
 
 					<DialogFooter>
 						<DialogClose asChild>
-							<Button variant='outline'>Hủy</Button>
+							<Button variant='outline'>
+								{t('common.cancel')}
+							</Button>
 						</DialogClose>
 						<form.AppForm>
-							<form.SubscribeButton label='Lưu' />
+							<form.SubscribeButton
+								label={t('common.saveShort')}
+							/>
 						</form.AppForm>
 					</DialogFooter>
 				</form>

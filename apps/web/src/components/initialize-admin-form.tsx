@@ -1,4 +1,5 @@
 import { Shield } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import {
 	Card,
@@ -14,23 +15,36 @@ import { InitAdmin } from '@/api'
 import { toast } from 'sonner'
 import { useNavigate } from '@tanstack/react-router'
 import { getErrorMessage } from '@/lib/utils'
+import i18n from '@/i18n'
+
+// Zod calls `error` while parsing, so messages follow the language in use at
+// that moment instead of the one the module was loaded in.
+const msg = (key: string) => ({
+	error: () => i18n.t(key as never) as string
+})
 
 const InitAdminSchema = z
 	.object({
-		username: z.string().nonempty('Tên đăng nhập không được bỏ trống'),
-		displayName: z.string().nonempty('Họ và tên không được bỏ trống'),
+		username: z
+			.string()
+			.nonempty(msg('units:initialize.admin.usernameRequired')),
+		displayName: z
+			.string()
+			.nonempty(msg('units:initialize.admin.displayNameRequired')),
 
 		password: z
 			.string()
-			.min(8, 'Mật khẩu phải có ít nhất 8 ký tự')
-			.regex(/[A-Z]/, 'Mật khẩu phải chứa ít nhất 1 chữ hoa')
-			.regex(/[a-z]/, 'Mật khẩu phải chứa ít nhất 1 chữ thường')
-			.regex(/[0-9]/, 'Mật khẩu phải chứa ít nhất 1 chữ số'),
+			.min(8, msg('units:initialize.admin.passwordMin'))
+			.regex(/[A-Z]/, msg('units:initialize.admin.passwordUpper'))
+			.regex(/[a-z]/, msg('units:initialize.admin.passwordLower'))
+			.regex(/[0-9]/, msg('units:initialize.admin.passwordDigit')),
 
-		confirmPassword: z.string().nonempty('Vui lòng xác nhận mật khẩu')
+		confirmPassword: z
+			.string()
+			.nonempty(msg('units:initialize.admin.confirmRequired'))
 	})
 	.refine((data) => data.password === data.confirmPassword, {
-		message: 'Mật khẩu xác nhận không khớp',
+		error: () => i18n.t('units:initialize.admin.confirmMismatch'),
 		path: ['confirmPassword'] // highlight the correct field
 	})
 
@@ -41,13 +55,14 @@ export interface InitializeAdminFormProps {
 export default function InitializeAdminForm({
 	rootUnitId
 }: InitializeAdminFormProps) {
+	const { t } = useTranslation('units')
 	const navigate = useNavigate()
 	const queryClient = useQueryClient()
 	const { mutateAsync } = useMutation({
 		mutationFn: InitAdmin,
 		onSuccess: () => {
-			toast.success('Khởi tạo tài khoản quản trị thành công!', {
-				description: 'Bây giờ bạn đã có thể đăng nhập vào hệ thống.'
+			toast.success(t('initialize.admin.success'), {
+				description: t('initialize.admin.successDescription')
 			})
 			// The root layout redirects back to /khoi-tao-qtv while
 			// isInitAdmin is false, so update the cache synchronously
@@ -59,12 +74,7 @@ export default function InitializeAdminForm({
 		},
 		onError: (err) => {
 			console.error('InitAdmin failed', err)
-			toast.error(
-				getErrorMessage(
-					err,
-					'Khởi tạo tài khoản quản trị thất bại, đã có lỗi xảy ra, vui lòng liên hệ kỹ thuật viên!'
-				)
-			)
+			toast.error(getErrorMessage(err, t('initialize.admin.failed')))
 		}
 	})
 	const form = useAppForm({
@@ -87,11 +97,10 @@ export default function InitializeAdminForm({
 					<Shield className='h-6 w-6 text-primary-foreground' />
 				</div>
 				<CardTitle className='text-center text-2xl font-semibold tracking-tight'>
-					Khởi tạo quản trị viên
+					{t('initialize.admin.title')}
 				</CardTitle>
 				<CardDescription className='text-center text-muted-foreground'>
-					Hãy khởi tạo tài khoản quản trị viên của bạn để sử dụng hệ
-					thống
+					{t('initialize.admin.description')}
 				</CardDescription>
 			</CardHeader>
 			<CardContent>
@@ -105,14 +114,20 @@ export default function InitializeAdminForm({
 				>
 					<div className='space-y-2'>
 						<form.AppField name='displayName'>
-							{(field) => <field.TextField label='Họ và tên' />}
+							{(field) => (
+								<field.TextField
+									label={t('initialize.admin.displayName')}
+								/>
+							)}
 						</form.AppField>
 					</div>
 
 					<div className='space-y-2'>
 						<form.AppField name='username'>
 							{(field) => (
-								<field.TextField label='Tên đăng nhập' />
+								<field.TextField
+									label={t('initialize.admin.username')}
+								/>
 							)}
 						</form.AppField>
 					</div>
@@ -122,7 +137,7 @@ export default function InitializeAdminForm({
 							{(field) => (
 								<field.TextField
 									type='password'
-									label='Mật khẩu'
+									label={t('initialize.admin.password')}
 								/>
 							)}
 						</form.AppField>
@@ -133,7 +148,9 @@ export default function InitializeAdminForm({
 							{(field) => (
 								<field.TextField
 									type='password'
-									label='Mật khẩu xác nhận'
+									label={t(
+										'initialize.admin.confirmPassword'
+									)}
 								/>
 							)}
 						</form.AppField>
@@ -150,7 +167,9 @@ export default function InitializeAdminForm({
 								disabled={!canSubmit}
 								type='submit'
 							>
-								{isSubmitting ? 'Đang khởi tạo...' : 'Khởi tạo'}
+								{isSubmitting
+									? t('initialize.admin.submitting')
+									: t('initialize.admin.submit')}
 							</Button>
 						)}
 					/>

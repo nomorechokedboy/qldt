@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Building2 } from 'lucide-react'
 import { toast } from 'sonner'
 import { useNavigate } from '@tanstack/react-router'
@@ -25,6 +26,7 @@ import type { UnitLevel } from '@/types'
 import { getErrorMessage } from '@/lib/utils'
 
 export default function InitializeRootUnitForm() {
+	const { t } = useTranslation('units')
 	const navigate = useNavigate()
 	const [alias, setAlias] = useState('')
 	const [name, setName] = useState('')
@@ -40,16 +42,11 @@ export default function InitializeRootUnitForm() {
 				name,
 				level
 			})
-			toast.success('Khởi tạo đơn vị thành công!')
+			toast.success(t('initialize.rootUnit.success'))
 			navigate({ to: '/khoi-tao-qtv', replace: true })
 		} catch (err) {
 			console.error('Failed to create root unit:', err)
-			toast.error(
-				getErrorMessage(
-					err,
-					'Khởi tạo đơn vị thất bại, đã có lỗi xảy ra!'
-				)
-			)
+			toast.error(getErrorMessage(err, t('initialize.rootUnit.failed')))
 		}
 	}
 
@@ -60,17 +57,18 @@ export default function InitializeRootUnitForm() {
 					<Building2 className='h-6 w-6 text-primary-foreground' />
 				</div>
 				<CardTitle className='text-center text-2xl font-semibold tracking-tight'>
-					Khởi tạo đơn vị
+					{t('initialize.rootUnit.title')}
 				</CardTitle>
 				<CardDescription className='text-center text-muted-foreground'>
-					Hệ thống chưa có đơn vị nào. Hãy khởi tạo đơn vị gốc của đơn
-					vị trước khi tiếp tục sử dụng.
+					{t('initialize.rootUnit.description')}
 				</CardDescription>
 			</CardHeader>
 			<CardContent>
 				<form onSubmit={handleSubmit} className='space-y-4'>
 					<div className='space-y-2'>
-						<Label htmlFor='root-unit-name'>Tên đơn vị</Label>
+						<Label htmlFor='root-unit-name'>
+							{t('initialize.rootUnit.name')}
+						</Label>
 						<Input
 							id='root-unit-name'
 							value={name}
@@ -81,19 +79,21 @@ export default function InitializeRootUnitForm() {
 
 					<div className='space-y-2'>
 						<Label htmlFor='root-unit-alias'>
-							Mã định danh (alias)
+							{t('initialize.rootUnit.alias')}
 						</Label>
 						<Input
 							id='root-unit-alias'
 							value={alias}
 							onChange={(e) => setAlias(e.target.value)}
-							placeholder='vd: d1'
+							placeholder={t('initialize.rootUnit.aliasExample')}
 							required
 						/>
 					</div>
 
 					<div className='space-y-2'>
-						<Label htmlFor='root-unit-level'>Cấp đơn vị</Label>
+						<Label htmlFor='root-unit-level'>
+							{t('initialize.rootUnit.level')}
+						</Label>
 						<Select
 							value={level}
 							onValueChange={(value) =>
@@ -101,7 +101,11 @@ export default function InitializeRootUnitForm() {
 							}
 						>
 							<SelectTrigger id='root-unit-level'>
-								<SelectValue placeholder='Chọn cấp đơn vị' />
+								<SelectValue
+									placeholder={t(
+										'initialize.rootUnit.levelPlaceholder'
+									)}
+								/>
 							</SelectTrigger>
 							<SelectContent>
 								{rootUnitLevelOptions.map((opt) => (
@@ -122,8 +126,8 @@ export default function InitializeRootUnitForm() {
 						disabled={initRootUnitMutation.isPending}
 					>
 						{initRootUnitMutation.isPending
-							? 'Đang khởi tạo...'
-							: 'Khởi tạo đơn vị'}
+							? t('initialize.rootUnit.submitting')
+							: t('initialize.rootUnit.submit')}
 					</Button>
 				</form>
 			</CardContent>

@@ -1,6 +1,7 @@
 import useAuth from '@/hooks/useAuth'
 import { Navigate, useLocation } from '@tanstack/react-router'
 import { LoaderCircle, ShieldAlert } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { PageSkeleton } from './page-skeleton'
 
 interface ProtectedRouteProps {
@@ -13,14 +14,12 @@ interface ProtectedRouteProps {
 }
 
 function AccessDenied() {
+	const { t } = useTranslation('admin')
 	return (
 		<div className='flex flex-1 flex-col items-center justify-center gap-2 p-8 text-center'>
 			<ShieldAlert className='h-10 w-10 text-muted-foreground' />
-			<h2 className='text-lg font-semibold'>Không có quyền truy cập</h2>
-			<p className='text-muted-foreground'>
-				Bạn không có quyền để xem nội dung này. Vui lòng liên hệ quản
-				trị viên nếu cần hỗ trợ.
-			</p>
+			<h2 className='text-lg font-semibold'>{t('access.deniedTitle')}</h2>
+			<p className='text-muted-foreground'>{t('access.deniedBody')}</p>
 		</div>
 	)
 }

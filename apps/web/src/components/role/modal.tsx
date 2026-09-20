@@ -10,6 +10,7 @@ import {
 	DialogTrigger
 } from '@/components/ui/dialog'
 import type { ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 
 interface RoleModalProps {
 	actionText: string
@@ -32,6 +33,7 @@ export default function RoleModal({
 	trigger,
 	onOpenChange
 }: RoleModalProps) {
+	const { t } = useTranslation('admin')
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault()
 		e.stopPropagation()
@@ -49,19 +51,25 @@ export default function RoleModal({
 					<div className='grid grid-cols-1 gap-4'>
 						<form.AppField name='name'>
 							{(field: any) => (
-								<field.TextField label='Tên quyền' />
+								<field.TextField
+									label={t('roles.fields.name')}
+								/>
 							)}
 						</form.AppField>
 
 						<form.AppField name='description'>
-							{(field: any) => <field.TextField label='Mô tả' />}
+							{(field: any) => (
+								<field.TextField
+									label={t('roles.fields.description')}
+								/>
+							)}
 						</form.AppField>
 					</div>
 
 					<DialogFooter>
 						<DialogClose asChild>
 							<Button type='button' variant='outline'>
-								Hủy
+								{t('common.cancel')}
 							</Button>
 						</DialogClose>
 						<form.Subscribe

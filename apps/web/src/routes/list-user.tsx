@@ -5,12 +5,14 @@ import UserTable from '@/components/user-table'
 import type { StudentQueryParams } from '@/types'
 import useUnitsData from '@/hooks/useUnitsData'
 import ProtectedRoute from '@/components/ProtectedRoute'
+import { useTranslation } from 'react-i18next'
 
 export const Route = createFileRoute('/list-user')({
 	component: RouteComponent
 })
 
 function RouteComponent() {
+	const { t } = useTranslation('admin')
 	// const [studentParams, setStudentParams] =
 	// 	React.useState<StudentQueryParams>({
 	// 		isEthnicMinority: true
@@ -22,7 +24,7 @@ function RouteComponent() {
 					<div className='flex items-center justify-between space-y-2'>
 						<div>
 							<h2 className='text-2xl font-bold tracking-tight'>
-								Danh sách người dùng
+								{t('users.title')}
 							</h2>
 						</div>
 					</div>

@@ -29,32 +29,35 @@ import useAuditLogs from '@/hooks/useAuditLogs'
 import { formatDbTimestamp } from '@/lib/utils'
 import type { audit_logs } from '@/api/client'
 import AuditLogDiff from './diff'
+import { useTranslation } from 'react-i18next'
 
 const PAGE_SIZE = 20
 
-const RESOURCE_LABELS: Record<string, string> = {
-	students: 'Quân nhân',
-	material_assets: 'Vũ khí/trang bị',
-	material_types: 'Danh mục vật tư',
-	material_stocks: 'Tồn kho vật tư',
-	buildings: 'Tòa nhà',
-	rooms: 'Phòng',
-	units: 'Đơn vị',
-	roles: 'Vai trò',
-	permissions: 'Quyền',
-	users: 'Người dùng',
-	user_roles: 'Phân quyền người dùng',
-	transfer_requests: 'Yêu cầu bàn giao',
-	inventory_sessions: 'Phiên kiểm kê'
-}
+// Resource / action codes are what the API records; only their labels are
+// translated (see `audit.resources` / `audit.actions` in the admin catalog).
+const RESOURCES = [
+	'students',
+	'material_assets',
+	'material_types',
+	'material_stocks',
+	'buildings',
+	'rooms',
+	'units',
+	'roles',
+	'permissions',
+	'users',
+	'user_roles',
+	'transfer_requests',
+	'inventory_sessions'
+] as const
 
-const ACTION_LABELS: Record<string, string> = {
-	create: 'Tạo mới',
-	update: 'Cập nhật',
-	delete: 'Xoá',
-	approve: 'Phê duyệt',
-	reject: 'Từ chối'
-}
+const ACTIONS = ['create', 'update', 'delete', 'approve', 'reject'] as const
+
+const isResource = (value: string): value is (typeof RESOURCES)[number] =>
+	(RESOURCES as readonly string[]).includes(value)
+
+const isAction = (value: string): value is (typeof ACTIONS)[number] =>
+	(ACTIONS as readonly string[]).includes(value)
 
 const ACTION_BADGE_VARIANT: Record<
 	string,
@@ -68,6 +71,7 @@ const ACTION_BADGE_VARIANT: Record<
 type AuditLogRow = audit_logs.GetAuditLogsResponse['data'][number]
 
 export default function AuditLogTab() {
+	const { t } = useTranslation('admin')
 	const [page, setPage] = useState(1)
 	const [resource, setResource] = useState<string>('')
 	const [action, setAction] = useState<string>('')
@@ -82,6 +86,12 @@ export default function AuditLogTab() {
 
 	const total = data?.total ?? 0
 	const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
+
+	// Unknown codes fall back to the raw value the API returned.
+	const resourceLabel = (value: string) =>
+		isResource(value) ? t(`audit.resources.${value}`) : value
+	const actionLabel = (value: string) =>
+		isAction(value) ? t(`audit.actions.${value}`) : value
 
 	const handleFilterChange = (setter: (v: string) => void) => (v: string) => {
 		setter(v === 'all' ? '' : v)
@@ -100,17 +110,19 @@ export default function AuditLogTab() {
 					onValueChange={handleFilterChange(setResource)}
 				>
 					<SelectTrigger className='h-8 w-[200px]'>
-						<SelectValue placeholder='Tài nguyên' />
+						<SelectValue
+							placeholder={t('audit.columns.resource')}
+						/>
 					</SelectTrigger>
 					<SelectContent>
-						<SelectItem value='all'>Tất cả tài nguyên</SelectItem>
-						{Object.entries(RESOURCE_LABELS).map(
-							([value, label]) => (
-								<SelectItem key={value} value={value}>
-									{label}
-								</SelectItem>
-							)
-						)}
+						<SelectItem value='all'>
+							{t('audit.allResources')}
+						</SelectItem>
+						{RESOURCES.map((value) => (
+							<SelectItem key={value} value={value}>
+								{resourceLabel(value)}
+							</SelectItem>
+						))}
 					</SelectContent>
 				</Select>
 
@@ -119,13 +131,15 @@ export default function AuditLogTab() {
 					onValueChange={handleFilterChange(setAction)}
 				>
 					<SelectTrigger className='h-8 w-[160px]'>
-						<SelectValue placeholder='Hành động' />
+						<SelectValue placeholder={t('audit.columns.action')} />
 					</SelectTrigger>
 					<SelectContent>
-						<SelectItem value='all'>Tất cả hành động</SelectItem>
-						{Object.entries(ACTION_LABELS).map(([value, label]) => (
+						<SelectItem value='all'>
+							{t('audit.allActions')}
+						</SelectItem>
+						{ACTIONS.map((value) => (
 							<SelectItem key={value} value={value}>
-								{label}
+								{actionLabel(value)}
 							</SelectItem>
 						))}
 					</SelectContent>
@@ -138,13 +152,13 @@ export default function AuditLogTab() {
 				<Table>
 					<TableHeader>
 						<TableRow>
-							<TableHead>Thời gian</TableHead>
-							<TableHead>Người thực hiện</TableHead>
-							<TableHead>Tài nguyên</TableHead>
-							<TableHead>Hành động</TableHead>
+							<TableHead>{t('audit.columns.time')}</TableHead>
+							<TableHead>{t('audit.columns.actor')}</TableHead>
+							<TableHead>{t('audit.columns.resource')}</TableHead>
+							<TableHead>{t('audit.columns.action')}</TableHead>
 							<TableHead>Endpoint</TableHead>
 							<TableHead className='text-right'>
-								Chi tiết
+								{t('common.details')}
 							</TableHead>
 						</TableRow>
 					</TableHeader>
@@ -166,7 +180,7 @@ export default function AuditLogTab() {
 									colSpan={6}
 									className='py-10 text-center text-muted-foreground'
 								>
-									Không có nhật ký nào
+									{t('audit.empty')}
 								</TableCell>
 							</TableRow>
 						)}
@@ -181,8 +195,7 @@ export default function AuditLogTab() {
 										{log.actor?.displayName ?? '—'}
 									</TableCell>
 									<TableCell>
-										{RESOURCE_LABELS[log.resource] ??
-											log.resource}
+										{resourceLabel(log.resource)}
 									</TableCell>
 									<TableCell>
 										<Badge
@@ -192,8 +205,7 @@ export default function AuditLogTab() {
 												] ?? 'secondary'
 											}
 										>
-											{ACTION_LABELS[log.action] ??
-												log.action}
+											{actionLabel(log.action)}
 										</Badge>
 									</TableCell>
 									<TableCell className='font-mono text-xs text-muted-foreground'>
@@ -205,7 +217,7 @@ export default function AuditLogTab() {
 											size='sm'
 											onClick={() => setSelectedLog(log)}
 										>
-											Xem
+											{t('audit.view')}
 										</Button>
 									</TableCell>
 								</TableRow>
@@ -216,7 +228,7 @@ export default function AuditLogTab() {
 
 			<div className='flex items-center justify-between text-sm text-muted-foreground'>
 				<span>
-					Trang {page} / {totalPages} ({total} bản ghi)
+					{t('audit.pagination', { page, totalPages, total })}
 				</span>
 				<div className='flex gap-2'>
 					<Button
@@ -225,7 +237,7 @@ export default function AuditLogTab() {
 						disabled={page <= 1}
 						onClick={() => setPage((p) => Math.max(1, p - 1))}
 					>
-						Trước
+						{t('audit.previous')}
 					</Button>
 					<Button
 						variant='outline'
@@ -235,7 +247,7 @@ export default function AuditLogTab() {
 							setPage((p) => Math.min(totalPages, p + 1))
 						}
 					>
-						Sau
+						{t('audit.next')}
 					</Button>
 				</div>
 			</div>
@@ -246,33 +258,29 @@ export default function AuditLogTab() {
 			>
 				<SheetContent className='w-full overflow-y-auto sm:max-w-xl'>
 					<SheetHeader>
-						<SheetTitle>Chi tiết nhật ký</SheetTitle>
+						<SheetTitle>{t('audit.detailTitle')}</SheetTitle>
 					</SheetHeader>
 					{selectedLog && (
 						<div className='space-y-4 px-4 pb-4'>
 							<div className='grid grid-cols-2 gap-2 text-sm'>
 								<span className='text-muted-foreground'>
-									Tài nguyên
+									{t('audit.columns.resource')}
 								</span>
 								<span>
-									{RESOURCE_LABELS[selectedLog.resource] ??
-										selectedLog.resource}
+									{resourceLabel(selectedLog.resource)}
 								</span>
 								<span className='text-muted-foreground'>
-									Hành động
+									{t('audit.columns.action')}
 								</span>
-								<span>
-									{ACTION_LABELS[selectedLog.action] ??
-										selectedLog.action}
-								</span>
+								<span>{actionLabel(selectedLog.action)}</span>
 								<span className='text-muted-foreground'>
-									Người thực hiện
+									{t('audit.columns.actor')}
 								</span>
 								<span>
 									{selectedLog.actor?.displayName ?? '—'}
 								</span>
 								<span className='text-muted-foreground'>
-									Thời gian
+									{t('audit.columns.time')}
 								</span>
 								<span>
 									{formatDbTimestamp(selectedLog.createdAt)}

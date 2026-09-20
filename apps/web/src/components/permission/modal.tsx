@@ -2,6 +2,7 @@ import { type ReactNode } from 'react'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader } from '../ui/dialog'
 import { DialogClose, DialogTitle, DialogTrigger } from '@radix-ui/react-dialog'
+import { useTranslation } from 'react-i18next'
 
 interface PermissionModalProps {
 	actionText: string
@@ -24,6 +25,7 @@ export default function PermissionModal({
 	trigger,
 	onOpenChange
 }: PermissionModalProps) {
+	const { t } = useTranslation('admin')
 	const handleSubmit = () => {}
 
 	return (
@@ -40,27 +42,44 @@ export default function PermissionModal({
 					</DialogHeader>
 					<form.AppField name='name'>
 						{(field: any) => (
-							<field.TextField label='Tên quyền' disabled />
+							<field.TextField
+								label={t('permissions.fields.name')}
+								disabled
+							/>
 						)}
 					</form.AppField>
 					<form.AppField name='displayName'>
 						{(field: any) => (
-							<field.TextField label='Tên hiển thị' />
+							<field.TextField
+								label={t('permissions.fields.displayName')}
+							/>
 						)}
 					</form.AppField>
 					<form.AppField name='description'>
-						{(field: any) => <field.TextField label='Mô tả' />}
+						{(field: any) => (
+							<field.TextField
+								label={t('permissions.fields.description')}
+							/>
+						)}
 					</form.AppField>
 					<form.AppField name='resourceId'>
-						{(field: any) => <field.TextField label='Tài nguyên' />}
+						{(field: any) => (
+							<field.TextField
+								label={t('permissions.fields.resource')}
+							/>
+						)}
 					</form.AppField>
 					<form.AppField name='actionId'>
-						{(field: any) => <field.TextField label='Hành động' />}
+						{(field: any) => (
+							<field.TextField
+								label={t('permissions.fields.action')}
+							/>
+						)}
 					</form.AppField>
 					<DialogFooter>
 						<DialogClose>
 							<Button type='button' variant='outline'>
-								Hủy
+								{t('common.cancel')}
 							</Button>
 						</DialogClose>
 						<form.Subscribe

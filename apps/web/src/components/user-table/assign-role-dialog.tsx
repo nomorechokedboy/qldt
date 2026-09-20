@@ -13,6 +13,7 @@ import useUserRoles from '@/hooks/useUserRoles'
 import useAssignRoles from '@/hooks/useAssignRoles'
 import { useEffect, useState } from 'react'
 import { Loader2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 interface AssignRoleDialogProps {
 	open: boolean
@@ -27,6 +28,7 @@ export default function AssignRoleDialog({
 	userId,
 	userName
 }: AssignRoleDialogProps) {
+	const { t } = useTranslation('admin')
 	const { data: roles = [], isLoading: isLoadingRoles } = useRoles()
 	const { data: userRolesData, isLoading: isLoadingUserRoles } =
 		useUserRoles(userId)
@@ -70,7 +72,9 @@ export default function AssignRoleDialog({
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent className='sm:max-w-[425px] h-auto'>
 				<DialogHeader>
-					<DialogTitle>Phân quyền cho {userName}</DialogTitle>
+					<DialogTitle>
+						{t('assignRoles.title', { name: userName })}
+					</DialogTitle>
 				</DialogHeader>
 				<div className='py-4'>
 					{isLoading ? (
@@ -81,7 +85,7 @@ export default function AssignRoleDialog({
 						<div className='space-y-4'>
 							{roles.length === 0 ? (
 								<p className='text-sm text-muted-foreground text-center'>
-									Chưa có vai trò nào trong hệ thống
+									{t('assignRoles.empty')}
 								</p>
 							) : (
 								roles.map((role) => (
@@ -123,7 +127,7 @@ export default function AssignRoleDialog({
 						onClick={() => onOpenChange(false)}
 						disabled={isAssigning}
 					>
-						Hủy
+						{t('common.cancel')}
 					</Button>
 					<Button
 						onClick={handleSubmit}
@@ -132,7 +136,7 @@ export default function AssignRoleDialog({
 						{isAssigning && (
 							<Loader2 className='w-4 h-4 mr-2 animate-spin' />
 						)}
-						Lưu thay đổi
+						{t('assignRoles.save')}
 					</Button>
 				</DialogFooter>
 			</DialogContent>

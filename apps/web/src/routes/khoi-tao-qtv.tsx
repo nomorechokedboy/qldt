@@ -2,12 +2,14 @@ import InitializeAdminForm from '@/components/initialize-admin-form'
 import useIsInitAdmin from '@/hooks/useIsInitAdmin'
 import useIsInitRootUnit from '@/hooks/useIsInitRootUnit'
 import { createFileRoute, Navigate } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 
 export const Route = createFileRoute('/khoi-tao-qtv')({
 	component: RouteComponent
 })
 
 function RouteComponent() {
+	const { t } = useTranslation('units')
 	const { data: isInitAdmin, isLoading: isInitAdminLoading } =
 		useIsInitAdmin()
 	const { data: rootUnitStatus, isLoading: isRootUnitLoading } =
@@ -30,13 +32,12 @@ function RouteComponent() {
 			<div className='w-full max-w-md space-y-6'>
 				<div className='text-center space-y-2'>
 					<p className='text-xs font-medium uppercase tracking-widest text-muted-foreground'>
-						Khởi tạo lần đầu
+						{t('initialize.firstTime')}
 					</p>
 				</div>
 				<InitializeAdminForm rootUnitId={rootUnitStatus.rootUnitId!} />
 				<p className='text-center text-xs text-muted-foreground'>
-					Tài khoản quản trị viên này sẽ có toàn bộ quyền truy cập hệ
-					thống và dữ liệu.
+					{t('initialize.adminNotice')}
 				</p>
 			</div>
 		</main>

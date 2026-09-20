@@ -2,12 +2,14 @@ import { createFileRoute } from '@tanstack/react-router'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { SidebarInset } from '@/components/ui/sidebar'
 import ProfileView from '@/components/profile/profile-view'
+import { useTranslation } from 'react-i18next'
 
 export const Route = createFileRoute('/profile')({
 	component: RouteComponent
 })
 
 function RouteComponent() {
+	const { t } = useTranslation('admin')
 	return (
 		<ProtectedRoute>
 			<SidebarInset>
@@ -15,7 +17,7 @@ function RouteComponent() {
 					<div className='flex items-center justify-between space-y-2'>
 						<div>
 							<h2 className='text-2xl font-bold tracking-tight'>
-								Trang cá nhân
+								{t('profile.title')}
 							</h2>
 						</div>
 					</div>

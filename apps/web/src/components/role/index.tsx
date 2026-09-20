@@ -20,8 +20,10 @@ import { toast } from 'sonner'
 import UpdateRoleForm from './update-form'
 import { Dialog, DialogContent, DialogFooter, DialogTitle } from '../ui/dialog'
 import { DialogClose, DialogTrigger } from '@radix-ui/react-dialog'
+import { Trans, useTranslation } from 'react-i18next'
 
 export default function RolesTab() {
+	const { t } = useTranslation('admin')
 	const {
 		data: roles = [],
 		isLoading,
@@ -33,13 +35,13 @@ export default function RolesTab() {
 		useMutation({
 			mutationFn: DeleteRole,
 			onSuccess: () => {
-				toast.success('Xóa vai trò thành công!')
+				toast.success(t('roles.delete.success'))
 				refetchRoles()
 			},
 			onError: (err) => {
 				console.error('DeleteRole error', err)
 
-				toast.error('Xóa vai trò thất bại.', {
+				toast.error(t('roles.delete.failed'), {
 					description: err.message
 				})
 			}
@@ -68,7 +70,7 @@ export default function RolesTab() {
 			{/* Header with Search and Create Button */}
 			<div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
 				<Input
-					placeholder='Tìm kiếm...'
+					placeholder={t('roles.searchPlaceholder')}
 					value={searchQuery}
 					onChange={(e) => setSearchQuery(e.target.value)}
 					className='sm:max-w-xs'
@@ -99,10 +101,9 @@ export default function RolesTab() {
 								{/* Permission Badges */}
 								<div className='space-y-2'>
 									<p className='text-xs font-semibold text-muted-foreground'>
-										{role.permissions.length} quyền
-										{role.permissions.length !== 1
-											? 's'
-											: ''}
+										{t('roles.permissionCount', {
+											count: role.permissions.length
+										})}
 									</p>
 									<div className='flex flex-wrap gap-1'>
 										{role.permissions
@@ -129,8 +130,9 @@ export default function RolesTab() {
 
 								{/* User Count */}
 								<div className='text-sm text-muted-foreground'>
-									{role.userCount} người dùng
-									{role.userCount !== 1 ? 's' : ''}
+									{t('roles.userCount', {
+										count: role.userCount
+									})}
 								</div>
 
 								{/* Actions */}
@@ -155,23 +157,33 @@ export default function RolesTab() {
 										</DialogTrigger>
 										<DialogContent className='max-w-md max-h-1/4'>
 											<DialogTitle className='sr-only'>
-												Xác nhận xoá vai trò
+												{t('roles.delete.dialogTitle')}
 											</DialogTitle>
 											<div className='flex flex-col gap-4'>
 												<div className='font-semibold text-lg text-center'>
-													Xác nhận xoá vai trò?
+													{t('roles.delete.heading')}
 												</div>
 												<div className='text-center text-muted-foreground'>
-													Bạn có chắc muốn xoá vai trò{' '}
-													<b className='text-red-600'>
-														{role.name}
-													</b>{' '}
-													không?
+													<Trans
+														t={t}
+														i18nKey='roles.delete.confirm'
+														values={{
+															name: role.name
+														}}
+														components={{
+															name: (
+																<b className='text-red-600' />
+															)
+														}}
+													/>
 													<p>
-														Hành động này{' '}
-														<b>
-															không thể hoàn tác.
-														</b>
+														<Trans
+															t={t}
+															i18nKey='roles.delete.irreversible'
+															components={{
+																b: <b />
+															}}
+														/>
 													</p>
 												</div>
 												<DialogFooter className='flex justify-end gap-2 mt-4'>
@@ -184,7 +196,9 @@ export default function RolesTab() {
 																isDeleteRolePending
 															}
 														>
-															Huỷ
+															{t(
+																'roles.delete.cancel'
+															)}
 														</Button>
 													</DialogClose>
 													<Button
@@ -200,8 +214,12 @@ export default function RolesTab() {
 														}
 													>
 														{isDeleteRolePending
-															? 'Đang xoá...'
-															: 'Xoá'}
+															? t(
+																	'roles.delete.deleting'
+																)
+															: t(
+																	'roles.delete.action'
+																)}
 													</Button>
 												</DialogFooter>
 											</div>
@@ -220,7 +238,7 @@ export default function RolesTab() {
 					<CardContent className='flex flex-col items-center justify-center py-12'>
 						<Shield className='mb-4 h-8 w-8 text-muted-foreground' />
 						<p className='text-muted-foreground'>
-							Chưa có vai trò...
+							{t('roles.empty')}
 						</p>
 					</CardContent>
 				</Card>
