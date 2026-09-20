@@ -6,12 +6,24 @@ import viLangPacks from './locales/vi/langPacks'
 import viNav from './locales/vi/nav'
 import viStudent from './locales/vi/student'
 import viTable from './locales/vi/table'
+import viUnits from './locales/vi/units'
+import viMaterials from './locales/vi/materials'
+import viProposals from './locales/vi/proposals'
+import viAdmin from './locales/vi/admin'
+import viStats from './locales/vi/stats'
+import viIo from './locales/vi/io'
 import enAuth from './locales/en/auth'
 import enCommon from './locales/en/common'
 import enLangPacks from './locales/en/langPacks'
 import enNav from './locales/en/nav'
 import enStudent from './locales/en/student'
 import enTable from './locales/en/table'
+import enUnits from './locales/en/units'
+import enMaterials from './locales/en/materials'
+import enProposals from './locales/en/proposals'
+import enAdmin from './locales/en/admin'
+import enStats from './locales/en/stats'
+import enIo from './locales/en/io'
 
 export const LANGUAGES = [
 	{ code: 'vi', label: 'Tiếng Việt', short: 'VI' },
@@ -29,6 +41,12 @@ export const resources = {
 		auth: viAuth,
 		nav: viNav,
 		langPacks: viLangPacks,
+		units: viUnits,
+		materials: viMaterials,
+		proposals: viProposals,
+		admin: viAdmin,
+		stats: viStats,
+		io: viIo,
 		table: viTable,
 		student: viStudent
 	},
@@ -37,6 +55,12 @@ export const resources = {
 		auth: enAuth,
 		nav: enNav,
 		langPacks: enLangPacks,
+		units: enUnits,
+		materials: enMaterials,
+		proposals: enProposals,
+		admin: enAdmin,
+		stats: enStats,
+		io: enIo,
 		table: enTable,
 		student: enStudent
 	}
