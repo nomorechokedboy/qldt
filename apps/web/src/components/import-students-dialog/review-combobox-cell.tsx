@@ -17,6 +17,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { cn } from '@/lib/utils'
 import { Check, ChevronsUpDown } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { reviewInputClass } from './review-input-class'
 
 // Searchable, grouped picker for review-table cells backed by a large
@@ -35,6 +36,7 @@ export function ReviewComboboxCell({
 	options: { value: string; label: string; group?: string }[]
 	placeholder: string
 }) {
+	const { t } = useTranslation('io')
 	const [open, setOpen] = useState(false)
 	const selected = options.find((o) => o.value === value)
 
@@ -78,9 +80,13 @@ export function ReviewComboboxCell({
 			</PopoverTrigger>
 			<PopoverContent className='w-[280px] p-0'>
 				<Command>
-					<CommandInput placeholder='Tìm kiếm...' />
+					<CommandInput
+						placeholder={t('importDialog.cells.search')}
+					/>
 					<CommandList>
-						<CommandEmpty>Không tìm thấy.</CommandEmpty>
+						<CommandEmpty>
+							{t('importDialog.cells.notFound')}
+						</CommandEmpty>
 						<ScrollArea className='max-h-64'>
 							{grouped.map(({ group, options: opts }) => (
 								<CommandGroup

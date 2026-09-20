@@ -20,7 +20,8 @@ import {
 } from '@/hooks/useExportTemplates'
 import type { ExportResourceType, ExportTemplate } from '@/types'
 import type { ColumnDef } from '@tanstack/react-table'
-import { type ReactNode, useRef, useState } from 'react'
+import { type ReactNode, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
 export interface ExportTemplateManagerProps {
@@ -28,50 +29,55 @@ export interface ExportTemplateManagerProps {
 	resourceType: ExportResourceType
 }
 
-const columns: ColumnDef<ExportTemplate>[] = [
-	{
-		id: 'select',
-		header: ({ table }) => (
-			<Checkbox
-				checked={
-					table.getIsAllPageRowsSelected() ||
-					(table.getIsSomePageRowsSelected() && 'indeterminate')
-				}
-				onCheckedChange={(value) =>
-					table.toggleAllPageRowsSelected(!!value)
-				}
-				aria-label='Select all'
-				className='translate-y-[2px]'
-			/>
-		),
-		cell: ({ row }) => (
-			<Checkbox
-				checked={row.getIsSelected()}
-				onCheckedChange={(value) => row.toggleSelected(!!value)}
-				aria-label='Select row'
-				className='translate-y-[2px]'
-			/>
-		),
-		enableSorting: false,
-		enableHiding: false
-	},
-	{
-		accessorKey: 'name',
-		header: 'Tên mẫu'
-	},
-	{
-		accessorKey: 'originalFilename',
-		header: 'Tên file'
-	}
-]
-
 export function ExportTemplateManager({
 	children,
 	resourceType
 }: ExportTemplateManagerProps) {
+	const { t } = useTranslation('io')
 	const [open, setOpen] = useState(false)
 	const [name, setName] = useState('')
 	const fileInputRef = useRef<HTMLInputElement>(null)
+
+	const columns = useMemo<ColumnDef<ExportTemplate>[]>(
+		() => [
+			{
+				id: 'select',
+				header: ({ table }) => (
+					<Checkbox
+						checked={
+							table.getIsAllPageRowsSelected() ||
+							(table.getIsSomePageRowsSelected() &&
+								'indeterminate')
+						}
+						onCheckedChange={(value) =>
+							table.toggleAllPageRowsSelected(!!value)
+						}
+						aria-label='Select all'
+						className='translate-y-[2px]'
+					/>
+				),
+				cell: ({ row }) => (
+					<Checkbox
+						checked={row.getIsSelected()}
+						onCheckedChange={(value) => row.toggleSelected(!!value)}
+						aria-label='Select row'
+						className='translate-y-[2px]'
+					/>
+				),
+				enableSorting: false,
+				enableHiding: false
+			},
+			{
+				accessorKey: 'name',
+				header: t('templates.columns.name')
+			},
+			{
+				accessorKey: 'originalFilename',
+				header: t('templates.columns.filename')
+			}
+		],
+		[t]
+	)
 
 	const {
 		data: templates,
@@ -85,11 +91,11 @@ export function ExportTemplateManager({
 	async function handleUpload() {
 		const file = fileInputRef.current?.files?.[0]
 		if (!file) {
-			toast.error('Hãy chọn file mẫu (.docx)')
+			toast.error(t('templates.pickFile'))
 			return
 		}
 		if (!name.trim()) {
-			toast.error('Hãy đặt tên cho mẫu')
+			toast.error(t('templates.nameRequired'))
 			return
 		}
 
@@ -104,10 +110,10 @@ export function ExportTemplateManager({
 			if (fileInputRef.current) {
 				fileInputRef.current.value = ''
 			}
-			toast.success('Đã tải lên mẫu xuất dữ liệu')
+			toast.success(t('templates.uploaded'))
 		} catch (err) {
 			console.error('handleUpload error', err)
-			toast.error('Không thể tải lên mẫu, đã có lỗi xảy ra!')
+			toast.error(t('templates.uploadFailed'))
 		}
 	}
 
@@ -121,17 +127,20 @@ export function ExportTemplateManager({
 			<DialogTrigger asChild>{children}</DialogTrigger>
 			<DialogContent className='container'>
 				<DialogHeader>
-					<DialogTitle>Quản lý mẫu xuất dữ liệu</DialogTitle>
+					<DialogTitle>{t('templates.title')}</DialogTitle>
 					<DialogDescription>
-						Tải lên mẫu docx của riêng bạn để dùng khi xuất dữ liệu,
-						hoặc xóa mẫu không còn dùng nữa
+						{t('templates.description')}
 					</DialogDescription>
 				</DialogHeader>
 
 				<Tabs defaultValue='templates'>
 					<TabsList>
-						<TabsTrigger value='templates'>Mẫu của tôi</TabsTrigger>
-						<TabsTrigger value='guideline'>Hướng dẫn</TabsTrigger>
+						<TabsTrigger value='templates'>
+							{t('templates.tabs.mine')}
+						</TabsTrigger>
+						<TabsTrigger value='guideline'>
+							{t('templates.tabs.guideline')}
+						</TabsTrigger>
 					</TabsList>
 					<TabsContent
 						value='templates'
@@ -139,17 +148,19 @@ export function ExportTemplateManager({
 					>
 						<div className='grid grid-cols-[1fr_1fr_auto] items-end gap-4'>
 							<div className='grid gap-2'>
-								<Label htmlFor='template-name'>Tên mẫu</Label>
+								<Label htmlFor='template-name'>
+									{t('templates.nameLabel')}
+								</Label>
 								<Input
 									id='template-name'
 									value={name}
 									onChange={(e) => setName(e.target.value)}
-									placeholder='Ví dụ: Mẫu báo cáo vũ khí'
+									placeholder={t('templates.namePlaceholder')}
 								/>
 							</div>
 							<div className='grid gap-2'>
 								<Label htmlFor='template-file'>
-									File mẫu (.docx)
+									{t('templates.fileLabel')}
 								</Label>
 								<Input
 									id='template-file'
@@ -162,7 +173,9 @@ export function ExportTemplateManager({
 								onClick={handleUpload}
 								disabled={isUploading}
 							>
-								{isUploading ? 'Đang tải lên...' : 'Tải lên'}
+								{isUploading
+									? t('templates.uploading')
+									: t('templates.upload')}
 							</Button>
 						</div>
 
@@ -170,7 +183,9 @@ export function ExportTemplateManager({
 							columns={columns}
 							data={isLoading ? [] : (templates ?? [])}
 							placeholder={
-								isLoading ? 'Đang tải...' : 'Chưa có mẫu nào'
+								isLoading
+									? t('templates.loading')
+									: t('templates.empty')
 							}
 							onDeleteRows={handleDeleteRows}
 							pagination={false}

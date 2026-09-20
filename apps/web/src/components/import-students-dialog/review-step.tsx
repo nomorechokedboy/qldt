@@ -9,6 +9,7 @@ import {
 	CheckCircle,
 	ClipboardList
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 // Every visible column mounts its own `<form.Field>` per row, and each of
 // those re-derives its value from the shared form store (regex path-parse
@@ -48,6 +49,8 @@ export function ReviewStep({
 	isUploading,
 	reviewColumns
 }: ReviewStepProps) {
+	const { t } = useTranslation('io')
+	const { t: tTable } = useTranslation('table')
 	return (
 		<div className='space-y-4'>
 			<div className='flex items-center justify-between'>
@@ -55,11 +58,10 @@ export function ReviewStep({
 					<ClipboardList className='h-6 w-6 text-primary' />
 					<div>
 						<h3 className='font-medium text-foreground'>
-							Xem trước dữ liệu import
+							{t('importDialog.review.title')}
 						</h3>
 						<p className='text-sm text-muted-foreground'>
-							Kiểm tra và chỉnh sửa dữ liệu bên dưới trước khi
-							import vào hệ thống
+							{t('importDialog.review.hint')}
 						</p>
 					</div>
 				</div>
@@ -70,13 +72,13 @@ export function ReviewStep({
 					disabled={isUploading}
 				>
 					<ArrowLeft className='h-4 w-4' />
-					Chọn file khác
+					{t('importDialog.review.another')}
 				</Button>
 			</div>
 
 			<div className='flex flex-wrap items-center gap-3 text-sm'>
 				<span className='text-muted-foreground'>
-					Tổng số:{' '}
+					{t('importDialog.review.total')}{' '}
 					<span className='font-medium text-foreground'>
 						{rows.length}
 					</span>
@@ -86,12 +88,14 @@ export function ReviewStep({
 					className='gap-1 border-green-400 text-green-700 dark:border-green-800 dark:text-green-400'
 				>
 					<CheckCircle className='h-3.5 w-3.5' />
-					Hợp lệ: {validRowCount}
+					{t('importDialog.review.valid', { count: validRowCount })}
 				</Badge>
 				{errorRowCount > 0 && (
 					<Badge variant='destructive' className='gap-1'>
 						<AlertCircle className='h-3.5 w-3.5' />
-						Lỗi: {errorRowCount}
+						{t('importDialog.review.errors', {
+							count: errorRowCount
+						})}
 					</Badge>
 				)}
 			</div>
@@ -99,17 +103,17 @@ export function ReviewStep({
 			<DataTable
 				columns={reviewColumns}
 				data={rows}
-				placeholder='Không có dữ liệu'
+				placeholder={t('importDialog.review.empty')}
 				defaultColumnVisibility={REVIEW_DEFAULT_COLUMN_VISIBILITY}
 			/>
 
 			{errorRowCount > 0 && (
 				<p className='text-sm text-muted-foreground'>
-					Xem cột "Trạng thái" của từng dòng để biết dòng nào còn lỗi
-					- di chuột vào nhãn "Lỗi" để xem chi tiết. Lỗi quê quán/trú
-					quán có thể sửa ngay trong bảng - dùng nút "Hiển thị các
-					cột" ở trên để bật các cột Tỉnh/Thành và Phường/Xã tương
-					ứng.
+					{t('importDialog.review.help', {
+						status: t('importDialog.columns.status'),
+						error: t('importDialog.rowStatus.error'),
+						columns: tTable('viewOptions.trigger')
+					})}
 				</p>
 			)}
 		</div>

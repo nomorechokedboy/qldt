@@ -1,4 +1,5 @@
 import { lazy, Suspense } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ImportDialogSkeleton } from './import-dialog-skeleton'
 import type { ImportStudentsDialogProps } from './import-students-dialog'
 
@@ -14,6 +15,8 @@ const ImportStudentsDialog = lazy(() =>
 )
 
 export function LazyImportStudentsDialog(props: ImportStudentsDialogProps) {
+	const { t } = useTranslation('io')
+
 	if (!props.isOpen) {
 		return null
 	}
@@ -24,7 +27,7 @@ export function LazyImportStudentsDialog(props: ImportStudentsDialogProps) {
 				<ImportDialogSkeleton
 					isOpen={props.isOpen}
 					onClose={props.onClose}
-					title='Import danh sách quân nhân'
+					title={t('importDialog.title')}
 				/>
 			}
 		>

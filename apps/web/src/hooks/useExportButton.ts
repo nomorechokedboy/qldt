@@ -1,4 +1,5 @@
 import { ExportTableData } from '@/api'
+import i18n from '@/i18n'
 import type { ExportData } from '@/types'
 import { toast } from 'sonner'
 
@@ -74,7 +75,7 @@ export default function useExportButton({
 		} catch (err) {
 			console.error('handleExport error', err)
 
-			toast.error('Chưa thể xuất file, đã có lỗi xảy ra!')
+			toast.error(i18n.t('io:export.failed'))
 		}
 	}
 

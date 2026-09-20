@@ -14,6 +14,7 @@ import useAuth from '@/hooks/useAuth'
 import useExportButton from '@/hooks/useExportButton'
 import type { TemplType } from '@/types'
 import { useState, type ReactNode } from 'react'
+import { useTranslation } from 'react-i18next'
 
 export interface ExportStudentDataDialogProps {
 	children: ReactNode
@@ -35,6 +36,7 @@ export function ExportStudentDataDialog({
 	templType,
 	id = 'exportFileForm'
 }: ExportStudentDataDialogProps) {
+	const { t } = useTranslation('io')
 	const { user } = useAuth()
 	const { onExport } = useExportButton({ filename: defaultFilename })
 	const [open, setOpen] = useState(false)
@@ -70,9 +72,9 @@ export function ExportStudentDataDialog({
 				<DialogTrigger asChild>{children}</DialogTrigger>
 				<DialogContent className='container' key={id}>
 					<DialogHeader>
-						<DialogTitle>Xuất dữ liệu</DialogTitle>
+						<DialogTitle>{t('export.generic.title')}</DialogTitle>
 						<DialogDescription>
-							Hãy điền những thông tin cần thiết để xuất dữ liệu
+							{t('export.description')}
 						</DialogDescription>
 					</DialogHeader>
 					<div className='grid grid-cols-3 gap-4'>
@@ -81,13 +83,13 @@ export function ExportStudentDataDialog({
 							validators={{
 								onBlur: ({ value }) =>
 									!value
-										? 'Tên file không được bỏ trống'
+										? t('export.required.filename')
 										: undefined
 							}}
 						>
 							{(field) => (
 								<field.EditableInput
-									label='Tên file'
+									label={t('export.fields.filename')}
 									ellipsisMaxWidth='500px'
 								/>
 							)}
@@ -97,13 +99,13 @@ export function ExportStudentDataDialog({
 							validators={{
 								onBlur: ({ value }) =>
 									!value
-										? 'Tên đơn vị không được bỏ trống'
+										? t('export.required.unitName')
 										: undefined
 							}}
 						>
 							{(field) => (
 								<field.EditableInput
-									label='Tên đơn vị'
+									label={t('export.fields.unitName')}
 									ellipsisMaxWidth='500px'
 								/>
 							)}
@@ -113,13 +115,13 @@ export function ExportStudentDataDialog({
 							validators={{
 								onBlur: ({ value }) =>
 									!value
-										? 'Tên đơn vị trực thuộc không được bỏ trống'
+										? t('export.required.underUnitName')
 										: undefined
 							}}
 						>
 							{(field) => (
 								<field.EditableInput
-									label='Tên đơn vị trực thuộc'
+									label={t('export.fields.underUnitName')}
 									ellipsisMaxWidth='500px'
 								/>
 							)}
@@ -131,13 +133,13 @@ export function ExportStudentDataDialog({
 							validators={{
 								onBlur: ({ value }) =>
 									!value
-										? 'Chức vụ chỉ huy không được bỏ trống'
+										? t('export.required.commanderPosition')
 										: undefined
 							}}
 						>
 							{(field) => (
 								<field.EditableInput
-									label='Cấp bậc của chỉ huy'
+									label={t('export.fields.commanderPosition')}
 									ellipsisMaxWidth='500px'
 								/>
 							)}
@@ -147,29 +149,37 @@ export function ExportStudentDataDialog({
 							validators={{
 								onBlur: ({ value }) =>
 									!value
-										? 'Tên chỉ huy không được bỏ trống'
+										? t('export.required.commanderName')
 										: undefined
 							}}
 						>
-							{(field) => <field.TextField label='Tên chỉ huy' />}
+							{(field) => (
+								<field.TextField
+									label={t('export.fields.commanderName')}
+								/>
+							)}
 						</form.AppField>
 						<form.AppField
 							name='commanderRank'
 							validators={{
 								onBlur: ({ value }) =>
 									!value
-										? 'Cấp bậc của chỉ huy không được bỏ trống'
+										? t('export.required.commanderRank')
 										: undefined
 							}}
 						>
 							{(field) => (
-								<field.TextField label='Cấp bậc của chỉ huy' />
+								<field.TextField
+									label={t('export.fields.commanderRank')}
+								/>
 							)}
 						</form.AppField>
 					</div>
 					<DialogFooter>
 						<DialogClose asChild>
-							<Button variant='outline'>Hủy</Button>
+							<Button variant='outline'>
+								{t('export.cancel')}
+							</Button>
 						</DialogClose>
 						<form.Subscribe
 							selector={(state) => [
@@ -183,8 +193,8 @@ export function ExportStudentDataDialog({
 									disabled={!canSubmit}
 								>
 									{isSubmitting
-										? 'Đang xuất file...'
-										: 'Xác nhận'}
+										? t('export.exporting')
+										: t('export.confirm')}
 								</Button>
 							)}
 						/>

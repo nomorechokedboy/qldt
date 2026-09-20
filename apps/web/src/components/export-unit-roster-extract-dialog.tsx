@@ -13,6 +13,7 @@ import {
 import { useAppForm } from '@/hooks/use-app-form'
 import useAuth from '@/hooks/useAuth'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
 export interface ExportUnitRosterExtractDialogProps {
@@ -35,6 +36,7 @@ export function ExportUnitRosterExtractDialog({
 	defaultValues,
 	id = 'exportUnitRosterExtractForm'
 }: ExportUnitRosterExtractDialogProps) {
+	const { t } = useTranslation('io')
 	const { user } = useAuth()
 	const [previewOpen, setPreviewOpen] = useState(false)
 	const [previewBuffer, setPreviewBuffer] = useState<ArrayBuffer | null>(null)
@@ -72,7 +74,7 @@ export function ExportUnitRosterExtractDialog({
 				formApi.reset()
 			} catch (err) {
 				console.error('handleExportUnitRosterExtract error', err)
-				toast.error('Chưa thể xuất file, đã có lỗi xảy ra!')
+				toast.error(t('export.failed'))
 			}
 		}
 	})
@@ -90,10 +92,11 @@ export function ExportUnitRosterExtractDialog({
 				>
 					<DialogContent className='container' key={id}>
 						<DialogHeader>
-							<DialogTitle>Xuất danh sách biên chế</DialogTitle>
+							<DialogTitle>
+								{t('export.roster.title')}
+							</DialogTitle>
 							<DialogDescription>
-								Danh sách biên chế của đơn vị này và toàn bộ đơn
-								vị trực thuộc, phân theo từng đơn vị
+								{t('export.roster.description')}
 							</DialogDescription>
 						</DialogHeader>
 						<div className='grid grid-cols-3 gap-4'>
@@ -102,13 +105,13 @@ export function ExportUnitRosterExtractDialog({
 								validators={{
 									onBlur: ({ value }) =>
 										!value
-											? 'Tên file không được bỏ trống'
+											? t('export.required.filename')
 											: undefined
 								}}
 							>
 								{(field) => (
 									<field.EditableInput
-										label='Tên file'
+										label={t('export.fields.filename')}
 										ellipsisMaxWidth='500px'
 									/>
 								)}
@@ -118,13 +121,13 @@ export function ExportUnitRosterExtractDialog({
 								validators={{
 									onBlur: ({ value }) =>
 										!value
-											? 'Tên đơn vị không được bỏ trống'
+											? t('export.required.unitName')
 											: undefined
 								}}
 							>
 								{(field) => (
 									<field.EditableInput
-										label='Tên đơn vị'
+										label={t('export.fields.unitName')}
 										ellipsisMaxWidth='500px'
 									/>
 								)}
@@ -134,13 +137,13 @@ export function ExportUnitRosterExtractDialog({
 								validators={{
 									onBlur: ({ value }) =>
 										!value
-											? 'Tên đơn vị trực thuộc không được bỏ trống'
+											? t('export.required.underUnitName')
 											: undefined
 								}}
 							>
 								{(field) => (
 									<field.EditableInput
-										label='Tên đơn vị trực thuộc'
+										label={t('export.fields.underUnitName')}
 										ellipsisMaxWidth='500px'
 									/>
 								)}
@@ -152,12 +155,14 @@ export function ExportUnitRosterExtractDialog({
 								validators={{
 									onBlur: ({ value }) =>
 										!value
-											? 'Tiêu đề báo cáo không được bỏ trống'
+											? t('export.required.reportTitle')
 											: undefined
 								}}
 							>
 								{(field) => (
-									<field.EditableInput label='Tiêu đề báo cáo' />
+									<field.EditableInput
+										label={t('export.fields.reportTitle')}
+									/>
 								)}
 							</form.AppField>
 							<form.AppField
@@ -165,12 +170,14 @@ export function ExportUnitRosterExtractDialog({
 								validators={{
 									onBlur: ({ value }) =>
 										!value
-											? 'Địa danh không được bỏ trống'
+											? t('export.required.city')
 											: undefined
 								}}
 							>
 								{(field) => (
-									<field.EditableInput label='Địa danh' />
+									<field.EditableInput
+										label={t('export.fields.city')}
+									/>
 								)}
 							</form.AppField>
 						</div>
@@ -180,13 +187,17 @@ export function ExportUnitRosterExtractDialog({
 								validators={{
 									onBlur: ({ value }) =>
 										!value
-											? 'Chức vụ chỉ huy không được bỏ trống'
+											? t(
+													'export.required.commanderPosition'
+												)
 											: undefined
 								}}
 							>
 								{(field) => (
 									<field.EditableInput
-										label='Chức vụ chỉ huy'
+										label={t(
+											'export.fields.commanderPosition'
+										)}
 										ellipsisMaxWidth='500px'
 									/>
 								)}
@@ -196,12 +207,14 @@ export function ExportUnitRosterExtractDialog({
 								validators={{
 									onBlur: ({ value }) =>
 										!value
-											? 'Tên chỉ huy không được bỏ trống'
+											? t('export.required.commanderName')
 											: undefined
 								}}
 							>
 								{(field) => (
-									<field.TextField label='Tên chỉ huy' />
+									<field.TextField
+										label={t('export.fields.commanderName')}
+									/>
 								)}
 							</form.AppField>
 							<form.AppField
@@ -209,18 +222,22 @@ export function ExportUnitRosterExtractDialog({
 								validators={{
 									onBlur: ({ value }) =>
 										!value
-											? 'Cấp bậc của chỉ huy không được bỏ trống'
+											? t('export.required.commanderRank')
 											: undefined
 								}}
 							>
 								{(field) => (
-									<field.TextField label='Cấp bậc của chỉ huy' />
+									<field.TextField
+										label={t('export.fields.commanderRank')}
+									/>
 								)}
 							</form.AppField>
 						</div>
 						<DialogFooter>
 							<DialogClose asChild>
-								<Button variant='outline'>Hủy</Button>
+								<Button variant='outline'>
+									{t('export.cancel')}
+								</Button>
 							</DialogClose>
 							<form.Subscribe
 								selector={(state) => [
@@ -234,8 +251,8 @@ export function ExportUnitRosterExtractDialog({
 										disabled={!canSubmit}
 									>
 										{isSubmitting
-											? 'Đang xuất file...'
-											: 'Xác nhận'}
+											? t('export.exporting')
+											: t('export.confirm')}
 									</Button>
 								)}
 							/>
