@@ -160,15 +160,6 @@ const admin: Messages<typeof vi> = {
 		title: 'Positions',
 		searchPlaceholder: 'Search by position name...',
 		empty: 'No positions yet',
-		levels: {
-			squad: 'Squad',
-			platoon: 'Platoon',
-			company: 'Company',
-			battalion: 'Battalion',
-			brigade: 'Brigade',
-			regiment: 'Regiment',
-			division: 'Division'
-		},
 		columns: {
 			priority: 'Priority',
 			code: 'Position code',

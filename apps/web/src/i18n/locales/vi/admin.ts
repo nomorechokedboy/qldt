@@ -157,15 +157,6 @@ const admin = {
 		title: 'Chức vụ',
 		searchPlaceholder: 'Tìm kiếm theo tên chức vụ...',
 		empty: 'Chưa có chức vụ nào',
-		levels: {
-			squad: 'Tiểu đội',
-			platoon: 'Trung đội',
-			company: 'Đại đội',
-			battalion: 'Tiểu đoàn',
-			brigade: 'Lữ đoàn',
-			regiment: 'Trung đoàn',
-			division: 'Sư đoàn'
-		},
 		columns: {
 			priority: 'Ưu tiên',
 			code: 'Mã chức vụ',
