@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import {
@@ -25,23 +26,24 @@ export default function RejectDialog({
 	onOpenChange: (open: boolean) => void
 	onSuccess?: () => void
 }) {
+	const { t } = useTranslation('proposals')
 	const [reason, setReason] = useState('')
 	const rejectMutation = useRejectTransferRequest()
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
 		if (!reason.trim()) {
-			toast.error('Vui lòng nhập lý do từ chối')
+			toast.error(t('reject.reasonRequired'))
 			return
 		}
 		try {
 			await rejectMutation.mutateAsync({ id, reason })
-			toast.success('Đã từ chối yêu cầu bàn giao')
+			toast.success(t('transfer.rejected'))
 			setReason('')
 			onOpenChange(false)
 			onSuccess?.()
 		} catch (err) {
-			toast.error(getErrorMessage(err, 'Từ chối yêu cầu thất bại!'))
+			toast.error(getErrorMessage(err, t('transfer.rejectFailed')))
 		}
 	}
 
@@ -49,11 +51,13 @@ export default function RejectDialog({
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent className='sm:max-w-md h-auto'>
 				<DialogHeader>
-					<DialogTitle>Từ chối yêu cầu bàn giao</DialogTitle>
+					<DialogTitle>{t('transfer.rejectTitle')}</DialogTitle>
 				</DialogHeader>
 				<form className='space-y-4' onSubmit={handleSubmit}>
 					<div className='space-y-2'>
-						<Label htmlFor='reject-reason'>Lý do từ chối</Label>
+						<Label htmlFor='reject-reason'>
+							{t('reject.reasonLabel')}
+						</Label>
 						<Textarea
 							id='reject-reason'
 							value={reason}
@@ -63,7 +67,9 @@ export default function RejectDialog({
 					</div>
 					<DialogFooter>
 						<DialogClose asChild>
-							<Button variant='outline'>Hủy</Button>
+							<Button variant='outline'>
+								{t('common.cancel')}
+							</Button>
 						</DialogClose>
 						<Button
 							type='submit'
@@ -71,8 +77,8 @@ export default function RejectDialog({
 							disabled={rejectMutation.isPending}
 						>
 							{rejectMutation.isPending
-								? 'Đang từ chối...'
-								: 'Từ chối'}
+								? t('reject.submitting')
+								: t('common.reject')}
 						</Button>
 					</DialogFooter>
 				</form>

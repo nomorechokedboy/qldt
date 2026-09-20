@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import { Badge } from '@/components/ui/badge'
@@ -44,6 +45,7 @@ export default function CreateTransferRequestForm({
 }: {
 	onSuccess?: () => void
 }) {
+	const { t } = useTranslation('proposals')
 	const [open, setOpen] = useState(false)
 	const [sourceUnitId, setSourceUnitId] = useState('')
 	const [destinationUnitId, setDestinationUnitId] = useState('')
@@ -173,7 +175,7 @@ export default function CreateTransferRequestForm({
 	)
 
 	const materialTypeName = (id: number) =>
-		materialTypes?.find((t) => t.id === id)?.name ?? `#${id}`
+		materialTypes?.find((type) => type.id === id)?.name ?? `#${id}`
 
 	const resetForm = () => {
 		setSourceUnitId('')
@@ -209,7 +211,7 @@ export default function CreateTransferRequestForm({
 		e.preventDefault()
 
 		if (totalSelected === 0) {
-			toast.error('Vui lòng chọn ít nhất một nguồn lực để bàn giao')
+			toast.error(t('transfer.selectAtLeastOne'))
 			return
 		}
 
@@ -235,12 +237,12 @@ export default function CreateTransferRequestForm({
 
 		try {
 			await createMutation.mutateAsync(body)
-			toast.success('Tạo yêu cầu bàn giao thành công')
+			toast.success(t('transfer.created'))
 			onSuccess?.()
 			resetForm()
 			setOpen(false)
 		} catch (err) {
-			toast.error(getErrorMessage(err, 'Tạo yêu cầu bàn giao thất bại!'))
+			toast.error(getErrorMessage(err, t('transfer.createFailed')))
 		}
 	}
 
@@ -255,12 +257,12 @@ export default function CreateTransferRequestForm({
 			<SheetTrigger asChild>
 				<Button>
 					<Plus className='mr-2 h-4 w-4' />
-					Tạo yêu cầu bàn giao
+					{t('transfer.createButton')}
 				</Button>
 			</SheetTrigger>
 			<SheetContent className='w-full overflow-y-auto sm:max-w-2xl'>
 				<SheetHeader>
-					<SheetTitle>Yêu cầu bàn giao nguồn lực</SheetTitle>
+					<SheetTitle>{t('transfer.formTitle')}</SheetTitle>
 				</SheetHeader>
 				<form
 					id='create-transfer-request-form'
@@ -269,11 +271,11 @@ export default function CreateTransferRequestForm({
 				>
 					<div className='grid grid-cols-2 gap-4'>
 						<div className='space-y-2'>
-							<Label>Đơn vị nguồn</Label>
+							<Label>{t('transfer.sourceUnit')}</Label>
 							<UnitSelect
 								options={sourceUnitOptions}
 								value={sourceUnitId}
-								placeholder='Chọn đơn vị nguồn'
+								placeholder={t('transfer.pickSourceUnit')}
 								onValueChange={(v) => {
 									setSourceUnitId(v)
 									setTrooperIds(new Set())
@@ -285,11 +287,11 @@ export default function CreateTransferRequestForm({
 						</div>
 
 						<div className='space-y-2'>
-							<Label>Đơn vị đích</Label>
+							<Label>{t('transfer.destinationUnit')}</Label>
 							<UnitSelect
 								options={destinationUnitOptions}
 								value={destinationUnitId}
-								placeholder='Chọn đơn vị đích'
+								placeholder={t('transfer.pickDestinationUnit')}
 								onValueChange={(v) => {
 									setDestinationUnitId(v)
 									setDestinationRoomId(NONE)
@@ -301,17 +303,21 @@ export default function CreateTransferRequestForm({
 
 					<div className='grid grid-cols-2 gap-4'>
 						<div className='space-y-2'>
-							<Label>Vị trí đích (tuỳ chọn)</Label>
+							<Label>
+								{t('transfer.destinationRoomOptional')}
+							</Label>
 							<Select
 								value={destinationRoomId}
 								onValueChange={setDestinationRoomId}
 							>
 								<SelectTrigger>
-									<SelectValue placeholder='Chọn vị trí' />
+									<SelectValue
+										placeholder={t('transfer.pickRoom')}
+									/>
 								</SelectTrigger>
 								<SelectContent>
 									<SelectItem value={NONE}>
-										Không chỉ định
+										{t('transfer.noRoom')}
 									</SelectItem>
 									{destinationRooms.map((r) => (
 										<SelectItem
@@ -326,14 +332,16 @@ export default function CreateTransferRequestForm({
 						</div>
 
 						<div className='space-y-2'>
-							<Label>Người phê duyệt</Label>
+							<Label>{t('common.approver')}</Label>
 							<Select
 								value={approverUserId}
 								onValueChange={setApproverUserId}
 								disabled={!sourceUnitId || !destinationUnitId}
 							>
 								<SelectTrigger>
-									<SelectValue placeholder='Chọn người phê duyệt' />
+									<SelectValue
+										placeholder={t('common.pickApprover')}
+									/>
 								</SelectTrigger>
 								<SelectContent>
 									{(eligibleApprovers ?? []).map((u) => (
@@ -348,24 +356,23 @@ export default function CreateTransferRequestForm({
 							</Select>
 							<p className='text-xs text-muted-foreground'>
 								{!sourceUnitId || !destinationUnitId
-									? 'Chọn đơn vị nguồn và đích để xem người có thể phê duyệt'
+									? t('transfer.approverNeedsUnits')
 									: (eligibleApprovers ?? []).length === 0
-										? 'Không có người phê duyệt hợp lệ cho hai đơn vị này'
-										: 'Chỉ huy/chính trị viên (hoặc cấp phó) của đơn vị cấp trên chung của đơn vị nguồn và đích'}
+										? t('transfer.approverNone')
+										: t('transfer.approverHint')}
 							</p>
 						</div>
 					</div>
 
 					{!sourceUnitId ? (
 						<p className='py-6 text-center text-sm text-muted-foreground'>
-							Chọn đơn vị nguồn để xem nguồn lực có thể chuyển
-							giao
+							{t('transfer.pickSourceForResources')}
 						</p>
 					) : (
 						<Tabs defaultValue='troopers'>
 							<TabsList>
 								<TabsTrigger value='troopers'>
-									Quân nhân{' '}
+									{t('common.troopers')}{' '}
 									{trooperIds.size > 0 && (
 										<Badge
 											variant='secondary'
@@ -376,7 +383,7 @@ export default function CreateTransferRequestForm({
 									)}
 								</TabsTrigger>
 								<TabsTrigger value='assets'>
-									Khí tài{' '}
+									{t('transfer.assets')}{' '}
 									{assetIds.size > 0 && (
 										<Badge
 											variant='secondary'
@@ -387,7 +394,7 @@ export default function CreateTransferRequestForm({
 									)}
 								</TabsTrigger>
 								<TabsTrigger value='stocks'>
-									Vật tư{' '}
+									{t('transfer.stocks')}{' '}
 									{stockQuantities.size > 0 && (
 										<Badge
 											variant='secondary'
@@ -403,8 +410,7 @@ export default function CreateTransferRequestForm({
 								<ScrollArea className='h-64 rounded-md border p-2'>
 									{sourceUnitStudents.length === 0 && (
 										<p className='p-2 text-sm text-muted-foreground'>
-											Không có quân nhân nào thuộc đơn vị
-											này
+											{t('common.noTroopersInUnit')}
 										</p>
 									)}
 									{sourceUnitStudents.map((s) => (
@@ -434,8 +440,7 @@ export default function CreateTransferRequestForm({
 								<ScrollArea className='h-64 rounded-md border p-2'>
 									{sourceUnitAssets.length === 0 && (
 										<p className='p-2 text-sm text-muted-foreground'>
-											Không có khí tài nào thuộc đơn vị
-											này
+											{t('transfer.noAssetsInUnit')}
 										</p>
 									)}
 									{sourceUnitAssets.map((a) => (
@@ -468,8 +473,7 @@ export default function CreateTransferRequestForm({
 								<ScrollArea className='h-64 rounded-md border p-2'>
 									{sourceUnitStocks.length === 0 && (
 										<p className='p-2 text-sm text-muted-foreground'>
-											Không có tồn kho vật tư nào thuộc
-											đơn vị này
+											{t('transfer.noStocksInUnit')}
 										</p>
 									)}
 									{sourceUnitStocks.map((s) => (
@@ -493,8 +497,10 @@ export default function CreateTransferRequestForm({
 												{materialTypeName(
 													s.materialTypeId
 												)}{' '}
-												({s.condition}) — còn{' '}
-												{s.quantity}
+												{t('transfer.stockRemaining', {
+													condition: s.condition,
+													quantity: s.quantity
+												})}
 											</span>
 											{stockQuantities.has(s.id) && (
 												<Input
@@ -545,8 +551,8 @@ export default function CreateTransferRequestForm({
 						}
 					>
 						{createMutation.isPending
-							? 'Đang tạo...'
-							: 'Tạo yêu cầu'}
+							? t('common.creating')
+							: t('transfer.submit')}
 					</Button>
 				</SheetFooter>
 			</SheetContent>

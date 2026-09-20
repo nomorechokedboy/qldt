@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Plus, Search, X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -58,6 +59,7 @@ export default function CreateRankPromotionProposalForm({
 }: {
 	onSuccess?: () => void
 }) {
+	const { t } = useTranslation('proposals')
 	const [open, setOpen] = useState(false)
 	const [unitId, setUnitId] = useState('')
 	const [approverUserId, setApproverUserId] = useState('')
@@ -250,12 +252,12 @@ export default function CreateRankPromotionProposalForm({
 		e.preventDefault()
 
 		if (trooperIds.size === 0) {
-			toast.error('Vui lòng chọn ít nhất một quân nhân')
+			toast.error(t('common.selectAtLeastOneTrooper'))
 			return
 		}
 
 		if (!effectiveDate) {
-			toast.error('Vui lòng chọn ngày hiệu lực')
+			toast.error(t('common.effectiveDateRequired'))
 			return
 		}
 
@@ -277,12 +279,12 @@ export default function CreateRankPromotionProposalForm({
 
 		try {
 			await createMutation.mutateAsync(body)
-			toast.success('Tạo đề xuất thăng quân hàm thành công')
+			toast.success(t('rank.created'))
 			onSuccess?.()
 			resetForm()
 			setOpen(false)
 		} catch (err) {
-			toast.error(getErrorMessage(err, 'Tạo đề xuất thất bại!'))
+			toast.error(getErrorMessage(err, t('rank.createFailed')))
 		}
 	}
 
@@ -309,12 +311,12 @@ export default function CreateRankPromotionProposalForm({
 			<SheetTrigger asChild>
 				<Button>
 					<Plus className='mr-2 h-4 w-4' />
-					Tạo đề xuất thăng quân hàm
+					{t('rank.createButton')}
 				</Button>
 			</SheetTrigger>
 			<SheetContent className='w-full overflow-hidden sm:max-w-xl'>
 				<SheetHeader>
-					<SheetTitle>Đề xuất thăng quân hàm</SheetTitle>
+					<SheetTitle>{t('rank.formTitle')}</SheetTitle>
 				</SheetHeader>
 				<form
 					id='create-rank-promotion-proposal-form'
@@ -322,7 +324,7 @@ export default function CreateRankPromotionProposalForm({
 					onSubmit={handleSubmit}
 				>
 					<div className='space-y-2'>
-						<Label>Đơn vị</Label>
+						<Label>{t('common.unit')}</Label>
 						<UnitSelect
 							options={unitOptions}
 							value={unitId}
@@ -337,7 +339,9 @@ export default function CreateRankPromotionProposalForm({
 
 					<div className='grid grid-cols-2 gap-4'>
 						<div className='space-y-2'>
-							<Label htmlFor='targetRank'>Quân hàm đề xuất</Label>
+							<Label htmlFor='targetRank'>
+								{t('rank.targetRank')}
+							</Label>
 							<Select
 								value={targetRank}
 								onValueChange={(v) => {
@@ -378,7 +382,9 @@ export default function CreateRankPromotionProposalForm({
 								}}
 							>
 								<SelectTrigger id='targetRank'>
-									<SelectValue placeholder='Chọn quân hàm' />
+									<SelectValue
+										placeholder={t('rank.pickRank')}
+									/>
 								</SelectTrigger>
 								<SelectContent>
 									{rankOptionsWithoutPrivate.map((o) => (
@@ -394,14 +400,16 @@ export default function CreateRankPromotionProposalForm({
 						</div>
 
 						<div className='space-y-2'>
-							<Label>Người phê duyệt</Label>
+							<Label>{t('common.approver')}</Label>
 							<Select
 								value={approverUserId}
 								onValueChange={setApproverUserId}
 								disabled={!unitId}
 							>
 								<SelectTrigger>
-									<SelectValue placeholder='Chọn người phê duyệt' />
+									<SelectValue
+										placeholder={t('common.pickApprover')}
+									/>
 								</SelectTrigger>
 								<SelectContent>
 									{(eligibleApprovers ?? []).map((u) => (
@@ -416,25 +424,25 @@ export default function CreateRankPromotionProposalForm({
 							</Select>
 							<p className='text-xs text-muted-foreground'>
 								{!unitId
-									? 'Chọn đơn vị để xem người có thể phê duyệt'
+									? t('common.approverNeedsUnit')
 									: (eligibleApprovers ?? []).length === 0
-										? 'Không có người phê duyệt hợp lệ cho đơn vị này'
-										: 'Chỉ huy/chính trị viên (hoặc cấp phó) của đơn vị này hoặc cấp trên'}
+										? t('common.approverNone')
+										: t('common.approverHint')}
 							</p>
 						</div>
 					</div>
 
 					<div className='space-y-2'>
-						<Label>Ngày hiệu lực</Label>
+						<Label>{t('common.effectiveDate')}</Label>
 						<RankPromotionDateField
 							value={effectiveDate}
 							onChange={setEffectiveDate}
-							placeholder='Chọn ngày hiệu lực'
+							placeholder={t('common.pickEffectiveDate')}
 						/>
 					</div>
 
 					<div className='space-y-2'>
-						<Label>Ghi chú (tuỳ chọn)</Label>
+						<Label>{t('common.noteOptional')}</Label>
 						<Textarea
 							value={note}
 							onChange={(e) => setNote(e.target.value)}
@@ -443,17 +451,19 @@ export default function CreateRankPromotionProposalForm({
 
 					<div className='flex min-h-0 flex-1 flex-col space-y-2'>
 						<div className='flex items-center justify-between gap-2'>
-							<Label>Quân nhân</Label>
+							<Label>{t('common.troopers')}</Label>
 							{eligibleStudents.length > 0 && (
 								<span className='text-xs text-muted-foreground'>
-									Đã chọn {trooperIds.size}/
-									{eligibleStudents.length}
+									{t('common.selectedCount', {
+										selected: trooperIds.size,
+										total: eligibleStudents.length
+									})}
 								</span>
 							)}
 						</div>
 						{!unitId ? (
 							<p className='py-6 text-center text-sm text-muted-foreground'>
-								Chọn đơn vị để xem danh sách quân nhân
+								{t('common.pickUnitForTroopers')}
 							</p>
 						) : (
 							<>
@@ -465,7 +475,9 @@ export default function CreateRankPromotionProposalForm({
 											onChange={(e) =>
 												setTrooperSearch(e.target.value)
 											}
-											placeholder='Tìm theo tên quân nhân...'
+											placeholder={t(
+												'common.searchTrooper'
+											)}
 											className='pl-8 pr-8'
 										/>
 										{trooperSearch && (
@@ -478,7 +490,7 @@ export default function CreateRankPromotionProposalForm({
 											>
 												<X className='size-4' />
 												<span className='sr-only'>
-													Xóa tìm kiếm
+													{t('common.clearSearch')}
 												</span>
 											</button>
 										)}
@@ -487,23 +499,22 @@ export default function CreateRankPromotionProposalForm({
 								<ScrollArea className='min-h-32 flex-1 rounded-md border p-2'>
 									{unitStudents.length === 0 && (
 										<p className='p-2 text-sm text-muted-foreground'>
-											Không có quân nhân nào thuộc đơn vị
-											này
+											{t('common.noTroopersInUnit')}
 										</p>
 									)}
 									{unitStudents.length !== 0 &&
 										eligibleStudents.length === 0 && (
 											<p className='p-2 text-sm text-muted-foreground'>
-												Không có quân nhân nào đủ điều
-												kiện thăng lên quân hàm này
+												{t('rank.noEligibleTroopers')}
 											</p>
 										)}
 									{eligibleStudents.length !== 0 &&
 										visibleStudents.length === 0 && (
 											<div className='flex flex-col items-center gap-2 p-4 text-center'>
 												<p className='text-sm text-muted-foreground'>
-													Không tìm thấy quân nhân nào
-													khớp với "{trooperSearch}"
+													{t('common.noSearchMatch', {
+														query: trooperSearch
+													})}
 												</p>
 												<Button
 													type='button'
@@ -514,7 +525,7 @@ export default function CreateRankPromotionProposalForm({
 														setTrooperSearch('')
 													}
 												>
-													Xóa tìm kiếm
+													{t('common.clearSearch')}
 												</Button>
 											</div>
 										)}
@@ -535,10 +546,10 @@ export default function CreateRankPromotionProposalForm({
 												}}
 												id='proposalTrooperCheckAll'
 											/>
-											Chọn tất cả
+											{t('common.selectAll')}
 											{visibleStudents.length !==
 												eligibleStudents.length &&
-												` (${visibleStudents.length} hiển thị)`}
+												` ${t('common.shownCount', { count: visibleStudents.length })}`}
 										</Label>
 									)}
 									{visibleStudents.length !== 0 &&
@@ -588,8 +599,12 @@ export default function CreateRankPromotionProposalForm({
 																}
 															>
 																{hasOverride
-																	? 'Dùng chung'
-																	: 'Tuỳ chỉnh riêng'}
+																	? t(
+																			'rank.useShared'
+																		)
+																	: t(
+																			'rank.customize'
+																		)}
 															</Button>
 														)}
 													</Label>
@@ -614,7 +629,11 @@ export default function CreateRankPromotionProposalForm({
 																	}
 																>
 																	<SelectTrigger>
-																		<SelectValue placeholder='Quân hàm (riêng)' />
+																		<SelectValue
+																			placeholder={t(
+																				'rank.rankOwn'
+																			)}
+																		/>
 																	</SelectTrigger>
 																	<SelectContent>
 																		{rankOptionsWithoutPrivate.map(
@@ -652,7 +671,9 @@ export default function CreateRankPromotionProposalForm({
 																			}
 																		)
 																	}
-																	placeholder='Ngày hiệu lực (riêng)'
+																	placeholder={t(
+																		'common.effectiveDateOwn'
+																	)}
 																/>
 															</div>
 														)}
@@ -677,8 +698,8 @@ export default function CreateRankPromotionProposalForm({
 						}
 					>
 						{createMutation.isPending
-							? 'Đang tạo...'
-							: 'Tạo đề xuất'}
+							? t('common.creating')
+							: t('rank.submit')}
 					</Button>
 				</SheetFooter>
 			</SheetContent>

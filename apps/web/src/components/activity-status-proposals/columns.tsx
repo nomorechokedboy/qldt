@@ -1,18 +1,27 @@
 import type { ColumnDef } from '@tanstack/react-table'
+import type { TFunction } from 'i18next'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { activityStatusLabels } from '@/data/activity-statuses'
+import { activityStatusLabel } from '@/data/activity-statuses'
 import { formatDbTimestamp } from '@/lib/utils'
 import type { activity_status_proposals } from '@/api/client'
 
 export type ActivityStatusProposalRow =
 	activity_status_proposals.ActivityStatusProposalResp
 
-export const STATUS_LABELS: Record<string, string> = {
-	pending: 'Chờ duyệt',
-	approved: 'Đã duyệt',
-	rejected: 'Đã từ chối',
-	cancelled: 'Đã hủy'
+export const STATUS_VALUES = [
+	'pending',
+	'approved',
+	'rejected',
+	'cancelled'
+] as const
+
+export type ProposalStatus = (typeof STATUS_VALUES)[number]
+
+export function statusLabel(t: TFunction<'proposals'>, status: string): string {
+	return (STATUS_VALUES as readonly string[]).includes(status)
+		? t(`status.${status as ProposalStatus}`)
+		: status
 }
 
 export const STATUS_BADGE_VARIANT: Record<
@@ -26,6 +35,7 @@ export const STATUS_BADGE_VARIANT: Record<
 }
 
 type GetColumnsOptions = {
+	t: TFunction<'proposals'>
 	currentUserId?: number
 	canApprove: boolean
 	canReject: boolean
@@ -38,6 +48,7 @@ type GetColumnsOptions = {
 }
 
 export function getActivityStatusProposalColumns({
+	t,
 	currentUserId,
 	canApprove,
 	canReject,
@@ -52,7 +63,7 @@ export function getActivityStatusProposalColumns({
 		{
 			id: 'createdAt',
 			accessorKey: 'createdAt',
-			header: 'Thời gian',
+			header: t('common.createdAt'),
 			cell: ({ row }) => (
 				<span className='whitespace-nowrap text-sm'>
 					{formatDbTimestamp(row.original.createdAt)}
@@ -62,23 +73,20 @@ export function getActivityStatusProposalColumns({
 		{
 			id: 'unit.name',
 			accessorFn: (row) => row.unit?.name ?? '',
-			header: 'Đơn vị',
+			header: t('common.unit'),
 			cell: ({ row }) => row.original.unit?.name ?? '—'
 		},
 		{
 			id: 'targetActivityStatus',
 			accessorKey: 'targetActivityStatus',
-			header: 'Chế độ đề xuất',
+			header: t('activity.targetStatus'),
 			cell: ({ row }) =>
-				activityStatusLabels[
-					row.original
-						.targetActivityStatus as keyof typeof activityStatusLabels
-				] ?? row.original.targetActivityStatus
+				activityStatusLabel(row.original.targetActivityStatus)
 		},
 		{
 			id: 'troopers',
 			accessorFn: (row) => row.troopers?.length ?? 0,
-			header: 'Số quân nhân',
+			header: t('common.trooperCount'),
 			cell: ({ row }) => (
 				<span className='text-sm'>
 					{row.original.troopers?.length ?? 0}
@@ -88,32 +96,34 @@ export function getActivityStatusProposalColumns({
 		{
 			id: 'requestedBy.displayName',
 			accessorFn: (row) => row.requestedBy?.displayName ?? '',
-			header: 'Người đề xuất',
+			header: t('common.requestedBy'),
 			cell: ({ row }) => row.original.requestedBy?.displayName ?? '—'
 		},
 		{
 			id: 'approver.displayName',
 			accessorFn: (row) => row.approver?.displayName ?? '',
-			header: 'Người phê duyệt',
+			header: t('common.approver'),
 			cell: ({ row }) => row.original.approver?.displayName ?? '—'
 		},
 		{
 			id: 'status',
 			accessorKey: 'status',
-			header: 'Trạng thái',
+			header: t('status.label'),
 			cell: ({ row }) => (
 				<Badge
 					variant={
 						STATUS_BADGE_VARIANT[row.original.status] ?? 'secondary'
 					}
 				>
-					{STATUS_LABELS[row.original.status] ?? row.original.status}
+					{statusLabel(t, row.original.status)}
 				</Badge>
 			)
 		},
 		{
 			id: 'actions',
-			header: () => <div className='text-right'>Thao tác</div>,
+			header: () => (
+				<div className='text-right'>{t('common.actions')}</div>
+			),
 			enableSorting: false,
 			enableHiding: false,
 			cell: ({ row }) => {
@@ -128,7 +138,7 @@ export function getActivityStatusProposalColumns({
 							size='sm'
 							onClick={() => onView(proposal)}
 						>
-							Xem
+							{t('common.view')}
 						</Button>
 						{isPending && canApprove && proposal.canDecide && (
 							<Button
@@ -137,7 +147,7 @@ export function getActivityStatusProposalColumns({
 								disabled={isApproving}
 								onClick={() => onApprove(proposal.id)}
 							>
-								Duyệt
+								{t('common.approve')}
 							</Button>
 						)}
 						{isPending && canReject && proposal.canDecide && (
@@ -146,7 +156,7 @@ export function getActivityStatusProposalColumns({
 								size='sm'
 								onClick={() => onReject(proposal.id)}
 							>
-								Từ chối
+								{t('common.reject')}
 							</Button>
 						)}
 						{isPending && isRequester && (
@@ -156,7 +166,7 @@ export function getActivityStatusProposalColumns({
 								disabled={isCancelling}
 								onClick={() => onCancel(proposal.id)}
 							>
-								Hủy
+								{t('common.cancel')}
 							</Button>
 						)}
 					</div>

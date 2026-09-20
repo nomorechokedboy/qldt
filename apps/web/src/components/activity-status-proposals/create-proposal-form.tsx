@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import dayjs from 'dayjs'
 import { Plus, Search, X } from 'lucide-react'
 import type { DateRange } from 'react-day-picker'
@@ -91,6 +92,7 @@ export default function CreateActivityStatusProposalForm({
 }: {
 	onSuccess?: () => void
 }) {
+	const { t } = useTranslation('proposals')
 	const [open, setOpen] = useState(false)
 	const [unitId, setUnitId] = useState('')
 	const [approverUserId, setApproverUserId] = useState('')
@@ -246,17 +248,17 @@ export default function CreateActivityStatusProposalForm({
 		e.preventDefault()
 
 		if (trooperIds.size === 0) {
-			toast.error('Vui lòng chọn ít nhất một quân nhân')
+			toast.error(t('common.selectAtLeastOneTrooper'))
 			return
 		}
 
 		const ranged = isRangedTarget(targetActivityStatus)
 		if (ranged && (!startDate || !endDate)) {
-			toast.error('Vui lòng chọn ngày bắt đầu và kết thúc')
+			toast.error(t('activity.pickRangeDates'))
 			return
 		}
 		if (!ranged && !effectiveDate) {
-			toast.error('Vui lòng chọn ngày hiệu lực')
+			toast.error(t('common.effectiveDateRequired'))
 			return
 		}
 
@@ -292,12 +294,12 @@ export default function CreateActivityStatusProposalForm({
 
 		try {
 			await createMutation.mutateAsync(body)
-			toast.success('Tạo đề xuất chế độ thành công')
+			toast.success(t('activity.created'))
 			onSuccess?.()
 			resetForm()
 			setOpen(false)
 		} catch (err) {
-			toast.error(getErrorMessage(err, 'Tạo đề xuất chế độ thất bại!'))
+			toast.error(getErrorMessage(err, t('activity.createFailed')))
 		}
 	}
 
@@ -324,12 +326,12 @@ export default function CreateActivityStatusProposalForm({
 			<SheetTrigger asChild>
 				<Button>
 					<Plus className='mr-2 h-4 w-4' />
-					Tạo đề xuất chế độ
+					{t('activity.createButton')}
 				</Button>
 			</SheetTrigger>
 			<SheetContent className='w-full overflow-hidden sm:max-w-xl'>
 				<SheetHeader>
-					<SheetTitle>Đề xuất thay đổi chế độ</SheetTitle>
+					<SheetTitle>{t('activity.formTitle')}</SheetTitle>
 				</SheetHeader>
 				<form
 					id='create-activity-status-proposal-form'
@@ -337,7 +339,7 @@ export default function CreateActivityStatusProposalForm({
 					onSubmit={handleSubmit}
 				>
 					<div className='space-y-2'>
-						<Label>Đơn vị</Label>
+						<Label>{t('common.unit')}</Label>
 						<UnitSelect
 							options={unitOptions}
 							value={unitId}
@@ -352,7 +354,7 @@ export default function CreateActivityStatusProposalForm({
 
 					<div className='grid grid-cols-2 gap-4'>
 						<div className='space-y-2'>
-							<Label>Chế độ đề xuất</Label>
+							<Label>{t('activity.targetStatus')}</Label>
 							<Select
 								value={targetActivityStatus}
 								onValueChange={(v) => {
@@ -364,7 +366,9 @@ export default function CreateActivityStatusProposalForm({
 								}}
 							>
 								<SelectTrigger>
-									<SelectValue placeholder='Chọn chế độ' />
+									<SelectValue
+										placeholder={t('activity.pickStatus')}
+									/>
 								</SelectTrigger>
 								<SelectContent>
 									{targetActivityStatusOptions.map((o) => (
@@ -372,7 +376,7 @@ export default function CreateActivityStatusProposalForm({
 											key={o.value}
 											value={o.value}
 										>
-											{o.label}
+											{t(`activityStatus.${o.value}`)}
 										</SelectItem>
 									))}
 								</SelectContent>
@@ -380,14 +384,16 @@ export default function CreateActivityStatusProposalForm({
 						</div>
 
 						<div className='space-y-2'>
-							<Label>Người phê duyệt</Label>
+							<Label>{t('common.approver')}</Label>
 							<Select
 								value={approverUserId}
 								onValueChange={setApproverUserId}
 								disabled={!unitId}
 							>
 								<SelectTrigger>
-									<SelectValue placeholder='Chọn người phê duyệt' />
+									<SelectValue
+										placeholder={t('common.pickApprover')}
+									/>
 								</SelectTrigger>
 								<SelectContent>
 									{(eligibleApprovers ?? []).map((u) => (
@@ -402,10 +408,10 @@ export default function CreateActivityStatusProposalForm({
 							</Select>
 							<p className='text-xs text-muted-foreground'>
 								{!unitId
-									? 'Chọn đơn vị để xem người có thể phê duyệt'
+									? t('common.approverNeedsUnit')
 									: (eligibleApprovers ?? []).length === 0
-										? 'Không có người phê duyệt hợp lệ cho đơn vị này'
-										: 'Chỉ huy/chính trị viên (hoặc cấp phó) của đơn vị này hoặc cấp trên'}
+										? t('common.approverNone')
+										: t('common.approverHint')}
 							</p>
 						</div>
 					</div>
@@ -413,7 +419,7 @@ export default function CreateActivityStatusProposalForm({
 					{targetActivityStatus &&
 						(isRangedTarget(targetActivityStatus) ? (
 							<div className='space-y-2'>
-								<Label>Khoảng thời gian</Label>
+								<Label>{t('activity.dateRange')}</Label>
 								<DateRangePicker
 									value={toDateRange(startDate, endDate)}
 									onChange={(range) => {
@@ -422,23 +428,23 @@ export default function CreateActivityStatusProposalForm({
 										setStartDate(s)
 										setEndDate(e)
 									}}
-									placeholder='Chọn khoảng ngày'
+									placeholder={t('activity.pickDateRange')}
 									className='w-full'
 								/>
 							</div>
 						) : (
 							<div className='space-y-2'>
-								<Label>Ngày hiệu lực</Label>
+								<Label>{t('common.effectiveDate')}</Label>
 								<ActivityStatusDateField
 									value={effectiveDate}
 									onChange={setEffectiveDate}
-									placeholder='Chọn ngày hiệu lực'
+									placeholder={t('common.pickEffectiveDate')}
 								/>
 							</div>
 						))}
 
 					<div className='space-y-2'>
-						<Label>Ghi chú (tuỳ chọn)</Label>
+						<Label>{t('common.noteOptional')}</Label>
 						<Textarea
 							value={note}
 							onChange={(e) => setNote(e.target.value)}
@@ -447,17 +453,19 @@ export default function CreateActivityStatusProposalForm({
 
 					<div className='flex min-h-0 flex-1 flex-col space-y-2'>
 						<div className='flex items-center justify-between gap-2'>
-							<Label>Quân nhân</Label>
+							<Label>{t('common.troopers')}</Label>
 							{unitStudents.length > 0 && (
 								<span className='text-xs text-muted-foreground'>
-									Đã chọn {trooperIds.size}/
-									{unitStudents.length}
+									{t('common.selectedCount', {
+										selected: trooperIds.size,
+										total: unitStudents.length
+									})}
 								</span>
 							)}
 						</div>
 						{!unitId ? (
 							<p className='py-6 text-center text-sm text-muted-foreground'>
-								Chọn đơn vị để xem danh sách quân nhân
+								{t('common.pickUnitForTroopers')}
 							</p>
 						) : (
 							<>
@@ -469,7 +477,9 @@ export default function CreateActivityStatusProposalForm({
 											onChange={(e) =>
 												setTrooperSearch(e.target.value)
 											}
-											placeholder='Tìm theo tên quân nhân...'
+											placeholder={t(
+												'common.searchTrooper'
+											)}
 											className='pl-8 pr-8'
 										/>
 										{trooperSearch && (
@@ -482,7 +492,7 @@ export default function CreateActivityStatusProposalForm({
 											>
 												<X className='size-4' />
 												<span className='sr-only'>
-													Xóa tìm kiếm
+													{t('common.clearSearch')}
 												</span>
 											</button>
 										)}
@@ -491,16 +501,16 @@ export default function CreateActivityStatusProposalForm({
 								<ScrollArea className='min-h-32 flex-1 rounded-md border p-2'>
 									{unitStudents.length === 0 && (
 										<p className='p-2 text-sm text-muted-foreground'>
-											Không có quân nhân nào thuộc đơn vị
-											này
+											{t('common.noTroopersInUnit')}
 										</p>
 									)}
 									{unitStudents.length !== 0 &&
 										visibleStudents.length === 0 && (
 											<div className='flex flex-col items-center gap-2 p-4 text-center'>
 												<p className='text-sm text-muted-foreground'>
-													Không tìm thấy quân nhân nào
-													khớp với "{trooperSearch}"
+													{t('common.noSearchMatch', {
+														query: trooperSearch
+													})}
 												</p>
 												<Button
 													type='button'
@@ -511,7 +521,7 @@ export default function CreateActivityStatusProposalForm({
 														setTrooperSearch('')
 													}
 												>
-													Xóa tìm kiếm
+													{t('common.clearSearch')}
 												</Button>
 											</div>
 										)}
@@ -532,10 +542,10 @@ export default function CreateActivityStatusProposalForm({
 												}}
 												id='proposalTrooperCheckAll'
 											/>
-											Chọn tất cả
+											{t('common.selectAll')}
 											{visibleStudents.length !==
 												unitStudents.length &&
-												` (${visibleStudents.length} hiển thị)`}
+												` ${t('common.shownCount', { count: visibleStudents.length })}`}
 										</Label>
 									)}
 									{visibleStudents.length !== 0 &&
@@ -587,8 +597,12 @@ export default function CreateActivityStatusProposalForm({
 																	}
 																>
 																	{hasOverride
-																		? 'Dùng ngày chung'
-																		: 'Tuỳ chỉnh ngày riêng'}
+																		? t(
+																				'activity.useSharedDates'
+																			)
+																		: t(
+																				'activity.customDates'
+																			)}
 																</Button>
 															)}
 													</Label>
@@ -623,7 +637,9 @@ export default function CreateActivityStatusProposalForm({
 																			}
 																		)
 																	}}
-																	placeholder='Khoảng ngày (riêng)'
+																	placeholder={t(
+																		'activity.dateRangeOwn'
+																	)}
 																	className='w-full'
 																/>
 															</div>
@@ -644,7 +660,9 @@ export default function CreateActivityStatusProposalForm({
 																			}
 																		)
 																	}
-																	placeholder='Ngày hiệu lực (riêng)'
+																	placeholder={t(
+																		'common.effectiveDateOwn'
+																	)}
 																/>
 															</div>
 														))}
@@ -671,8 +689,8 @@ export default function CreateActivityStatusProposalForm({
 						}
 					>
 						{createMutation.isPending
-							? 'Đang tạo...'
-							: 'Tạo đề xuất'}
+							? t('common.creating')
+							: t('activity.submit')}
 					</Button>
 				</SheetFooter>
 			</SheetContent>

@@ -1,4 +1,5 @@
 import * as React from 'react'
+import { useTranslation } from 'react-i18next'
 import dayjs from 'dayjs'
 import { CalendarIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -25,6 +26,7 @@ export default function RankPromotionDateField({
 	onChange: (value: string | undefined) => void
 	placeholder?: string
 }) {
+	const { t } = useTranslation('proposals')
 	const [open, setOpen] = React.useState(false)
 	const selected = value ? dayjs(value, 'YYYY-MM-DD') : undefined
 	const selectedDate =
@@ -44,7 +46,7 @@ export default function RankPromotionDateField({
 					<CalendarIcon className='mr-2 h-4 w-4' />
 					{selectedDate
 						? dayjs(selectedDate).format('DD/MM/YYYY')
-						: (placeholder ?? 'Chọn ngày')}
+						: (placeholder ?? t('common.pickDate'))}
 				</Button>
 			</PopoverTrigger>
 			<PopoverContent className='w-auto p-0' align='start'>

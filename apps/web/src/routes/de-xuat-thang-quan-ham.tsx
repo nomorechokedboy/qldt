@@ -2,12 +2,15 @@ import RankPromotionProposalsTab from '@/components/rank-promotion-proposals'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { SidebarInset } from '@/components/ui/sidebar'
 import { createFileRoute } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 
 export const Route = createFileRoute('/de-xuat-thang-quan-ham')({
 	component: RouteComponent
 })
 
 function RouteComponent() {
+	const { t } = useTranslation('proposals')
+
 	return (
 		<ProtectedRoute requiredPermission='rank_promotion_proposals:read'>
 			<SidebarInset>
@@ -15,7 +18,7 @@ function RouteComponent() {
 					<div className='flex items-center justify-between space-y-2'>
 						<div>
 							<h2 className='text-2xl font-bold tracking-tight'>
-								Đề xuất thăng quân hàm
+								{t('route.rankTitle')}
 							</h2>
 						</div>
 					</div>

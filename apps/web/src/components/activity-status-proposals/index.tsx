@@ -1,5 +1,7 @@
 import RefreshButton from '@/components/refresh-button'
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 import { toast } from 'sonner'
 import { DataTable } from '@/components/data-table'
 import DataTableSkeleton from '@/components/data-table-skeleton'
@@ -18,7 +20,7 @@ import {
 	SheetHeader,
 	SheetTitle
 } from '@/components/ui/sheet'
-import { activityStatusLabels } from '@/data/activity-statuses'
+import { activityStatusLabel } from '@/data/activity-statuses'
 import useAuth from '@/hooks/useAuth'
 import useActivityStatusProposals from '@/hooks/useActivityStatusProposals'
 import {
@@ -30,16 +32,19 @@ import type { activity_status_proposals } from '@/api/client'
 import {
 	getActivityStatusProposalColumns,
 	STATUS_BADGE_VARIANT,
-	STATUS_LABELS,
+	STATUS_VALUES,
+	statusLabel,
 	type ActivityStatusProposalRow
 } from './columns'
 import CreateActivityStatusProposalForm from './create-proposal-form'
 import RejectDialog from './reject-dialog'
 
-const ITEM_STATUS_LABELS: Record<string, string> = {
-	pending: 'Chờ duyệt',
-	approved: 'Thành công',
-	failed: 'Thất bại'
+const ITEM_STATUSES = ['pending', 'approved', 'failed'] as const
+
+function itemStatusLabel(t: TFunction<'proposals'>, status: string): string {
+	return (ITEM_STATUSES as readonly string[]).includes(status)
+		? t(`itemStatus.${status as (typeof ITEM_STATUSES)[number]}`)
+		: status
 }
 
 // 'discharged' is a one-off transition (single effectiveDate); the other 3
@@ -80,6 +85,7 @@ function resolveDates(
 }
 
 export default function ActivityStatusProposalsTab() {
+	const { t } = useTranslation('proposals')
 	const [status, setStatus] = useState<string>('')
 	const [selected, setSelected] = useState<ActivityStatusProposalRow | null>(
 		null
@@ -100,28 +106,29 @@ export default function ActivityStatusProposalsTab() {
 	const canReject = hasPermission('activity_status_proposals:reject')
 
 	const handleApprove = async (id: number) => {
-		if (!confirm('Bạn có chắc muốn duyệt đề xuất chế độ này?')) return
+		if (!confirm(t('activity.confirmApprove'))) return
 		try {
 			await approveMutation.mutateAsync(id)
-			toast.success('Đã duyệt đề xuất chế độ')
+			toast.success(t('activity.approved'))
 		} catch (err) {
-			toast.error(getErrorMessage(err, 'Duyệt đề xuất thất bại!'))
+			toast.error(getErrorMessage(err, t('activity.approveFailed')))
 		}
 	}
 
 	const handleCancel = async (id: number) => {
-		if (!confirm('Bạn có chắc muốn hủy đề xuất chế độ này?')) return
+		if (!confirm(t('activity.confirmCancel'))) return
 		try {
 			await cancelMutation.mutateAsync(id)
-			toast.success('Đã hủy đề xuất chế độ')
+			toast.success(t('activity.cancelled'))
 		} catch (err) {
-			toast.error(getErrorMessage(err, 'Hủy đề xuất thất bại!'))
+			toast.error(getErrorMessage(err, t('activity.cancelFailed')))
 		}
 	}
 
 	const columns = useMemo(
 		() =>
 			getActivityStatusProposalColumns({
+				t,
 				currentUserId: user?.id,
 				canApprove,
 				canReject,
@@ -133,6 +140,7 @@ export default function ActivityStatusProposalsTab() {
 				onCancel: handleCancel
 			}),
 		[
+			t,
 			user?.id,
 			canApprove,
 			canReject,
@@ -153,13 +161,13 @@ export default function ActivityStatusProposalsTab() {
 					onValueChange={(v) => setStatus(v === 'all' ? '' : v)}
 				>
 					<SelectTrigger className='h-8 w-[180px]'>
-						<SelectValue placeholder='Trạng thái' />
+						<SelectValue placeholder={t('status.label')} />
 					</SelectTrigger>
 					<SelectContent>
-						<SelectItem value='all'>Tất cả trạng thái</SelectItem>
-						{Object.entries(STATUS_LABELS).map(([value, label]) => (
+						<SelectItem value='all'>{t('status.all')}</SelectItem>
+						{STATUS_VALUES.map((value) => (
 							<SelectItem key={value} value={value}>
-								{label}
+								{t(`status.${value}`)}
 							</SelectItem>
 						))}
 					</SelectContent>
@@ -180,7 +188,7 @@ export default function ActivityStatusProposalsTab() {
 					columns={columns}
 					data={data ?? []}
 					toolbarVisible={false}
-					placeholder='Không có đề xuất chế độ nào'
+					placeholder={t('activity.emptyTable')}
 					getRowId={(row) => String(row.id)}
 				/>
 			)}
@@ -191,37 +199,37 @@ export default function ActivityStatusProposalsTab() {
 			>
 				<SheetContent className='w-full overflow-y-auto sm:max-w-xl'>
 					<SheetHeader>
-						<SheetTitle>Chi tiết đề xuất chế độ</SheetTitle>
+						<SheetTitle>{t('activity.detailTitle')}</SheetTitle>
 					</SheetHeader>
 					{selected && (
 						<div className='space-y-4 px-4 pb-4'>
 							<div className='grid grid-cols-2 gap-2 text-sm'>
 								<span className='text-muted-foreground'>
-									Đơn vị
+									{t('common.unit')}
 								</span>
 								<span>{selected.unit?.name ?? '—'}</span>
 								<span className='text-muted-foreground'>
-									Chế độ đề xuất
+									{t('activity.targetStatus')}
 								</span>
 								<span>
-									{activityStatusLabels[
-										selected.targetActivityStatus as keyof typeof activityStatusLabels
-									] ?? selected.targetActivityStatus}
+									{activityStatusLabel(
+										selected.targetActivityStatus
+									)}
 								</span>
 								<span className='text-muted-foreground'>
-									Người đề xuất
+									{t('common.requestedBy')}
 								</span>
 								<span>
 									{selected.requestedBy?.displayName ?? '—'}
 								</span>
 								<span className='text-muted-foreground'>
-									Người phê duyệt
+									{t('common.approver')}
 								</span>
 								<span>
 									{selected.approver?.displayName ?? '—'}
 								</span>
 								<span className='text-muted-foreground'>
-									Trạng thái
+									{t('status.label')}
 								</span>
 								<span>
 									<Badge
@@ -231,8 +239,7 @@ export default function ActivityStatusProposalsTab() {
 											] ?? 'secondary'
 										}
 									>
-										{STATUS_LABELS[selected.status] ??
-											selected.status}
+										{statusLabel(t, selected.status)}
 									</Badge>
 								</span>
 								{isRangedTarget(
@@ -240,18 +247,18 @@ export default function ActivityStatusProposalsTab() {
 								) ? (
 									<>
 										<span className='text-muted-foreground'>
-											Từ ngày
+											{t('activity.startDate')}
 										</span>
 										<span>{selected.startDate ?? '—'}</span>
 										<span className='text-muted-foreground'>
-											Đến ngày
+											{t('activity.endDate')}
 										</span>
 										<span>{selected.endDate ?? '—'}</span>
 									</>
 								) : (
 									<>
 										<span className='text-muted-foreground'>
-											Ngày hiệu lực
+											{t('common.effectiveDate')}
 										</span>
 										<span>
 											{selected.effectiveDate ?? '—'}
@@ -261,7 +268,7 @@ export default function ActivityStatusProposalsTab() {
 								{selected.note && (
 									<>
 										<span className='text-muted-foreground'>
-											Ghi chú
+											{t('common.note')}
 										</span>
 										<span>{selected.note}</span>
 									</>
@@ -269,7 +276,7 @@ export default function ActivityStatusProposalsTab() {
 								{selected.rejectionReason && (
 									<>
 										<span className='text-muted-foreground'>
-											Lý do từ chối
+											{t('common.rejectionReason')}
 										</span>
 										<span>{selected.rejectionReason}</span>
 									</>
@@ -279,37 +286,37 @@ export default function ActivityStatusProposalsTab() {
 							{!!selected.troopers?.length && (
 								<div>
 									<h4 className='mb-1 text-sm font-medium'>
-										Quân nhân
+										{t('common.troopers')}
 									</h4>
 									<ul className='space-y-1 text-sm'>
-										{selected.troopers.map((t) => {
+										{selected.troopers.map((trooper) => {
 											const dates = resolveDates(
 												selected.targetActivityStatus,
 												selected,
-												t
+												trooper
 											)
 											return (
 												<li
-													key={t.id}
+													key={trooper.id}
 													className='flex flex-col gap-1 rounded-md border p-2'
 												>
 													<div className='flex items-center justify-between'>
 														<span>
-															{t.student
+															{trooper.student
 																?.fullName ??
-																`#${t.id}`}
+																`#${trooper.id}`}
 														</span>
 														<span className='flex items-center gap-2'>
 															<Badge variant='outline'>
-																{ITEM_STATUS_LABELS[
-																	t.itemStatus
-																] ??
-																	t.itemStatus}
+																{itemStatusLabel(
+																	t,
+																	trooper.itemStatus
+																)}
 															</Badge>
-															{t.failureReason && (
+															{trooper.failureReason && (
 																<span className='text-xs text-destructive'>
 																	{
-																		t.failureReason
+																		trooper.failureReason
 																	}
 																</span>
 															)}
@@ -328,24 +335,37 @@ export default function ActivityStatusProposalsTab() {
 															</span>
 														) : (
 															<span>
-																Ngày hiệu lực:{' '}
-																{dates.effectiveDate ??
-																	'—'}
-															</span>
-														)}
-														{t.appliedAt && (
-															<span>
-																Đã áp dụng:{' '}
-																{formatDbTimestamp(
-																	t.appliedAt
+																{t(
+																	'common.itemEffectiveDate',
+																	{
+																		date:
+																			dates.effectiveDate ??
+																			'—'
+																	}
 																)}
 															</span>
 														)}
-														{t.revertedAt && (
+														{trooper.appliedAt && (
 															<span>
-																Đã khôi phục:{' '}
-																{formatDbTimestamp(
-																	t.revertedAt
+																{t(
+																	'common.itemAppliedAt',
+																	{
+																		date: formatDbTimestamp(
+																			trooper.appliedAt
+																		)
+																	}
+																)}
+															</span>
+														)}
+														{trooper.revertedAt && (
+															<span>
+																{t(
+																	'activity.itemRevertedAt',
+																	{
+																		date: formatDbTimestamp(
+																			trooper.revertedAt
+																		)
+																	}
 																)}
 															</span>
 														)}

@@ -2,12 +2,15 @@ import TransferRequestsTab from '@/components/transfer-requests'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import { SidebarInset } from '@/components/ui/sidebar'
 import { createFileRoute } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 
 export const Route = createFileRoute('/chuyen-giao-tai-san')({
 	component: RouteComponent
 })
 
 function RouteComponent() {
+	const { t } = useTranslation('proposals')
+
 	return (
 		<ProtectedRoute requiredPermission='transfer_requests:read'>
 			<SidebarInset>
@@ -15,7 +18,7 @@ function RouteComponent() {
 					<div className='flex items-center justify-between space-y-2'>
 						<div>
 							<h2 className='text-2xl font-bold tracking-tight'>
-								Bàn giao quân số/vật chất
+								{t('route.transferTitle')}
 							</h2>
 						</div>
 					</div>

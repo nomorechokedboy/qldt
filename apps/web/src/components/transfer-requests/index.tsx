@@ -1,5 +1,7 @@
 import RefreshButton from '@/components/refresh-button'
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 import { toast } from 'sonner'
 import { DataTable } from '@/components/data-table'
 import DataTableSkeleton from '@/components/data-table-skeleton'
@@ -30,19 +32,23 @@ import type { transfer_requests } from '@/api/client'
 import {
 	getTransferRequestColumns,
 	STATUS_BADGE_VARIANT,
-	STATUS_LABELS,
+	STATUS_VALUES,
+	statusLabel,
 	type TransferRequestRow
 } from './columns'
 import CreateTransferRequestForm from './create-transfer-request-form'
 import RejectDialog from './reject-dialog'
 
-const ITEM_STATUS_LABELS: Record<string, string> = {
-	pending: 'Chờ duyệt',
-	approved: 'Thành công',
-	failed: 'Thất bại'
+const ITEM_STATUSES = ['pending', 'approved', 'failed'] as const
+
+function itemStatusLabel(t: TFunction<'proposals'>, status: string): string {
+	return (ITEM_STATUSES as readonly string[]).includes(status)
+		? t(`itemStatus.${status as (typeof ITEM_STATUSES)[number]}`)
+		: status
 }
 
 export default function TransferRequestsTab() {
+	const { t } = useTranslation('proposals')
 	const [status, setStatus] = useState<string>('')
 	const [selected, setSelected] = useState<TransferRequestRow | null>(null)
 	const [rejectingId, setRejectingId] = useState<number | null>(null)
@@ -62,12 +68,12 @@ export default function TransferRequestsTab() {
 	const canReject = hasPermission('transfer_requests:reject')
 
 	const handleApprove = async (id: number) => {
-		if (!confirm('Bạn có chắc muốn duyệt yêu cầu bàn giao này?')) return
+		if (!confirm(t('transfer.confirmApprove'))) return
 		try {
 			await approveMutation.mutateAsync(id)
-			toast.success('Đã duyệt yêu cầu bàn giao')
+			toast.success(t('transfer.approved'))
 		} catch (err) {
-			toast.error(getErrorMessage(err, 'Duyệt yêu cầu thất bại!'))
+			toast.error(getErrorMessage(err, t('transfer.approveFailed')))
 		}
 	}
 
@@ -75,25 +81,24 @@ export default function TransferRequestsTab() {
 		try {
 			await exportHandoverMutation.mutateAsync(id)
 		} catch (err) {
-			toast.error(
-				getErrorMessage(err, 'Xuất biên bản bàn giao thất bại!')
-			)
+			toast.error(getErrorMessage(err, t('transfer.exportFailed')))
 		}
 	}
 
 	const handleCancel = async (id: number) => {
-		if (!confirm('Bạn có chắc muốn hủy yêu cầu bàn giao này?')) return
+		if (!confirm(t('transfer.confirmCancel'))) return
 		try {
 			await cancelMutation.mutateAsync(id)
-			toast.success('Đã hủy yêu cầu bàn giao')
+			toast.success(t('transfer.cancelled'))
 		} catch (err) {
-			toast.error(getErrorMessage(err, 'Hủy yêu cầu thất bại!'))
+			toast.error(getErrorMessage(err, t('transfer.cancelFailed')))
 		}
 	}
 
 	const columns = useMemo(
 		() =>
 			getTransferRequestColumns({
+				t,
 				currentUserId: user?.id,
 				canApprove,
 				canReject,
@@ -107,6 +112,7 @@ export default function TransferRequestsTab() {
 				onExportHandover: handleExportHandover
 			}),
 		[
+			t,
 			user?.id,
 			canApprove,
 			canReject,
@@ -128,13 +134,13 @@ export default function TransferRequestsTab() {
 					onValueChange={(v) => setStatus(v === 'all' ? '' : v)}
 				>
 					<SelectTrigger className='h-8 w-[180px]'>
-						<SelectValue placeholder='Trạng thái' />
+						<SelectValue placeholder={t('status.label')} />
 					</SelectTrigger>
 					<SelectContent>
-						<SelectItem value='all'>Tất cả trạng thái</SelectItem>
-						{Object.entries(STATUS_LABELS).map(([value, label]) => (
+						<SelectItem value='all'>{t('status.all')}</SelectItem>
+						{STATUS_VALUES.map((value) => (
 							<SelectItem key={value} value={value}>
-								{label}
+								{t(`status.${value}`)}
 							</SelectItem>
 						))}
 					</SelectContent>
@@ -153,7 +159,7 @@ export default function TransferRequestsTab() {
 					columns={columns}
 					data={data ?? []}
 					toolbarVisible={false}
-					placeholder='Không có yêu cầu bàn giao nào'
+					placeholder={t('transfer.emptyTable')}
 					getRowId={(row) => String(row.id)}
 				/>
 			)}
@@ -164,41 +170,41 @@ export default function TransferRequestsTab() {
 			>
 				<SheetContent className='w-full overflow-y-auto sm:max-w-xl'>
 					<SheetHeader>
-						<SheetTitle>Chi tiết yêu cầu bàn giao</SheetTitle>
+						<SheetTitle>{t('transfer.detailTitle')}</SheetTitle>
 					</SheetHeader>
 					{selected && (
 						<div className='space-y-4 px-4 pb-4'>
 							<div className='grid grid-cols-2 gap-2 text-sm'>
 								<span className='text-muted-foreground'>
-									Đơn vị nguồn
+									{t('transfer.sourceUnit')}
 								</span>
 								<span>{selected.sourceUnit?.name ?? '—'}</span>
 								<span className='text-muted-foreground'>
-									Đơn vị đích
+									{t('transfer.destinationUnit')}
 								</span>
 								<span>
 									{selected.destinationUnit?.name ?? '—'}
 								</span>
 								<span className='text-muted-foreground'>
-									Vị trí đích
+									{t('transfer.destinationRoom')}
 								</span>
 								<span>
 									{selected.destinationRoom?.name ?? '—'}
 								</span>
 								<span className='text-muted-foreground'>
-									Người yêu cầu
+									{t('transfer.requestedBy')}
 								</span>
 								<span>
 									{selected.requestedBy?.displayName ?? '—'}
 								</span>
 								<span className='text-muted-foreground'>
-									Người phê duyệt
+									{t('common.approver')}
 								</span>
 								<span>
 									{selected.approver?.displayName ?? '—'}
 								</span>
 								<span className='text-muted-foreground'>
-									Trạng thái
+									{t('status.label')}
 								</span>
 								<span>
 									<Badge
@@ -208,14 +214,13 @@ export default function TransferRequestsTab() {
 											] ?? 'secondary'
 										}
 									>
-										{STATUS_LABELS[selected.status] ??
-											selected.status}
+										{statusLabel(t, selected.status)}
 									</Badge>
 								</span>
 								{selected.rejectionReason && (
 									<>
 										<span className='text-muted-foreground'>
-											Lý do từ chối
+											{t('common.rejectionReason')}
 										</span>
 										<span>{selected.rejectionReason}</span>
 									</>
@@ -225,27 +230,31 @@ export default function TransferRequestsTab() {
 							{!!selected.troopers?.length && (
 								<div>
 									<h4 className='mb-1 text-sm font-medium'>
-										Quân nhân
+										{t('common.troopers')}
 									</h4>
 									<ul className='space-y-1 text-sm'>
-										{selected.troopers.map((t) => (
+										{selected.troopers.map((trooper) => (
 											<li
-												key={t.id}
+												key={trooper.id}
 												className='flex items-center justify-between rounded-md border p-2'
 											>
 												<span>
-													{t.student?.fullName ??
-														`#${t.id}`}
+													{trooper.student
+														?.fullName ??
+														`#${trooper.id}`}
 												</span>
 												<span className='flex items-center gap-2'>
 													<Badge variant='outline'>
-														{ITEM_STATUS_LABELS[
-															t.itemStatus
-														] ?? t.itemStatus}
+														{itemStatusLabel(
+															t,
+															trooper.itemStatus
+														)}
 													</Badge>
-													{t.failureReason && (
+													{trooper.failureReason && (
 														<span className='text-xs text-destructive'>
-															{t.failureReason}
+															{
+																trooper.failureReason
+															}
 														</span>
 													)}
 												</span>
@@ -258,7 +267,7 @@ export default function TransferRequestsTab() {
 							{!!selected.materialAssetItems?.length && (
 								<div>
 									<h4 className='mb-1 text-sm font-medium'>
-										Khí tài
+										{t('transfer.assets')}
 									</h4>
 									<ul className='space-y-1 text-sm'>
 										{selected.materialAssetItems.map(
@@ -274,9 +283,10 @@ export default function TransferRequestsTab() {
 													</span>
 													<span className='flex items-center gap-2'>
 														<Badge variant='outline'>
-															{ITEM_STATUS_LABELS[
+															{itemStatusLabel(
+																t,
 																m.itemStatus
-															] ?? m.itemStatus}
+															)}
 														</Badge>
 														{m.failureReason && (
 															<span className='text-xs text-destructive'>
@@ -296,7 +306,7 @@ export default function TransferRequestsTab() {
 							{!!selected.materialStockItems?.length && (
 								<div>
 									<h4 className='mb-1 text-sm font-medium'>
-										Vật tư
+										{t('transfer.stocks')}
 									</h4>
 									<ul className='space-y-1 text-sm'>
 										{selected.materialStockItems.map(
@@ -313,9 +323,10 @@ export default function TransferRequestsTab() {
 													</span>
 													<span className='flex items-center gap-2'>
 														<Badge variant='outline'>
-															{ITEM_STATUS_LABELS[
+															{itemStatusLabel(
+																t,
 																m.itemStatus
-															] ?? m.itemStatus}
+															)}
 														</Badge>
 														{m.failureReason && (
 															<span className='text-xs text-destructive'>
