@@ -1,27 +1,25 @@
 import type { inventory_sessions } from '@/api/client'
 
-export const DIFF_STATUS_LABEL: Record<
+type BadgeVariant = 'default' | 'destructive' | 'secondary' | 'outline'
+
+// Only the badge styling lives here; the wording is translated at the call
+// site as `materials:inventory.diffStatus.<status>`.
+export const DIFF_STATUS_VARIANT: Record<
 	inventory_sessions.InventorySessionDiffStatus,
-	{
-		label: string
-		variant: 'default' | 'destructive' | 'secondary' | 'outline'
-	}
+	BadgeVariant
 > = {
-	matched: { label: 'Khớp', variant: 'secondary' },
-	missing: { label: 'Thiếu', variant: 'destructive' },
-	extra: { label: 'Phát sinh', variant: 'outline' },
-	condition_changed: { label: 'Đổi tình trạng', variant: 'default' }
+	matched: 'secondary',
+	missing: 'destructive',
+	extra: 'outline',
+	condition_changed: 'default'
 }
 
-export const STOCK_DIFF_STATUS_LABEL: Record<
+export const STOCK_DIFF_STATUS_VARIANT: Record<
 	inventory_sessions.InventorySessionStockDiffStatus,
-	{
-		label: string
-		variant: 'default' | 'destructive' | 'secondary' | 'outline'
-	}
+	BadgeVariant
 > = {
-	matched: { label: 'Khớp', variant: 'default' },
-	short: { label: 'Thiếu', variant: 'destructive' },
-	over: { label: 'Dư', variant: 'default' },
-	extra: { label: 'Phát sinh', variant: 'outline' }
+	matched: 'default',
+	short: 'destructive',
+	over: 'default',
+	extra: 'outline'
 }

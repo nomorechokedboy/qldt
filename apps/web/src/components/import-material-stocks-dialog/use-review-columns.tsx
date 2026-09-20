@@ -7,6 +7,7 @@ import {
 import { materialConditionOptions } from '@/data/material-categories'
 import type { ColumnDef } from '@tanstack/react-table'
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { StockImportLookups } from './build-lookups'
 import type { MaterialConditionName, MaterialStockImportRow } from './types'
 
@@ -23,6 +24,7 @@ export function useReviewColumns({
 	updateRow,
 	clearRowErrors
 }: UseReviewColumnsOptions) {
+	const { t } = useTranslation('materials')
 	const { materialTypeOptions, unitOptions, roomsByUnitId } = lookups
 
 	return useMemo<ColumnDef<MaterialStockImportRow>[]>(() => {
@@ -50,7 +52,7 @@ export function useReviewColumns({
 			statusColumn(errorsByRowIndex),
 			{
 				accessorKey: 'materialTypeId',
-				header: 'Loại vật tư',
+				header: t('importStocks.columns.materialType'),
 				cell: ({ row }) => (
 					<select
 						className={reviewInputClass}
@@ -59,7 +61,9 @@ export function useReviewColumns({
 							changeMaterialType(row.index, e.target.value)
 						}
 					>
-						<option value=''>-- Chọn loại vật tư --</option>
+						<option value=''>
+							{t('importStocks.pickMaterialType')}
+						</option>
 						{materialTypeOptions.map((o) => (
 							<option key={o.id} value={o.id}>
 								{o.label}
@@ -70,14 +74,14 @@ export function useReviewColumns({
 			},
 			{
 				accessorKey: 'unitId',
-				header: 'Đơn vị',
+				header: t('importStocks.columns.unit'),
 				cell: ({ row }) => (
 					<select
 						className={reviewInputClass}
 						value={row.original.unitId ?? ''}
 						onChange={(e) => changeUnit(row.index, e.target.value)}
 					>
-						<option value=''>-- Chọn đơn vị --</option>
+						<option value=''>{t('importShared.pickUnit')}</option>
 						{unitOptions.map((o) => (
 							<option key={o.id} value={o.id}>
 								{o.label}
@@ -88,7 +92,7 @@ export function useReviewColumns({
 			},
 			{
 				accessorKey: 'roomId',
-				header: 'Vị trí',
+				header: t('importStocks.columns.room'),
 				cell: ({ row }) => {
 					const unitId = row.original.unitId
 					const options =
@@ -104,7 +108,9 @@ export function useReviewColumns({
 								changeRoom(row.index, e.target.value)
 							}
 						>
-							<option value=''>Chưa có vị trí cụ thể</option>
+							<option value=''>
+								{t('shared.noSpecificRoom')}
+							</option>
 							{options.map((r) => (
 								<option key={r.id} value={r.id}>
 									{r.name}
@@ -116,7 +122,7 @@ export function useReviewColumns({
 			},
 			{
 				accessorKey: 'quantity',
-				header: 'Số lượng',
+				header: t('importStocks.columns.quantity'),
 				cell: ({ row }) => (
 					<input
 						type='number'
@@ -133,7 +139,7 @@ export function useReviewColumns({
 			},
 			{
 				accessorKey: 'condition',
-				header: 'Tình trạng',
+				header: t('importStocks.columns.condition'),
 				cell: ({ row }) => (
 					<select
 						className={reviewInputClass}
@@ -145,7 +151,9 @@ export function useReviewColumns({
 							})
 						}
 					>
-						<option value=''>-- Mặc định (Tốt) --</option>
+						<option value=''>
+							{t('importAssets.defaultCondition')}
+						</option>
 						{materialConditionOptions.map((o) => (
 							<option key={o.value} value={o.value}>
 								{o.label}
@@ -161,6 +169,7 @@ export function useReviewColumns({
 		unitOptions,
 		roomsByUnitId,
 		updateRow,
-		clearRowErrors
+		clearRowErrors,
+		t
 	])
 }

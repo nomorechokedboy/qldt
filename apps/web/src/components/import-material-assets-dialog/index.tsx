@@ -3,6 +3,7 @@ import { ImportDialogShell } from '@/components/material-import/import-dialog-sh
 import { downloadWithErrorAlert } from '@/components/material-import/template-helpers'
 import type { ImportResults } from '@/components/material-import/types'
 import { useImportDialogState } from '@/components/material-import/use-import-dialog-state'
+import { useTranslation } from 'react-i18next'
 import useImportMaterialAssets from '@/hooks/useImportMaterialAssets'
 import { downloadAssetImportTemplate } from './build-import-template'
 import { parseAssetRows } from './parse-import-file'
@@ -23,6 +24,7 @@ export function ImportMaterialAssetsDialog({
 	onClose,
 	onSuccess
 }: ImportMaterialAssetsDialogProps) {
+	const { t } = useTranslation('materials')
 	const { lookups, unitsById } = useAssetImportLookups(isOpen)
 	const importAssets = useImportMaterialAssets()
 
@@ -30,10 +32,10 @@ export function ImportMaterialAssetsDialog({
 		parseRows: (headers, dataRows) =>
 			parseAssetRows(headers, dataRows, lookups),
 		describeReferenceErrors: (count) =>
-			`Đã đọc file, nhưng có ${count} dòng chứa lỗi tham chiếu (khí tài/đơn vị/vị trí/quân nhân không hợp lệ).`,
+			t('importAssets.referenceErrors', { count }),
 		importRows: (rows) =>
 			importAssets.mutateAsync(rows as materials.MaterialAssetBody[]),
-		itemNoun: 'khí tài',
+		itemNoun: t('importAssets.itemNoun'),
 		onClose,
 		onSuccess
 	})
@@ -49,9 +51,9 @@ export function ImportMaterialAssetsDialog({
 
 	return (
 		<ImportDialogShell
-			title='Import vũ khí/trang bị'
-			description='Tải lên file Excel hoặc CSV để thêm nhiều khí tài cùng lúc.'
-			itemNoun='khí tài'
+			title={t('importAssets.title')}
+			description={t('importAssets.description')}
+			itemNoun={t('importAssets.itemNoun')}
 			state={state}
 			columns={columns}
 			downloadTemplate={() =>

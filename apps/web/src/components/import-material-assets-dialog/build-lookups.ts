@@ -1,6 +1,6 @@
 import {
-	materialAssetStatusOptions,
-	materialConditionOptions
+	materialAssetStatusOptionsVi,
+	materialConditionOptionsVi
 } from '@/data/material-categories'
 import {
 	buildLabelMap,
@@ -69,12 +69,12 @@ export function buildAssetImportLookups({
 			(s) => s.id
 		),
 		conditionLabelToValue: buildLabelMap(
-			materialConditionOptions,
+			materialConditionOptionsVi,
 			(o) => o.label,
 			(o) => o.value as MaterialConditionName
 		),
 		statusLabelToValue: buildLabelMap(
-			materialAssetStatusOptions,
+			materialAssetStatusOptionsVi,
 			(o) => o.label,
 			(o) => o.value as MaterialAssetStatus
 		)

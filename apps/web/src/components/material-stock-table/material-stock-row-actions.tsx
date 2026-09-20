@@ -1,5 +1,6 @@
 import { useState, type MouseEvent } from 'react'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { MoreHorizontal } from 'lucide-react'
 import { AxiosError } from 'axios'
 import { Button } from '@/components/ui/button'
@@ -26,6 +27,7 @@ export function MaterialStockRowActions({
 	roomOptions,
 	onChanged
 }: MaterialStockRowActionsProps) {
+	const { t } = useTranslation('materials')
 	const [openEdit, setOpenEdit] = useState(false)
 	const deleteMutation = useDeleteMaterialStocks()
 
@@ -33,16 +35,18 @@ export function MaterialStockRowActions({
 		try {
 			if (
 				!confirm(
-					`Bạn có chắc muốn xoá vật tư "${data.materialType?.name}"? Hành động này không thể hoàn tác.`
+					t('stockTable.confirmDelete', {
+						name: data.materialType?.name
+					})
 				)
 			) {
 				return
 			}
 			await deleteMutation.mutateAsync([data.id])
-			toast.success('Xóa vật tư thành công!')
+			toast.success(t('stockTable.deleted'))
 			onChanged?.()
 		} catch (err) {
-			toast.error('Xóa vật tư thất bại!')
+			toast.error(t('stockTable.deleteFailed'))
 			if (err instanceof AxiosError) {
 				console.error('Http error: ', err.response?.data)
 			}
@@ -64,14 +68,14 @@ export function MaterialStockRowActions({
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align='end' className='w-[180px]'>
 					<DropdownMenuItem onClick={() => setOpenEdit(true)}>
-						Cập nhật
+						{t('actions.update')}
 					</DropdownMenuItem>
 					<DropdownMenuSeparator />
 					<DropdownMenuItem
 						disabled={deleteMutation.isPending}
 						onClick={handleDelete}
 					>
-						Xóa
+						{t('actions.delete')}
 					</DropdownMenuItem>
 				</DropdownMenuContent>
 			</DropdownMenu>
@@ -79,7 +83,7 @@ export function MaterialStockRowActions({
 			<Dialog open={openEdit} onOpenChange={setOpenEdit}>
 				<DialogContent className='backdrop-blur-sm flex items-center justify-center'>
 					<DialogTitle className='sr-only'>
-						Cập nhật vật tư
+						{t('stockTable.editTitle')}
 					</DialogTitle>
 					<MaterialStockEditForm
 						data={data}

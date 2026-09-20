@@ -1,4 +1,4 @@
-import { materialConditionLabels } from '@/data/material-categories'
+import { materialConditionLabelsVi } from '@/data/material-categories'
 import type { MaterialStock } from '@/types'
 
 export interface MaterialStockExportField {
@@ -34,7 +34,8 @@ export const materialStockExportFields: MaterialStockExportField[] = [
 		label: 'Tình trạng',
 		getValue: (stock) =>
 			stock.condition
-				? (materialConditionLabels[stock.condition] ?? stock.condition)
+				? (materialConditionLabelsVi[stock.condition] ??
+					stock.condition)
 				: ''
 	}
 ]

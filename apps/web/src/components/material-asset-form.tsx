@@ -25,6 +25,7 @@ import type { MaterialType, Room, Student, Unit } from '@/types'
 import { Plus } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 
 const NONE = 'none'
 
@@ -45,6 +46,7 @@ export default function MaterialAssetForm({
 	studentOptions,
 	onSuccess
 }: MaterialAssetFormProps) {
+	const { t } = useTranslation('materials')
 	const [open, setOpen] = useState(false)
 	const [materialTypeId, setMaterialTypeId] = useState('')
 	const [unitId, setUnitId] = useState<string>(
@@ -83,13 +85,13 @@ export default function MaterialAssetForm({
 						: Number(assignedTrooperId),
 				images
 			})
-			toast.success('Thêm mới khí tài thành công')
+			toast.success(t('assetForm.created'))
 			onSuccess?.()
 			resetForm()
 			setOpen(false)
 		} catch (err) {
 			console.error('Error creating material asset:', err)
-			toast.error(getErrorMessage(err, 'Thêm mới khí tài thất bại!'))
+			toast.error(getErrorMessage(err, t('assetForm.createFailed')))
 		}
 	}
 
@@ -104,24 +106,26 @@ export default function MaterialAssetForm({
 			<DialogTrigger asChild>
 				<Button>
 					<Plus className='w-4 h-4 mr-2' />
-					Thêm khí tài
+					{t('assetForm.trigger')}
 				</Button>
 			</DialogTrigger>
 			<DialogContent className='sm:max-w-md h-auto'>
 				<DialogHeader>
-					<DialogTitle>Biểu mẫu thêm khí tài/vũ khí</DialogTitle>
+					<DialogTitle>{t('assetForm.title')}</DialogTitle>
 				</DialogHeader>
 				<form className='space-y-4' onSubmit={handleSubmit}>
 					<div className='space-y-2'>
 						<Label htmlFor='asset-material-type'>
-							Loại khí tài
+							{t('columns.assetType')}
 						</Label>
 						<Select
 							value={materialTypeId}
 							onValueChange={setMaterialTypeId}
 						>
 							<SelectTrigger id='asset-material-type'>
-								<SelectValue placeholder='Chọn loại khí tài' />
+								<SelectValue
+									placeholder={t('assetForm.pickType')}
+								/>
 							</SelectTrigger>
 							<SelectContent>
 								{materialTypeOptions.map((t) => (
@@ -134,7 +138,9 @@ export default function MaterialAssetForm({
 					</div>
 
 					<div className='space-y-2'>
-						<Label htmlFor='asset-serial'>Số sê-ri</Label>
+						<Label htmlFor='asset-serial'>
+							{t('columns.serialNumber')}
+						</Label>
 						<Input
 							id='asset-serial'
 							maxLength={MAX_MATERIAL_ASSET_SERIAL_LENGTH}
@@ -145,7 +151,7 @@ export default function MaterialAssetForm({
 					</div>
 
 					<div className='space-y-2'>
-						<Label htmlFor='asset-unit'>Thuộc đơn vị</Label>
+						<Label htmlFor='asset-unit'>{t('form.unit')}</Label>
 						<Select
 							value={unitId}
 							onValueChange={(value) => {
@@ -154,7 +160,7 @@ export default function MaterialAssetForm({
 							}}
 						>
 							<SelectTrigger id='asset-unit'>
-								<SelectValue placeholder='Chọn đơn vị' />
+								<SelectValue placeholder={t('form.pickUnit')} />
 							</SelectTrigger>
 							<SelectContent>
 								{unitOptions.map((u) => (
@@ -167,14 +173,16 @@ export default function MaterialAssetForm({
 					</div>
 
 					<div className='space-y-2'>
-						<Label htmlFor='asset-room'>Vị trí</Label>
+						<Label htmlFor='asset-room'>{t('columns.room')}</Label>
 						<Select value={roomId} onValueChange={setRoomId}>
 							<SelectTrigger id='asset-room'>
-								<SelectValue placeholder='Chọn phòng (tuỳ chọn)' />
+								<SelectValue
+									placeholder={t('assetForm.pickRoom')}
+								/>
 							</SelectTrigger>
 							<SelectContent>
 								<SelectItem value={NONE}>
-									Chưa có vị trí cụ thể
+									{t('shared.noSpecificRoom')}
 								</SelectItem>
 								{roomsForUnit.map((r) => (
 									<SelectItem key={r.id} value={String(r.id)}>
@@ -187,18 +195,22 @@ export default function MaterialAssetForm({
 
 					<div className='space-y-2'>
 						<Label htmlFor='asset-trooper'>
-							Cấp phát cho quân nhân
+							{t('assetForm.assignTrooper')}
 						</Label>
 						<Select
 							value={assignedTrooperId}
 							onValueChange={setAssignedTrooperId}
 						>
 							<SelectTrigger id='asset-trooper'>
-								<SelectValue placeholder='Chọn quân nhân (tuỳ chọn)' />
+								<SelectValue
+									placeholder={t(
+										'assetForm.pickTrooperOptional'
+									)}
+								/>
 							</SelectTrigger>
 							<SelectContent>
 								<SelectItem value={NONE}>
-									Chưa cấp phát
+									{t('shared.notAssigned')}
 								</SelectItem>
 								{studentOptions.map((s) => (
 									<SelectItem key={s.id} value={String(s.id)}>
@@ -210,7 +222,7 @@ export default function MaterialAssetForm({
 					</div>
 
 					<div className='space-y-2'>
-						<Label>Hình ảnh</Label>
+						<Label>{t('columns.images')}</Label>
 						<MaterialImagesUpload
 							value={images}
 							onChange={setImages}
@@ -219,7 +231,9 @@ export default function MaterialAssetForm({
 
 					<DialogFooter>
 						<DialogClose asChild>
-							<Button variant='outline'>Hủy</Button>
+							<Button variant='outline'>
+								{t('form.cancel')}
+							</Button>
 						</DialogClose>
 						<Button
 							type='submit'
@@ -229,7 +243,9 @@ export default function MaterialAssetForm({
 								!unitId
 							}
 						>
-							{createMutation.isPending ? 'Đang thêm...' : 'Thêm'}
+							{createMutation.isPending
+								? t('form.adding')
+								: t('form.add')}
 						</Button>
 					</DialogFooter>
 				</form>

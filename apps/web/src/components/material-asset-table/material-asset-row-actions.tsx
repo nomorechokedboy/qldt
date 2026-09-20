@@ -1,5 +1,6 @@
 import { useState, type MouseEvent } from 'react'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { MoreHorizontal } from 'lucide-react'
 import { AxiosError } from 'axios'
 import { Button } from '@/components/ui/button'
@@ -30,6 +31,7 @@ export function MaterialAssetRowActions({
 	studentOptions,
 	onChanged
 }: MaterialAssetRowActionsProps) {
+	const { t } = useTranslation('materials')
 	const [openEdit, setOpenEdit] = useState(false)
 	const [openHistory, setOpenHistory] = useState(false)
 	const [openQr, setOpenQr] = useState(false)
@@ -39,16 +41,16 @@ export function MaterialAssetRowActions({
 		try {
 			if (
 				!confirm(
-					`Bạn có chắc muốn xoá khí tài "${data.serialNumber}"? Hành động này không thể hoàn tác.`
+					t('assetTable.confirmDelete', { name: data.serialNumber })
 				)
 			) {
 				return
 			}
 			await deleteMutation.mutateAsync([data.id])
-			toast.success('Xóa khí tài thành công!')
+			toast.success(t('assetTable.deleted'))
 			onChanged?.()
 		} catch (err) {
-			toast.error('Xóa khí tài thất bại!')
+			toast.error(t('assetTable.deleteFailed'))
 			if (err instanceof AxiosError) {
 				console.error('Http error: ', err.response?.data)
 			}
@@ -70,20 +72,20 @@ export function MaterialAssetRowActions({
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align='end' className='w-[180px]'>
 					<DropdownMenuItem onClick={() => setOpenEdit(true)}>
-						Cấp phát / cập nhật
+						{t('assetTable.allocate')}
 					</DropdownMenuItem>
 					<DropdownMenuItem onClick={() => setOpenHistory(true)}>
-						Lịch sử
+						{t('assetTable.history')}
 					</DropdownMenuItem>
 					<DropdownMenuItem onClick={() => setOpenQr(true)}>
-						Tải mã QR
+						{t('assetTable.downloadQr')}
 					</DropdownMenuItem>
 					<DropdownMenuSeparator />
 					<DropdownMenuItem
 						disabled={deleteMutation.isPending}
 						onClick={handleDelete}
 					>
-						Xóa
+						{t('actions.delete')}
 					</DropdownMenuItem>
 				</DropdownMenuContent>
 			</DropdownMenu>
@@ -91,7 +93,7 @@ export function MaterialAssetRowActions({
 			<Dialog open={openEdit} onOpenChange={setOpenEdit}>
 				<DialogContent className='backdrop-blur-sm flex items-center justify-center'>
 					<DialogTitle className='sr-only'>
-						Cập nhật khí tài
+						{t('assetTable.editTitle')}
 					</DialogTitle>
 					<MaterialAssetEditForm
 						data={data}

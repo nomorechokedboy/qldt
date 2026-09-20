@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import type { DateRange } from 'react-day-picker'
+import { useTranslation } from 'react-i18next'
 import {
 	Accordion,
 	AccordionContent,
@@ -41,18 +42,22 @@ import { Label } from '../ui/label'
 
 const HISTORY_PAGE_SIZE = 10
 
-const SESSION_STATUS_LABEL: Record<
+const SESSION_STATUS_VARIANT: Record<
 	string,
-	{
-		label: string
-		variant: 'default' | 'secondary' | 'outline' | 'destructive'
-	}
+	'default' | 'secondary' | 'outline' | 'destructive'
 > = {
-	in_progress: { label: 'Đang kiểm kê', variant: 'secondary' },
-	completed: { label: 'Chờ xác nhận', variant: 'default' },
-	reviewed: { label: 'Đã xác nhận', variant: 'outline' },
-	expired: { label: 'Đã hết hạn', variant: 'destructive' }
+	in_progress: 'secondary',
+	completed: 'default',
+	reviewed: 'outline',
+	expired: 'destructive'
 }
+
+const SESSION_STATUSES = [
+	'in_progress',
+	'completed',
+	'reviewed',
+	'expired'
+] as const
 
 function SessionDiffPanel({
 	sessionId,
@@ -65,6 +70,7 @@ function SessionDiffPanel({
 	enabledApply: boolean
 	completedAt: string | null
 }) {
+	const { t } = useTranslation('materials')
 	const {
 		data: review,
 		isLoading,
@@ -75,7 +81,11 @@ function SessionDiffPanel({
 
 	if (!enabled) return null
 	if (isLoading) {
-		return <p className='text-muted-foreground text-sm'>Đang tải...</p>
+		return (
+			<p className='text-muted-foreground text-sm'>
+				{t('inventory.history.loading')}
+			</p>
+		)
 	}
 	if (!review) return null
 
@@ -83,12 +93,12 @@ function SessionDiffPanel({
 		<div className='flex flex-col gap-4'>
 			<div className='flex items-center gap-2'>
 				<Badge className='bg-sky-50 text-sky-700'>
-					Hoàn thành lúc:{' '}
+					{t('inventory.history.completedAt')}{' '}
 				</Badge>
 				<span className='font-mono'>
 					{completedAt !== null
 						? formatDbTimestamp(completedAt)
-						: 'Chưa hoàn thành'}
+						: t('inventory.history.notCompleted')}
 				</span>
 			</div>
 			<InventorySessionDiffList diff={review.diff} />
@@ -121,6 +131,7 @@ export default function InventorySessionHistorySheet({
 	open,
 	onOpenChange
 }: InventorySessionHistorySheetProps) {
+	const { t } = useTranslation('materials')
 	const [openSessionId, setOpenSessionId] = useState('')
 	const [status, setStatus] = useState('')
 	const [dateRange, setDateRange] = useState<DateRange | undefined>()
@@ -171,40 +182,45 @@ export default function InventorySessionHistorySheet({
 		<Sheet open={open} onOpenChange={onOpenChange}>
 			<SheetContent className='w-full sm:max-w-lg'>
 				<SheetHeader>
-					<SheetTitle>Lịch sử kiểm kê - {roomName}</SheetTitle>
+					<SheetTitle>
+						{t('inventory.history.title', { roomName })}
+					</SheetTitle>
 				</SheetHeader>
 				<ScrollArea className='px-4 pb-4 h-screen'>
 					<div className='flex flex-wrap items-center gap-2 pb-3'>
 						<div className='flex flex-col gap-2'>
 							<Label className='font-bold'>
-								Trạng thái của phiên
+								{t('inventory.history.sessionStatus')}
 							</Label>
 							<Select
 								value={status || 'all'}
 								onValueChange={handleFilterChange(setStatus)}
 							>
 								<SelectTrigger className='h-8 w-[160px]'>
-									<SelectValue placeholder='Trạng thái' />
+									<SelectValue
+										placeholder={t(
+											'inventory.history.status'
+										)}
+									/>
 								</SelectTrigger>
 								<SelectContent>
 									<SelectItem value='all'>
-										Tất cả trạng thái
+										{t('inventory.history.allStatuses')}
 									</SelectItem>
-									{Object.entries(SESSION_STATUS_LABEL).map(
-										([value, { label }]) => (
-											<SelectItem
-												key={value}
-												value={value}
-											>
-												{label}
-											</SelectItem>
-										)
-									)}
+									{SESSION_STATUSES.map((value) => (
+										<SelectItem key={value} value={value}>
+											{t(
+												`inventory.sessionStatus.${value}`
+											)}
+										</SelectItem>
+									))}
 								</SelectContent>
 							</Select>
 						</div>
 						<div className='flex flex-col gap-2'>
-							<Label className='font-bold'>Khoảng ngày</Label>
+							<Label className='font-bold'>
+								{t('inventory.history.dateRange')}
+							</Label>
 							<DateRangePicker
 								value={dateRange}
 								onChange={setDateRange}
@@ -220,7 +236,7 @@ export default function InventorySessionHistorySheet({
 					)}
 					{!error && !isFetching && sessions.length === 0 && (
 						<p className='text-muted-foreground text-sm'>
-							Phòng này chưa có phiên kiểm kê nào.
+							{t('inventory.history.empty')}
 						</p>
 					)}
 					{!error && sessions.length > 0 && (
@@ -234,12 +250,13 @@ export default function InventorySessionHistorySheet({
 								(
 									session: inventory_sessions.InventorySessionResp
 								) => {
-									const statusLabel = SESSION_STATUS_LABEL[
-										session.status
-									] ?? {
-										label: session.status,
-										variant: 'outline' as const
-									}
+									const isKnownStatus = (
+										SESSION_STATUSES as readonly string[]
+									).includes(session.status)
+									const statusVariant =
+										SESSION_STATUS_VARIANT[
+											session.status
+										] ?? 'outline'
 									const enabledApply = session.completedAt
 										? !IsExceedApplyTime(
 												session.completedAt
@@ -254,7 +271,9 @@ export default function InventorySessionHistorySheet({
 											<AccordionTrigger>
 												<div className='flex items-center justify-between w-full'>
 													<span className='font-mono'>
-														Tạo lúc:{' '}
+														{t(
+															'inventory.history.createdAt'
+														)}{' '}
 														<span>
 															{formatDbTimestamp(
 																session.createdAt
@@ -262,11 +281,13 @@ export default function InventorySessionHistorySheet({
 														</span>
 													</span>
 													<Badge
-														variant={
-															statusLabel.variant
-														}
+														variant={statusVariant}
 													>
-														{statusLabel.label}
+														{isKnownStatus
+															? t(
+																	`inventory.sessionStatus.${session.status as (typeof SESSION_STATUSES)[number]}`
+																)
+															: session.status}
 													</Badge>
 												</div>
 											</AccordionTrigger>
@@ -298,7 +319,9 @@ export default function InventorySessionHistorySheet({
 								disabled={isFetching}
 								onClick={() => setPage((p) => p + 1)}
 							>
-								{isFetching ? 'Đang tải...' : 'Tải thêm'}
+								{isFetching
+									? t('inventory.history.loading')
+									: t('inventory.history.loadMore')}
 							</Button>
 						</div>
 					)}

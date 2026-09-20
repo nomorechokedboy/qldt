@@ -1,4 +1,5 @@
 import { type ChangeEvent, useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import jsQR from 'jsqr'
 import { Upload } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -22,8 +23,13 @@ export default function WebcamQrScanner({
 	const videoRef = useRef<HTMLVideoElement>(null)
 	const canvasRef = useRef<HTMLCanvasElement>(null)
 	const fileInputRef = useRef<HTMLInputElement>(null)
-	const [error, setError] = useState<string | null>(null)
-	const [fileError, setFileError] = useState<string | null>(null)
+	const { t } = useTranslation('materials')
+	// Kept as codes, not sentences, so they follow the language in use when
+	// rendered and the camera effect below doesn't depend on `t`.
+	const [error, setError] = useState<'cameraDenied' | null>(null)
+	const [fileError, setFileError] = useState<
+		'noQrInImage' | 'unreadableImage' | null
+	>(null)
 
 	// The scan loop below only starts once (see the empty deps array further
 	// down) so the camera stream doesn't restart - and flicker - every time
@@ -52,9 +58,7 @@ export default function WebcamQrScanner({
 				})
 			} catch {
 				if (!cancelled) {
-					setError(
-						'Không thể truy cập camera. Vui lòng cấp quyền camera cho trình duyệt.'
-					)
+					setError('cameraDenied')
 				}
 				return
 			}
@@ -165,12 +169,10 @@ export default function WebcamQrScanner({
 			if (result?.data) {
 				onDecodeRef.current(result.data)
 			} else {
-				setFileError(
-					'Không tìm thấy mã QR trong ảnh, vui lòng thử ảnh khác.'
-				)
+				setFileError('noQrInImage')
 			}
 		} catch {
-			setFileError('Không đọc được ảnh này, vui lòng thử ảnh khác.')
+			setFileError('unreadableImage')
 		} finally {
 			URL.revokeObjectURL(objectUrl)
 		}
@@ -179,7 +181,9 @@ export default function WebcamQrScanner({
 	return (
 		<div className='flex flex-col gap-3'>
 			{error ? (
-				<p className='text-destructive text-sm'>{error}</p>
+				<p className='text-destructive text-sm'>
+					{t(`inventory.scanner.${error}`)}
+				</p>
 			) : (
 				<div className='relative overflow-hidden rounded-md border'>
 					{/* biome-ignore lint/a11y/useMediaCaption: live camera feed, not a media file */}
@@ -196,8 +200,8 @@ export default function WebcamQrScanner({
 			<div className='flex flex-col items-center gap-2'>
 				<p className='text-muted-foreground text-xs'>
 					{error
-						? 'Bạn có thể tải lên ảnh chụp mã QR thay thế.'
-						: 'Hoặc tải lên ảnh chụp mã QR nếu không dùng được camera.'}
+						? t('inventory.scanner.uploadInstead')
+						: t('inventory.scanner.uploadOptional')}
 				</p>
 				<Button
 					type='button'
@@ -206,7 +210,7 @@ export default function WebcamQrScanner({
 					onClick={() => fileInputRef.current?.click()}
 				>
 					<Upload />
-					Tải ảnh lên
+					{t('inventory.scanner.upload')}
 				</Button>
 				<input
 					ref={fileInputRef}
@@ -216,7 +220,9 @@ export default function WebcamQrScanner({
 					onChange={handleFileChange}
 				/>
 				{fileError && (
-					<p className='text-destructive text-sm'>{fileError}</p>
+					<p className='text-destructive text-sm'>
+						{t(`inventory.scanner.${fileError}`)}
+					</p>
 				)}
 			</div>
 		</div>

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { createFileRoute } from '@tanstack/react-router'
 import ProtectedRoute from '@/components/ProtectedRoute'
 import MaterialTypeForm from '@/components/material-type-form'
@@ -20,6 +21,7 @@ function RouteComponent() {
 }
 
 function MaterialTypeCatalog() {
+	const { t } = useTranslation('materials')
 	const { data: materialTypes, refetch } = useMaterialTypesData({
 		enabled: true
 	})
@@ -27,21 +29,25 @@ function MaterialTypeCatalog() {
 		useDataTableToolbarConfig()
 
 	const searchConfig = [
-		createSearchConfig('name', 'Tìm kiếm theo tên vật tư...')
+		createSearchConfig('name', t('catalog.searchPlaceholder'))
 	]
 	const facetedFilters = [
-		createFacetedFilter('category', 'Phân loại', materialCategoryOptions)
+		createFacetedFilter(
+			'category',
+			t('columns.category'),
+			materialCategoryOptions
+		)
 	]
 
 	return (
 		<div className='hidden h-full flex-1 flex-col space-y-8 p-8 md:flex'>
 			<div className='flex items-center justify-between space-y-2'>
 				<h2 className='text-2xl font-bold tracking-tight'>
-					Danh mục vật tư
+					{t('catalog.title')}
 				</h2>
 			</div>
 			<DataTable
-				placeholder='Chưa có danh mục vật tư nào'
+				placeholder={t('catalog.empty')}
 				columns={buildMaterialTypeColumns(() => refetch())}
 				data={materialTypes ?? []}
 				onRefresh={() => refetch()}

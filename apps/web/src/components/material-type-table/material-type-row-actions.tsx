@@ -1,5 +1,6 @@
 import { useState, type MouseEvent } from 'react'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 import { MoreHorizontal } from 'lucide-react'
 import { AxiosError } from 'axios'
 import { Button } from '@/components/ui/button'
@@ -24,23 +25,20 @@ export function MaterialTypeRowActions({
 	data,
 	onChanged
 }: MaterialTypeRowActionsProps) {
+	const { t } = useTranslation('materials')
 	const [openEdit, setOpenEdit] = useState(false)
 	const deleteMutation = useDeleteMaterialTypes()
 
 	async function handleDelete(_: MouseEvent<HTMLDivElement>) {
 		try {
-			if (
-				!confirm(
-					`Bạn có chắc muốn xoá danh mục "${data.name}"? Hành động này không thể hoàn tác.`
-				)
-			) {
+			if (!confirm(t('typeTable.confirmDelete', { name: data.name }))) {
 				return
 			}
 			await deleteMutation.mutateAsync([data.id])
-			toast.success('Xóa danh mục vật tư thành công!')
+			toast.success(t('typeTable.deleted'))
 			onChanged?.()
 		} catch (err) {
-			toast.error('Xóa danh mục vật tư thất bại!')
+			toast.error(t('typeTable.deleteFailed'))
 			if (err instanceof AxiosError) {
 				console.error('Http error: ', err.response?.data)
 			}
@@ -62,14 +60,14 @@ export function MaterialTypeRowActions({
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align='end' className='w-[160px]'>
 					<DropdownMenuItem onClick={() => setOpenEdit(true)}>
-						Chỉnh sửa
+						{t('actions.edit')}
 					</DropdownMenuItem>
 					<DropdownMenuSeparator />
 					<DropdownMenuItem
 						disabled={deleteMutation.isPending}
 						onClick={handleDelete}
 					>
-						Xóa
+						{t('actions.delete')}
 					</DropdownMenuItem>
 				</DropdownMenuContent>
 			</DropdownMenu>
@@ -77,7 +75,7 @@ export function MaterialTypeRowActions({
 			<Dialog open={openEdit} onOpenChange={setOpenEdit}>
 				<DialogContent className='backdrop-blur-sm flex items-center justify-center'>
 					<DialogTitle className='sr-only'>
-						Chỉnh sửa danh mục vật tư
+						{t('typeTable.editTitle')}
 					</DialogTitle>
 					<MaterialTypeEditForm
 						data={data}

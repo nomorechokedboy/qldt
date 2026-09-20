@@ -1,3 +1,4 @@
+import i18n from '@/i18n'
 import type ExcelJS from 'exceljs'
 
 // Data rows a template validates: from the first row users fill in (4).
@@ -191,6 +192,10 @@ export async function downloadWithErrorAlert(build: () => Promise<void>) {
 		await build()
 	} catch (err) {
 		console.error('Error:', err)
-		alert(`Lỗi tạo file: ${(err as Error).message}`)
+		alert(
+			i18n.t('materials:import.state.templateFailed', {
+				message: (err as Error).message
+			})
+		)
 	}
 }

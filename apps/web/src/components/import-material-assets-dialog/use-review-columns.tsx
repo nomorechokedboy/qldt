@@ -11,6 +11,7 @@ import {
 import { MAX_MATERIAL_ASSET_SERIAL_LENGTH } from '@/lib/material-limits'
 import type { ColumnDef } from '@tanstack/react-table'
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { studentLabel, type AssetImportLookups } from './build-lookups'
 import type {
 	MaterialAssetImportRow,
@@ -31,6 +32,7 @@ export function useReviewColumns({
 	updateRow,
 	clearRowErrors
 }: UseReviewColumnsOptions) {
+	const { t } = useTranslation('materials')
 	const {
 		materialTypeOptions,
 		unitOptions,
@@ -74,7 +76,7 @@ export function useReviewColumns({
 			statusColumn(errorsByRowIndex),
 			{
 				accessorKey: 'materialTypeId',
-				header: 'Loại khí tài',
+				header: t('importAssets.columns.materialType'),
 				cell: ({ row }) => (
 					<select
 						className={reviewInputClass}
@@ -83,7 +85,9 @@ export function useReviewColumns({
 							changeMaterialType(row.index, e.target.value)
 						}
 					>
-						<option value=''>-- Chọn loại khí tài --</option>
+						<option value=''>
+							{t('importAssets.pickMaterialType')}
+						</option>
 						{materialTypeOptions.map((o) => (
 							<option key={o.id} value={o.id}>
 								{o.label}
@@ -94,7 +98,7 @@ export function useReviewColumns({
 			},
 			{
 				accessorKey: 'serialNumber',
-				header: 'Số sê-ri',
+				header: t('importAssets.columns.serialNumber'),
 				cell: ({ row }) => (
 					<input
 						type='text'
@@ -111,14 +115,14 @@ export function useReviewColumns({
 			},
 			{
 				accessorKey: 'unitId',
-				header: 'Đơn vị',
+				header: t('importAssets.columns.unit'),
 				cell: ({ row }) => (
 					<select
 						className={reviewInputClass}
 						value={row.original.unitId ?? ''}
 						onChange={(e) => changeUnit(row.index, e.target.value)}
 					>
-						<option value=''>-- Chọn đơn vị --</option>
+						<option value=''>{t('importShared.pickUnit')}</option>
 						{unitOptions.map((o) => (
 							<option key={o.id} value={o.id}>
 								{o.label}
@@ -129,7 +133,7 @@ export function useReviewColumns({
 			},
 			{
 				accessorKey: 'roomId',
-				header: 'Vị trí',
+				header: t('importAssets.columns.room'),
 				cell: ({ row }) => {
 					const unitId = row.original.unitId
 					const options =
@@ -145,7 +149,9 @@ export function useReviewColumns({
 								changeRoom(row.index, e.target.value)
 							}
 						>
-							<option value=''>Chưa có vị trí cụ thể</option>
+							<option value=''>
+								{t('shared.noSpecificRoom')}
+							</option>
 							{options.map((r) => (
 								<option key={r.id} value={r.id}>
 									{r.name}
@@ -157,7 +163,7 @@ export function useReviewColumns({
 			},
 			{
 				accessorKey: 'condition',
-				header: 'Tình trạng',
+				header: t('importAssets.columns.condition'),
 				cell: ({ row }) => (
 					<select
 						className={reviewInputClass}
@@ -169,7 +175,9 @@ export function useReviewColumns({
 							})
 						}
 					>
-						<option value=''>-- Mặc định (Tốt) --</option>
+						<option value=''>
+							{t('importAssets.defaultCondition')}
+						</option>
 						{materialConditionOptions.map((o) => (
 							<option key={o.value} value={o.value}>
 								{o.label}
@@ -180,7 +188,7 @@ export function useReviewColumns({
 			},
 			{
 				accessorKey: 'assetStatus',
-				header: 'Trạng thái sử dụng',
+				header: t('importAssets.columns.status'),
 				cell: ({ row }) => (
 					<select
 						className={reviewInputClass}
@@ -192,7 +200,9 @@ export function useReviewColumns({
 							})
 						}
 					>
-						<option value=''>-- Mặc định (Đang sử dụng) --</option>
+						<option value=''>
+							{t('importAssets.defaultStatus')}
+						</option>
 						{materialAssetStatusOptions.map((o) => (
 							<option key={o.value} value={o.value}>
 								{o.label}
@@ -203,7 +213,7 @@ export function useReviewColumns({
 			},
 			{
 				accessorKey: 'assignedTrooperId',
-				header: 'Cấp phát cho quân nhân',
+				header: t('importAssets.columns.assignedTrooper'),
 				cell: ({ row }) => {
 					const unitId = row.original.unitId
 					const options =
@@ -219,7 +229,7 @@ export function useReviewColumns({
 								changeTrooper(row.index, e.target.value)
 							}
 						>
-							<option value=''>Chưa cấp phát</option>
+							<option value=''>{t('shared.notAssigned')}</option>
 							{options.map((s) => (
 								<option key={s.id} value={s.id}>
 									{studentLabel(s)}
@@ -237,6 +247,7 @@ export function useReviewColumns({
 		roomsByUnitId,
 		studentsByUnitId,
 		updateRow,
-		clearRowErrors
+		clearRowErrors,
+		t
 	])
 }

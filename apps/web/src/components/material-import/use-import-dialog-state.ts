@@ -1,3 +1,4 @@
+import i18n from '@/i18n'
 import type React from 'react'
 import { useCallback, useMemo, useRef, useState } from 'react'
 import {
@@ -82,7 +83,7 @@ export function useImportDialogState<Row>({
 
 	const handleFileSelect = async (file: File) => {
 		if (!file || !isSupportedSpreadsheet(file)) {
-			failWith('Vui lòng chọn file CSV hoặc Excel (.xlsx, .xls)')
+			failWith(i18n.t('materials:import.state.unsupportedFile'))
 			return
 		}
 
@@ -96,8 +97,8 @@ export function useImportDialogState<Row>({
 			console.error('Error parsing file:', error)
 			failWith(
 				error instanceof SpreadsheetReadError
-					? 'Lỗi đọc file. Vui lòng thử lại.'
-					: 'Lỗi đọc file. Vui lòng kiểm tra định dạng file.'
+					? i18n.t('materials:import.state.readFailed')
+					: i18n.t('materials:import.state.badFormat')
 			)
 			return
 		}
@@ -139,14 +140,12 @@ export function useImportDialogState<Row>({
 
 	const handleImport = async () => {
 		if (!selectedFile) {
-			failWith('Vui lòng chọn file để import')
+			failWith(i18n.t('materials:import.state.noFile'))
 			return
 		}
 
 		if (parseErrors.length > 0) {
-			failWith(
-				'Vui lòng sửa các dòng có lỗi tham chiếu trước khi import.'
-			)
+			failWith(i18n.t('materials:import.state.fixReferenceErrors'))
 			setImportResults({
 				successCount: 0,
 				errorCount: parseErrors.length,
@@ -157,7 +156,7 @@ export function useImportDialogState<Row>({
 		}
 
 		setUploadStatus('uploading')
-		setUploadMessage('Đang xử lý file...')
+		setUploadMessage(i18n.t('materials:import.state.processing'))
 
 		try {
 			await importRows(rows)
@@ -172,13 +171,21 @@ export function useImportDialogState<Row>({
 			setUploadStatus('success')
 			setImportResults(results)
 			setUploadMessage(
-				`Import hoàn tất! Thành công: ${results.successCount}/${results.totalCount} ${itemNoun}`
+				i18n.t('materials:import.state.done', {
+					success: results.successCount,
+					total: results.totalCount,
+					itemNoun
+				})
 			)
 			onSuccess?.(results)
 		} catch (error) {
 			console.error('Import error:', error)
 			const message = (error as Error | undefined)?.message
-			failWith(`Lỗi import: ${message || error}`)
+			failWith(
+				i18n.t('materials:import.state.failed', {
+					message: message || String(error)
+				})
+			)
 			setImportResults({
 				successCount: 0,
 				errorCount: rows.length,

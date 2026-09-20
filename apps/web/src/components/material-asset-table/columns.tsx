@@ -4,6 +4,8 @@ import {
 	materialAssetStatusLabels,
 	materialConditionLabels
 } from '@/data/material-categories'
+import i18n from '@/i18n'
+import { localizedHeader } from '@/lib/material-column-header'
 import { getMediaUri } from '@/lib/utils'
 import type { MaterialAsset, Room, Student } from '@/types'
 import type { ColumnDef } from '@tanstack/react-table'
@@ -43,7 +45,7 @@ export function buildMaterialAssetColumns(
 		},
 		{
 			id: 'images',
-			header: 'Hình ảnh',
+			...localizedHeader('columns.images'),
 			cell: ({ row }) => {
 				const images = row.original.images
 				if (!images || images.length === 0) return '—'
@@ -59,39 +61,42 @@ export function buildMaterialAssetColumns(
 		},
 		{
 			accessorKey: 'serialNumber',
-			header: 'Số sê-ri'
+			...localizedHeader('columns.serialNumber')
 		},
 		{
 			id: 'materialType',
-			header: 'Loại khí tài',
+			...localizedHeader('columns.assetType'),
 			accessorFn: (row) => row.materialType?.name ?? '',
 			cell: ({ row }) => row.original.materialType?.name ?? '—',
 			filterFn: (row, id, value) => value.includes(row.getValue(id))
 		},
 		{
 			id: 'room',
-			header: 'Vị trí',
-			accessorFn: (row) => row.room?.name ?? 'Chưa có vị trí cụ thể',
+			...localizedHeader('columns.room'),
+			accessorFn: (row) =>
+				row.room?.name ?? i18n.t('materials:shared.noSpecificRoom'),
 			cell: ({ row }) =>
 				row.original.room?.name ?? (
 					<span className='text-muted-foreground'>
-						Chưa có vị trí cụ thể
+						{i18n.t('materials:shared.noSpecificRoom')}
 					</span>
 				),
 			filterFn: (row, id, value) => value.includes(row.getValue(id))
 		},
 		{
 			id: 'assignedTrooper',
-			header: 'Cấp phát cho',
+			...localizedHeader('columns.assignedTo'),
 			accessorFn: (row) => row.assignedTrooper?.fullName ?? '',
 			cell: ({ row }) =>
 				row.original.assignedTrooper?.fullName ?? (
-					<span className='text-muted-foreground'>Chưa cấp phát</span>
+					<span className='text-muted-foreground'>
+						{i18n.t('materials:shared.notAssigned')}
+					</span>
 				)
 		},
 		{
 			accessorKey: 'condition',
-			header: 'Tình trạng',
+			...localizedHeader('columns.condition'),
 			cell: ({ row }) => {
 				const condition = row.getValue('condition') as string | null
 				if (condition === null || condition === undefined) {
@@ -103,7 +108,7 @@ export function buildMaterialAssetColumns(
 		},
 		{
 			accessorKey: 'status',
-			header: 'Trạng thái',
+			...localizedHeader('columns.status'),
 			cell: ({ row }) => {
 				const status = row.getValue('status') as string
 				return (
