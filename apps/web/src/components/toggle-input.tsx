@@ -80,6 +80,9 @@ type BaseToggleInputProps = {
 	placeholder?: ReactNode
 	className?: string
 	disabled?: boolean
+	// Shows the value as plain text: no hover affordance and no editing,
+	// without the dimmed look of `disabled`.
+	readOnly?: boolean
 	isLoading?: boolean
 	ellipsisMaxWidth?: string
 	onChange?: (value: any) => void
@@ -135,6 +138,7 @@ export default function ToggleInput<T extends InputType>(
 		onCancel,
 		className = '',
 		disabled = false,
+		readOnly = false,
 		isLoading = false,
 		ellipsisMaxWidth,
 		...restProps
@@ -180,7 +184,7 @@ export default function ToggleInput<T extends InputType>(
 	}
 
 	const handleDoubleClick = () => {
-		if (!disabled && !isLoading) {
+		if (!disabled && !readOnly && !isLoading) {
 			setIsEditing(true)
 			setTempValue(value)
 			if (type === 'date' || type === 'combobox') {
@@ -497,12 +501,16 @@ export default function ToggleInput<T extends InputType>(
 	return (
 		<div
 			className={`group flex items-center gap-2 min-h-[40px] px-3 py-2 border border-transparent rounded-md transition-colors ${
-				disabled || isLoading
-					? 'pointer-events-none opacity-70 cursor-not-allowed'
-					: 'cursor-pointer hover:border-border hover:bg-muted/50'
+				readOnly
+					? ''
+					: disabled || isLoading
+						? 'pointer-events-none opacity-70 cursor-not-allowed'
+						: 'cursor-pointer hover:border-border hover:bg-muted/50'
 			} ${className}`}
 			onDoubleClick={
-				disabled || isLoading ? undefined : handleDoubleClick
+				disabled || readOnly || isLoading
+					? undefined
+					: handleDoubleClick
 			}
 		>
 			<EllipsisText
@@ -512,8 +520,10 @@ export default function ToggleInput<T extends InputType>(
 				{getDisplayValue()}
 			</EllipsisText>
 			<div className='flex items-center gap-1'>
-				{(type === 'select' || type === 'combobox') && getDisplayIcon()}
-				{!disabled && !isLoading && (
+				{!readOnly &&
+					(type === 'select' || type === 'combobox') &&
+					getDisplayIcon()}
+				{!disabled && !readOnly && !isLoading && (
 					<Edit3 className='h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity' />
 				)}
 			</div>

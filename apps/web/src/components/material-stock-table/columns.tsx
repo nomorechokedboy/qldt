@@ -12,13 +12,15 @@ export function buildMaterialStockColumns(
 			id: 'materialType',
 			header: 'Loại vật tư',
 			accessorFn: (row) => row.materialType?.name ?? '',
-			cell: ({ row }) => row.original.materialType?.name ?? '—'
+			cell: ({ row }) => row.original.materialType?.name ?? '—',
+			filterFn: (row, id, value) => value.includes(row.getValue(id))
 		},
 		{
 			id: 'unit',
 			header: 'Đơn vị',
 			accessorFn: (row) => row.unit?.name ?? '',
-			cell: ({ row }) => row.original.unit?.name ?? '—'
+			cell: ({ row }) => row.original.unit?.name ?? '—',
+			filterFn: (row, id, value) => value.includes(row.getValue(id))
 		},
 		{
 			id: 'room',

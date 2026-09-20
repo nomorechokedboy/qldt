@@ -51,7 +51,7 @@ const student = {
 } as Student
 
 // The action bar reads the signed-in user, which needs a router.
-async function setup(current: Student = student) {
+async function setup(current: Student = student, readOnly = false) {
 	mockFetch(() => ({ body: { data: [] } }))
 	const client = new QueryClient({
 		defaultOptions: { queries: { retry: false } }
@@ -60,7 +60,7 @@ async function setup(current: Student = student) {
 	const index = createRoute({
 		getParentRoute: () => root,
 		path: '/',
-		component: () => <StudentInfo student={current} />
+		component: () => <StudentInfo student={current} readOnly={readOnly} />
 	})
 	const router = createRouter({
 		routeTree: root.addChildren([index]),
@@ -142,6 +142,12 @@ describe('StudentInfo', () => {
 		await setup({ ...student, status: 'confirmed' })
 
 		expect(screen.getByText('Đã xác nhận')).toBeTruthy()
+		expect(screen.queryByRole('button', { name: /Chỉnh sửa/ })).toBeNull()
+	})
+
+	it('offers no editing when read only, even for an unconfirmed record', async () => {
+		await setup(student, true)
+
 		expect(screen.queryByRole('button', { name: /Chỉnh sửa/ })).toBeNull()
 	})
 })

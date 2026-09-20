@@ -27,19 +27,11 @@ import {
 	ChartTooltipContent
 } from '@/components/ui/chart'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { DataTable } from '@/components/data-table'
 import TableSkeleton from '@/components/table-skeleton'
+import UnitRollupTables from '@/components/unit-rollup-tables'
 import useAuth from '@/hooks/useAuth'
 import useUnitStats from '@/hooks/useUnitStats'
-import useUnitStatsStudents from '@/hooks/useUnitStatsStudents'
-import useUnitStatsMaterialStocks from '@/hooks/useUnitStatsMaterialStocks'
-import useUnitStatsMaterialAssets from '@/hooks/useUnitStatsMaterialAssets'
 import useProvinces from '@/hooks/useProvinces'
-import { buildBattalionStudentColumnsWithoutAction } from '@/components/student-table/columns'
-import { defaultBirthdayColumnVisibility } from '@/components/student-table/default-columns-visibility'
-import { useStudentFacetedFilters } from '@/hooks/useStudentFacetedFilters'
-import { buildMaterialStockColumns } from '@/components/material-stock-table/columns'
-import { buildMaterialAssetColumns } from '@/components/material-asset-table/columns'
 import {
 	COLORS as POLITICS_CHART_COLORS,
 	PieChartCard,
@@ -52,13 +44,6 @@ import { materialAssetStatusLabels } from '@/data/material-categories'
 import { GetPoliticsQualityReport } from '@/api'
 import { transformPoliticsQualityData } from '@/lib/utils'
 import type { units } from '@/api/client'
-
-const readOnlyMaterialStockColumns = buildMaterialStockColumns([]).filter(
-	(c) => c.id !== 'actions'
-)
-const readOnlyMaterialAssetColumns = buildMaterialAssetColumns([], []).filter(
-	(c) => c.id !== 'actions'
-)
 
 const TROOP_CHART_COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042']
 
@@ -97,14 +82,6 @@ export default function BaseStatsDashboard() {
 
 	const showRollupTabs = stats !== undefined && stats.unit.level !== 'squad'
 
-	const { data: rollupStudents, isLoading: isLoadingRollupStudents } =
-		useUnitStatsStudents(showRollupTabs ? selectedUnitId : undefined)
-	const { data: rollupStocks, isLoading: isLoadingRollupStocks } =
-		useUnitStatsMaterialStocks(showRollupTabs ? selectedUnitId : undefined)
-	const { data: rollupAssets, isLoading: isLoadingRollupAssets } =
-		useUnitStatsMaterialAssets(showRollupTabs ? selectedUnitId : undefined)
-	const studentFacetedFilters = useStudentFacetedFilters(rollupStudents ?? [])
-
 	if (isLoadingUnits) {
 		return <TableSkeleton />
 	}
@@ -112,9 +89,6 @@ export default function BaseStatsDashboard() {
 	const handleUnitChange = (id: string) => {
 		navigate({ search: (prev) => ({ ...prev, unit: Number(id) }) })
 	}
-
-	const battalionStudentColumnsWithoutAction =
-		buildBattalionStudentColumnsWithoutAction(unitsById)
 
 	const kpiCards = [
 		{
@@ -498,60 +472,6 @@ export default function BaseStatsDashboard() {
 		</div>
 	)
 
-	const detailsContent = showRollupTabs && (
-		<Tabs defaultValue='students'>
-			<TabsList>
-				<TabsTrigger value='students'>Quân nhân</TabsTrigger>
-				<TabsTrigger value='material-stocks'>
-					Cơ sở vật chất
-				</TabsTrigger>
-				<TabsTrigger value='material-assets'>
-					Vũ khí/trang bị
-				</TabsTrigger>
-			</TabsList>
-
-			<TabsContent value='students'>
-				{isLoadingRollupStudents ? (
-					<TableSkeleton />
-				) : (
-					<DataTable
-						placeholder='Không có quân nhân nào'
-						columns={battalionStudentColumnsWithoutAction}
-						data={rollupStudents ?? []}
-						defaultColumnVisibility={
-							defaultBirthdayColumnVisibility
-						}
-						facetedFilters={studentFacetedFilters}
-					/>
-				)}
-			</TabsContent>
-
-			<TabsContent value='material-stocks'>
-				{isLoadingRollupStocks ? (
-					<TableSkeleton />
-				) : (
-					<DataTable
-						placeholder='Không có vật tư sinh hoạt nào'
-						columns={readOnlyMaterialStockColumns}
-						data={rollupStocks ?? []}
-					/>
-				)}
-			</TabsContent>
-
-			<TabsContent value='material-assets'>
-				{isLoadingRollupAssets ? (
-					<TableSkeleton />
-				) : (
-					<DataTable
-						placeholder='Không có vũ khí/trang bị nào'
-						columns={readOnlyMaterialAssetColumns}
-						data={rollupAssets ?? []}
-					/>
-				)}
-			</TabsContent>
-		</Tabs>
-	)
-
 	return (
 		<div className='container mx-auto p-6 space-y-6'>
 			<div className='flex flex-col gap-4 md:flex-row md:items-center md:justify-between'>
@@ -602,7 +522,11 @@ export default function BaseStatsDashboard() {
 						</TabsContent>
 
 						<TabsContent value='details'>
-							{detailsContent}
+							<UnitRollupTables
+								unitId={stats.unit.id}
+								unit={selectedUnit}
+								unitsById={unitsById}
+							/>
 						</TabsContent>
 					</Tabs>
 				) : (

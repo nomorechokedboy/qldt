@@ -10,10 +10,12 @@ import { unitLevelLabels, unitLevelOrder } from '@/data/unit-levels'
 
 export type EditablePositionProps = CellContext<Student, unknown> & {
 	className?: string
+	readOnly?: boolean
 }
 
 export default function EditablePosition({
 	className,
+	readOnly,
 	row
 }: EditablePositionProps) {
 	const { data: positions } = usePositionsData()
@@ -52,6 +54,7 @@ export default function EditablePosition({
 
 	return (
 		<ToggleInput
+			readOnly={readOnly}
 			type='combobox'
 			options={positionOptions}
 			className={`font-medium min-w-32 ${className}`}

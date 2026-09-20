@@ -27,18 +27,22 @@ import { isSuperAdmin } from '@/lib/utils'
 interface DataTableRowActionsProps<TData> {
 	row: Row<TData>
 	onDeleteRows?: OnDeleteRows
+	// Only the details can be opened: no delete, and the details cannot edit.
+	readOnly?: boolean
 }
 
 export function DataTableRowActions<TData>({
 	row,
-	onDeleteRows
+	onDeleteRows,
+	readOnly = false
 }: DataTableRowActionsProps<TData>) {
 	const student = row.original as unknown as Student
 	const [dialogOpen, setDialogOpen] = useState(false)
 	const { mutateAsync: deleteStudentMutate, isPending: isDeletingStudent } =
 		useDeleteStudents()
 
-	const canDelete = isSuperAdmin() || student.status !== 'confirmed'
+	const canDelete =
+		!readOnly && (isSuperAdmin() || student.status !== 'confirmed')
 
 	function handleOpenDialog() {
 		setDialogOpen(true)
@@ -105,7 +109,7 @@ export function DataTableRowActions<TData>({
 						</DialogDescription>
 					</DialogHeader>
 
-					<StudentInfo student={student} />
+					<StudentInfo student={student} readOnly={readOnly} />
 				</DialogContent>
 			</Dialog>
 		</>

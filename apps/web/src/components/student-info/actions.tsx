@@ -18,14 +18,21 @@ import { toast } from 'sonner'
 import { ExportStudentDataDialog } from '../export-student-data-dialog'
 import StudentEditForm from '../student-edit-form'
 
-export default function StudentActions({ student }: { student: Student }) {
+export default function StudentActions({
+	student,
+	readOnly = false
+}: {
+	student: Student
+	readOnly?: boolean
+}) {
 	const [open, setOpen] = useState(false)
 	const queryClient = useQueryClient()
 	const { mutateAsync: updateStudent, isPending: isUpdating } =
 		useUpdateStudent()
 	const { user } = useAuth()
 
-	const canEdit = isSuperAdmin() || student.status !== 'confirmed'
+	const canEdit =
+		!readOnly && (isSuperAdmin() || student.status !== 'confirmed')
 
 	const handleConfirmStudent = async () => {
 		const confirmed = confirm(
@@ -76,7 +83,7 @@ export default function StudentActions({ student }: { student: Student }) {
 				</Button>
 			</ExportStudentDataDialog>
 
-			{student.status === 'pending' && (
+			{!readOnly && student.status === 'pending' && (
 				<Button
 					onClick={handleConfirmStudent}
 					disabled={isUpdating}
