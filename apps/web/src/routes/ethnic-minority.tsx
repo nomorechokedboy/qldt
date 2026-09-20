@@ -1,4 +1,5 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { createFileRoute } from '@tanstack/react-router'
 import { SidebarInset } from '@/components/ui/sidebar'
 import StudentTable from '@/components/student-table'
@@ -20,6 +21,7 @@ type SelectProps = {
 }
 
 function Select({ label, options, value, onChange, placeholder }: SelectProps) {
+	const { t } = useTranslation('stats')
 	return (
 		<div>
 			<span className='font-medium'>{label}:</span>
@@ -32,7 +34,8 @@ function Select({ label, options, value, onChange, placeholder }: SelectProps) {
 				}}
 			>
 				<option value='-'>
-					{placeholder ?? `--Chọn ${label.toLowerCase()}--`}
+					{placeholder ??
+						t('routes.choose', { label: label.toLowerCase() })}
 				</option>
 				{options.map((o) => (
 					<option key={o.id} value={o.id}>
@@ -45,6 +48,7 @@ function Select({ label, options, value, onChange, placeholder }: SelectProps) {
 }
 
 function RouteComponent() {
+	const { t } = useTranslation('stats')
 	const [studentParams, setStudentParams] =
 		React.useState<StudentQueryParams>({
 			isEthnicMinority: true
@@ -115,17 +119,16 @@ function RouteComponent() {
 					<div className='flex items-center justify-between space-y-2'>
 						<div>
 							<h2 className='text-2xl font-bold tracking-tight'>
-								Danh sách quân nhân dân tộc thiểu số
+								{t('routes.ethnicMinorityTitle')}
 							</h2>
 							<p className='text-muted-foreground'>
-								Chọn tiểu đoàn, đại đội, lớp để xem bảng học
-								viên
+								{t('routes.pickHint')}
 							</p>
 						</div>
 					</div>
 					<div className='flex items-center gap-4 mb-4'>
 						<Select
-							label='Tiểu đoàn'
+							label={t('routes.battalion')}
 							options={battalions}
 							value={selectedBattalionId}
 							onChange={(id) => {
@@ -136,7 +139,7 @@ function RouteComponent() {
 						/>
 						<span className='mx-2'>/</span>
 						<Select
-							label='Đại đội'
+							label={t('routes.company')}
 							options={companies}
 							value={selectedCompanyId}
 							onChange={(id) => {
@@ -146,7 +149,7 @@ function RouteComponent() {
 						/>
 						<span className='mx-2'>/</span>
 						<Select
-							label='Tiểu đội'
+							label={t('routes.squad')}
 							options={classes}
 							value={selectedClassId}
 							onChange={setSelectedClassId}
@@ -155,7 +158,7 @@ function RouteComponent() {
 							className='ml-4 px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90'
 							onClick={handleFilter}
 						>
-							Lọc
+							{t('routes.filter')}
 						</button>
 					</div>
 					<div className='mt-4'>

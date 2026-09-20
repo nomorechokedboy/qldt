@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { CalendarIcon } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { DateRange } from 'react-day-picker'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
@@ -29,9 +30,10 @@ export interface DateRangePickerProps {
 export default function DateRangePicker({
 	value,
 	onChange,
-	placeholder = 'Chọn khoảng ngày',
+	placeholder,
 	className
 }: DateRangePickerProps) {
+	const { t } = useTranslation('stats')
 	const [open, setOpen] = useState(false)
 
 	return (
@@ -56,7 +58,7 @@ export default function DateRangePicker({
 							formatDisplayDate(value.from)
 						)
 					) : (
-						<span>{placeholder}</span>
+						<span>{placeholder ?? t('dateRange.placeholder')}</span>
 					)}
 				</Button>
 			</PopoverTrigger>
@@ -78,7 +80,7 @@ export default function DateRangePicker({
 								setOpen(false)
 							}}
 						>
-							Xoá khoảng ngày
+							{t('dateRange.clear')}
 						</Button>
 					</div>
 				)}

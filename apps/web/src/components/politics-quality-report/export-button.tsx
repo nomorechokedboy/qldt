@@ -5,6 +5,7 @@ import type {
 	UnitPoliticsQualitySummary
 } from '@/types'
 import { Download } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import ExportPoliticsQualityDialog from '../export-politics-quality-dialog'
 
 export interface ExportButtonProps {
@@ -186,6 +187,7 @@ function calculateTotalObject(data: UnitPoliticsQualitySummary[]) {
 }
 
 export function ExportButton({ data: originalData }: ExportButtonProps) {
+	const { t } = useTranslation('stats')
 	const total = calculateTotalObject(originalData)
 	const exportData = convertToPoliticsQualitySummary(originalData).map(
 		(el, idx) => ({ ...el, idx: ++idx })
@@ -199,7 +201,7 @@ export function ExportButton({ data: originalData }: ExportButtonProps) {
 		>
 			<Button className='flex items-center gap-2'>
 				<Download className='h-4 w-4' />
-				Xuất file Excel (.xlsx)
+				{t('report.exportExcel')}
 			</Button>
 		</ExportPoliticsQualityDialog>
 	)

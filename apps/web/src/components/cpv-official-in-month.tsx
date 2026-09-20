@@ -4,6 +4,8 @@ import useUnitsData from '@/hooks/useUnitsData'
 import type { Month, Student, StudentQueryParams } from '@/types'
 import dayjs from 'dayjs'
 import { useCallback, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { getMonthOptions } from './period-options'
 import {
 	Select,
 	SelectContent,
@@ -18,58 +20,9 @@ import UnitFacetedFilter, { useFilteredClassIds } from './unit-filter'
 import { useStudentFacetedFilters } from '@/hooks/useStudentFacetedFilters'
 import { buildUnitsById } from '@/lib/unit-labels'
 
-const monthOptions = [
-	{
-		value: '01',
-		label: 'Tháng 1'
-	},
-	{
-		value: '02',
-		label: 'Tháng 2'
-	},
-	{
-		value: '03',
-		label: 'Tháng 3'
-	},
-	{
-		value: '04',
-		label: 'Tháng 4'
-	},
-	{
-		value: '05',
-		label: 'Tháng 5'
-	},
-	{
-		value: '06',
-		label: 'Tháng 6'
-	},
-	{
-		value: '07',
-		label: 'Tháng 7'
-	},
-	{
-		value: '08',
-		label: 'Tháng 8'
-	},
-	{
-		value: '09',
-		label: 'Tháng 9'
-	},
-	{
-		value: '10',
-		label: 'Tháng 10'
-	},
-	{
-		value: '11',
-		label: 'Tháng 11'
-	},
-	{
-		value: '12',
-		label: 'Tháng 12'
-	}
-]
-
 export default function CpvOfficialInMonth() {
+	const { t } = useTranslation('stats')
+	const monthOptions = getMonthOptions()
 	const [selectedUnits, setSelectedUnits] = useState<number[]>([])
 	const filteredUnitIds = useFilteredClassIds(selectedUnits)
 	const [month, setMonth] = useState<Month>(dayjs().format('MM') as Month)
@@ -102,8 +55,7 @@ export default function CpvOfficialInMonth() {
 				<div>
 					<div className='flex gap-2'>
 						<h2 className='text-2xl font-bold tracking-tight'>
-							Danh sách quân nhân chuẩn bị chuyển Đảng chính thức
-							trong
+							{t('cpv.heading')}
 						</h2>
 						<Select
 							value={month}
@@ -113,7 +65,7 @@ export default function CpvOfficialInMonth() {
 						>
 							<SelectTrigger className='w-[180px]'>
 								<SelectValue aria-label={month}>
-									Tháng {month}
+									{t('period.month', { month: month })}
 								</SelectValue>
 							</SelectTrigger>
 							<SelectContent>
@@ -128,8 +80,7 @@ export default function CpvOfficialInMonth() {
 						</Select>
 					</div>
 					<p className='text-muted-foreground'>
-						Đây là danh sách quân nhân chuẩn bị chuyển Đảng chính
-						thức trong tháng {month} của đại đội
+						{t('cpv.descriptionMonth', { month })}
 					</p>
 				</div>
 			</div>

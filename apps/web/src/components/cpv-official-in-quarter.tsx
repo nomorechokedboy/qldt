@@ -1,4 +1,6 @@
 import { useCallback, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { getQuarterOptions } from './period-options'
 import type { Quarter, Student, StudentQueryParams } from '@/types'
 import { getCurrentQuarter } from '@/lib/utils'
 import {
@@ -18,14 +20,9 @@ import UnitFacetedFilter, { useFilteredClassIds } from './unit-filter'
 import { useStudentFacetedFilters } from '@/hooks/useStudentFacetedFilters'
 import { buildUnitsById } from '@/lib/unit-labels'
 
-const quarterOptions = [
-	{ value: 'Q1', label: 'Quý 1' },
-	{ value: 'Q2', label: 'Quý 2' },
-	{ value: 'Q3', label: 'Quý 3' },
-	{ value: 'Q4', label: 'Quý 4' }
-]
-
 export default function CpvOfficialInQuarter() {
+	const { t } = useTranslation('stats')
+	const quarterOptions = getQuarterOptions()
 	const [quarter, setQuarter] = useState<Quarter>(
 		`Q${getCurrentQuarter()}` as Quarter
 	)
@@ -59,8 +56,7 @@ export default function CpvOfficialInQuarter() {
 				<div>
 					<div className='flex gap-2'>
 						<h2 className='text-2xl font-bold tracking-tight'>
-							Danh sách quân nhân chuẩn bị chuyển Đảng chính thức
-							trong
+							{t('cpv.heading')}
 						</h2>
 						<Select
 							value={quarter}
@@ -70,7 +66,7 @@ export default function CpvOfficialInQuarter() {
 						>
 							<SelectTrigger className='w-[180px]'>
 								<SelectValue aria-label={quarter}>
-									Quý {quarter}
+									{t('period.quarter', { quarter: quarter })}
 								</SelectValue>
 							</SelectTrigger>
 							<SelectContent>
@@ -85,8 +81,7 @@ export default function CpvOfficialInQuarter() {
 						</Select>
 					</div>
 					<p className='text-muted-foreground'>
-						Đây là danh sách quân nhân chuẩn bị chuyển Đảng chính
-						thức trong quý {quarter} của đại đội
+						{t('cpv.descriptionQuarter', { quarter })}
 					</p>
 				</div>
 			</div>

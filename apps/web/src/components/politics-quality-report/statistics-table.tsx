@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/table'
 import { ChevronDown, ChevronRight } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { PoliticsQualityReport, UnitPoliticsQualitySummary } from '@/types'
 
 interface StatisticsTableProps {
@@ -18,6 +19,7 @@ interface StatisticsTableProps {
 }
 
 export function StatisticsTable({ data }: StatisticsTableProps) {
+	const { t } = useTranslation('stats')
 	const [collapsedRows, setCollapsedRows] = useState<Set<string>>(() => {
 		const initialCollapsed = new Set<string>()
 
@@ -199,7 +201,7 @@ export function StatisticsTable({ data }: StatisticsTableProps) {
 	return (
 		<Card>
 			<CardHeader>
-				<CardTitle>Bảng thống kê chi tiết</CardTitle>
+				<CardTitle>{t('table.title')}</CardTitle>
 			</CardHeader>
 			<CardContent>
 				<div className='overflow-x-auto relative'>
@@ -210,70 +212,70 @@ export function StatisticsTable({ data }: StatisticsTableProps) {
 									className='w-32 sticky left-0 bg-card z-20 border-t border-r shadow-sm'
 									rowSpan={2}
 								>
-									Đơn vị
+									{t('table.unit')}
 								</TableHead>
 								<TableHead
 									className='text-center border-b-0 border-r border-t'
 									colSpan={4}
 								>
-									Phân cấp
+									{t('table.rankGroup')}
 								</TableHead>
 								<TableHead
 									className='text-center border-b-0 border-r border-t'
 									colSpan={ethnicKeys.length}
 								>
-									Dân tộc
+									{t('table.ethnic')}
 								</TableHead>
 								<TableHead
 									className='text-center border-b-0 border-r border-t'
 									colSpan={religionKeys.length}
 								>
-									Tôn giáo
+									{t('table.religion')}
 								</TableHead>
 								<TableHead
 									className='text-center border-b-0 border-r border-t'
 									colSpan={educationKeys.length}
 								>
-									Văn hóa
+									{t('table.education')}
 								</TableHead>
 
 								<TableHead
 									className='text-center border-b-0 border-r border-t'
 									rowSpan={2}
 								>
-									Đảng viên
+									{t('table.partyMember')}
 								</TableHead>
 								<TableHead
 									className='text-center border-b-0 border-r border-t'
 									rowSpan={2}
 								>
-									Đoàn viên
+									{t('table.youthMember')}
 								</TableHead>
 								<TableHead
 									className='text-center border-b-0 border-r border-t'
 									colSpan={3}
 								>
-									Gia đình
+									{t('table.family')}
 								</TableHead>
 								<TableHead
 									className='text-center border-b-0 border-r border-t'
 									rowSpan={2}
 								>
-									Ghi chú
+									{t('table.note')}
 								</TableHead>
 							</TableRow>
 							<TableRow>
 								<TableHead className='text-center border-r'>
-									Tá
+									{t('table.fieldOfficer')}
 								</TableHead>
 								<TableHead className='text-center border-r'>
-									Úy
+									{t('table.juniorOfficer')}
 								</TableHead>
 								<TableHead className='text-center border-r'>
-									QNCN (Cán bộ quản lý)
+									{t('table.proSoldierCommander')}
 								</TableHead>
 								<TableHead className='text-center border-r'>
-									QNCN
+									{t('table.proSoldier')}
 								</TableHead>
 								{ethnicKeys.map((key) => (
 									<TableHead
@@ -300,13 +302,13 @@ export function StatisticsTable({ data }: StatisticsTableProps) {
 									</TableHead>
 								))}
 								<TableHead className='text-center border-r'>
-									Cách mạng
+									{t('table.revolution')}
 								</TableHead>
 								<TableHead className='text-center border-r'>
-									N/quân-quyền
+									{t('table.military')}
 								</TableHead>
 								<TableHead className='text-center border-r'>
-									Nước ngoài
+									{t('table.abroad')}
 								</TableHead>
 							</TableRow>
 						</TableHeader>
@@ -320,7 +322,7 @@ export function StatisticsTable({ data }: StatisticsTableProps) {
 									className='border-b-0 border-r border-t sticky left-0'
 									rowSpan={2}
 								>
-									Tổng số
+									{t('table.total')}
 								</TableCell>
 
 								<TableCell className='text-center'>0</TableCell>

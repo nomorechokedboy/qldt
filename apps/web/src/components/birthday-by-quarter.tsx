@@ -3,6 +3,8 @@ import useStudentData from '@/hooks/useStudents'
 import useUnitsData from '@/hooks/useUnitsData'
 import type { Quarter, Student, StudentQueryParams } from '@/types'
 import { useCallback, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import { getQuarterOptions } from './period-options'
 import {
 	Select,
 	SelectContent,
@@ -18,26 +20,9 @@ import UnitFacetedFilter, { useFilteredClassIds } from './unit-filter'
 import { useStudentFacetedFilters } from '@/hooks/useStudentFacetedFilters'
 import { buildUnitsById } from '@/lib/unit-labels'
 
-const quarterOptions = [
-	{
-		value: 'Q1',
-		label: 'Quý 1'
-	},
-	{
-		value: 'Q2',
-		label: 'Quý 2'
-	},
-	{
-		value: 'Q3',
-		label: 'Quý 3'
-	},
-	{
-		value: 'Q4',
-		label: 'Quý 4'
-	}
-]
-
 export default function BirthdayByQuarter() {
+	const { t } = useTranslation('stats')
+	const quarterOptions = getQuarterOptions()
 	const [selectedUnits, setSelectedUnits] = useState<number[]>([])
 	const filteredUnitIds = useFilteredClassIds(selectedUnits)
 	const [quarter, setQuarter] = useState<Quarter>(
@@ -71,7 +56,7 @@ export default function BirthdayByQuarter() {
 				<div>
 					<div className='flex gap-2'>
 						<h2 className='text-2xl font-bold tracking-tight'>
-							Danh sách quân nhân có sinh nhật trong
+							{t('birthday.heading')}
 						</h2>
 						<Select
 							value={quarter}
@@ -81,7 +66,7 @@ export default function BirthdayByQuarter() {
 						>
 							<SelectTrigger className='w-[180px]'>
 								<SelectValue aria-label={quarter}>
-									Quý {quarter}
+									{t('period.quarter', { quarter: quarter })}
 								</SelectValue>
 							</SelectTrigger>
 							<SelectContent>
@@ -96,8 +81,7 @@ export default function BirthdayByQuarter() {
 						</Select>
 					</div>
 					<p className='text-muted-foreground'>
-						Đây là danh sách quân nhân có sinh nhật trong quý{' '}
-						{quarter} của đại đội
+						{t('birthday.descriptionQuarter', { quarter })}
 					</p>
 				</div>
 			</div>
@@ -114,7 +98,7 @@ export default function BirthdayByQuarter() {
 						level='battalion'
 						selectedUnits={selectedUnits}
 						onSelectionChange={setSelectedUnits}
-						title='Đơn vị'
+						title={t('period.unit')}
 					/>
 				}
 				showRefreshButton

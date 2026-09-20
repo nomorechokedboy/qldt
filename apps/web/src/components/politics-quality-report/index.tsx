@@ -29,6 +29,7 @@ import {
 	CollapsibleTrigger
 } from '../ui/collapsible'
 import useAuth from '@/hooks/useAuth'
+import { useTranslation } from 'react-i18next'
 
 // Recursive renderer for children
 function UnitBlock({
@@ -40,6 +41,7 @@ function UnitBlock({
 		children?: any[]
 	}
 }) {
+	const { t } = useTranslation('stats')
 	const [isOpen, setIsOpen] = useState(false)
 	const isParent = unit.children !== undefined && unit.children?.length > 0
 
@@ -65,7 +67,9 @@ function UnitBlock({
 						</Button>
 					</CollapsibleTrigger>
 					<p className='text-sm text-muted-foreground'>
-						Tổng quân số: {unit.politicsQualityReport?.total ?? 0}
+						{t('report.totalPersonnelValue', {
+							count: unit.politicsQualityReport?.total ?? 0
+						})}
 					</p>
 				</div>
 
@@ -87,7 +91,9 @@ function UnitBlock({
 			<div>
 				<h3 className='font-semibold'>{unit.name}</h3>
 				<p className='text-sm text-muted-foreground'>
-					Tổng quân số: {unit.politicsQualityReport?.total ?? 0}
+					{t('report.totalPersonnelValue', {
+						count: unit.politicsQualityReport?.total ?? 0
+					})}
 				</p>
 			</div>
 		</div>
@@ -95,6 +101,7 @@ function UnitBlock({
 }
 
 export function PoliticalQualityDashboard() {
+	const { t } = useTranslation('stats')
 	const { user } = useAuth()
 	const { data: units = [] } = useUnitsData(
 		user?.isSuperUser === true ? { level: 'battalion' } : undefined
@@ -140,7 +147,7 @@ export function PoliticalQualityDashboard() {
 				<Card>
 					<CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
 						<CardTitle className='text-sm font-medium'>
-							Tổng quân số
+							{t('report.totalPersonnel')}
 						</CardTitle>
 						<Users className='h-4 w-4 text-blue-600' />
 					</CardHeader>
@@ -149,7 +156,7 @@ export function PoliticalQualityDashboard() {
 							{totalPersonnel}
 						</div>
 						<p className='text-xs text-muted-foreground'>
-							Toàn đơn vị
+							{t('report.wholeUnit')}
 						</p>
 					</CardContent>
 				</Card>
@@ -157,7 +164,7 @@ export function PoliticalQualityDashboard() {
 				<Card>
 					<CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
 						<CardTitle className='text-sm font-medium'>
-							Số đơn vị
+							{t('report.unitCount')}
 						</CardTitle>
 						<Target className='h-4 w-4 text-green-600' />
 					</CardHeader>
@@ -165,14 +172,16 @@ export function PoliticalQualityDashboard() {
 						<div className='text-2xl font-bold text-foreground'>
 							{totalUnit}
 						</div>
-						<p className='text-xs text-muted-foreground'>Đơn vị</p>
+						<p className='text-xs text-muted-foreground'>
+							{t('report.units')}
+						</p>
 					</CardContent>
 				</Card>
 
 				<Card>
 					<CardHeader className='flex flex-row items-center justify-between space-y-0 pb-2'>
 						<CardTitle className='text-sm font-medium'>
-							Số lớp
+							{t('report.classCount')}
 						</CardTitle>
 						<School />
 					</CardHeader>
@@ -181,7 +190,7 @@ export function PoliticalQualityDashboard() {
 							{totalSquads}
 						</div>
 						<p className='text-xs text-muted-foreground'>
-							Tiểu đội
+							{t('report.squads')}
 						</p>
 					</CardContent>
 				</Card>
@@ -194,21 +203,21 @@ export function PoliticalQualityDashboard() {
 					onClick={() => setActiveTab('overview')}
 					className='flex-1'
 				>
-					Tổng quan
+					{t('report.tabs.overview')}
 				</Button>
 				<Button
 					variant={activeTab === 'detailed' ? 'default' : 'ghost'}
 					onClick={() => setActiveTab('detailed')}
 					className='flex-1'
 				>
-					Chi tiết
+					{t('report.tabs.detailed')}
 				</Button>
 				<Button
 					variant={activeTab === 'charts' ? 'default' : 'ghost'}
 					onClick={() => setActiveTab('charts')}
 					className='flex-1'
 				>
-					Biểu đồ
+					{t('report.tabs.charts')}
 				</Button>
 			</div>
 
@@ -219,7 +228,7 @@ export function PoliticalQualityDashboard() {
 						<CardHeader>
 							<CardTitle className='flex items-center gap-2'>
 								<FileSpreadsheet className='h-5 w-5' />
-								Thống kê tổng quan theo đơn vị
+								{t('report.overviewTitle')}
 							</CardTitle>
 						</CardHeader>
 						<CardContent>
@@ -244,7 +253,7 @@ export function PoliticalQualityDashboard() {
 				<CardHeader>
 					<CardTitle className='flex items-center gap-2'>
 						<Download className='h-5 w-5' />
-						Xuất báo cáo
+						{t('report.exportTitle')}
 					</CardTitle>
 				</CardHeader>
 				<CardContent>
@@ -258,11 +267,11 @@ export function PoliticalQualityDashboard() {
 									className='flex items-center gap-2 bg-transparent'
 								>
 									<FileSpreadsheet className='h-4 w-4' />
-									Xuất PDF
+									{t('report.exportPdf')}
 								</Button>
 							</TooltipTrigger>
 							<TooltipContent>
-								<p>Tính năng đang phát triển</p>
+								<p>{t('report.inDevelopment')}</p>
 							</TooltipContent>
 						</Tooltip>
 					</div>
