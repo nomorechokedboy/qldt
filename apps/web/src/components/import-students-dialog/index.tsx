@@ -7,9 +7,8 @@ import {
 	DialogHeader,
 	DialogTitle
 } from '@/components/ui/dialog'
-import { unitLevelLabels, unitLevelOrder } from '@/data/unit-levels'
 import useCreateStudents from '@/hooks/useCreateStudents'
-import usePositionsData from '@/hooks/usePositionsData'
+import usePositionOptions from '@/hooks/usePositionOptions'
 import useProvinces from '@/hooks/useProvinces'
 import useUnitOptions from '@/hooks/useUnitOptions'
 import useWards from '@/hooks/useWards'
@@ -49,64 +48,26 @@ export function ImportStudentsDialog({
 	onSuccess
 }: ImportStudentsDialogProps) {
 	const { options: unitOptions } = useUnitOptions({ enabled: isOpen })
-	const { data: positions = [] } = usePositionsData(undefined, {
-		enabled: isOpen
-	})
 	const { data: provinces = [] } = useProvinces({ enabled: isOpen })
 	// Unfiltered - the whole ward list is needed up front to build the
 	// per-province cascading dropdown sheet and the name->code lookup used
 	// when parsing the uploaded file back.
 	const { data: wards = [] } = useWards(undefined, { enabled: isOpen })
 
+	// Grouped by unit level like every other position picker, so the review
+	// table's searchable combobox can group and filter instead of forcing a
+	// scroll through every position of every level.
+	const positionComboboxOptions = usePositionOptions({ enabled: isOpen })
+
+	// The dropdown in the downloaded template is a flat list, so the level is
+	// folded into each label.
 	const positionOptions = useMemo(
 		() =>
-			[...(positions ?? [])]
-				.sort((a, b) => {
-					const levelDiff =
-						unitLevelOrder.indexOf(a.level as never) -
-						unitLevelOrder.indexOf(b.level as never)
-					if (levelDiff !== 0) return levelDiff
-					const groupDiff = (a.group ?? '').localeCompare(
-						b.group ?? ''
-					)
-					if (groupDiff !== 0) return groupDiff
-					return a.priority - b.priority
-				})
-				.map((p) => {
-					const group = unitLevelLabels[p.level as never] ?? p.level
-					return { id: p.id, label: `${group} - ${p.name}` }
-				}),
-		[positions]
-	)
-
-	// Same catalog as `positionOptions` above, shaped for the review
-	// table's searchable combobox: level kept separate (as the group
-	// heading) instead of folded into one label string, so the picker can
-	// group + filter instead of forcing a scroll through a flat list of
-	// every position across every unit level. Grouped strictly by unit
-	// level (not `p.group`, which is an unrelated HSQ/CS-BS classification
-	// override) so e.g. HSQ-flagged positions still sort under their own
-	// level instead of being bucketed together under "HSQ".
-	const positionComboboxOptions = useMemo(
-		() =>
-			[...(positions ?? [])]
-				.sort((a, b) => {
-					const levelDiff =
-						unitLevelOrder.indexOf(a.level as never) -
-						unitLevelOrder.indexOf(b.level as never)
-					if (levelDiff !== 0) return levelDiff
-					const groupDiff = (a.group ?? '').localeCompare(
-						b.group ?? ''
-					)
-					if (groupDiff !== 0) return groupDiff
-					return a.priority - b.priority
-				})
-				.map((p) => ({
-					value: String(p.id),
-					label: p.name,
-					group: unitLevelLabels[p.level as never] ?? p.level
-				})),
-		[positions]
+			positionComboboxOptions.map((o) => ({
+				id: Number(o.value),
+				label: `${o.group} - ${o.label}`
+			})),
+		[positionComboboxOptions]
 	)
 
 	// label (lowercased, trimmed) -> id, used to resolve the dropdown's

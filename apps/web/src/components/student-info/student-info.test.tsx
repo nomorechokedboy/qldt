@@ -89,6 +89,17 @@ describe('StudentInfo', () => {
 		).toBeGreaterThan(0)
 	})
 
+	it('names the position instead of showing its alias', async () => {
+		await setup({
+			...student,
+			position: 'dai doi truong',
+			positionRef: { name: 'Đại đội trưởng' }
+		} as Student)
+
+		expect(screen.getAllByText('Đại đội trưởng').length).toBeGreaterThan(0)
+		expect(screen.queryByText('dai doi truong')).toBeNull()
+	})
+
 	it('reads stored dates as day/month/year', async () => {
 		await setup()
 

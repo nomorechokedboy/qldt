@@ -65,6 +65,20 @@ describe('buildRosterRows', () => {
 		})
 	})
 
+	it('prints the position name while ordering by its code', () => {
+		const rows = buildRosterRows(company1, units, [
+			student('Named', 4, {
+				position: 'dai doi truong',
+				positionName: 'Đại đội trưởng'
+			}),
+			student('Unnamed', 4, { position: 'chien si' })
+		])
+
+		expect(
+			rows.flatMap((r) => (r.type === 'member' ? [r.position] : []))
+		).toEqual(['Đại đội trưởng', 'chien si'])
+	})
+
 	it('does not include units or students outside the root', () => {
 		const rows = buildRosterRows(company1, units, [
 			student('In C1', 4),

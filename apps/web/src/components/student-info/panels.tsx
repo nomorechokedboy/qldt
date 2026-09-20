@@ -1,5 +1,6 @@
 import { RecordSection, StepBody } from '@/components/record-section'
 import { politicalOptions } from '@/data/political-status'
+import { positionName } from '@/lib/position-name'
 import type { Student } from '@/types'
 import type { ComponentType } from 'react'
 import type { SectionId } from '@/components/student-record/sections'
@@ -44,7 +45,7 @@ function MilitaryPanel({ student }: { student: Student }) {
 			<RecordSection title='Quân sự'>
 				<Facts columns={3}>
 					<Fact label='Cấp bậc' value={student.rank} />
-					<Fact label='Chức vụ' value={student.position} />
+					<Fact label='Chức vụ' value={positionName(student)} />
 					<Fact label='Đơn vị' value={student.unit?.name} />
 					<Fact
 						label='Ngày nhập ngũ'

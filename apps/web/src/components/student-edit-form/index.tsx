@@ -15,6 +15,7 @@ import {
 	type SectionId
 } from '@/components/student-record/sections'
 import { PANELS } from './sections'
+import { positionName } from '@/lib/position-name'
 import { StudentFormProvider } from './student-form-context'
 import useStudentEditForm from './use-student-edit-form'
 
@@ -47,7 +48,7 @@ export default function StudentEditForm({
 		form,
 		photoField: 'avatarFile',
 		currentSrc: student.avatar ? getMediaUri(student.avatar) : undefined,
-		fallback: { position: student.position, unit: student.unit?.name }
+		fallback: { position: positionName(student), unit: student.unit?.name }
 	}
 
 	return (
