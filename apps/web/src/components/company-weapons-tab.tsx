@@ -98,6 +98,13 @@ export default function CompanyWeaponsTab({ unitId }: CompanyWeaponsTabProps) {
 					handleChanged
 				)}
 				data={companyAssets}
+				onRefresh={() =>
+					Promise.all([
+						refetchUnit(),
+						refetchAssets(),
+						refetchRooms()
+					])
+				}
 				toolbarProps={{
 					searchConfig,
 					facetedFilters

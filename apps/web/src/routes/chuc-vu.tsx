@@ -76,6 +76,7 @@ function PositionLevelTable({ level }: { level: string }) {
 			placeholder='Chưa có chức vụ nào'
 			columns={buildPositionColumns(() => refetch())}
 			data={sorted}
+			onRefresh={() => refetch()}
 			toolbarProps={{
 				rightSection: (
 					<PositionForm level={level} onSuccess={() => refetch()} />

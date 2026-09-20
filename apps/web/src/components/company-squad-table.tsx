@@ -3,7 +3,7 @@ import SquadForm from '@/components/squad-form'
 import useUnitData from '@/hooks/useUnitData'
 import type { Unit } from '@/types'
 import { Button } from '@/components/ui/button'
-import { RefreshCw } from 'lucide-react'
+import RefreshButton from '@/components/refresh-button'
 
 type CompanySquadTableProps = {
 	companyId: number
@@ -28,9 +28,7 @@ export default function CompanySquadTable({
 					Danh sách tiểu đội của {company?.name}
 				</h2>
 				<div className='flex items-center gap-2'>
-					<Button onClick={() => refetch()}>
-						<RefreshCw />
-					</Button>
+					<RefreshButton onRefresh={() => refetch()} />
 					<SquadForm
 						platoonOptions={platoons}
 						onSuccess={() => refetch()}

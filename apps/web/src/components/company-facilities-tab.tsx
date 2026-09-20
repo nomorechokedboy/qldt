@@ -149,6 +149,14 @@ export default function CompanyFacilitiesTab({
 					handleStockChanged
 				)}
 				data={companyStocks}
+				onRefresh={() =>
+					Promise.all([
+						refetchUnit(),
+						refetchBuildings(),
+						refetchRooms(),
+						refetchStocks()
+					])
+				}
 				toolbarProps={{ searchConfig, facetedFilters }}
 				withDynamicColsData={false}
 				renderToolbarActions={({ exportHook }) => (

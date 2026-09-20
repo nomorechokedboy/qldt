@@ -53,10 +53,16 @@ export default function UnitRollupTables({
 		isLoading: isLoadingStudents,
 		refetch: refetchStudents
 	} = useUnitStatsStudents(unitId)
-	const { data: stocks, isLoading: isLoadingStocks } =
-		useUnitStatsMaterialStocks(unitId)
-	const { data: assets, isLoading: isLoadingAssets } =
-		useUnitStatsMaterialAssets(unitId)
+	const {
+		data: stocks,
+		isLoading: isLoadingStocks,
+		refetch: refetchStocks
+	} = useUnitStatsMaterialStocks(unitId)
+	const {
+		data: assets,
+		isLoading: isLoadingAssets,
+		refetch: refetchAssets
+	} = useUnitStatsMaterialAssets(unitId)
 	const studentFacetedFilters = useStudentFacetedFilters(students ?? [])
 	const { createSearchConfig, createFacetedFilter } =
 		useDataTableToolbarConfig()
@@ -106,6 +112,7 @@ export default function UnitRollupTables({
 						placeholder='Không có vật tư sinh hoạt nào'
 						columns={stockColumns}
 						data={stocks ?? []}
+						onRefresh={() => refetchStocks()}
 						toolbarProps={{
 							searchConfig: [
 								createSearchConfig(
@@ -176,6 +183,7 @@ export default function UnitRollupTables({
 						placeholder='Không có vũ khí/trang bị nào'
 						columns={assetColumns}
 						data={assets ?? []}
+						onRefresh={() => refetchAssets()}
 						toolbarProps={{
 							searchConfig: [
 								createSearchConfig(
