@@ -15,6 +15,8 @@ import {
 	Pie,
 	Cell
 } from 'recharts'
+import i18n from '@/i18n'
+import { useTranslation } from 'react-i18next'
 import type { PoliticsQualityReport, UnitPoliticsQualitySummary } from '@/types'
 
 export interface ChartsSectionProps {
@@ -33,9 +35,19 @@ export const COLORS = [
 	'#FF6666'
 ]
 
-export const politicalOrgNameMapping = { cpv: 'Đảng', hcyu: 'Đoàn' }
+// Getters so the label follows the current language instead of the one at
+// module load.
+export const politicalOrgNameMapping = {
+	get cpv() {
+		return i18n.t('stats:politicalOrg.cpv')
+	},
+	get hcyu() {
+		return i18n.t('stats:politicalOrg.hcyu')
+	}
+}
 
 export function ChartsSection({ data }: ChartsSectionProps) {
+	const { t } = useTranslation('stats')
 	const units = data
 
 	const isLeaf = (entity: UnitPoliticsQualitySummary) =>
@@ -154,9 +166,7 @@ export function ChartsSection({ data }: ChartsSectionProps) {
 		<div className='space-y-6'>
 			<Card>
 				<CardHeader>
-					<CardTitle>
-						Biểu đồ trình độ quân nhân theo đơn vị & lớp
-					</CardTitle>
+					<CardTitle>{t('charts.byUnit')}</CardTitle>
 				</CardHeader>
 				<CardContent>
 					<ChartContainer
@@ -182,7 +192,7 @@ export function ChartsSection({ data }: ChartsSectionProps) {
 								<Bar
 									dataKey='total'
 									fill='var(--color-total)'
-									name='Tổng số'
+									name={t('charts.total')}
 								/>
 								{eduKeys.map((key) => (
 									<Bar
@@ -199,15 +209,18 @@ export function ChartsSection({ data }: ChartsSectionProps) {
 			</Card>
 
 			<div className='grid grid-cols-1 lg:grid-cols-2 gap-6'>
-				<PieChartCard data={ethnicData} title='Phân bố dân tộc' />
-				<PieChartCard data={religionData} title='Phân bố tôn giáo' />
+				<PieChartCard data={ethnicData} title={t('charts.ethnic')} />
+				<PieChartCard
+					data={religionData}
+					title={t('charts.religion')}
+				/>
 				<PieChartCard
 					data={educationData}
-					title='Phân bố trình độ văn hóa'
+					title={t('charts.education')}
 				/>
 				<PieChartCard
 					data={politicalOrgData}
-					title='Phân bố Đoàn/Đảng'
+					title={t('charts.politicalOrg')}
 				/>
 			</div>
 		</div>
@@ -226,6 +239,7 @@ type PieChartCardProps = {
 }
 
 export function PieChartCard({ data, title }: PieChartCardProps) {
+	const { t } = useTranslation('stats')
 	return (
 		<Card>
 			<CardHeader>
@@ -233,7 +247,7 @@ export function PieChartCard({ data, title }: PieChartCardProps) {
 			</CardHeader>
 			<CardContent>
 				<ChartContainer
-					config={{ value: { label: 'Số lượng' } }}
+					config={{ value: { label: t('charts.count') } }}
 					className='h-[300px]'
 				>
 					<ResponsiveContainer width='100%' height='100%'>

@@ -8,6 +8,7 @@ import {
 } from 'lucide-react'
 import { useNavigate } from '@tanstack/react-router'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import {
 	Bar,
 	BarChart,
@@ -48,6 +49,7 @@ import type { units } from '@/api/client'
 const TROOP_CHART_COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042']
 
 export default function BaseStatsDashboard() {
+	const { t } = useTranslation('units')
 	const navigate = useNavigate({ from: Route.fullPath })
 	const { unit: unitIdParam } = Route.useSearch()
 	const { user } = useAuth()
@@ -76,7 +78,7 @@ export default function BaseStatsDashboard() {
 
 	const { data: provinces = [] } = useProvinces()
 	const provinceNameMap: Record<string, string> = {
-		unknown: 'Chưa xác định',
+		unknown: t('dashboard.unknown'),
 		...Object.fromEntries(provinces.map((p) => [p.code, p.nameWithType]))
 	}
 
@@ -92,21 +94,21 @@ export default function BaseStatsDashboard() {
 
 	const kpiCards = [
 		{
-			label: 'Tổng quân số',
+			label: t('dashboard.kpiTotalTroops'),
 			value: stats?.totalStudents ?? 0,
 			icon: Users,
 			color: 'text-blue-600',
 			valueColor: 'text-foreground'
 		},
 		{
-			label: 'Nhà/khu nhà',
+			label: t('dashboard.kpiBuildings'),
 			value: stats?.buildingsCount ?? 0,
 			icon: Building2,
 			color: 'text-green-600',
 			valueColor: 'text-foreground'
 		},
 		{
-			label: 'Phòng',
+			label: t('dashboard.kpiRooms'),
 			value: stats?.roomsCount ?? 0,
 			icon: DoorOpen,
 			color: 'text-amber-600',
@@ -116,22 +118,22 @@ export default function BaseStatsDashboard() {
 
 	const troopSummaryCards = [
 		{
-			label: 'SQ',
+			label: t('dashboard.troopSq'),
 			value: stats?.troopSummary.sq ?? 0,
 			color: TROOP_CHART_COLORS[0]
 		},
 		{
-			label: 'QNCN',
+			label: t('dashboard.troopQncn'),
 			value: stats?.troopSummary.qncn ?? 0,
 			color: TROOP_CHART_COLORS[1]
 		},
 		{
-			label: 'HSQ',
+			label: t('dashboard.troopHsq'),
 			value: stats?.troopSummary.hsq ?? 0,
 			color: TROOP_CHART_COLORS[2]
 		},
 		{
-			label: 'CS (BS)',
+			label: t('dashboard.troopBs'),
 			value: stats?.troopSummary.bs ?? 0,
 			color: TROOP_CHART_COLORS[3]
 		}
@@ -194,8 +196,9 @@ export default function BaseStatsDashboard() {
 									{value}
 								</div>
 								<p className='text-xs text-muted-foreground'>
-									{stats.unit.name}
-									{' và đơn vị trực thuộc'}
+									{t('dashboard.kpiScope', {
+										name: stats.unit.name
+									})}
 								</p>
 							</CardContent>
 						</Card>
@@ -207,19 +210,19 @@ export default function BaseStatsDashboard() {
 				<CardHeader>
 					<CardTitle className='flex items-center gap-2'>
 						<Shield className='h-5 w-5' />
-						Cơ cấu đơn vị trực thuộc
+						{t('dashboard.subordinateStructure')}
 					</CardTitle>
 				</CardHeader>
 				<CardContent>
 					{unitCountChartData.length === 0 ? (
 						<p className='text-muted-foreground'>
-							Đơn vị này không có đơn vị trực thuộc nào.
+							{t('dashboard.noSubordinates')}
 						</p>
 					) : (
 						<div className='grid grid-cols-1 md:grid-cols-2 gap-4 items-center'>
 							<ChartContainer
 								config={{
-									value: { label: 'Số lượng' }
+									value: { label: t('dashboard.quantity') }
 								}}
 								className='h-[260px] w-full'
 							>
@@ -297,19 +300,19 @@ export default function BaseStatsDashboard() {
 				<CardHeader>
 					<CardTitle className='flex items-center gap-2'>
 						<Users className='h-5 w-5' />
-						Cơ cấu quân số
+						{t('dashboard.troopStructure')}
 					</CardTitle>
 				</CardHeader>
 				<CardContent>
 					{troopChartData.length === 0 ? (
 						<p className='text-muted-foreground'>
-							Chưa có dữ liệu quân số.
+							{t('dashboard.noTroopData')}
 						</p>
 					) : (
 						<div className='grid grid-cols-1 md:grid-cols-2 gap-4 items-center'>
 							<ChartContainer
 								config={{
-									value: { label: 'Số lượng' }
+									value: { label: t('dashboard.quantity') }
 								}}
 								className='h-[260px] w-full'
 							>
@@ -370,7 +373,7 @@ export default function BaseStatsDashboard() {
 				<CardHeader>
 					<CardTitle className='flex items-center gap-2'>
 						<Target className='h-5 w-5' />
-						Thống kê quân số
+						{t('dashboard.troopStats')}
 					</CardTitle>
 				</CardHeader>
 				<CardContent>
@@ -378,26 +381,29 @@ export default function BaseStatsDashboard() {
 						<TableSkeleton />
 					) : !hasPoliticsData ? (
 						<p className='text-muted-foreground'>
-							Chưa có dữ liệu thống kê quân số.
+							{t('dashboard.noTroopStats')}
 						</p>
 					) : (
 						<div className='grid grid-cols-1 lg:grid-cols-2 gap-4'>
 							<PieChartCard
 								data={educationData}
-								title='Trình độ văn hóa'
+								title={t('dashboard.education')}
 							/>
-							<PieChartCard data={ethnicData} title='Dân tộc' />
+							<PieChartCard
+								data={ethnicData}
+								title={t('dashboard.ethnic')}
+							/>
 							<PieChartCard
 								data={religionData}
-								title='Tôn giáo'
+								title={t('dashboard.religion')}
 							/>
 							<PieChartCard
 								data={politicalOrgData}
-								title='Đoàn/Đảng'
+								title={t('dashboard.politicalOrg')}
 							/>
 							<PieChartCard
 								data={originPlaceData}
-								title='Quê quán (Tỉnh/Thành)'
+								title={t('dashboard.birthPlace')}
 							/>
 						</div>
 					)}
@@ -409,13 +415,13 @@ export default function BaseStatsDashboard() {
 					<CardHeader>
 						<CardTitle className='flex items-center gap-2'>
 							<Package className='h-5 w-5' />
-							Vật tư sinh hoạt
+							{t('dashboard.supplies')}
 						</CardTitle>
 					</CardHeader>
 					<CardContent>
 						{stats.materialStockSummary.length === 0 ? (
 							<p className='text-muted-foreground'>
-								Chưa có vật tư sinh hoạt nào.
+								{t('dashboard.noSupplies')}
 							</p>
 						) : (
 							<ul className='space-y-2'>
@@ -439,13 +445,13 @@ export default function BaseStatsDashboard() {
 					<CardHeader>
 						<CardTitle className='flex items-center gap-2'>
 							<Shield className='h-5 w-5' />
-							Vũ khí/trang bị
+							{t('dashboard.weapons')}
 						</CardTitle>
 					</CardHeader>
 					<CardContent>
 						{stats.materialAssetSummary.length === 0 ? (
 							<p className='text-muted-foreground'>
-								Chưa có vũ khí/trang bị nào.
+								{t('dashboard.noWeapons')}
 							</p>
 						) : (
 							<ul className='space-y-2'>
@@ -477,11 +483,10 @@ export default function BaseStatsDashboard() {
 			<div className='flex flex-col gap-4 md:flex-row md:items-center md:justify-between'>
 				<div>
 					<h2 className='text-2xl font-bold tracking-tight'>
-						Thống kê đơn vị
+						{t('dashboard.title')}
 					</h2>
 					<p className='text-muted-foreground'>
-						Tổng hợp quân số, cơ sở vật chất và vũ khí/trang bị của
-						đơn vị và toàn bộ đơn vị trực thuộc.
+						{t('dashboard.subtitle')}
 					</p>
 				</div>
 
@@ -499,7 +504,7 @@ export default function BaseStatsDashboard() {
 
 			{selectedUnitId === undefined && (
 				<p className='text-muted-foreground'>
-					Bạn chưa được phân công đơn vị nào để xem thống kê.
+					{t('dashboard.noUnitAssigned')}
 				</p>
 			)}
 
@@ -512,9 +517,11 @@ export default function BaseStatsDashboard() {
 					<Tabs defaultValue='overview'>
 						<TabsList>
 							<TabsTrigger value='overview'>
-								Tổng quan
+								{t('dashboard.overview')}
 							</TabsTrigger>
-							<TabsTrigger value='details'>Chi tiết</TabsTrigger>
+							<TabsTrigger value='details'>
+								{t('dashboard.details')}
+							</TabsTrigger>
 						</TabsList>
 
 						<TabsContent value='overview'>

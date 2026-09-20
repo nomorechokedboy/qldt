@@ -5,12 +5,14 @@ import { defaultBirthdayColumnVisibility } from './student-table/default-columns
 import { getCurrentWeekNumber } from '@/lib/utils'
 import StudentTable from './student-table'
 import { useCallback, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { Student, StudentQueryParams } from '@/types'
 import UnitFacetedFilter, { useFilteredClassIds } from './unit-filter'
 import { useStudentFacetedFilters } from '@/hooks/useStudentFacetedFilters'
 import { buildUnitsById } from '@/lib/unit-labels'
 
 export default function BirthdayByWeek() {
+	const { t } = useTranslation('stats')
 	const [selectedUnits, setSelectedUnits] = useState<number[]>([])
 	const { data: units = [] } = useUnitsData()
 	const battalionStudentColumnsWithoutAction =
@@ -41,11 +43,10 @@ export default function BirthdayByWeek() {
 			<div className='flex items-center justify-between space-y-2'>
 				<div>
 					<h2 className='text-2xl font-bold tracking-tight'>
-						Danh sách quân nhân có sinh nhật trong tuần
+						{t('birthday.headingWeek')}
 					</h2>
 					<p className='text-muted-foreground'>
-						Đây là danh sách quân nhân có sinh nhật trong tuần của
-						đại đội
+						{t('birthday.descriptionWeek')}
 					</p>
 				</div>
 			</div>

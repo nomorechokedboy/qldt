@@ -7,10 +7,12 @@ import StudentTable from './student-table'
 import { useStudentFacetedFilters } from '@/hooks/useStudentFacetedFilters'
 import UnitFacetedFilter, { useFilteredClassIds } from './unit-filter'
 import { useCallback, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import type { Student, StudentQueryParams } from '@/types'
 import { buildUnitsById } from '@/lib/unit-labels'
 
 export default function CpvOfficialThisWeek() {
+	const { t } = useTranslation('stats')
 	const [selectedUnits, setSelectedUnits] = useState<number[]>([])
 	const { data: units = [] } = useUnitsData()
 	const battalionStudentColumnsWithoutAction =
@@ -40,12 +42,10 @@ export default function CpvOfficialThisWeek() {
 			<div className='flex items-center justify-between space-y-2'>
 				<div>
 					<h2 className='text-2xl font-bold tracking-tight'>
-						Danh sách quân nhân chuẩn bị chuyển Đảng chính thức
-						trong tuần
+						{t('cpv.headingWeek')}
 					</h2>
 					<p className='text-muted-foreground'>
-						Đây là danh sách quân nhân chuẩn bị chuyển Đảng chính
-						thức trong tuần của đại đội
+						{t('cpv.descriptionWeek')}
 					</p>
 				</div>
 			</div>

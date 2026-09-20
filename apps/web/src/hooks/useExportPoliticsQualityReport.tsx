@@ -1,6 +1,7 @@
 import { ExportPoliticsQualityData } from '@/api'
 import type { ExportPoliticsQualityReport } from '@/types'
 import { toast } from 'sonner'
+import i18n from '@/i18n'
 
 export type ExportConfig = {
 	filename?: string
@@ -32,7 +33,7 @@ export default function useExportPoliticsQualityReport({
 		} catch (err) {
 			console.error('handleExport error', err)
 
-			toast.error('Chưa thể xuất file, đã có lỗi xảy ra!')
+			toast.error(i18n.t('stats:report.exportFailed'))
 		}
 	}
 

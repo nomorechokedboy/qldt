@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import useDataTableToolbarConfig from '@/hooks/useDataTableToolbarConfig'
 import useUnitsData from '@/hooks/useUnitsData'
 import { EduLevelOptions } from '@/components/data-table/data/data'
@@ -21,6 +22,7 @@ function collectSquadOptions(
 export function useStudentFacetedFilters(students: Student[]) {
 	const { data: units = [] } = useUnitsData({ level: 'battalion' })
 	const { createFacetedFilter } = useDataTableToolbarConfig()
+	const { t } = useTranslation('table')
 
 	// Military Rank Options
 	const militaryRankSet = new Set(
@@ -41,17 +43,17 @@ export function useStudentFacetedFilters(students: Student[]) {
 	})
 
 	return [
-		createFacetedFilter('unit.name', 'Đơn vị', unitOptions),
-		createFacetedFilter('rank', 'Cấp bậc', militaryRankOptions),
-		createFacetedFilter('ethnic', 'Dân tộc', EhtnicOptions),
+		createFacetedFilter('unit.name', t('columns.unit'), unitOptions),
+		createFacetedFilter('rank', t('columns.rank'), militaryRankOptions),
+		createFacetedFilter('ethnic', t('columns.ethnic'), EhtnicOptions),
 		createFacetedFilter(
 			'educationLevel',
-			'Trình độ học vấn',
+			t('columns.educationLevel'),
 			EduLevelOptions
 		),
 		createFacetedFilter(
 			'activityStatus',
-			'Tình trạng',
+			t('columns.activityStatus'),
 			activityStatusOptions
 		)
 	]

@@ -1,4 +1,5 @@
 import React from 'react'
+import { useTranslation } from 'react-i18next'
 import { createFileRoute } from '@tanstack/react-router'
 import StudentTable from '@/components/student-table'
 import { SidebarInset } from '@/components/ui/sidebar'
@@ -11,6 +12,7 @@ export const Route = createFileRoute('/cpv')({
 })
 
 function RouteComponent() {
+	const { t } = useTranslation('stats')
 	// ...existing code...
 	const [studentParams, setStudentParams] =
 		React.useState<StudentQueryParams>({ politicalOrg: 'cpv' })
@@ -77,11 +79,10 @@ function RouteComponent() {
 					<div className='flex items-center justify-between space-y-2'>
 						<div>
 							<h2 className='text-2xl font-bold tracking-tight'>
-								Danh sách quân nhân là đảng viên
+								{t('routes.cpvTitle')}
 							</h2>
 							<p className='text-muted-foreground'>
-								Chọn tiểu đoàn, đại đội, lớp để xem bảng học
-								viên
+								{t('routes.pickHint')}
 							</p>
 						</div>
 					</div>
@@ -89,7 +90,9 @@ function RouteComponent() {
 					<div className='flex items-center gap-4 mb-4'>
 						{/* Battalion select */}
 						<div>
-							<span className='font-medium'>Tiểu đoàn:</span>
+							<span className='font-medium'>
+								{t('routes.battalion')}:
+							</span>
 							<select
 								className='ml-2 border rounded px-2 py-1'
 								value={selectedBattalionId ?? '-'}
@@ -107,7 +110,9 @@ function RouteComponent() {
 									}
 								}}
 							>
-								<option value='-'>--Chọn tiểu đoàn--</option>
+								<option value='-'>
+									{t('routes.chooseBattalion')}
+								</option>
 								{battalions.map((b) => (
 									<option key={b.id} value={b.id}>
 										{b.name}
@@ -118,7 +123,9 @@ function RouteComponent() {
 						<span className='mx-2'>/</span>
 						{/* Company select */}
 						<div>
-							<span className='font-medium'>Đại đội:</span>
+							<span className='font-medium'>
+								{t('routes.company')}:
+							</span>
 							<select
 								className='ml-2 border rounded px-2 py-1'
 								value={selectedCompanyId ?? '-'}
@@ -134,7 +141,9 @@ function RouteComponent() {
 									}
 								}}
 							>
-								<option value='-'>--Chọn đại đội--</option>
+								<option value='-'>
+									{t('routes.chooseCompany')}
+								</option>
 								{companies.map((c) => (
 									<option key={c.id} value={c.id}>
 										{c.name}
@@ -145,7 +154,9 @@ function RouteComponent() {
 						<span className='mx-2'>/</span>
 						{/* Class select */}
 						<div>
-							<span className='font-medium'>Lớp:</span>
+							<span className='font-medium'>
+								{t('routes.class')}:
+							</span>
 							<select
 								className='ml-2 border rounded px-2 py-1'
 								value={selectedClassId ?? '-'}
@@ -158,7 +169,9 @@ function RouteComponent() {
 									}
 								}}
 							>
-								<option value='-'>--Chọn lớp--</option>
+								<option value='-'>
+									{t('routes.chooseClass')}
+								</option>
 								{classes?.map((cls) => (
 									<option key={cls.id} value={cls.id}>
 										{cls.name}
@@ -171,7 +184,7 @@ function RouteComponent() {
 							className='ml-4 px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90'
 							onClick={handleFilter}
 						>
-							Lọc
+							{t('routes.filter')}
 						</button>
 					</div>
 					{/* Student table for selected class */}
