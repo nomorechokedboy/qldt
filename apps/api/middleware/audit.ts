@@ -69,6 +69,12 @@ const AUDIT_MAP: Record<string, AuditRouteConfig> = {
 		action: 'delete'
 	},
 
+	'PUT:/lang-packs/:language': { resource: 'lang_packs', action: 'update' },
+	'DELETE:/lang-packs/:language': {
+		resource: 'lang_packs',
+		action: 'delete'
+	},
+
 	'POST:/transfer-requests': {
 		resource: 'transfer_requests',
 		action: 'create'
