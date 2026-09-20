@@ -1,3 +1,4 @@
+import i18n from '@/i18n'
 import type { ActivityStatus } from '@/types'
 
 export const activityStatusOptions: { label: string; value: ActivityStatus }[] =
@@ -35,6 +36,15 @@ export const activityStatusLabels: Record<ActivityStatus, string> =
 	Object.fromEntries(
 		activityStatusOptions.map((o) => [o.value, o.label])
 	) as Record<ActivityStatus, string>
+
+// Language-aware label for display. The Vietnamese labels above are a data
+// contract (import parsing and export templates match on them), so screens
+// use this accessor instead.
+export function activityStatusLabel(status: string): string {
+	return status in activityStatusLabels
+		? i18n.t(`proposals:activityStatus.${status as ActivityStatus}`)
+		: status
+}
 
 // Badge color per status - kept separate from the label map so the table
 // column can style each state distinctly (green = present/normal duty,

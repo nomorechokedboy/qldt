@@ -1,4 +1,5 @@
 import type { ColumnDef } from '@tanstack/react-table'
+import type { TFunction } from 'i18next'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { formatDbTimestamp } from '@/lib/utils'
@@ -6,11 +7,19 @@ import type { transfer_requests } from '@/api/client'
 
 export type TransferRequestRow = transfer_requests.TransferRequestResp
 
-export const STATUS_LABELS: Record<string, string> = {
-	pending: 'Chờ duyệt',
-	approved: 'Đã duyệt',
-	rejected: 'Đã từ chối',
-	cancelled: 'Đã hủy'
+export const STATUS_VALUES = [
+	'pending',
+	'approved',
+	'rejected',
+	'cancelled'
+] as const
+
+export type ProposalStatus = (typeof STATUS_VALUES)[number]
+
+export function statusLabel(t: TFunction<'proposals'>, status: string): string {
+	return (STATUS_VALUES as readonly string[]).includes(status)
+		? t(`status.${status as ProposalStatus}`)
+		: status
 }
 
 export const STATUS_BADGE_VARIANT: Record<
@@ -23,17 +32,23 @@ export const STATUS_BADGE_VARIANT: Record<
 	cancelled: 'secondary'
 }
 
-function resourceSummary(row: TransferRequestRow) {
+function resourceSummary(t: TFunction<'proposals'>, row: TransferRequestRow) {
 	const parts: string[] = []
-	if (row.troopers?.length) parts.push(`${row.troopers.length} quân nhân`)
+	if (row.troopers?.length)
+		parts.push(t('transfer.trooperSummary', { count: row.troopers.length }))
 	if (row.materialAssetItems?.length)
-		parts.push(`${row.materialAssetItems.length} khí tài`)
+		parts.push(
+			t('transfer.assetSummary', { count: row.materialAssetItems.length })
+		)
 	if (row.materialStockItems?.length)
-		parts.push(`${row.materialStockItems.length} vật tư`)
+		parts.push(
+			t('transfer.stockSummary', { count: row.materialStockItems.length })
+		)
 	return parts.length > 0 ? parts.join(', ') : '—'
 }
 
 type GetColumnsOptions = {
+	t: TFunction<'proposals'>
 	currentUserId?: number
 	canApprove: boolean
 	canReject: boolean
@@ -48,6 +63,7 @@ type GetColumnsOptions = {
 }
 
 export function getTransferRequestColumns({
+	t,
 	currentUserId,
 	canApprove,
 	canReject,
@@ -64,7 +80,7 @@ export function getTransferRequestColumns({
 		{
 			id: 'createdAt',
 			accessorKey: 'createdAt',
-			header: 'Thời gian',
+			header: t('common.createdAt'),
 			cell: ({ row }) => (
 				<span className='whitespace-nowrap text-sm'>
 					{formatDbTimestamp(row.original.createdAt)}
@@ -74,51 +90,55 @@ export function getTransferRequestColumns({
 		{
 			id: 'sourceUnit.name',
 			accessorFn: (row) => row.sourceUnit?.name ?? '',
-			header: 'Nguồn',
+			header: t('transfer.source'),
 			cell: ({ row }) => row.original.sourceUnit?.name ?? '—'
 		},
 		{
 			id: 'destinationUnit.name',
 			accessorFn: (row) => row.destinationUnit?.name ?? '',
-			header: 'Đích',
+			header: t('transfer.destination'),
 			cell: ({ row }) => row.original.destinationUnit?.name ?? '—'
 		},
 		{
 			id: 'resourceSummary',
-			header: 'Nguồn lực',
+			header: t('transfer.resources'),
 			cell: ({ row }) => (
-				<span className='text-sm'>{resourceSummary(row.original)}</span>
+				<span className='text-sm'>
+					{resourceSummary(t, row.original)}
+				</span>
 			)
 		},
 		{
 			id: 'requestedBy.displayName',
 			accessorFn: (row) => row.requestedBy?.displayName ?? '',
-			header: 'Người yêu cầu',
+			header: t('transfer.requestedBy'),
 			cell: ({ row }) => row.original.requestedBy?.displayName ?? '—'
 		},
 		{
 			id: 'approver.displayName',
 			accessorFn: (row) => row.approver?.displayName ?? '',
-			header: 'Người phê duyệt',
+			header: t('common.approver'),
 			cell: ({ row }) => row.original.approver?.displayName ?? '—'
 		},
 		{
 			id: 'status',
 			accessorKey: 'status',
-			header: 'Trạng thái',
+			header: t('status.label'),
 			cell: ({ row }) => (
 				<Badge
 					variant={
 						STATUS_BADGE_VARIANT[row.original.status] ?? 'secondary'
 					}
 				>
-					{STATUS_LABELS[row.original.status] ?? row.original.status}
+					{statusLabel(t, row.original.status)}
 				</Badge>
 			)
 		},
 		{
 			id: 'actions',
-			header: () => <div className='text-right'>Thao tác</div>,
+			header: () => (
+				<div className='text-right'>{t('common.actions')}</div>
+			),
 			enableSorting: false,
 			enableHiding: false,
 			cell: ({ row }) => {
@@ -136,7 +156,7 @@ export function getTransferRequestColumns({
 							size='sm'
 							onClick={() => onView(request)}
 						>
-							Xem
+							{t('common.view')}
 						</Button>
 						{isPending && canApprove && request.canDecide && (
 							<Button
@@ -145,7 +165,7 @@ export function getTransferRequestColumns({
 								disabled={isApproving}
 								onClick={() => onApprove(request.id)}
 							>
-								Duyệt
+								{t('common.approve')}
 							</Button>
 						)}
 						{isPending && canReject && request.canDecide && (
@@ -154,7 +174,7 @@ export function getTransferRequestColumns({
 								size='sm'
 								onClick={() => onReject(request.id)}
 							>
-								Từ chối
+								{t('common.reject')}
 							</Button>
 						)}
 						{isPending && isRequester && (
@@ -164,7 +184,7 @@ export function getTransferRequestColumns({
 								disabled={isCancelling}
 								onClick={() => onCancel(request.id)}
 							>
-								Hủy
+								{t('common.cancel')}
 							</Button>
 						)}
 						{request.status === 'approved' && hasMaterialItems && (
@@ -174,7 +194,7 @@ export function getTransferRequestColumns({
 								disabled={isExportingHandover}
 								onClick={() => onExportHandover(request.id)}
 							>
-								Xuất biên bản
+								{t('transfer.exportHandover')}
 							</Button>
 						)}
 					</div>

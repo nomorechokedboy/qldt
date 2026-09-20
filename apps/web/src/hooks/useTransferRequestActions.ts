@@ -1,3 +1,4 @@
+import i18n from '@/i18n'
 import {
 	ApproveTransferRequest,
 	CancelTransferRequest,
@@ -46,7 +47,9 @@ export function useExportTransferRequestHandover() {
 			const resp = await ExportTransferRequestHandover(id)
 			if (!resp.ok) {
 				const message = await resp.text().catch(() => '')
-				throw new Error(message || 'Xuất biên bản bàn giao thất bại!')
+				throw new Error(
+					message || i18n.t('proposals:transfer.exportHandoverFailed')
+				)
 			}
 
 			const blob = await resp.blob()
