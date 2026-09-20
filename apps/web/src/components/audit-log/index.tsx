@@ -1,3 +1,4 @@
+import RefreshButton from '@/components/refresh-button'
 import { useState } from 'react'
 import { ErrorState } from '@/components/error-state'
 import { Badge } from '@/components/ui/badge'
@@ -129,6 +130,8 @@ export default function AuditLogTab() {
 						))}
 					</SelectContent>
 				</Select>
+
+				<RefreshButton onRefresh={() => refetch()} />
 			</div>
 
 			<div className='rounded-md border'>

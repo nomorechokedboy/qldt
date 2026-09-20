@@ -1,3 +1,4 @@
+import RefreshButton from '@/components/refresh-button'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { DataTable } from '@/components/data-table'
@@ -141,6 +142,7 @@ export default function RankPromotionProposalsTab() {
 					</SelectContent>
 				</Select>
 
+				<RefreshButton onRefresh={() => refetch()} />
 				<CreateRankPromotionProposalForm onSuccess={() => refetch()} />
 			</div>
 

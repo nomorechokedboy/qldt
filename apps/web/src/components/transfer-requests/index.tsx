@@ -1,3 +1,4 @@
+import RefreshButton from '@/components/refresh-button'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { DataTable } from '@/components/data-table'
@@ -139,6 +140,7 @@ export default function TransferRequestsTab() {
 					</SelectContent>
 				</Select>
 
+				<RefreshButton onRefresh={() => refetch()} />
 				<CreateTransferRequestForm onSuccess={() => refetch()} />
 			</div>
 

@@ -44,6 +44,7 @@ function MaterialTypeCatalog() {
 				placeholder='Chưa có danh mục vật tư nào'
 				columns={buildMaterialTypeColumns(() => refetch())}
 				data={materialTypes ?? []}
+				onRefresh={() => refetch()}
 				toolbarProps={{
 					rightSection: (
 						<MaterialTypeForm onSuccess={() => refetch()} />

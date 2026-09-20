@@ -1,3 +1,4 @@
+import RefreshButton from '@/components/refresh-button'
 import {
 	Table,
 	TableBody,
@@ -53,6 +54,8 @@ interface DataTableProps<TData, TValue> {
 	pagination?: boolean
 	toolbarVisible?: boolean
 	placeholder?: string
+	// Adds a refresh button to the toolbar that calls this.
+	onRefresh?: () => unknown
 	onDeleteRows?: (
 		ids: number[]
 	) => Promise<QueryObserverResult<TData[], unknown>>
@@ -85,6 +88,7 @@ export function DataTable<TData, TValue>({
 	pagination = true,
 	toolbarVisible = true,
 	placeholder = 'Không có dữ liệu nào',
+	onRefresh,
 	onDeleteRows,
 	onConfirmRows,
 	renderToolbarActions,
@@ -394,6 +398,9 @@ export function DataTable<TData, TValue>({
 					{...toolbarProps}
 					rightSection={
 						<>
+							{onRefresh && (
+								<RefreshButton onRefresh={onRefresh} />
+							)}
 							{renderToolbarActions?.({
 								table,
 								exportHook

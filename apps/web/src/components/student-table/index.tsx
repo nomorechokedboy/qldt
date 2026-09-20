@@ -10,7 +10,8 @@ import {
 } from '@/types'
 import type { QueryObserverResult } from '@tanstack/react-query'
 import type { ColumnDef, VisibilityState } from '@tanstack/react-table'
-import { ArrowDownToLine, RefreshCw, Settings, Upload } from 'lucide-react'
+import RefreshButton from '@/components/refresh-button'
+import { ArrowDownToLine, Settings, Upload } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useState } from 'react'
 import { DataTable } from '../data-table'
@@ -95,7 +96,7 @@ export default function StudentTable({
 	exportConfig,
 	readOnly = false,
 	enableCreation = false,
-	showRefreshButton = false,
+	showRefreshButton = true,
 	columnVisibility = defaultStudentColumnVisibility,
 	placeholder,
 	leftSection,
@@ -126,8 +127,8 @@ export default function StudentTable({
 		onCreateSuccess?.()
 	}
 
-	const handleRefresh = () => {
-		refetch()
+	const handleRefresh = async () => {
+		await refetch()
 		onRefresh?.()
 	}
 
@@ -200,11 +201,7 @@ export default function StudentTable({
 					Import
 				</Button>
 			)}
-			{showRefreshButton && (
-				<Button onClick={handleRefresh}>
-					<RefreshCw />
-				</Button>
-			)}
+			{showRefreshButton && <RefreshButton onRefresh={handleRefresh} />}
 			{rightToolbarSection}
 		</>
 	)

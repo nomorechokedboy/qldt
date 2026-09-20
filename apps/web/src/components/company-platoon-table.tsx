@@ -2,7 +2,7 @@ import UnitCard from '@/components/unit-table/unit-card'
 import PlatoonForm from '@/components/platoon-form'
 import useUnitData from '@/hooks/useUnitData'
 import { Button } from '@/components/ui/button'
-import { RefreshCw } from 'lucide-react'
+import RefreshButton from '@/components/refresh-button'
 
 type CompanyPlatoonTableProps = {
 	companyId: number
@@ -23,9 +23,7 @@ export default function CompanyPlatoonTable({
 					Danh sách trung đội của {company?.name}
 				</h2>
 				<div className='flex items-center gap-2'>
-					<Button onClick={() => refetch()}>
-						<RefreshCw />
-					</Button>
+					<RefreshButton onRefresh={() => refetch()} />
 					{company?.id !== undefined && (
 						<PlatoonForm
 							companyId={company.id}

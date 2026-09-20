@@ -1,3 +1,4 @@
+import RefreshButton from '@/components/refresh-button'
 import { useMemo, useState } from 'react'
 import { toast } from 'sonner'
 import { DataTable } from '@/components/data-table'
@@ -164,6 +165,7 @@ export default function ActivityStatusProposalsTab() {
 					</SelectContent>
 				</Select>
 
+				<RefreshButton onRefresh={() => refetch()} />
 				<CreateActivityStatusProposalForm onSuccess={() => refetch()} />
 			</div>
 

@@ -48,6 +48,7 @@ export default function UserTable(_props: UserTableProps) {
 					data={users}
 					columns={baseUsersColumns}
 					withDynamicColsData={false}
+					onRefresh={() => refetchUsers()}
 					renderToolbarActions={() => (
 						<div className='flex gap-2'>
 							<Button onClick={handleAddUser}>
