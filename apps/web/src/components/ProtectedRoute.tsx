@@ -8,6 +8,8 @@ interface ProtectedRouteProps {
 	fallback?: React.ReactNode
 	redirectTo?: string
 	requiredPermission?: string | string[]
+	// only a super admin may see the page; permission tags don't apply
+	superAdminOnly?: boolean
 }
 
 function AccessDenied() {
@@ -27,9 +29,10 @@ export default function ProtectedRoute({
 	children,
 	fallback,
 	redirectTo = '/login',
-	requiredPermission
+	requiredPermission,
+	superAdminOnly
 }: ProtectedRouteProps) {
-	const { isAuthenticated, isAuthLoading, hasPermission } = useAuth()
+	const { isAuthenticated, isAuthLoading, hasPermission, user } = useAuth()
 	const location = useLocation()
 
 	// Show loading spinner while checking auth
@@ -50,7 +53,10 @@ export default function ProtectedRoute({
 
 	// Show an in-place access-denied message if the user lacks the
 	// required permission tag(s)
-	if (!hasPermission(requiredPermission)) {
+	if (
+		(superAdminOnly && user?.isSuperAdmin !== true) ||
+		!hasPermission(requiredPermission)
+	) {
 		return <AccessDenied />
 	}
 

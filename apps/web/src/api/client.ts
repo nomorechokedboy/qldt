@@ -40,6 +40,7 @@ export default class Client {
 	public readonly facilities: facilities.ServiceClient
 	public readonly healthcheck: healthcheck.ServiceClient
 	public readonly inventory_sessions: inventory_sessions.ServiceClient
+	public readonly lang_packs: lang_packs.ServiceClient
 	public readonly locations: locations.ServiceClient
 	public readonly materials: materials.ServiceClient
 	public readonly media: media.ServiceClient
@@ -76,6 +77,7 @@ export default class Client {
 		this.facilities = new facilities.ServiceClient(base)
 		this.healthcheck = new healthcheck.ServiceClient(base)
 		this.inventory_sessions = new inventory_sessions.ServiceClient(base)
+		this.lang_packs = new lang_packs.ServiceClient(base)
 		this.locations = new locations.ServiceClient(base)
 		this.materials = new materials.ServiceClient(base)
 		this.media = new media.ServiceClient(base)
@@ -1191,6 +1193,71 @@ export namespace inventory_sessions {
 				JSON.stringify(params)
 			)
 			return (await resp.json()) as InventorySessionReview
+		}
+	}
+}
+
+export namespace lang_packs {
+	export interface GetLangPacksResponse {
+		/**
+		 * language -> { namespace -> { key -> string } }
+		 */
+		packs: { [key: string]: { [key: string]: any } }
+	}
+
+	export interface SetLangPackRequest {
+		pack: { [key: string]: any }
+	}
+
+	export interface SetLangPackResponse {
+		language: string
+	}
+
+	export class ServiceClient {
+		private baseClient: BaseClient
+
+		constructor(baseClient: BaseClient) {
+			this.baseClient = baseClient
+			this.DeleteLangPack = this.DeleteLangPack.bind(this)
+			this.GetLangPacks = this.GetLangPacks.bind(this)
+			this.SetLangPack = this.SetLangPack.bind(this)
+		}
+
+		public async DeleteLangPack(
+			language: string
+		): Promise<SetLangPackResponse> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'DELETE',
+				`/lang-packs/${encodeURIComponent(language)}`
+			)
+			return (await resp.json()) as SetLangPackResponse
+		}
+
+		/**
+		 * Public on purpose: the login page renders before anyone is authenticated
+		 * and must already show the customised strings.
+		 */
+		public async GetLangPacks(): Promise<GetLangPacksResponse> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'GET',
+				`/lang-packs`
+			)
+			return (await resp.json()) as GetLangPacksResponse
+		}
+
+		public async SetLangPack(
+			language: string,
+			params: SetLangPackRequest
+		): Promise<SetLangPackResponse> {
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'PUT',
+				`/lang-packs/${encodeURIComponent(language)}`,
+				JSON.stringify(params)
+			)
+			return (await resp.json()) as SetLangPackResponse
 		}
 	}
 }

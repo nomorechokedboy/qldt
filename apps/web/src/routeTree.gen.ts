@@ -29,6 +29,7 @@ import { Route as CpvRouteImport } from './routes/cpv'
 import { Route as ChuyenGiaoTaiSanRouteImport } from './routes/chuyen-giao-tai-san'
 import { Route as ChuyenDangChinhThucRouteImport } from './routes/chuyen-dang-chinh-thuc'
 import { Route as ChucVuRouteImport } from './routes/chuc-vu'
+import { Route as CaiDatNgonNguRouteImport } from './routes/cai-dat-ngon-ngu'
 import { Route as CacQuyenRouteImport } from './routes/cac-quyen'
 import { Route as BirthdayRouteImport } from './routes/birthday'
 import { Route as IndexRouteImport } from './routes/index'
@@ -137,6 +138,11 @@ const ChucVuRoute = ChucVuRouteImport.update({
   path: '/chuc-vu',
   getParentRoute: () => rootRouteImport,
 } as any)
+const CaiDatNgonNguRoute = CaiDatNgonNguRouteImport.update({
+  id: '/cai-dat-ngon-ngu',
+  path: '/cai-dat-ngon-ngu',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const CacQuyenRoute = CacQuyenRouteImport.update({
   id: '/cac-quyen',
   path: '/cac-quyen',
@@ -177,6 +183,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/birthday': typeof BirthdayRoute
   '/cac-quyen': typeof CacQuyenRoute
+  '/cai-dat-ngon-ngu': typeof CaiDatNgonNguRoute
   '/chuc-vu': typeof ChucVuRoute
   '/chuyen-dang-chinh-thuc': typeof ChuyenDangChinhThucRoute
   '/chuyen-giao-tai-san': typeof ChuyenGiaoTaiSanRoute
@@ -206,6 +213,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/birthday': typeof BirthdayRoute
   '/cac-quyen': typeof CacQuyenRoute
+  '/cai-dat-ngon-ngu': typeof CaiDatNgonNguRoute
   '/chuc-vu': typeof ChucVuRoute
   '/chuyen-dang-chinh-thuc': typeof ChuyenDangChinhThucRoute
   '/chuyen-giao-tai-san': typeof ChuyenGiaoTaiSanRoute
@@ -236,6 +244,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/birthday': typeof BirthdayRoute
   '/cac-quyen': typeof CacQuyenRoute
+  '/cai-dat-ngon-ngu': typeof CaiDatNgonNguRoute
   '/chuc-vu': typeof ChucVuRoute
   '/chuyen-dang-chinh-thuc': typeof ChuyenDangChinhThucRoute
   '/chuyen-giao-tai-san': typeof ChuyenGiaoTaiSanRoute
@@ -267,6 +276,7 @@ export interface FileRouteTypes {
     | '/'
     | '/birthday'
     | '/cac-quyen'
+    | '/cai-dat-ngon-ngu'
     | '/chuc-vu'
     | '/chuyen-dang-chinh-thuc'
     | '/chuyen-giao-tai-san'
@@ -296,6 +306,7 @@ export interface FileRouteTypes {
     | '/'
     | '/birthday'
     | '/cac-quyen'
+    | '/cai-dat-ngon-ngu'
     | '/chuc-vu'
     | '/chuyen-dang-chinh-thuc'
     | '/chuyen-giao-tai-san'
@@ -325,6 +336,7 @@ export interface FileRouteTypes {
     | '/'
     | '/birthday'
     | '/cac-quyen'
+    | '/cai-dat-ngon-ngu'
     | '/chuc-vu'
     | '/chuyen-dang-chinh-thuc'
     | '/chuyen-giao-tai-san'
@@ -355,6 +367,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BirthdayRoute: typeof BirthdayRoute
   CacQuyenRoute: typeof CacQuyenRoute
+  CaiDatNgonNguRoute: typeof CaiDatNgonNguRoute
   ChucVuRoute: typeof ChucVuRoute
   ChuyenDangChinhThucRoute: typeof ChuyenDangChinhThucRoute
   ChuyenGiaoTaiSanRoute: typeof ChuyenGiaoTaiSanRoute
@@ -523,6 +536,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ChucVuRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/cai-dat-ngon-ngu': {
+      id: '/cai-dat-ngon-ngu'
+      path: '/cai-dat-ngon-ngu'
+      fullPath: '/cai-dat-ngon-ngu'
+      preLoaderRoute: typeof CaiDatNgonNguRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/cac-quyen': {
       id: '/cac-quyen'
       path: '/cac-quyen'
@@ -579,6 +599,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BirthdayRoute: BirthdayRoute,
   CacQuyenRoute: CacQuyenRoute,
+  CaiDatNgonNguRoute: CaiDatNgonNguRoute,
   ChucVuRoute: ChucVuRoute,
   ChuyenDangChinhThucRoute: ChuyenDangChinhThucRoute,
   ChuyenGiaoTaiSanRoute: ChuyenGiaoTaiSanRoute,
