@@ -60,6 +60,8 @@ interface StudentTableProps {
 	}
 
 	// UI configuration
+	// Rows can be opened for their details but not edited or deleted.
+	readOnly?: boolean
 	enableCreation?: boolean
 	showRefreshButton?: boolean
 	columnVisibility?: VisibilityState
@@ -91,6 +93,7 @@ export default function StudentTable({
 	filename,
 	templType = 'StudentInfoTempl',
 	exportConfig,
+	readOnly = false,
 	enableCreation = false,
 	showRefreshButton = false,
 	columnVisibility = defaultStudentColumnVisibility,
@@ -104,7 +107,7 @@ export default function StudentTable({
 	onConfirmRows
 }: StudentTableProps) {
 	const { createFacetedFilter } = useDataTableToolbarConfig()
-	const actionColumn = useActionColumn(handleRefreshStudents)
+	const actionColumn = useActionColumn(handleRefreshStudents, readOnly)
 	const [exportFileOpen, setExportFileOpen] = useState(false)
 	const [exportRosterOpen, setExportRosterOpen] = useState(false)
 	const [importOpen, setImportOpen] = useState(false)

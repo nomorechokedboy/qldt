@@ -20,11 +20,16 @@ import { PANELS } from './panels'
 
 interface StudentInfoProps {
 	student: Student
+	// Hides everything that changes the record.
+	readOnly?: boolean
 }
 
 // Fills the two-pane dialog: the record cover on the left, one section of
 // the record on the right.
-export default function StudentInfo({ student }: StudentInfoProps) {
+export default function StudentInfo({
+	student,
+	readOnly = false
+}: StudentInfoProps) {
 	const [sectionId, setSectionId] = useState<SectionId>(RECORD_SECTIONS[0].id)
 	const scrollRef = useRef<HTMLDivElement>(null)
 	const section =
@@ -95,7 +100,7 @@ export default function StudentInfo({ student }: StudentInfoProps) {
 				</div>
 
 				<footer className='flex flex-wrap items-center justify-end gap-2 border-t px-4 py-3 lg:px-8'>
-					<StudentActions student={student} />
+					<StudentActions student={student} readOnly={readOnly} />
 				</footer>
 			</div>
 		</div>

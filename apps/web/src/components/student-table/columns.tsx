@@ -682,6 +682,27 @@ export function buildBattalionStudentColumnsWithoutAction(
 	]
 }
 
+// The cells that edit a student in place, swapped for plain text.
+const readOnlyCells = new Map<unknown, ColumnDef<Student>['cell']>([
+	[EditableCell, (ctx) => <EditableCell {...ctx} readOnly />],
+	[EditableMilitaryRank, (ctx) => <EditableMilitaryRank {...ctx} readOnly />],
+	[EditablePosition, (ctx) => <EditablePosition {...ctx} readOnly />]
+])
+
+export function buildReadOnlyBattalionStudentColumns(
+	unitsById: Map<number, Unit>
+): ColumnDef<Student>[] {
+	const columns = [
+		...buildBattalionStudentColumnsWithoutAction(unitsById),
+		// The "Tình trạng" facet filters on this column.
+		activityStatusColumn
+	]
+	return columns.map((column) => {
+		const cell = readOnlyCells.get(column.cell)
+		return cell ? { ...column, cell } : column
+	})
+}
+
 export const columnsWithoutAction: ColumnDef<Student>[] = [
 	selectColumn,
 	...baseStudentsColumns,

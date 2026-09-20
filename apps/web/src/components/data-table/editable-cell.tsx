@@ -6,16 +6,19 @@ import ToggleInput from '@/components/toggle-input'
 
 export type EditableCellProps = CellContext<Student, unknown> & {
 	className?: string
+	readOnly?: boolean
 }
 
 export default function EditableCell({
 	className,
+	readOnly,
 	column,
 	row
 }: EditableCellProps) {
 	const { handlePatchStudentData, isPending } = usePatchStudent(row, column)
 	return (
 		<ToggleInput
+			readOnly={readOnly}
 			type='text'
 			className={`font-medium min-w-32 ${className}`}
 			onSave={handlePatchStudentData}

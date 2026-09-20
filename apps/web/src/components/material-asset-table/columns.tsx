@@ -65,7 +65,8 @@ export function buildMaterialAssetColumns(
 			id: 'materialType',
 			header: 'Loại khí tài',
 			accessorFn: (row) => row.materialType?.name ?? '',
-			cell: ({ row }) => row.original.materialType?.name ?? '—'
+			cell: ({ row }) => row.original.materialType?.name ?? '—',
+			filterFn: (row, id, value) => value.includes(row.getValue(id))
 		},
 		{
 			id: 'room',
@@ -97,7 +98,8 @@ export function buildMaterialAssetColumns(
 					return '—'
 				}
 				return materialConditionLabels[condition] ?? condition
-			}
+			},
+			filterFn: (row, id, value) => value.includes(row.getValue(id))
 		},
 		{
 			accessorKey: 'status',
