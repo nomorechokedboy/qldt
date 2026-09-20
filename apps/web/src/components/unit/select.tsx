@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import {
 	Select,
 	SelectContent,
@@ -28,16 +29,19 @@ export default function UnitSelect({
 	options,
 	value,
 	onValueChange,
-	placeholder = 'Chọn đơn vị',
+	placeholder,
 	id,
 	className,
 	disabled,
 	noneOption
 }: UnitSelectProps) {
+	const { t } = useTranslation('units')
 	return (
 		<Select value={value} onValueChange={onValueChange} disabled={disabled}>
 			<SelectTrigger id={id} className={cn('w-full', className)}>
-				<SelectValue placeholder={placeholder} />
+				<SelectValue
+					placeholder={placeholder ?? t('select.placeholder')}
+				/>
 			</SelectTrigger>
 			<SelectContent>
 				{noneOption && (

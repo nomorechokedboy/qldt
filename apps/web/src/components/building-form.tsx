@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -35,6 +36,7 @@ export default function BuildingForm({
 	defaultUnitId,
 	onSuccess
 }: BuildingFormProps) {
+	const { t } = useTranslation('units')
 	const [open, setOpen] = useState(false)
 	const [name, setName] = useState('')
 	const [description, setDescription] = useState('')
@@ -59,13 +61,15 @@ export default function BuildingForm({
 				name,
 				description: description || undefined
 			})
-			toast.success('Thêm mới nhà/khu nhà thành công')
+			toast.success(t('facilities.building.created'))
 			onSuccess?.()
 			resetForm()
 			setOpen(false)
 		} catch (err) {
 			console.error('Error creating building:', err)
-			toast.error(getErrorMessage(err, 'Thêm mới nhà/khu nhà thất bại!'))
+			toast.error(
+				getErrorMessage(err, t('facilities.building.createFailed'))
+			)
 		}
 	}
 
@@ -80,30 +84,42 @@ export default function BuildingForm({
 			<DialogTrigger asChild>
 				<Button>
 					<Plus className='w-4 h-4 mr-2' />
-					Thêm nhà/khu nhà
+					{t('facilities.building.trigger')}
 				</Button>
 			</DialogTrigger>
 			<DialogContent className='sm:max-w-md h-auto'>
 				<DialogHeader>
-					<DialogTitle>Biểu mẫu thêm nhà/khu nhà</DialogTitle>
+					<DialogTitle>
+						{t('facilities.building.formTitle')}
+					</DialogTitle>
 				</DialogHeader>
 				<form className='space-y-4' onSubmit={handleSubmit}>
 					<div className='space-y-2'>
-						<Label htmlFor='building-name'>Tên nhà/khu nhà</Label>
+						<Label htmlFor='building-name'>
+							{t('facilities.building.name')}
+						</Label>
 						<Input
 							id='building-name'
 							value={name}
 							onChange={(e) => setName(e.target.value)}
-							placeholder='vd: Nhà đại đội 1'
+							placeholder={t(
+								'facilities.building.namePlaceholder'
+							)}
 							required
 						/>
 					</div>
 
 					<div className='space-y-2'>
-						<Label htmlFor='building-unit'>Thuộc đơn vị</Label>
+						<Label htmlFor='building-unit'>
+							{t('facilities.building.unit')}
+						</Label>
 						<Select value={unitId} onValueChange={setUnitId}>
 							<SelectTrigger id='building-unit'>
-								<SelectValue placeholder='Chọn đơn vị' />
+								<SelectValue
+									placeholder={t(
+										'facilities.building.pickUnit'
+									)}
+								/>
 							</SelectTrigger>
 							<SelectContent>
 								{unitOptions.map((u) => (
@@ -116,7 +132,9 @@ export default function BuildingForm({
 					</div>
 
 					<div className='space-y-2'>
-						<Label htmlFor='building-description'>Mô tả</Label>
+						<Label htmlFor='building-description'>
+							{t('facilities.common.description')}
+						</Label>
 						<Input
 							id='building-description'
 							value={description}
@@ -126,13 +144,17 @@ export default function BuildingForm({
 
 					<DialogFooter>
 						<DialogClose asChild>
-							<Button variant='outline'>Hủy</Button>
+							<Button variant='outline'>
+								{t('facilities.common.cancel')}
+							</Button>
 						</DialogClose>
 						<Button
 							type='submit'
 							disabled={createMutation.isPending || !unitId}
 						>
-							{createMutation.isPending ? 'Đang thêm...' : 'Thêm'}
+							{createMutation.isPending
+								? t('facilities.common.adding')
+								: t('facilities.common.add')}
 						</Button>
 					</DialogFooter>
 				</form>

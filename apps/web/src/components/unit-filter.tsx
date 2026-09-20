@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import useUnitsData from '@/hooks/useUnitsData'
 import FacetedFilter, {
 	type GroupedOption,
@@ -19,8 +20,10 @@ export default function UnitFacetedFilter({
 	level = 'battalion',
 	selectedUnits = [],
 	onSelectionChange,
-	title = 'Đơn vị'
+	title: titleProp
 }: UnitFacetedFilterProps) {
+	const { t } = useTranslation('units')
+	const title = titleProp ?? t('filters.unit')
 	const [internalFilterValues, setInternalFilterValues] =
 		useState<number[]>(selectedUnits)
 

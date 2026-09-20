@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -48,6 +49,7 @@ export interface UnitFormProps {
 }
 
 export default function UnitForm({ onSuccess }: UnitFormProps) {
+	const { t } = useTranslation('units')
 	const [open, setOpen] = useState(false)
 	const [alias, setAlias] = useState('')
 	const [name, setName] = useState('')
@@ -124,13 +126,13 @@ export default function UnitForm({ onSuccess }: UnitFormProps) {
 				parentId: parentId === NO_PARENT ? null : Number(parentId),
 				...commanderValuesToPayload(commanders)
 			})
-			toast.success('Thêm mới đơn vị thành công')
+			toast.success(t('form.createSuccess'))
 			onSuccess?.()
 			resetForm()
 			setOpen(false)
 		} catch (err) {
 			console.error('Error creating unit:', err)
-			toast.error(getErrorMessage(err, 'Thêm mới đơn vị thất bại!'))
+			toast.error(getErrorMessage(err, t('form.createFailed')))
 		}
 	}
 
@@ -145,16 +147,16 @@ export default function UnitForm({ onSuccess }: UnitFormProps) {
 			<DialogTrigger asChild>
 				<Button>
 					<Plus className='w-4 h-4 mr-2' />
-					Thêm đơn vị
+					{t('form.addButton')}
 				</Button>
 			</DialogTrigger>
 			<DialogContent className='sm:max-w-md h-auto'>
 				<DialogHeader>
-					<DialogTitle>Biểu mẫu thêm đơn vị</DialogTitle>
+					<DialogTitle>{t('form.addTitle')}</DialogTitle>
 				</DialogHeader>
 				<form className='space-y-4' onSubmit={handleSubmit}>
 					<div className='space-y-2'>
-						<Label htmlFor='unit-name'>Tên đơn vị</Label>
+						<Label htmlFor='unit-name'>{t('form.name')}</Label>
 						<Input
 							id='unit-name'
 							value={name}
@@ -164,18 +166,18 @@ export default function UnitForm({ onSuccess }: UnitFormProps) {
 					</div>
 
 					<div className='space-y-2'>
-						<Label htmlFor='unit-alias'>Mã định danh (alias)</Label>
+						<Label htmlFor='unit-alias'>{t('form.alias')}</Label>
 						<Input
 							id='unit-alias'
 							value={alias}
 							onChange={(e) => setAlias(e.target.value)}
-							placeholder='vd: d1, c1'
+							placeholder={t('form.aliasExample')}
 							required
 						/>
 					</div>
 
 					<div className='space-y-2'>
-						<Label htmlFor='unit-level'>Cấp đơn vị</Label>
+						<Label htmlFor='unit-level'>{t('form.level')}</Label>
 						<Select
 							value={level}
 							onValueChange={(value) => {
@@ -184,7 +186,9 @@ export default function UnitForm({ onSuccess }: UnitFormProps) {
 							}}
 						>
 							<SelectTrigger id='unit-level'>
-								<SelectValue placeholder='Chọn cấp đơn vị' />
+								<SelectValue
+									placeholder={t('form.levelPlaceholder')}
+								/>
 							</SelectTrigger>
 							<SelectContent>
 								{levelOptions.map((opt) => (
@@ -200,18 +204,18 @@ export default function UnitForm({ onSuccess }: UnitFormProps) {
 					</div>
 
 					<div className='space-y-2'>
-						<Label htmlFor='unit-parent'>Thuộc đơn vị</Label>
+						<Label htmlFor='unit-parent'>{t('form.parent')}</Label>
 						<UnitSelect
 							id='unit-parent'
 							options={parentSelectOptions}
 							value={parentId}
 							onValueChange={setParentId}
-							placeholder='Chọn đơn vị cấp trên'
+							placeholder={t('form.parentPlaceholder')}
 							noneOption={
 								isSuperAdmin
 									? {
 											value: NO_PARENT,
-											label: 'Không có (đơn vị gốc)'
+											label: t('form.noParent')
 										}
 									: undefined
 							}
@@ -237,8 +241,8 @@ export default function UnitForm({ onSuccess }: UnitFormProps) {
 							idPrefix='unit'
 							label={
 								level === 'squad'
-									? 'Tiểu đội trưởng'
-									: 'Trung đội trưởng'
+									? t('commanders.squadCommander')
+									: t('commanders.platoonCommander')
 							}
 							value={commanders.commanderId}
 							onChange={(value) =>
@@ -252,15 +256,17 @@ export default function UnitForm({ onSuccess }: UnitFormProps) {
 
 					<DialogFooter>
 						<DialogClose asChild>
-							<Button variant='outline'>Hủy</Button>
+							<Button variant='outline'>
+								{t('form.cancelAlt')}
+							</Button>
 						</DialogClose>
 						<Button
 							type='submit'
 							disabled={createUnitMutation.isPending}
 						>
 							{createUnitMutation.isPending
-								? 'Đang thêm...'
-								: 'Thêm'}
+								? t('form.adding')
+								: t('form.add')}
 						</Button>
 					</DialogFooter>
 				</form>

@@ -21,6 +21,7 @@ import useUnitStatsMaterialStocks from '@/hooks/useUnitStatsMaterialStocks'
 import useUnitStatsStudents from '@/hooks/useUnitStatsStudents'
 import type { MaterialAsset, MaterialStock, Unit } from '@/types'
 import { ArrowDownToLine, Settings } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 // The rollup tables only show, so the per-row actions are left out.
 const stockColumns = buildMaterialStockColumns([]).filter(
@@ -48,6 +49,7 @@ export default function UnitRollupTables({
 	unit,
 	unitsById
 }: UnitRollupTablesProps) {
+	const { t } = useTranslation('units')
 	const {
 		data: students,
 		isLoading: isLoadingStudents,
@@ -74,12 +76,12 @@ export default function UnitRollupTables({
 	return (
 		<Tabs defaultValue='students'>
 			<TabsList>
-				<TabsTrigger value='students'>Quân nhân</TabsTrigger>
+				<TabsTrigger value='students'>{t('tabs.students')}</TabsTrigger>
 				<TabsTrigger value='material-stocks'>
-					Cơ sở vật chất
+					{t('tabs.facilities')}
 				</TabsTrigger>
 				<TabsTrigger value='material-assets'>
-					Vũ khí/trang bị
+					{t('tabs.weapons')}
 				</TabsTrigger>
 			</TabsList>
 
@@ -92,7 +94,7 @@ export default function UnitRollupTables({
 					columns={studentColumns}
 					columnVisibility={defaultBirthdayColumnVisibility}
 					facetedFilters={studentFacetedFilters}
-					placeholder='Không có quân nhân nào'
+					placeholder={t('rollup.noStudents')}
 					exportConfig={{
 						filename: `quan-nhan-${unitName ?? ''}`,
 						defaultExportValues: {
@@ -109,7 +111,7 @@ export default function UnitRollupTables({
 					<TableSkeleton />
 				) : (
 					<DataTable
-						placeholder='Không có vật tư sinh hoạt nào'
+						placeholder={t('rollup.noSupplies')}
 						columns={stockColumns}
 						data={stocks ?? []}
 						onRefresh={() => refetchStocks()}
@@ -117,20 +119,20 @@ export default function UnitRollupTables({
 							searchConfig: [
 								createSearchConfig(
 									'materialType',
-									'Tìm kiếm theo loại vật tư...'
+									t('materialTables.searchSupplyType')
 								)
 							],
 							facetedFilters: [
 								createFacetedFilter(
 									'unit',
-									'Đơn vị',
+									t('materialTables.unit'),
 									uniqueOptions(
 										(stocks ?? []).map((s) => s.unit?.name)
 									)
 								),
 								createFacetedFilter(
 									'materialType',
-									'Loại vật tư',
+									t('materialTables.supplyType'),
 									uniqueOptions(
 										(stocks ?? []).map(
 											(s) => s.materialType?.name
@@ -139,7 +141,7 @@ export default function UnitRollupTables({
 								),
 								createFacetedFilter(
 									'condition',
-									'Tình trạng',
+									t('materialTables.condition'),
 									materialConditionOptions
 								)
 							]
@@ -150,7 +152,7 @@ export default function UnitRollupTables({
 								<ExportTemplateManager resourceType='material_stocks'>
 									<Button variant='outline'>
 										<Settings />
-										Quản lý mẫu
+										{t('materialTables.manageTemplates')}
 									</Button>
 								</ExportTemplateManager>
 								<ExportMaterialStocksDialog
@@ -166,7 +168,7 @@ export default function UnitRollupTables({
 								>
 									<Button>
 										<ArrowDownToLine />
-										Xuất file
+										{t('materialTables.export')}
 									</Button>
 								</ExportMaterialStocksDialog>
 							</>
@@ -180,7 +182,7 @@ export default function UnitRollupTables({
 					<TableSkeleton />
 				) : (
 					<DataTable
-						placeholder='Không có vũ khí/trang bị nào'
+						placeholder={t('rollup.noAssets')}
 						columns={assetColumns}
 						data={assets ?? []}
 						onRefresh={() => refetchAssets()}
@@ -188,13 +190,13 @@ export default function UnitRollupTables({
 							searchConfig: [
 								createSearchConfig(
 									'serialNumber',
-									'Tìm kiếm theo số sê-ri...'
+									t('materialTables.searchSerial')
 								)
 							],
 							facetedFilters: [
 								createFacetedFilter(
 									'materialType',
-									'Loại khí tài',
+									t('materialTables.assetType'),
 									uniqueOptions(
 										(assets ?? []).map(
 											(a) => a.materialType?.name
@@ -203,12 +205,12 @@ export default function UnitRollupTables({
 								),
 								createFacetedFilter(
 									'condition',
-									'Tình trạng',
+									t('materialTables.condition'),
 									materialConditionOptions
 								),
 								createFacetedFilter(
 									'status',
-									'Trạng thái',
+									t('materialTables.status'),
 									materialAssetStatusOptions
 								)
 							]
@@ -219,7 +221,7 @@ export default function UnitRollupTables({
 								<ExportTemplateManager resourceType='material_assets'>
 									<Button variant='outline'>
 										<Settings />
-										Quản lý mẫu
+										{t('materialTables.manageTemplates')}
 									</Button>
 								</ExportTemplateManager>
 								<ExportMaterialAssetsDialog
@@ -235,7 +237,7 @@ export default function UnitRollupTables({
 								>
 									<Button>
 										<ArrowDownToLine />
-										Xuất file
+										{t('materialTables.export')}
 									</Button>
 								</ExportMaterialAssetsDialog>
 							</>

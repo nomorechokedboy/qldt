@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -29,6 +30,7 @@ export default function PlatoonForm({
 	companyId,
 	onSuccess
 }: PlatoonFormProps) {
+	const { t } = useTranslation('units')
 	const [open, setOpen] = useState(false)
 	const [alias, setAlias] = useState('')
 	const [name, setName] = useState('')
@@ -54,13 +56,13 @@ export default function PlatoonForm({
 				commanderId:
 					commanderId === NO_COMMANDER ? null : Number(commanderId)
 			})
-			toast.success('Thêm mới trung đội thành công')
+			toast.success(t('platoonForm.createSuccess'))
 			onSuccess?.()
 			resetForm()
 			setOpen(false)
 		} catch (err) {
 			console.error('Error creating platoon:', err)
-			toast.error(getErrorMessage(err, 'Thêm mới trung đội thất bại!'))
+			toast.error(getErrorMessage(err, t('platoonForm.createFailed')))
 		}
 	}
 
@@ -75,16 +77,18 @@ export default function PlatoonForm({
 			<DialogTrigger asChild>
 				<Button>
 					<Plus className='w-4 h-4 mr-2' />
-					Thêm trung đội
+					{t('platoonForm.addButton')}
 				</Button>
 			</DialogTrigger>
 			<DialogContent className='sm:max-w-md h-auto'>
 				<DialogHeader>
-					<DialogTitle>Biểu mẫu thêm trung đội</DialogTitle>
+					<DialogTitle>{t('platoonForm.title')}</DialogTitle>
 				</DialogHeader>
 				<form className='space-y-4' onSubmit={handleSubmit}>
 					<div className='space-y-2'>
-						<Label htmlFor='platoon-name'>Tên trung đội</Label>
+						<Label htmlFor='platoon-name'>
+							{t('platoonForm.name')}
+						</Label>
 						<Input
 							id='platoon-name'
 							value={name}
@@ -94,36 +98,36 @@ export default function PlatoonForm({
 					</div>
 
 					<div className='space-y-2'>
-						<Label htmlFor='platoon-alias'>
-							Mã định danh (alias)
-						</Label>
+						<Label htmlFor='platoon-alias'>{t('form.alias')}</Label>
 						<Input
 							id='platoon-alias'
 							value={alias}
 							onChange={(e) => setAlias(e.target.value)}
-							placeholder='vd: b1, b2'
+							placeholder={t('platoonForm.aliasExample')}
 							required
 						/>
 					</div>
 
 					<SingleCommanderField
 						idPrefix='platoon'
-						label='Trung đội trưởng'
+						label={t('commanders.platoonCommander')}
 						value={commanderId}
 						onChange={setCommanderId}
 					/>
 
 					<DialogFooter>
 						<DialogClose asChild>
-							<Button variant='outline'>Hủy</Button>
+							<Button variant='outline'>
+								{t('form.cancelAlt')}
+							</Button>
 						</DialogClose>
 						<Button
 							type='submit'
 							disabled={createUnitMutation.isPending}
 						>
 							{createUnitMutation.isPending
-								? 'Đang thêm...'
-								: 'Thêm'}
+								? t('form.adding')
+								: t('form.add')}
 						</Button>
 					</DialogFooter>
 				</form>

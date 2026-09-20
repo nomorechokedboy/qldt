@@ -1,3 +1,4 @@
+import i18n from '@/i18n'
 import type { UnitLevel } from '@/types'
 
 // Ordered from smallest to largest unit. A unit's parent must be strictly
@@ -14,21 +15,46 @@ export const unitLevelOrder: UnitLevel[] = [
 	'corps'
 ]
 
+// The labels are read while rendering, so they follow the language in use.
+// Getters keep them out of the module-load path, where the language could
+// still change.
+const levelLabel = (level: UnitLevel) => i18n.t(`units:levels.${level}`)
+
 export const unitLevelLabels: Record<UnitLevel, string> = {
-	squad: 'Tiểu đội',
-	platoon: 'Trung đội',
-	company: 'Đại đội',
-	battalion: 'Tiểu đoàn',
-	department: 'Cơ quan',
-	regiment: 'Trung đoàn',
-	brigade: 'Lữ đoàn',
-	division: 'Sư đoàn',
-	corps: 'Quân đoàn'
+	get squad() {
+		return levelLabel('squad')
+	},
+	get platoon() {
+		return levelLabel('platoon')
+	},
+	get company() {
+		return levelLabel('company')
+	},
+	get battalion() {
+		return levelLabel('battalion')
+	},
+	get department() {
+		return levelLabel('department')
+	},
+	get regiment() {
+		return levelLabel('regiment')
+	},
+	get brigade() {
+		return levelLabel('brigade')
+	},
+	get division() {
+		return levelLabel('division')
+	},
+	get corps() {
+		return levelLabel('corps')
+	}
 }
 
 export const unitLevelOptions = unitLevelOrder.map((level) => ({
 	value: level,
-	label: unitLevelLabels[level]
+	get label() {
+		return levelLabel(level)
+	}
 }))
 
 // A root (parentless) unit must be Company level or larger.

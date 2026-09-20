@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Plus } from 'lucide-react'
 import { toast } from 'sonner'
 import {
@@ -39,6 +40,7 @@ export default function SquadForm({
 	defaultPlatoonId,
 	onSuccess
 }: SquadFormProps) {
+	const { t } = useTranslation('units')
 	const [open, setOpen] = useState(false)
 	const [alias, setAlias] = useState('')
 	const [name, setName] = useState('')
@@ -62,7 +64,7 @@ export default function SquadForm({
 		e.preventDefault()
 
 		if (!platoonId) {
-			toast.error('Vui lòng chọn trung đội')
+			toast.error(t('squadForm.platoonRequired'))
 			return
 		}
 
@@ -75,13 +77,13 @@ export default function SquadForm({
 				commanderId:
 					commanderId === NO_COMMANDER ? null : Number(commanderId)
 			})
-			toast.success('Thêm mới tiểu đội thành công')
+			toast.success(t('squadForm.createSuccess'))
 			onSuccess?.()
 			resetForm()
 			setOpen(false)
 		} catch (err) {
 			console.error('Error creating squad:', err)
-			toast.error(getErrorMessage(err, 'Thêm mới tiểu đội thất bại!'))
+			toast.error(getErrorMessage(err, t('squadForm.createFailed')))
 		}
 	}
 
@@ -96,16 +98,18 @@ export default function SquadForm({
 			<DialogTrigger asChild>
 				<Button disabled={platoonOptions.length === 0}>
 					<Plus className='w-4 h-4 mr-2' />
-					Thêm tiểu đội
+					{t('squadForm.addButton')}
 				</Button>
 			</DialogTrigger>
 			<DialogContent className='sm:max-w-md h-auto'>
 				<DialogHeader>
-					<DialogTitle>Biểu mẫu thêm tiểu đội</DialogTitle>
+					<DialogTitle>{t('squadForm.title')}</DialogTitle>
 				</DialogHeader>
 				<form className='space-y-4' onSubmit={handleSubmit}>
 					<div className='space-y-2'>
-						<Label htmlFor='squad-name'>Tên tiểu đội</Label>
+						<Label htmlFor='squad-name'>
+							{t('squadForm.name')}
+						</Label>
 						<Input
 							id='squad-name'
 							value={name}
@@ -115,23 +119,27 @@ export default function SquadForm({
 					</div>
 
 					<div className='space-y-2'>
-						<Label htmlFor='squad-alias'>
-							Mã định danh (alias)
-						</Label>
+						<Label htmlFor='squad-alias'>{t('form.alias')}</Label>
 						<Input
 							id='squad-alias'
 							value={alias}
 							onChange={(e) => setAlias(e.target.value)}
-							placeholder='vd: a1, a2'
+							placeholder={t('squadForm.aliasExample')}
 							required
 						/>
 					</div>
 
 					<div className='space-y-2'>
-						<Label htmlFor='squad-platoon'>Thuộc trung đội</Label>
+						<Label htmlFor='squad-platoon'>
+							{t('squadForm.platoon')}
+						</Label>
 						<Select value={platoonId} onValueChange={setPlatoonId}>
 							<SelectTrigger id='squad-platoon'>
-								<SelectValue placeholder='Chọn trung đội' />
+								<SelectValue
+									placeholder={t(
+										'squadForm.platoonPlaceholder'
+									)}
+								/>
 							</SelectTrigger>
 							<SelectContent>
 								{platoonOptions.map((p) => (
@@ -152,15 +160,17 @@ export default function SquadForm({
 
 					<DialogFooter>
 						<DialogClose asChild>
-							<Button variant='outline'>Hủy</Button>
+							<Button variant='outline'>
+								{t('form.cancelAlt')}
+							</Button>
 						</DialogClose>
 						<Button
 							type='submit'
 							disabled={createUnitMutation.isPending}
 						>
 							{createUnitMutation.isPending
-								? 'Đang thêm...'
-								: 'Thêm'}
+								? t('form.adding')
+								: t('form.add')}
 						</Button>
 					</DialogFooter>
 				</form>

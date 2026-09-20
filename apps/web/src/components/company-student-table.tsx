@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { EduLevelOptions } from '@/components/data-table/data/data'
 import { columnsWithoutAction } from '@/components/student-table/columns'
 import { SidebarInset } from '@/components/ui/sidebar'
@@ -17,6 +18,7 @@ export default function CompanyStudentTable({
 	alias,
 	id
 }: CompanyStudentTableProps) {
+	const { t } = useTranslation('units')
 	const { createFacetedFilter } = useDataTableToolbarConfig()
 	const {
 		data: students = [],
@@ -50,23 +52,23 @@ export default function CompanyStudentTable({
 	}))
 
 	const statusOptions = [
-		{ label: 'Chưa xác nhận', value: 'pending' },
-		{ label: 'Đã xác nhận', value: 'confirmed' }
+		{ label: t('filters.statusPending'), value: 'pending' },
+		{ label: t('filters.statusConfirmed'), value: 'confirmed' }
 	]
 
 	const facetedFilters = [
-		createFacetedFilter('unit.name', 'Đơn vị', [
+		createFacetedFilter('unit.name', t('filters.unit'), [
 			{ label: unit?.name, value: unit?.name },
 			...unitOptions
 		]),
-		createFacetedFilter('rank', 'Cấp bậc', militaryRankOptions),
-		createFacetedFilter('ethnic', 'Dân tộc', EhtnicOptions),
+		createFacetedFilter('rank', t('filters.rank'), militaryRankOptions),
+		createFacetedFilter('ethnic', t('filters.ethnic'), EhtnicOptions),
 		createFacetedFilter(
 			'educationLevel',
-			'Trình độ học vấn',
+			t('filters.educationLevel'),
 			EduLevelOptions
 		),
-		createFacetedFilter('status', 'Trạng thái', statusOptions)
+		createFacetedFilter('status', t('filters.status'), statusOptions)
 	]
 
 	return (
@@ -75,10 +77,12 @@ export default function CompanyStudentTable({
 				<div className='flex items-center justify-between space-y-2'>
 					<div>
 						<h2 className='text-2xl font-bold tracking-tight'>
-							Danh sách quân nhân
+							{t('company.studentListTitle')}
 						</h2>
 						<p className='text-muted-foreground'>
-							Đây là danh sách quân nhân của {unit?.name}
+							{t('company.studentListSubtitle', {
+								name: unit?.name ?? ''
+							})}
 						</p>
 					</div>
 				</div>
@@ -89,7 +93,7 @@ export default function CompanyStudentTable({
 					columnVisibility={defaultCompanyTrooperColumnVisibility}
 					columns={[...columnsWithoutAction, actionColumn]}
 					facetedFilters={facetedFilters}
-					placeholder='Chưa có thông tin quân nhân.'
+					placeholder={t('tabs.noStudentInfo')}
 					exportConfig={{
 						filename,
 						defaultExportValues: {
