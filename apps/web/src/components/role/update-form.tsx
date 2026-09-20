@@ -8,6 +8,7 @@ import { queryClient } from '@/integrations/tanstack-query/root-provider'
 import { Button } from '../ui/button'
 import { Edit2 } from 'lucide-react'
 import { getErrorMessage } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 interface UpdateRoleFormProps {
 	id: number
@@ -20,16 +21,17 @@ export default function UpdateRoleForm({
 	name,
 	description
 }: UpdateRoleFormProps) {
+	const { t } = useTranslation('admin')
 	const { mutateAsync, isPending } = useMutation({
 		mutationFn: UpdateRole,
 		onSuccess: () => {
-			toast.success('Chỉnh sửa vai trò thành công!')
+			toast.success(t('roles.update.success'))
 			setOpen(false)
 			queryClient.invalidateQueries({ queryKey: ['roles'] })
 		},
 		onError: (err) => {
-			toast.error('Chỉnh sửa vai trò thất bại.', {
-				description: getErrorMessage(err, 'Vui lòng thử lại sau.')
+			toast.error(t('roles.update.failed'), {
+				description: getErrorMessage(err, t('common.retryLater'))
 			})
 		}
 	})
@@ -43,13 +45,13 @@ export default function UpdateRoleForm({
 
 	return (
 		<RoleModal
-			title='Chỉnh sửa vai trò'
+			title={t('roles.update.title')}
 			form={form}
 			formId={`updateRoleForm-${id}`}
 			open={open}
 			onOpenChange={setOpen}
-			actionText='Chỉnh sửa'
-			loadingText='Đang chỉnh sửa...'
+			actionText={t('roles.update.action')}
+			loadingText={t('roles.update.loading')}
 			trigger={
 				<Button variant='outline' size='sm' disabled={isPending}>
 					<Edit2 className='h-4 w-4' />

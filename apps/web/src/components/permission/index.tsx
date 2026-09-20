@@ -10,8 +10,10 @@ import { ErrorState } from '@/components/error-state'
 import type { Permission } from '@/types'
 import { useQuery } from '@tanstack/react-query'
 import { GetPermissions } from '@/api'
+import { useTranslation } from 'react-i18next'
 
 export default function PermissionsTab() {
+	const { t } = useTranslation('admin')
 	const {
 		data: permissions = [],
 		isLoading,
@@ -63,7 +65,7 @@ export default function PermissionsTab() {
 			{/* Header with Search and Create Button */}
 			<div className='flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between'>
 				<Input
-					placeholder='Search permissions...'
+					placeholder={t('permissions.searchPlaceholder')}
 					value={searchQuery}
 					onChange={(e) => setSearchQuery(e.target.value)}
 					className='sm:max-w-xs'
@@ -73,7 +75,7 @@ export default function PermissionsTab() {
 					className='gap-2'
 				>
 					<Plus className='h-4 w-4' />
-					Create Permission
+					{t('permissions.createTrigger')}
 				</Button>
 			</div>
 
@@ -131,15 +133,12 @@ export default function PermissionsTab() {
 																	variant='outline'
 																	className='text-xs'
 																>
-																	Dùng bởi{' '}
-																	{
-																		permission.rolesCount
-																	}{' '}
-																	vai trò
-																	{permission.rolesCount !==
-																	1
-																		? 's'
-																		: ''}
+																	{t(
+																		'permissions.usedBy',
+																		{
+																			count: permission.rolesCount
+																		}
+																	)}
 																</Badge>
 															</div>
 														</div>
@@ -188,7 +187,7 @@ export default function PermissionsTab() {
 					<CardContent className='flex flex-col items-center justify-center py-12'>
 						<Key className='mb-4 h-8 w-8 text-muted-foreground' />
 						<p className='text-muted-foreground'>
-							Chưa có quyền nào
+							{t('permissions.empty')}
 						</p>
 					</CardContent>
 				</Card>

@@ -14,6 +14,7 @@ import {
 import { getErrorMessage } from '@/lib/utils'
 import useLockedUsers, { LOCKED_USERS_QUERY_KEY } from '@/hooks/useLockedUsers'
 import { useUnlockUser } from './useUnlockUser'
+import { Trans, useTranslation } from 'react-i18next'
 
 interface UserLockIndicatorProps {
 	username: string
@@ -22,6 +23,7 @@ interface UserLockIndicatorProps {
 export default function UserLockIndicator({
 	username
 }: UserLockIndicatorProps) {
+	const { t } = useTranslation('admin')
 	const queryClient = useQueryClient()
 	const { data: lockedUsernames = [] } = useLockedUsers()
 	const { mutateAsync: unlockUserMutate, isPending } = useUnlockUser()
@@ -35,11 +37,11 @@ export default function UserLockIndicator({
 	async function handleUnlock() {
 		try {
 			await unlockUserMutate(username)
-			toast.success('Đã mở khóa đăng nhập cho người dùng')
+			toast.success(t('users.unlock.success'))
 			queryClient.invalidateQueries({ queryKey: LOCKED_USERS_QUERY_KEY })
 			setConfirmOpen(false)
 		} catch (err) {
-			toast.error(getErrorMessage(err, 'Mở khóa đăng nhập thất bại'))
+			toast.error(getErrorMessage(err, t('users.unlock.failed')))
 		}
 	}
 
@@ -50,7 +52,7 @@ export default function UserLockIndicator({
 				size='icon'
 				className='h-6 w-6 text-destructive hover:text-destructive'
 				onClick={() => setConfirmOpen(true)}
-				title='Tài khoản đang bị khóa đăng nhập do nhập sai mật khẩu nhiều lần. Nhấn để mở khóa.'
+				title={t('users.unlock.tooltip')}
 			>
 				<Lock className='h-4 w-4' />
 			</Button>
@@ -58,13 +60,16 @@ export default function UserLockIndicator({
 			<Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
 				<DialogContent className='max-w-md h-auto'>
 					<DialogHeader>
-						<DialogTitle>Mở khóa đăng nhập</DialogTitle>
+						<DialogTitle>{t('users.unlock.title')}</DialogTitle>
 						<DialogDescription>
-							Tài khoản{' '}
-							<span className='font-medium'>{username}</span> đang
-							bị khóa đăng nhập do nhập sai mật khẩu quá số lần
-							cho phép. Bạn có chắc chắn muốn mở khóa ngay bây giờ
-							không?
+							<Trans
+								t={t}
+								i18nKey='users.unlock.description'
+								values={{ username }}
+								components={{
+									username: <span className='font-medium' />
+								}}
+							/>
 						</DialogDescription>
 					</DialogHeader>
 					<DialogFooter>
@@ -73,13 +78,13 @@ export default function UserLockIndicator({
 							onClick={() => setConfirmOpen(false)}
 							disabled={isPending}
 						>
-							Hủy
+							{t('common.cancel')}
 						</Button>
 						<Button onClick={handleUnlock} disabled={isPending}>
 							{isPending && (
 								<Loader2 className='w-4 h-4 mr-2 animate-spin' />
 							)}
-							Mở khóa
+							{t('users.unlock.action')}
 						</Button>
 					</DialogFooter>
 				</DialogContent>

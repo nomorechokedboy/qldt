@@ -15,17 +15,29 @@ import { toast } from 'sonner'
 import { useEffect } from 'react'
 import useAuth from '@/hooks/useAuth'
 import { getErrorMessage } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
+import i18n from '@/i18n'
+
+// Zod calls `error` while parsing, so messages follow the language in use at
+// that moment instead of the one the module was loaded in.
+const msg = (key: string) => ({
+	error: () => i18n.t(key as never) as string
+})
 
 const schema = z
 	.object({
 		prevPassword: z
 			.string()
-			.min(1, 'Mật khẩu hiện tại không được bỏ trống'),
-		password: z.string().min(6, 'Mật khẩu mới phải có ít nhất 6 ký tự'),
-		confirmPassword: z.string().min(1, 'Vui lòng xác nhận mật khẩu')
+			.min(1, msg('admin:profile.validation.prevPasswordRequired')),
+		password: z
+			.string()
+			.min(6, msg('admin:profile.validation.passwordMin')),
+		confirmPassword: z
+			.string()
+			.min(1, msg('admin:profile.validation.confirmRequired'))
 	})
 	.refine((data) => data.password === data.confirmPassword, {
-		message: 'Mật khẩu xác nhận không khớp',
+		error: () => i18n.t('admin:profile.validation.passwordMismatch'),
 		path: ['confirmPassword']
 	})
 
@@ -38,12 +50,13 @@ export default function PasswordChangeForm({
 	open,
 	setOpen
 }: PasswordChangeFormProps) {
+	const { t } = useTranslation('admin')
 	const { logout } = useAuth()
 
 	const { mutateAsync } = useMutation({
 		mutationFn: ChangePassword,
 		onSuccess: () => {
-			toast.success('Đổi mật khẩu thành công. Vui lòng đăng nhập lại.')
+			toast.success(t('profile.password.success'))
 			setOpen(false)
 			// Logout user to force re-login with new password
 			setTimeout(() => logout(), 1500)
@@ -52,8 +65,8 @@ export default function PasswordChangeForm({
 			console.error('Failed to change password:', error)
 			toast.error(
 				error?.message === 'Incorrect password'
-					? 'Mật khẩu hiện tại không đúng'
-					: getErrorMessage(error, 'Đổi mật khẩu thất bại')
+					? t('profile.password.incorrect')
+					: getErrorMessage(error, t('profile.password.failed'))
 			)
 		}
 	})
@@ -91,7 +104,7 @@ export default function PasswordChangeForm({
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogContent className='sm:max-w-md h-auto'>
 				<DialogHeader>
-					<DialogTitle>Đổi mật khẩu</DialogTitle>
+					<DialogTitle>{t('profile.password.title')}</DialogTitle>
 				</DialogHeader>
 				<form
 					onSubmit={(e) => {
@@ -103,9 +116,11 @@ export default function PasswordChangeForm({
 					<form.AppField name='prevPassword'>
 						{(field: any) => (
 							<field.TextField
-								label='Mật khẩu hiện tại'
+								label={t('profile.password.current')}
 								type='password'
-								placeholder='Nhập mật khẩu hiện tại'
+								placeholder={t(
+									'profile.password.currentPlaceholder'
+								)}
 							/>
 						)}
 					</form.AppField>
@@ -113,9 +128,11 @@ export default function PasswordChangeForm({
 					<form.AppField name='password'>
 						{(field: any) => (
 							<field.TextField
-								label='Mật khẩu mới'
+								label={t('profile.password.new')}
 								type='password'
-								placeholder='Nhập mật khẩu mới (tối thiểu 6 ký tự)'
+								placeholder={t(
+									'profile.password.newPlaceholder'
+								)}
 							/>
 						)}
 					</form.AppField>
@@ -123,19 +140,25 @@ export default function PasswordChangeForm({
 					<form.AppField name='confirmPassword'>
 						{(field: any) => (
 							<field.TextField
-								label='Xác nhận mật khẩu mới'
+								label={t('profile.password.confirm')}
 								type='password'
-								placeholder='Nhập lại mật khẩu mới'
+								placeholder={t(
+									'profile.password.confirmPlaceholder'
+								)}
 							/>
 						)}
 					</form.AppField>
 
 					<DialogFooter>
 						<DialogClose asChild>
-							<Button variant='outline'>Hủy</Button>
+							<Button variant='outline'>
+								{t('common.cancel')}
+							</Button>
 						</DialogClose>
 						<form.AppForm>
-							<form.SubscribeButton label='Đổi mật khẩu' />
+							<form.SubscribeButton
+								label={t('profile.password.title')}
+							/>
 						</form.AppForm>
 					</DialogFooter>
 				</form>

@@ -7,12 +7,14 @@ import { Button } from '../ui/button'
 import { PlusIcon } from 'lucide-react'
 import UserForm from './user-form'
 import { UserTableContext } from './UserTableContext'
+import { useTranslation } from 'react-i18next'
 
 interface UserTableProps {
 	enabledCreation?: boolean
 }
 
 export default function UserTable(_props: UserTableProps) {
+	const { t } = useTranslation('admin')
 	const { data: users = [], refetch: refetchUsers } = useUserData()
 
 	// State for create form
@@ -53,7 +55,7 @@ export default function UserTable(_props: UserTableProps) {
 						<div className='flex gap-2'>
 							<Button onClick={handleAddUser}>
 								<PlusIcon className='w-4 h-4 mr-2' />
-								Thêm người dùng
+								{t('users.add')}
 							</Button>
 						</div>
 					)}

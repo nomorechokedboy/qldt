@@ -8,19 +8,21 @@ import { queryClient } from '@/integrations/tanstack-query/root-provider'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
 import { getErrorMessage } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 export default function CreateRoleForm() {
+	const { t } = useTranslation('admin')
 	const { mutateAsync } = useMutation({
 		mutationFn: CreateRole,
 		onSuccess: () => {
-			toast.success('Thêm mới vai trò thành công!')
+			toast.success(t('roles.create.success'))
 			setOpen(false)
 			queryClient.invalidateQueries({ queryKey: ['roles'] })
 		},
 		onError: (err) => {
 			console.error('CreateRole error', err)
-			toast.error('Thêm mới vai trò thất bại.', {
-				description: getErrorMessage(err, 'Vui lòng thử lại sau.')
+			toast.error(t('roles.create.failed'), {
+				description: getErrorMessage(err, t('common.retryLater'))
 			})
 		}
 	})
@@ -34,17 +36,17 @@ export default function CreateRoleForm() {
 
 	return (
 		<RoleModal
-			title='Tạo vai trò mới'
+			title={t('roles.create.title')}
 			form={form}
 			formId='createRoleForm'
 			open={open}
 			onOpenChange={setOpen}
-			actionText='Thêm mới'
-			loadingText='Đang thêm...'
+			actionText={t('roles.create.action')}
+			loadingText={t('roles.create.loading')}
 			trigger={
 				<Button className='gap-2'>
 					<Plus className='h-4 w-4' />
-					Tạo quyền
+					{t('roles.create.trigger')}
 				</Button>
 			}
 		/>

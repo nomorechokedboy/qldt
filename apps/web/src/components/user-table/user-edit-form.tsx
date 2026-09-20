@@ -18,11 +18,21 @@ import useUnitOptions from '@/hooks/useUnitOptions'
 import { userRankOptions } from '@/data/ranks'
 import { userPositionOptions } from '@/data/positions'
 import { getErrorMessage } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
+import i18n from '@/i18n'
+
+// Zod calls `error` while parsing, so messages follow the language in use at
+// that moment instead of the one the module was loaded in.
+const msg = (key: string) => ({
+	error: () => i18n.t(key as never) as string
+})
 
 const schema = z
 	.object({
 		id: z.number().optional(),
-		displayName: z.string().min(1, 'Họ và tên không được bỏ trống'),
+		displayName: z
+			.string()
+			.min(1, msg('admin:users.validation.displayNameRequired')),
 		password: z.string().optional(),
 		confirmPassword: z.string().optional(),
 		unitId: z.preprocess(
@@ -32,7 +42,7 @@ const schema = z
 				}
 				return val
 			},
-			z.number().min(1, 'Đơn vị không được bỏ trống')
+			z.number().min(1, msg('admin:users.validation.unitRequired'))
 		),
 		isSuperUser: z.preprocess((val) => {
 			if (val === 'true' || val === true) return true
@@ -51,7 +61,7 @@ const schema = z
 			return true
 		},
 		{
-			message: 'Mật khẩu xác nhận không khớp',
+			error: () => i18n.t('admin:profile.validation.passwordMismatch'),
 			path: ['confirmPassword']
 		}
 	)
@@ -64,7 +74,7 @@ const schema = z
 			return true
 		},
 		{
-			message: 'Mật khẩu phải có ít nhất 6 ký tự',
+			error: () => i18n.t('admin:users.validation.passwordMin'),
 			path: ['password']
 		}
 	)
@@ -88,6 +98,7 @@ export default function UserEditForm({
 	onClose,
 	editingUser
 }: UserFormProps) {
+	const { t } = useTranslation('admin')
 	const { options: unitOptions } = useUnitOptions()
 
 	const { mutateAsync } = useMutation({
@@ -121,11 +132,11 @@ export default function UserEditForm({
 				delete payload.confirmPassword
 
 				await mutateAsync(payload)
-				toast.success('Sửa người dùng thành công')
+				toast.success(t('users.edit.success'))
 				formApi.reset()
 			} catch (err) {
 				console.error(err)
-				toast.error(getErrorMessage(err, 'Sửa người dùng thất bại'))
+				toast.error(getErrorMessage(err, t('users.edit.failed')))
 			} finally {
 				setOpen(false)
 			}
@@ -136,8 +147,8 @@ export default function UserEditForm({
 	})
 
 	const superUserOptions = [
-		{ label: 'Tài khoản quản trị', value: 'true' },
-		{ label: 'Tài khoản thường', value: 'false' }
+		{ label: t('users.accountTypes.admin'), value: 'true' },
+		{ label: t('users.accountTypes.regular'), value: 'false' }
 	]
 	useEffect(() => {
 		if (open && editingUser) {
@@ -157,7 +168,7 @@ export default function UserEditForm({
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogContent className='sm:max-w-md h-auto'>
 				<DialogHeader>
-					<DialogTitle>Biểu mẫu sửa thông tin người dùng</DialogTitle>
+					<DialogTitle>{t('users.edit.title')}</DialogTitle>
 				</DialogHeader>
 				<div className='space-y-4'>
 					<form
@@ -171,7 +182,9 @@ export default function UserEditForm({
 						<div className='space-y-2'>
 							<form.AppField name='displayName'>
 								{(field: any) => (
-									<field.TextField label='Họ và tên' />
+									<field.TextField
+										label={t('users.fields.displayName')}
+									/>
 								)}
 							</form.AppField>
 						</div>
@@ -180,9 +193,11 @@ export default function UserEditForm({
 							<form.AppField name='password'>
 								{(field: any) => (
 									<field.TextField
-										label='Mật khẩu mới (để trống nếu không đổi)'
+										label={t('users.edit.newPassword')}
 										type='password'
-										placeholder='Nhập mật khẩu mới'
+										placeholder={t(
+											'users.edit.newPasswordPlaceholder'
+										)}
 									/>
 								)}
 							</form.AppField>
@@ -192,9 +207,11 @@ export default function UserEditForm({
 							<form.AppField name='confirmPassword'>
 								{(field: any) => (
 									<field.TextField
-										label='Xác nhận mật khẩu'
+										label={t('users.edit.confirmPassword')}
 										type='password'
-										placeholder='Nhập lại mật khẩu mới'
+										placeholder={t(
+											'profile.password.confirmPlaceholder'
+										)}
 									/>
 								)}
 							</form.AppField>
@@ -205,8 +222,10 @@ export default function UserEditForm({
 								{(field: any) => (
 									<>
 										<field.Select
-											label='Chọn đơn vị'
-											placeholder='Chọn đơn vị'
+											label={t('users.fields.selectUnit')}
+											placeholder={t(
+												'users.fields.selectUnit'
+											)}
 											values={unitOptions}
 											value={field.state.value?.toString()}
 										/>
@@ -219,8 +238,10 @@ export default function UserEditForm({
 							<form.AppField name='rank'>
 								{(field: any) => (
 									<field.Select
-										label='Cấp bậc'
-										placeholder='Chọn cấp bậc'
+										label={t('users.fields.rank')}
+										placeholder={t(
+											'users.fields.selectRank'
+										)}
 										values={userRankOptions}
 										value={field.state.value}
 									/>
@@ -232,8 +253,10 @@ export default function UserEditForm({
 							<form.AppField name='position'>
 								{(field: any) => (
 									<field.Select
-										label='Chức vụ'
-										placeholder='Chọn chức vụ'
+										label={t('users.fields.position')}
+										placeholder={t(
+											'users.fields.selectPosition'
+										)}
 										values={userPositionOptions}
 										value={field.state.value}
 									/>
@@ -247,8 +270,10 @@ export default function UserEditForm({
 							<form.AppField name='isSuperUser'>
 								{(field: any) => (
 									<field.Select
-										label='Loại tài khoản'
-										placeholder='Loại tài khoản'
+										label={t('users.fields.accountType')}
+										placeholder={t(
+											'users.fields.accountType'
+										)}
 										values={superUserOptions}
 										value={field.state.value}
 									/>
@@ -262,12 +287,14 @@ export default function UserEditForm({
 									onClick={() => setOpen(false)}
 									variant='outline'
 								>
-									Hủy
+									{t('common.cancel')}
 								</Button>
 							</DialogClose>
 
 							<form.AppForm>
-								<form.SubscribeButton label='Sửa' />
+								<form.SubscribeButton
+									label={t('common.edit')}
+								/>
 							</form.AppForm>
 						</DialogFooter>
 					</form>

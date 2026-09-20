@@ -20,12 +20,14 @@ import { Shield } from 'lucide-react'
 import { toast } from 'sonner'
 import { queryClient } from '@/integrations/tanstack-query/root-provider'
 import { getErrorMessage } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 interface PermissionsModalProps {
 	role: Role
 }
 
 export default function PermissionsModal({ role }: PermissionsModalProps) {
+	const { t } = useTranslation('admin')
 	const [open, setOpen] = useState(false)
 	const {
 		data: permissions = [],
@@ -39,13 +41,13 @@ export default function PermissionsModal({ role }: PermissionsModalProps) {
 	const { mutateAsync, isPending } = useMutation({
 		mutationFn: UpdateRole,
 		onSuccess: () => {
-			toast.success('Chỉnh sửa vai trò thành công!')
+			toast.success(t('roles.update.success'))
 			refetch()
 			queryClient.invalidateQueries({ queryKey: ['roles'] })
 		},
 		onError: (err) => {
-			toast.error('Chỉnh sửa vai trò thất bại.', {
-				description: getErrorMessage(err, 'Vui lòng thử lại sau.')
+			toast.error(t('roles.update.failed'), {
+				description: getErrorMessage(err, t('common.retryLater'))
 			})
 		}
 	})
@@ -103,16 +105,16 @@ export default function PermissionsModal({ role }: PermissionsModalProps) {
 					className='flex-1 gap-2 bg-transparent'
 				>
 					<Shield className='h-4 w-4' />
-					Các quyền
+					{t('permissions.assign.trigger')}
 				</Button>
 			</DialogTrigger>
 			<DialogContent>
 				<DialogHeader>
 					<DialogTitle>
-						Gán quyền cho vai trò {role?.name}
+						{t('permissions.assign.title', { name: role?.name })}
 					</DialogTitle>
 					<DialogDescription>
-						Hãy chọn các quyền mà vai trò này sẽ có
+						{t('permissions.assign.description')}
 					</DialogDescription>
 				</DialogHeader>
 
@@ -198,14 +200,14 @@ export default function PermissionsModal({ role }: PermissionsModalProps) {
 							variant='outline'
 							disabled={isLoading || isPending}
 						>
-							Hủy
+							{t('common.cancel')}
 						</Button>
 					</DialogClose>
 					<Button
 						onClick={handleSave}
 						disabled={isLoading || isPending}
 					>
-						Lưu lại
+						{t('common.save')}
 					</Button>
 				</DialogFooter>
 			</DialogContent>

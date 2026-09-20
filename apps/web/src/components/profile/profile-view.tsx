@@ -5,6 +5,7 @@ import { useState } from 'react'
 import ProfileEditForm from './profile-edit-form'
 import PasswordChangeForm from './password-change-form'
 import dayjs from 'dayjs'
+import { useTranslation } from 'react-i18next'
 import {
 	Edit,
 	KeyRound,
@@ -18,11 +19,12 @@ import {
 } from 'lucide-react'
 
 export default function ProfileView() {
+	const { t } = useTranslation('admin')
 	const { user } = useAuth()
 	const [editOpen, setEditOpen] = useState(false)
 	const [passwordOpen, setPasswordOpen] = useState(false)
 
-	if (!user) return <div>Loading...</div>
+	if (!user) return <div>{t('common.loading')}</div>
 
 	return (
 		<div className='space-y-6'>
@@ -33,7 +35,7 @@ export default function ProfileView() {
 					className='flex items-center gap-2'
 				>
 					<Edit className='w-4 h-4' />
-					Chỉnh sửa thông tin
+					{t('profile.view.editInfo')}
 				</Button>
 				<Button
 					variant='outline'
@@ -41,7 +43,7 @@ export default function ProfileView() {
 					className='flex items-center gap-2'
 				>
 					<KeyRound className='w-4 h-4' />
-					Đổi mật khẩu
+					{t('profile.password.title')}
 				</Button>
 			</div>
 
@@ -51,27 +53,27 @@ export default function ProfileView() {
 					{/* Personal Information Section */}
 					<div>
 						<h3 className='text-lg font-semibold mb-4'>
-							Thông tin cá nhân
+							{t('profile.view.personal')}
 						</h3>
 						<div className='grid grid-cols-2 md:grid-cols-4 gap-6'>
 							<InfoRow
 								icon={<User className='w-4 h-4' />}
-								label='Họ và tên'
+								label={t('users.fields.displayName')}
 								value={user.displayName}
 							/>
 							<InfoRow
 								icon={<Award className='w-4 h-4' />}
-								label='Cấp bậc'
+								label={t('users.fields.rank')}
 								value={user.rank || '—'}
 							/>
 							<InfoRow
 								icon={<Briefcase className='w-4 h-4' />}
-								label='Chức vụ'
+								label={t('users.fields.position')}
 								value={user.position || '—'}
 							/>
 							<InfoRow
 								icon={<Building2 className='w-4 h-4' />}
-								label='Đơn vị'
+								label={t('users.fields.unit')}
 								value={user.unitName || '—'}
 							/>
 						</div>
@@ -82,12 +84,12 @@ export default function ProfileView() {
 					{/* Login Information Section */}
 					<div>
 						<h3 className='text-lg font-semibold mb-4'>
-							Thông tin đăng nhập
+							{t('profile.view.login')}
 						</h3>
 						<div className='grid grid-cols-2 md:grid-cols-4 gap-6'>
 							<InfoRow
 								icon={<UserCircle className='w-4 h-4' />}
-								label='Tên tài khoản'
+								label={t('users.fields.username')}
 								value={user.username}
 							/>
 						</div>
@@ -98,19 +100,19 @@ export default function ProfileView() {
 					{/* System Information Section */}
 					<div>
 						<h3 className='text-lg font-semibold mb-4'>
-							Thông tin hệ thống
+							{t('profile.view.system')}
 						</h3>
 						<div className='grid grid-cols-2 md:grid-cols-4 gap-6'>
 							<InfoRow
 								icon={<Calendar className='w-4 h-4' />}
-								label='Ngày tạo'
+								label={t('profile.view.createdAt')}
 								value={dayjs(user.createdAt).format(
 									'DD/MM/YYYY HH:mm:ss'
 								)}
 							/>
 							<InfoRow
 								icon={<Clock className='w-4 h-4' />}
-								label='Ngày cập nhật'
+								label={t('profile.view.updatedAt')}
 								value={dayjs(user.updatedAt).format(
 									'DD/MM/YYYY HH:mm:ss'
 								)}

@@ -6,12 +6,14 @@ import dayjs from 'dayjs'
 import type { AppNotification } from '@/types'
 import Notification from './notification'
 import useInfiniteNotification from '@/hooks/useInfiniteNotification'
+import { useTranslation } from 'react-i18next'
 
 export type NotificationListProps = {
 	onItemClick?: () => void
 }
 
 export function NotificationList({ onItemClick }: NotificationListProps) {
+	const { t } = useTranslation('admin')
 	const scrollRef = useRef<HTMLDivElement>(null)
 
 	const {
@@ -65,9 +67,9 @@ export function NotificationList({ onItemClick }: NotificationListProps) {
 		const yesterday = today.subtract(1, 'day')
 
 		if (date.isSame(today, 'day')) {
-			return 'Hôm nay'
+			return t('notifications.today')
 		} else if (date.isSame(yesterday, 'day')) {
-			return 'Hôm qua'
+			return t('notifications.yesterday')
 		} else if (date.isSame(today, 'year')) {
 			return date.format('DD/MM')
 		} else {
@@ -86,7 +88,7 @@ export function NotificationList({ onItemClick }: NotificationListProps) {
 	if (error) {
 		return (
 			<div className='p-4 text-center text-destructive'>
-				Failed to load notifications
+				{t('notifications.loadFailed')}
 			</div>
 		)
 	}
@@ -128,21 +130,21 @@ export function NotificationList({ onItemClick }: NotificationListProps) {
 					<div className='flex items-center justify-center p-4'>
 						<Loader2 className='h-4 w-4 animate-spin mr-2' />
 						<span className='text-sm text-muted-foreground'>
-							Đang tải...
+							{t('common.loadingMore')}
 						</span>
 					</div>
 				)}
 
 				{!hasNextPage && allNotifications.length > 0 && (
 					<div className='p-4 text-center text-muted-foreground text-sm'>
-						Không còn thông báo mới
+						{t('notifications.noMore')}
 					</div>
 				)}
 
 				{allNotifications.length === 0 && (
 					<div className='p-8 text-center text-muted-foreground'>
 						<Bell className='h-12 w-12 mx-auto mb-4 opacity-50' />
-						<p>Chưa có thông báo nào</p>
+						<p>{t('notifications.empty')}</p>
 					</div>
 				)}
 			</div>

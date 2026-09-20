@@ -6,6 +6,8 @@ import { DataTableColumnHeader } from '../data-table/data-table-column-header'
 import { DataTableRowActions } from './data-user-table-row-actions'
 import UserLockIndicator from './user-lock-indicator'
 import { Shield, Award, Briefcase } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
+import i18n from '@/i18n'
 
 // Helper function to format a DB timestamp to DD/MM/YYYY, converted from the
 // stored UTC value to Vietnam time (see formatDbTimestamp in lib/utils.ts).
@@ -15,14 +17,20 @@ function formatDate(isoDate: string): string {
 }
 
 // Helper component for empty data cells
-const EmptyCell = () => <Badge variant='secondary'>Chưa có thông tin</Badge>
+const EmptyCell = () => {
+	const { t } = useTranslation('admin')
+	return <Badge variant='secondary'>{t('common.notProvided')}</Badge>
+}
 
 export const baseUsersColumns: ColumnDef<User>[] = [
 	{
 		id: 'displayName',
 		accessorFn: (row) => row.displayName,
 		header: ({ column }) => (
-			<DataTableColumnHeader column={column} title='Họ và tên' />
+			<DataTableColumnHeader
+				column={column}
+				title={i18n.t('admin:users.columns.displayName')}
+			/>
 		),
 		cell: ({ row }) => (
 			<div className='flex items-center gap-2 min-w-40'>
@@ -35,14 +43,19 @@ export const baseUsersColumns: ColumnDef<User>[] = [
 			</div>
 		),
 		meta: {
-			label: 'Họ và tên'
+			get label() {
+				return i18n.t('admin:users.columns.displayName')
+			}
 		}
 	},
 	{
 		id: 'username',
 		accessorFn: (row) => row.username,
 		header: ({ column }) => (
-			<DataTableColumnHeader column={column} title='Tên tài khoản' />
+			<DataTableColumnHeader
+				column={column}
+				title={i18n.t('admin:users.columns.username')}
+			/>
 		),
 		cell: ({ row }) => (
 			<div className='min-w-32 flex items-center gap-2'>
@@ -50,14 +63,19 @@ export const baseUsersColumns: ColumnDef<User>[] = [
 			</div>
 		),
 		meta: {
-			label: 'Tên tài khoản'
+			get label() {
+				return i18n.t('admin:users.columns.username')
+			}
 		}
 	},
 	{
 		id: 'unit.name',
 		accessorFn: (row) => row.unit?.name || null,
 		header: ({ column }) => (
-			<DataTableColumnHeader column={column} title='Đơn vị' />
+			<DataTableColumnHeader
+				column={column}
+				title={i18n.t('admin:users.columns.unit')}
+			/>
 		),
 		cell: ({ row }) => (
 			<div className='min-w-36'>
@@ -65,14 +83,19 @@ export const baseUsersColumns: ColumnDef<User>[] = [
 			</div>
 		),
 		meta: {
-			label: 'Đơn vị'
+			get label() {
+				return i18n.t('admin:users.columns.unit')
+			}
 		}
 	},
 	{
 		id: 'rank',
 		accessorFn: (row) => row.rank || null,
 		header: ({ column }) => (
-			<DataTableColumnHeader column={column} title='Cấp bậc' />
+			<DataTableColumnHeader
+				column={column}
+				title={i18n.t('admin:users.columns.rank')}
+			/>
 		),
 		cell: ({ row }) => (
 			<div className='min-w-28'>
@@ -87,14 +110,19 @@ export const baseUsersColumns: ColumnDef<User>[] = [
 			</div>
 		),
 		meta: {
-			label: 'Cấp bậc'
+			get label() {
+				return i18n.t('admin:users.columns.rank')
+			}
 		}
 	},
 	{
 		id: 'position',
 		accessorFn: (row) => row.position || null,
 		header: ({ column }) => (
-			<DataTableColumnHeader column={column} title='Chức vụ' />
+			<DataTableColumnHeader
+				column={column}
+				title={i18n.t('admin:users.columns.position')}
+			/>
 		),
 		cell: ({ row }) => (
 			<div className='min-w-36'>
@@ -109,14 +137,19 @@ export const baseUsersColumns: ColumnDef<User>[] = [
 			</div>
 		),
 		meta: {
-			label: 'Chức vụ'
+			get label() {
+				return i18n.t('admin:users.columns.position')
+			}
 		}
 	},
 	{
 		id: 'createdAt',
 		accessorKey: 'createdAt',
 		header: ({ column }) => (
-			<DataTableColumnHeader column={column} title='Ngày tạo' />
+			<DataTableColumnHeader
+				column={column}
+				title={i18n.t('admin:users.columns.createdAt')}
+			/>
 		),
 		cell: ({ row }) => (
 			<div className='min-w-28 text-muted-foreground'>
@@ -128,7 +161,9 @@ export const baseUsersColumns: ColumnDef<User>[] = [
 			</div>
 		),
 		meta: {
-			label: 'Ngày tạo'
+			get label() {
+				return i18n.t('admin:users.columns.createdAt')
+			}
 		}
 	},
 	{
@@ -150,7 +185,10 @@ export const battalionStudentColumnsWithoutAction: ColumnDef<User>[] = [
 		id: 'displayName',
 		accessorFn: (row) => row.displayName,
 		header: ({ column }) => (
-			<DataTableColumnHeader column={column} title='Họ và tên' />
+			<DataTableColumnHeader
+				column={column}
+				title={i18n.t('admin:users.columns.displayName')}
+			/>
 		),
 		cell: ({ row }) => (
 			<div className='flex items-center gap-2'>
@@ -163,34 +201,49 @@ export const battalionStudentColumnsWithoutAction: ColumnDef<User>[] = [
 			</div>
 		),
 		meta: {
-			label: 'Họ và tên'
+			get label() {
+				return i18n.t('admin:users.columns.displayName')
+			}
 		}
 	},
 	{
 		id: 'username',
 		accessorFn: (row) => row.username,
 		header: ({ column }) => (
-			<DataTableColumnHeader column={column} title='Tên tài khoản' />
+			<DataTableColumnHeader
+				column={column}
+				title={i18n.t('admin:users.columns.username')}
+			/>
 		),
 		meta: {
-			label: 'Tên tài khoản'
+			get label() {
+				return i18n.t('admin:users.columns.username')
+			}
 		}
 	},
 	{
 		id: 'unit.name',
 		accessorFn: (row) => row.unit?.name || null,
 		header: ({ column }) => (
-			<DataTableColumnHeader column={column} title='Đơn vị' />
+			<DataTableColumnHeader
+				column={column}
+				title={i18n.t('admin:users.columns.unit')}
+			/>
 		),
 		meta: {
-			label: 'Đơn vị'
+			get label() {
+				return i18n.t('admin:users.columns.unit')
+			}
 		}
 	},
 	{
 		id: 'rank',
 		accessorFn: (row) => row.rank || null,
 		header: ({ column }) => (
-			<DataTableColumnHeader column={column} title='Cấp bậc' />
+			<DataTableColumnHeader
+				column={column}
+				title={i18n.t('admin:users.columns.rank')}
+			/>
 		),
 		cell: ({ row }) => (
 			<div className='flex items-center gap-2'>
@@ -201,14 +254,19 @@ export const battalionStudentColumnsWithoutAction: ColumnDef<User>[] = [
 			</div>
 		),
 		meta: {
-			label: 'Cấp bậc'
+			get label() {
+				return i18n.t('admin:users.columns.rank')
+			}
 		}
 	},
 	{
 		id: 'position',
 		accessorFn: (row) => row.position || null,
 		header: ({ column }) => (
-			<DataTableColumnHeader column={column} title='Chức vụ' />
+			<DataTableColumnHeader
+				column={column}
+				title={i18n.t('admin:users.columns.position')}
+			/>
 		),
 		cell: ({ row }) => (
 			<div className='flex items-center gap-2'>
@@ -219,14 +277,19 @@ export const battalionStudentColumnsWithoutAction: ColumnDef<User>[] = [
 			</div>
 		),
 		meta: {
-			label: 'Chức vụ'
+			get label() {
+				return i18n.t('admin:users.columns.position')
+			}
 		}
 	},
 	{
 		id: 'createdAt',
 		accessorKey: 'createdAt',
 		header: ({ column }) => (
-			<DataTableColumnHeader column={column} title='Ngày tạo' />
+			<DataTableColumnHeader
+				column={column}
+				title={i18n.t('admin:users.columns.createdAt')}
+			/>
 		),
 		cell: ({ row }) => (
 			<div className='text-muted-foreground'>
@@ -236,22 +299,26 @@ export const battalionStudentColumnsWithoutAction: ColumnDef<User>[] = [
 			</div>
 		),
 		meta: {
-			label: 'Ngày tạo'
+			get label() {
+				return i18n.t('admin:users.columns.createdAt')
+			}
 		}
 	},
 	{
 		id: 'actions',
-		header: 'Thao tác',
+		header: () => i18n.t('admin:users.columns.actions'),
 		cell: ({ row }) => (
 			<button
 				onClick={() => console.log('Edit:', row.original.id)}
 				className='px-3 py-1 text-sm bg-primary text-primary-foreground rounded hover:bg-primary/90 transition-colors'
 			>
-				Sửa
+				{i18n.t('admin:common.edit')}
 			</button>
 		),
 		meta: {
-			label: 'Thao tác'
+			get label() {
+				return i18n.t('admin:users.columns.actions')
+			}
 		}
 	}
 ]

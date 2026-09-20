@@ -5,19 +5,21 @@ import { toast } from 'sonner'
 import { queryClient } from '@/integrations/tanstack-query/root-provider'
 import { useAppForm } from '@/hooks/use-app-form'
 import { getErrorMessage } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 export default function PermissionForm() {
+	const { t } = useTranslation('admin')
 	const [open, setOpen] = useState(false)
 	const { mutateAsync } = useMutation({
 		mutationFn: CreatePermission,
 		onError: (err) => {
 			console.error('CreatePermission error', err)
-			toast.error('Thêm mới thất bại.', {
-				description: getErrorMessage(err, 'Vui lòng thử lại sau.')
+			toast.error(t('permissions.create.failed'), {
+				description: getErrorMessage(err, t('common.retryLater'))
 			})
 		},
 		onSuccess: () => {
-			toast.success('Thêm mới thành công!')
+			toast.success(t('permissions.create.success'))
 			setOpen(false)
 			queryClient.invalidateQueries({ queryKey: ['permissions'] })
 		}

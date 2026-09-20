@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import PositionEditForm from '@/components/PositionEditForm'
 import { useDeletePositions } from '@/hooks/useDeletePositions'
 import type { Position } from '@/types'
+import { useTranslation } from 'react-i18next'
 
 interface PositionRowActionsProps {
 	data: Position
@@ -24,23 +25,20 @@ export function PositionRowActions({
 	data,
 	onChanged
 }: PositionRowActionsProps) {
+	const { t } = useTranslation('admin')
 	const [openEdit, setOpenEdit] = useState(false)
 	const deleteMutation = useDeletePositions()
 
 	async function handleDelete(_: MouseEvent<HTMLDivElement>) {
 		try {
-			if (
-				!confirm(
-					`Bạn có chắc muốn xoá chức vụ "${data.name}"? Hành động này không thể hoàn tác.`
-				)
-			) {
+			if (!confirm(t('positions.delete.confirm', { name: data.name }))) {
 				return
 			}
 			await deleteMutation.mutateAsync([data.id])
-			toast.success('Xóa chức vụ thành công!')
+			toast.success(t('positions.delete.success'))
 			onChanged?.()
 		} catch (err) {
-			toast.error('Xóa chức vụ thất bại!')
+			toast.error(t('positions.delete.failed'))
 			if (err instanceof AxiosError) {
 				console.error('Http error: ', err.response?.data)
 			}
@@ -62,14 +60,14 @@ export function PositionRowActions({
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align='end' className='w-[160px]'>
 					<DropdownMenuItem onClick={() => setOpenEdit(true)}>
-						Chỉnh sửa
+						{t('common.edit')}
 					</DropdownMenuItem>
 					<DropdownMenuSeparator />
 					<DropdownMenuItem
 						disabled={deleteMutation.isPending}
 						onClick={handleDelete}
 					>
-						Xóa
+						{t('common.delete')}
 					</DropdownMenuItem>
 				</DropdownMenuContent>
 			</DropdownMenu>
@@ -77,7 +75,7 @@ export function PositionRowActions({
 			<Dialog open={openEdit} onOpenChange={setOpenEdit}>
 				<DialogContent className='backdrop-blur-sm flex items-center justify-center'>
 					<DialogTitle className='sr-only'>
-						Chỉnh sửa chức vụ
+						{t('positions.update.title')}
 					</DialogTitle>
 					<PositionEditForm
 						data={data}

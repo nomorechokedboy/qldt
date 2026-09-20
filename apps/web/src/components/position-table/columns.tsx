@@ -3,6 +3,7 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Badge } from '@/components/ui/badge'
 import { PositionRowActions } from './position-row-actions'
 import type { Position } from '@/types'
+import i18n from '@/i18n'
 
 export function buildPositionColumns(
 	onChanged?: () => void
@@ -36,18 +37,18 @@ export function buildPositionColumns(
 		},
 		{
 			accessorKey: 'priority',
-			header: 'Ưu tiên',
+			header: () => i18n.t('admin:positions.columns.priority'),
 			cell: ({ row }) => (
 				<Badge variant='secondary'>{row.getValue('priority')}</Badge>
 			)
 		},
 		{
 			accessorKey: 'code',
-			header: 'Mã chức vụ'
+			header: () => i18n.t('admin:positions.columns.code')
 		},
 		{
 			accessorKey: 'name',
-			header: 'Tên chức vụ'
+			header: () => i18n.t('admin:positions.columns.name')
 		},
 		{
 			id: 'actions',

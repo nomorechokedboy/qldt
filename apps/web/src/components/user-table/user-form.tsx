@@ -17,11 +17,21 @@ import useUnitOptions from '@/hooks/useUnitOptions'
 import { userRankOptions } from '@/data/ranks'
 import { userPositionOptions } from '@/data/positions'
 import { getErrorMessage } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
+import i18n from '@/i18n'
+
+// Zod calls `error` while parsing, so messages follow the language in use at
+// that moment instead of the one the module was loaded in.
+const msg = (key: string) => ({
+	error: () => i18n.t(key as never) as string
+})
 
 const schema = z.object({
-	username: z.string().min(1, 'Tên tài khoản không được bỏ trống'),
-	displayName: z.string().min(1, 'Họ và tên không được bỏ trống'),
-	password: z.string().min(1, 'Mật khẩu không được bỏ trống'),
+	username: z.string().min(1, msg('admin:users.validation.usernameRequired')),
+	displayName: z
+		.string()
+		.min(1, msg('admin:users.validation.displayNameRequired')),
+	password: z.string().min(1, msg('admin:users.validation.passwordRequired')),
 	unitId: z.preprocess((val) => {
 		if (typeof val === 'string') {
 			return Number.parseInt(val)
@@ -41,6 +51,7 @@ export interface UserFormProps {
 }
 
 export default function UserForm({ onSuccess, open, setOpen }: UserFormProps) {
+	const { t } = useTranslation('admin')
 	const { options: unitOptions } = useUnitOptions()
 
 	const { mutateAsync } = useMutation({
@@ -65,13 +76,11 @@ export default function UserForm({ onSuccess, open, setOpen }: UserFormProps) {
 				value.isSuperUser = value.isSuperUser === 'true' ? true : false
 				const parsed = schema.parse(value)
 				await mutateAsync(parsed)
-				toast.success('Thêm mới người dùng thành công')
+				toast.success(t('users.create.success'))
 				formApi.reset()
 			} catch (err) {
 				console.error(err)
-				toast.error(
-					getErrorMessage(err, 'Thêm mới người dùng thất bại')
-				)
+				toast.error(getErrorMessage(err, t('users.create.failed')))
 			} finally {
 				setOpen(false)
 			}
@@ -84,7 +93,7 @@ export default function UserForm({ onSuccess, open, setOpen }: UserFormProps) {
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogContent className='sm:max-w-md h-auto'>
 				<DialogHeader>
-					<DialogTitle>Biểu mẫu thêm người dùng</DialogTitle>
+					<DialogTitle>{t('users.create.title')}</DialogTitle>
 				</DialogHeader>
 				<div className='space-y-4'>
 					<form
@@ -98,7 +107,9 @@ export default function UserForm({ onSuccess, open, setOpen }: UserFormProps) {
 						<div className='space-y-2'>
 							<form.AppField name='displayName'>
 								{(field: any) => (
-									<field.TextField label='Họ và tên' />
+									<field.TextField
+										label={t('users.fields.displayName')}
+									/>
 								)}
 							</form.AppField>
 						</div>
@@ -106,7 +117,9 @@ export default function UserForm({ onSuccess, open, setOpen }: UserFormProps) {
 						<div className='space-y-2'>
 							<form.AppField name='username'>
 								{(field: any) => (
-									<field.TextField label='Tên tài khoản' />
+									<field.TextField
+										label={t('users.fields.username')}
+									/>
 								)}
 							</form.AppField>
 						</div>
@@ -115,7 +128,7 @@ export default function UserForm({ onSuccess, open, setOpen }: UserFormProps) {
 							<form.AppField name='password'>
 								{(field: any) => (
 									<field.TextField
-										label='Mật khẩu'
+										label={t('users.fields.password')}
 										type='password'
 									/>
 								)}
@@ -127,8 +140,10 @@ export default function UserForm({ onSuccess, open, setOpen }: UserFormProps) {
 								{(field: any) => (
 									<>
 										<field.Select
-											label='Chọn đơn vị'
-											placeholder='Chọn đơn vị'
+											label={t('users.fields.selectUnit')}
+											placeholder={t(
+												'users.fields.selectUnit'
+											)}
 											values={unitOptions}
 										/>
 									</>
@@ -140,8 +155,10 @@ export default function UserForm({ onSuccess, open, setOpen }: UserFormProps) {
 							<form.AppField name='rank'>
 								{(field: any) => (
 									<field.Select
-										label='Cấp bậc'
-										placeholder='Chọn cấp bậc'
+										label={t('users.fields.rank')}
+										placeholder={t(
+											'users.fields.selectRank'
+										)}
 										values={userRankOptions}
 										defaultValue={''}
 									/>
@@ -153,8 +170,10 @@ export default function UserForm({ onSuccess, open, setOpen }: UserFormProps) {
 							<form.AppField name='position'>
 								{(field: any) => (
 									<field.Select
-										label='Chức vụ'
-										placeholder='Chọn chức vụ'
+										label={t('users.fields.position')}
+										placeholder={t(
+											'users.fields.selectPosition'
+										)}
 										values={userPositionOptions}
 										defaultValue={''}
 									/>
@@ -168,15 +187,21 @@ export default function UserForm({ onSuccess, open, setOpen }: UserFormProps) {
 							<form.AppField name='isSuperUser'>
 								{(field: any) => (
 									<field.Select
-										label='Loại tài khoản'
-										placeholder='Loại tài khoản'
+										label={t('users.fields.accountType')}
+										placeholder={t(
+											'users.fields.accountType'
+										)}
 										values={[
 											{
-												label: 'Tài khoản quản trị',
+												label: t(
+													'users.accountTypes.admin'
+												),
 												value: 'true'
 											},
 											{
-												label: 'Tài khoản thường',
+												label: t(
+													'users.accountTypes.regular'
+												),
 												value: 'false'
 											}
 										]}
@@ -192,12 +217,12 @@ export default function UserForm({ onSuccess, open, setOpen }: UserFormProps) {
 									onClick={() => setOpen(false)}
 									variant='outline'
 								>
-									Hủy
+									{t('common.cancel')}
 								</Button>
 							</DialogClose>
 
 							<form.AppForm>
-								<form.SubscribeButton label='Thêm' />
+								<form.SubscribeButton label={t('common.add')} />
 							</form.AppForm>
 						</DialogFooter>
 					</form>
