@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Label } from '@/components/ui/label'
 import {
 	Select,
@@ -70,12 +71,15 @@ export function commanderValuesToPayload(values: UnitCommanderValues) {
 	}
 }
 
-const FIELDS: { key: CommanderFieldKey; label: string }[] = [
-	{ key: 'commanderId', label: 'Chỉ huy trưởng' },
-	{ key: 'deputyCommanderId', label: 'Phó chỉ huy trưởng' },
-	{ key: 'politicalCommanderId', label: 'Chính ủy' },
-	{ key: 'deputyPoliticalCommanderId', label: 'Phó chính ủy' }
-]
+const FIELDS = [
+	{ key: 'commanderId', label: 'commanders.commander' },
+	{ key: 'deputyCommanderId', label: 'commanders.deputyCommander' },
+	{ key: 'politicalCommanderId', label: 'commanders.politicalCommander' },
+	{
+		key: 'deputyPoliticalCommanderId',
+		label: 'commanders.deputyPoliticalCommander'
+	}
+] as const satisfies { key: CommanderFieldKey; label: string }[]
 
 interface UnitCommanderFieldsProps {
 	idPrefix: string
@@ -88,36 +92,42 @@ export default function UnitCommanderFields({
 	values,
 	onChange
 }: UnitCommanderFieldsProps) {
+	const { t } = useTranslation('units')
 	const { data: users } = useUserData()
 
 	return (
 		<>
-			{FIELDS.map(({ key, label }) => (
-				<div className='space-y-2' key={key}>
-					<Label htmlFor={`${idPrefix}-${key}`}>{label}</Label>
-					<Select
-						value={values[key]}
-						onValueChange={(value) => onChange(key, value)}
-					>
-						<SelectTrigger id={`${idPrefix}-${key}`}>
-							<SelectValue
-								placeholder={`Chọn ${label.toLowerCase()}`}
-							/>
-						</SelectTrigger>
-						<SelectContent>
-							<SelectItem value={NO_COMMANDER}>
-								Chưa chỉ định
-							</SelectItem>
-							{users?.map((u) => (
-								<SelectItem key={u.id} value={String(u.id)}>
-									{u.displayName}
-									{u.rank ? ` (${u.rank})` : ''}
+			{FIELDS.map(({ key, label: labelKey }) => {
+				const label = t(labelKey)
+				return (
+					<div className='space-y-2' key={key}>
+						<Label htmlFor={`${idPrefix}-${key}`}>{label}</Label>
+						<Select
+							value={values[key]}
+							onValueChange={(value) => onChange(key, value)}
+						>
+							<SelectTrigger id={`${idPrefix}-${key}`}>
+								<SelectValue
+									placeholder={t('commanders.choose', {
+										label: label.toLowerCase()
+									})}
+								/>
+							</SelectTrigger>
+							<SelectContent>
+								<SelectItem value={NO_COMMANDER}>
+									{t('commanders.unassigned')}
 								</SelectItem>
-							))}
-						</SelectContent>
-					</Select>
-				</div>
-			))}
+								{users?.map((u) => (
+									<SelectItem key={u.id} value={String(u.id)}>
+										{u.displayName}
+										{u.rank ? ` (${u.rank})` : ''}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+					</div>
+				)
+			})}
 		</>
 	)
 }
@@ -138,6 +148,7 @@ export function SingleCommanderField({
 	value,
 	onChange
 }: SingleCommanderFieldProps) {
+	const { t } = useTranslation('units')
 	const { data: users } = useUserData()
 
 	return (
@@ -145,10 +156,16 @@ export function SingleCommanderField({
 			<Label htmlFor={`${idPrefix}-commanderId`}>{label}</Label>
 			<Select value={value} onValueChange={onChange}>
 				<SelectTrigger id={`${idPrefix}-commanderId`}>
-					<SelectValue placeholder={`Chọn ${label.toLowerCase()}`} />
+					<SelectValue
+						placeholder={t('commanders.choose', {
+							label: label.toLowerCase()
+						})}
+					/>
 				</SelectTrigger>
 				<SelectContent>
-					<SelectItem value={NO_COMMANDER}>Chưa chỉ định</SelectItem>
+					<SelectItem value={NO_COMMANDER}>
+						{t('commanders.unassigned')}
+					</SelectItem>
 					{users?.map((u) => (
 						<SelectItem key={u.id} value={String(u.id)}>
 							{u.displayName}

@@ -15,12 +15,14 @@ import useUnitData from '@/hooks/useUnitData'
 import type { MaterialAsset } from '@/types'
 import { ArrowDownToLine, Settings, Upload } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 type CompanyWeaponsTabProps = {
 	unitId: number
 }
 
 export default function CompanyWeaponsTab({ unitId }: CompanyWeaponsTabProps) {
+	const { t } = useTranslation('units')
 	const { data: company, refetch: refetchUnit } = useUnitData({ id: unitId })
 	const { data: assets, refetch: refetchAssets } = useMaterialAssetsData(
 		undefined,
@@ -50,17 +52,21 @@ export default function CompanyWeaponsTab({ unitId }: CompanyWeaponsTabProps) {
 	}
 
 	const searchConfig = [
-		createSearchConfig('serialNumber', 'Tìm kiếm theo số sê-ri...')
+		createSearchConfig('serialNumber', t('materialTables.searchSerial'))
 	]
 	const facetedFilters = [
-		createFacetedFilter('status', 'Trạng thái', materialAssetStatusOptions)
+		createFacetedFilter(
+			'status',
+			t('materialTables.status'),
+			materialAssetStatusOptions
+		)
 	]
 
 	return (
 		<div className='hidden h-full flex-1 flex-col space-y-8 p-8 md:flex'>
 			<div className='flex items-center justify-between space-y-2'>
 				<h2 className='text-2xl font-bold tracking-tight'>
-					Vũ khí/trang bị của {company?.name}
+					{t('company.weaponsTitle', { name: company?.name ?? '' })}
 				</h2>
 				{company?.id !== undefined && (
 					<div className='flex items-center gap-2'>
@@ -69,7 +75,7 @@ export default function CompanyWeaponsTab({ unitId }: CompanyWeaponsTabProps) {
 							onClick={() => setImportAssetsOpen(true)}
 						>
 							<Upload />
-							Import
+							{t('materialTables.import')}
 						</Button>
 						<MaterialAssetForm
 							unitOptions={unitOptions}
@@ -91,7 +97,7 @@ export default function CompanyWeaponsTab({ unitId }: CompanyWeaponsTabProps) {
 			/>
 
 			<DataTable
-				placeholder='Đơn vị chưa có vũ khí/trang bị nào'
+				placeholder={t('company.noWeapons')}
 				columns={buildMaterialAssetColumns(
 					companyRooms,
 					students ?? [],
@@ -115,7 +121,7 @@ export default function CompanyWeaponsTab({ unitId }: CompanyWeaponsTabProps) {
 						<ExportTemplateManager resourceType='material_assets'>
 							<Button variant='outline'>
 								<Settings />
-								Quản lý mẫu
+								{t('materialTables.manageTemplates')}
 							</Button>
 						</ExportTemplateManager>
 						<ExportMaterialAssetsDialog
@@ -131,7 +137,7 @@ export default function CompanyWeaponsTab({ unitId }: CompanyWeaponsTabProps) {
 						>
 							<Button>
 								<ArrowDownToLine />
-								Xuất file
+								{t('materialTables.export')}
 							</Button>
 						</ExportMaterialAssetsDialog>
 					</>

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { toast } from 'sonner'
@@ -27,6 +28,7 @@ export default function RoomForm({
 	buildingId,
 	onSuccess
 }: RoomFormProps) {
+	const { t } = useTranslation('units')
 	const [open, setOpen] = useState(false)
 	const [name, setName] = useState('')
 	const [type, setType] = useState('')
@@ -51,13 +53,13 @@ export default function RoomForm({
 				type: type || undefined,
 				description: description || undefined
 			})
-			toast.success('Thêm mới phòng thành công')
+			toast.success(t('facilities.room.created'))
 			onSuccess?.()
 			resetForm()
 			setOpen(false)
 		} catch (err) {
 			console.error('Error creating room:', err)
-			toast.error(getErrorMessage(err, 'Thêm mới phòng thất bại!'))
+			toast.error(getErrorMessage(err, t('facilities.room.createFailed')))
 		}
 	}
 
@@ -72,37 +74,43 @@ export default function RoomForm({
 			<DialogTrigger asChild>
 				<Button size='sm' variant='outline'>
 					<Plus className='w-4 h-4 mr-2' />
-					Thêm phòng
+					{t('facilities.room.trigger')}
 				</Button>
 			</DialogTrigger>
 			<DialogContent className='sm:max-w-md h-auto'>
 				<DialogHeader>
-					<DialogTitle>Biểu mẫu thêm phòng</DialogTitle>
+					<DialogTitle>{t('facilities.room.formTitle')}</DialogTitle>
 				</DialogHeader>
 				<form className='space-y-4' onSubmit={handleSubmit}>
 					<div className='space-y-2'>
-						<Label htmlFor='room-name'>Tên phòng</Label>
+						<Label htmlFor='room-name'>
+							{t('facilities.room.name')}
+						</Label>
 						<Input
 							id='room-name'
 							value={name}
 							onChange={(e) => setName(e.target.value)}
-							placeholder='vd: Phòng trung đội trưởng'
+							placeholder={t('facilities.room.namePlaceholder')}
 							required
 						/>
 					</div>
 
 					<div className='space-y-2'>
-						<Label htmlFor='room-type'>Loại phòng</Label>
+						<Label htmlFor='room-type'>
+							{t('facilities.room.type')}
+						</Label>
 						<Input
 							id='room-type'
 							value={type}
 							onChange={(e) => setType(e.target.value)}
-							placeholder='vd: phòng ở, kho, phòng chỉ huy'
+							placeholder={t('facilities.room.typePlaceholder')}
 						/>
 					</div>
 
 					<div className='space-y-2'>
-						<Label htmlFor='room-description'>Mô tả</Label>
+						<Label htmlFor='room-description'>
+							{t('facilities.common.description')}
+						</Label>
 						<Input
 							id='room-description'
 							value={description}
@@ -112,13 +120,17 @@ export default function RoomForm({
 
 					<DialogFooter>
 						<DialogClose asChild>
-							<Button variant='outline'>Hủy</Button>
+							<Button variant='outline'>
+								{t('facilities.common.cancel')}
+							</Button>
 						</DialogClose>
 						<Button
 							type='submit'
 							disabled={createMutation.isPending}
 						>
-							{createMutation.isPending ? 'Đang thêm...' : 'Thêm'}
+							{createMutation.isPending
+								? t('facilities.common.adding')
+								: t('facilities.common.add')}
 						</Button>
 					</DialogFooter>
 				</form>

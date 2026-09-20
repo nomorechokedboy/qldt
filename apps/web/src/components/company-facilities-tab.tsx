@@ -17,6 +17,7 @@ import useUnitData from '@/hooks/useUnitData'
 import type { MaterialStock } from '@/types'
 import { ArrowDownToLine, Settings, Upload } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 type CompanyFacilitiesTabProps = {
 	unitId: number
@@ -25,6 +26,7 @@ type CompanyFacilitiesTabProps = {
 export default function CompanyFacilitiesTab({
 	unitId
 }: CompanyFacilitiesTabProps) {
+	const { t } = useTranslation('units')
 	const { data: company, refetch: refetchUnit } = useUnitData({ id: unitId })
 	const { data: buildings, refetch: refetchBuildings } = useBuildingsData({
 		enabled: true
@@ -62,12 +64,13 @@ export default function CompanyFacilitiesTab({
 	}
 
 	const searchConfig = [
-		createSearchConfig('materialType', 'Tìm kiếm theo loại vật tư...')
+		createSearchConfig('materialType', t('materialTables.searchSupplyType'))
 	]
 
 	const roomOptions = [
 		{
-			label: 'Chưa có vị trí cụ thể',
+			label: t('materialTables.noRoom'),
+			// matches the placeholder the stock table's room column reports
 			value: 'Chưa có vị trí cụ thể'
 		},
 		...companyRooms.map((r) => ({ label: r.name, value: r.name }))
@@ -75,17 +78,19 @@ export default function CompanyFacilitiesTab({
 	const facetedFilters = [
 		createFacetedFilter(
 			'condition',
-			'Tình trạng',
+			t('materialTables.condition'),
 			materialConditionOptions
 		),
-		createFacetedFilter('room', 'Vị trí', roomOptions)
+		createFacetedFilter('room', t('materialTables.room'), roomOptions)
 	]
 
 	return (
 		<div className='flex flex-1 flex-col space-y-8 p-8'>
 			<div className='flex items-center justify-between space-y-2'>
 				<h2 className='text-2xl font-bold tracking-tight'>
-					Cơ sở vật chất của {company?.name}
+					{t('company.facilitiesTitle', {
+						name: company?.name ?? ''
+					})}
 				</h2>
 				{company?.id !== undefined && (
 					<BuildingForm
@@ -108,13 +113,13 @@ export default function CompanyFacilitiesTab({
 
 			{companyBuildings.length === 0 && (
 				<p className='text-muted-foreground'>
-					Đơn vị chưa có nhà/khu nhà nào.
+					{t('company.noBuildings')}
 				</p>
 			)}
 
 			<div className='flex items-center justify-between space-y-2 pt-4 border-t'>
 				<h2 className='text-2xl font-bold tracking-tight'>
-					Vật tư sinh hoạt
+					{t('company.suppliesTitle')}
 				</h2>
 				{company?.id !== undefined && (
 					<div className='flex items-center gap-2'>
@@ -123,7 +128,7 @@ export default function CompanyFacilitiesTab({
 							onClick={() => setImportStocksOpen(true)}
 						>
 							<Upload />
-							Import
+							{t('materialTables.import')}
 						</Button>
 						<MaterialStockForm
 							unitOptions={unitOptions}
@@ -143,7 +148,7 @@ export default function CompanyFacilitiesTab({
 			/>
 
 			<DataTable
-				placeholder='Đơn vị chưa có vật tư sinh hoạt nào'
+				placeholder={t('company.noSupplies')}
 				columns={buildMaterialStockColumns(
 					companyRooms,
 					handleStockChanged
@@ -164,7 +169,7 @@ export default function CompanyFacilitiesTab({
 						<ExportTemplateManager resourceType='material_stocks'>
 							<Button variant='outline'>
 								<Settings />
-								Quản lý mẫu
+								{t('materialTables.manageTemplates')}
 							</Button>
 						</ExportTemplateManager>
 						<ExportMaterialStocksDialog
@@ -180,7 +185,7 @@ export default function CompanyFacilitiesTab({
 						>
 							<Button>
 								<ArrowDownToLine />
-								Xuất file
+								{t('materialTables.export')}
 							</Button>
 						</ExportMaterialStocksDialog>
 					</>

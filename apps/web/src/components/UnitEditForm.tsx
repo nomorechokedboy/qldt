@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { X } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -52,6 +53,7 @@ export default function UnitEditForm({
 	onUpdate,
 	onClose
 }: UnitEditFormProps) {
+	const { t } = useTranslation('units')
 	// unitData may have come from a nested list (e.g. a platoon read off its
 	// company's `children`, or a squad off a platoon's), where `.parent`
 	// isn't populated past the first level of nesting. Re-fetch this exact
@@ -71,7 +73,9 @@ export default function UnitEditForm({
 				>
 					<X className='h-4 w-4' />
 				</Button>
-				<p className='text-sm text-muted-foreground'>Đang tải...</p>
+				<p className='text-sm text-muted-foreground'>
+					{t('form.loading')}
+				</p>
 			</div>
 		)
 	}
@@ -86,6 +90,7 @@ export default function UnitEditForm({
 }
 
 function UnitEditFormBody({ unitData, onUpdate, onClose }: UnitEditFormProps) {
+	const { t } = useTranslation('units')
 	const [alias, setAlias] = useState(unitData.alias)
 	const [name, setName] = useState(unitData.name)
 	const [level, setLevel] = useState<UnitLevel>(unitData.level)
@@ -139,14 +144,12 @@ function UnitEditFormBody({ unitData, onUpdate, onClose }: UnitEditFormProps) {
 					...commanderValuesToPayload(commanders)
 				}
 			])
-			toast.success('Cập nhật thông tin đơn vị thành công')
+			toast.success(t('form.updateSuccess'))
 			onUpdate({ alias, name, level, parentId: nextParentId })
 			onClose()
 		} catch (err) {
 			console.error('Error updating unit:', err)
-			toast.error(
-				getErrorMessage(err, 'Cập nhật thông tin đơn vị thất bại!')
-			)
+			toast.error(getErrorMessage(err, t('form.updateFailed')))
 		}
 	}
 
@@ -164,7 +167,7 @@ function UnitEditFormBody({ unitData, onUpdate, onClose }: UnitEditFormProps) {
 
 			<form onSubmit={handleSubmit} className='space-y-4'>
 				<div className='space-y-2'>
-					<Label htmlFor='edit-unit-name'>Tên đơn vị</Label>
+					<Label htmlFor='edit-unit-name'>{t('form.name')}</Label>
 					<Input
 						id='edit-unit-name'
 						value={name}
@@ -174,9 +177,7 @@ function UnitEditFormBody({ unitData, onUpdate, onClose }: UnitEditFormProps) {
 				</div>
 
 				<div className='space-y-2'>
-					<Label htmlFor='edit-unit-alias'>
-						Mã định danh (alias)
-					</Label>
+					<Label htmlFor='edit-unit-alias'>{t('form.alias')}</Label>
 					<Input
 						id='edit-unit-alias'
 						value={alias}
@@ -186,7 +187,7 @@ function UnitEditFormBody({ unitData, onUpdate, onClose }: UnitEditFormProps) {
 				</div>
 
 				<div className='space-y-2'>
-					<Label htmlFor='edit-unit-level'>Cấp đơn vị</Label>
+					<Label htmlFor='edit-unit-level'>{t('form.level')}</Label>
 					{isSuperAdmin ? (
 						<Select
 							value={level}
@@ -196,7 +197,9 @@ function UnitEditFormBody({ unitData, onUpdate, onClose }: UnitEditFormProps) {
 							}}
 						>
 							<SelectTrigger id='edit-unit-level'>
-								<SelectValue placeholder='Chọn cấp đơn vị' />
+								<SelectValue
+									placeholder={t('form.levelPlaceholder')}
+								/>
 							</SelectTrigger>
 							<SelectContent>
 								{levelOptions.map((opt) => (
@@ -218,25 +221,24 @@ function UnitEditFormBody({ unitData, onUpdate, onClose }: UnitEditFormProps) {
 								readOnly
 							/>
 							<p className='text-xs text-muted-foreground'>
-								Chỉ quản trị viên hệ thống mới có thể thay đổi
-								cấp đơn vị
+								{t('form.levelLocked')}
 							</p>
 						</>
 					)}
 				</div>
 
 				<div className='space-y-2'>
-					<Label htmlFor='edit-unit-parent'>Thuộc đơn vị</Label>
+					<Label htmlFor='edit-unit-parent'>{t('form.parent')}</Label>
 					{isSuperAdmin ? (
 						<UnitSelect
 							id='edit-unit-parent'
 							options={parentSelectOptions}
 							value={parentId}
 							onValueChange={setParentId}
-							placeholder='Chọn đơn vị cấp trên'
+							placeholder={t('form.parentPlaceholder')}
 							noneOption={{
 								value: NO_PARENT,
-								label: 'Không có (đơn vị gốc)'
+								label: t('form.noParent')
 							}}
 						/>
 					) : (
@@ -244,15 +246,13 @@ function UnitEditFormBody({ unitData, onUpdate, onClose }: UnitEditFormProps) {
 							<Input
 								id='edit-unit-parent'
 								value={
-									unitData.parent?.name ??
-									'Không có (đơn vị gốc)'
+									unitData.parent?.name ?? t('form.noParent')
 								}
 								disabled
 								readOnly
 							/>
 							<p className='text-xs text-muted-foreground'>
-								Chỉ quản trị viên hệ thống mới có thể thay đổi
-								đơn vị cấp trên
+								{t('form.parentLocked')}
 							</p>
 						</>
 					)}
@@ -274,8 +274,8 @@ function UnitEditFormBody({ unitData, onUpdate, onClose }: UnitEditFormProps) {
 						idPrefix='edit-unit'
 						label={
 							level === 'squad'
-								? 'Tiểu đội trưởng'
-								: 'Trung đội trưởng'
+								? t('commanders.squadCommander')
+								: t('commanders.platoonCommander')
 						}
 						value={commanders.commanderId}
 						onChange={(value) =>
@@ -289,15 +289,15 @@ function UnitEditFormBody({ unitData, onUpdate, onClose }: UnitEditFormProps) {
 
 				<div className='flex justify-end gap-2 pt-2'>
 					<Button type='button' onClick={onClose} variant='outline'>
-						Huỷ
+						{t('form.cancel')}
 					</Button>
 					<Button
 						type='submit'
 						disabled={updateUnitMutation.isPending}
 					>
 						{updateUnitMutation.isPending
-							? 'Đang cập nhật...'
-							: 'Cập nhật'}
+							? t('form.updating')
+							: t('form.update')}
 					</Button>
 				</div>
 			</form>

@@ -1,6 +1,7 @@
 import type { Unit } from '@/types'
 import useDataTableToolbarConfig from './useDataTableToolbarConfig'
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { buildUnitsById } from '@/lib/unit-labels'
 import { buildUnitOptions } from '@/lib/unit-options'
 
@@ -13,8 +14,10 @@ export interface UseUnitsFacetedFiltersParams {
 export default function useUnitsFacetedFilters({
 	key,
 	units,
-	label = 'Đơn vị'
+	label: labelProp
 }: UseUnitsFacetedFiltersParams) {
+	const { t } = useTranslation('units')
+	const label = labelProp ?? t('filters.unit')
 	const { createFacetedFilter } = useDataTableToolbarConfig()
 
 	const unitsById = useMemo(() => buildUnitsById(units), [units])

@@ -1,12 +1,14 @@
 import InitializeRootUnitForm from '@/components/initialize-root-unit-form'
 import useIsInitRootUnit from '@/hooks/useIsInitRootUnit'
 import { createFileRoute, Navigate } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 
 export const Route = createFileRoute('/khoi-tao-don-vi')({
 	component: RouteComponent
 })
 
 function RouteComponent() {
+	const { t } = useTranslation('units')
 	const { data, isLoading } = useIsInitRootUnit()
 
 	if (isLoading) {
@@ -22,7 +24,7 @@ function RouteComponent() {
 			<div className='w-full max-w-md space-y-6'>
 				<div className='text-center space-y-2'>
 					<p className='text-xs font-medium uppercase tracking-widest text-muted-foreground'>
-						Khởi tạo lần đầu
+						{t('initialize.firstTime')}
 					</p>
 				</div>
 				<InitializeRootUnitForm />

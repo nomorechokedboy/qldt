@@ -7,6 +7,7 @@ import CompanyWeaponsTab from '@/components/company-weapons-tab'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import StudentTable from '@/components/student-table'
 import z from 'zod'
+import { useTranslation } from 'react-i18next'
 import useUnitTroopersData from '@/hooks/useUnitTroopersData'
 import useOnDeleteStudents from '@/hooks/useOnDeleteStudents'
 import useActionColumn from '@/hooks/useActionColumn'
@@ -26,6 +27,7 @@ export const Route = createFileRoute('/dai-doi/$companyAlias')({
 })
 
 function RouteComponent() {
+	const { t } = useTranslation('units')
 	const { companyAlias } = Route.useParams()
 	const { id } = Route.useSearch()
 	const {
@@ -53,14 +55,20 @@ function RouteComponent() {
 			<div className='hidden h-full flex-1 flex-col space-y-8 p-8 md:flex'>
 				<Tabs defaultValue='students'>
 					<TabsList>
-						<TabsTrigger value='students'>Quân nhân</TabsTrigger>
-						<TabsTrigger value='platoons'>Trung đội</TabsTrigger>
-						<TabsTrigger value='squads'>Tiểu đội</TabsTrigger>
+						<TabsTrigger value='students'>
+							{t('tabs.students')}
+						</TabsTrigger>
+						<TabsTrigger value='platoons'>
+							{t('tabs.platoons')}
+						</TabsTrigger>
+						<TabsTrigger value='squads'>
+							{t('tabs.squads')}
+						</TabsTrigger>
 						<TabsTrigger value='facilities'>
-							Cơ sở vật chất
+							{t('tabs.facilities')}
 						</TabsTrigger>
 						<TabsTrigger value='weapons'>
-							Vũ khí/trang bị
+							{t('tabs.weapons')}
 						</TabsTrigger>
 					</TabsList>
 
@@ -91,7 +99,7 @@ function RouteComponent() {
 									actionColumn
 								]}
 								facetedFilters={[]}
-								placeholder='Chưa có thông tin quân nhân.'
+								placeholder={t('tabs.noStudentInfo')}
 								exportConfig={{
 									filename,
 									defaultExportValues: {

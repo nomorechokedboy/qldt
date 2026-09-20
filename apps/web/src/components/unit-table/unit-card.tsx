@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Trans, useTranslation } from 'react-i18next'
 import { Pencil, Trash, ExternalLink } from 'lucide-react'
 import { toast } from 'sonner'
 import { Link } from '@tanstack/react-router'
@@ -45,6 +46,7 @@ interface UnitCardProps {
 }
 
 export default function UnitCard({ data, onEdit, onDelete }: UnitCardProps) {
+	const { t } = useTranslation('units')
 	const [openEdit, setOpenEdit] = useState(false)
 	const [openDelete, setOpenDelete] = useState(false)
 	const deleteUnitMutation = useDeleteUnits()
@@ -54,10 +56,10 @@ export default function UnitCard({ data, onEdit, onDelete }: UnitCardProps) {
 	const handleDelete = async () => {
 		try {
 			await deleteUnitMutation.mutateAsync([data.id])
-			toast.success(`Đã xoá đơn vị "${data.name}" thành công!`)
+			toast.success(t('card.deleteSuccess', { name: data.name }))
 			onDelete?.()
 		} catch (error) {
-			toast.error('Có lỗi xảy ra khi xoá đơn vị')
+			toast.error(t('card.deleteFailed'))
 		} finally {
 			setOpenDelete(false)
 		}
@@ -78,13 +80,16 @@ export default function UnitCard({ data, onEdit, onDelete }: UnitCardProps) {
 							</Badge>
 							{isRoot && (
 								<Badge variant='outline' className='text-xs'>
-									Đơn vị gốc
+									{t('card.rootBadge')}
 								</Badge>
 							)}
 						</CardTitle>
 						<CardDescription>
-							Mã định danh: {data.alias}
-							{data.parent && ` · Thuộc ${data.parent.name}`}
+							{t('card.aliasLine', { alias: data.alias })}
+							{data.parent &&
+								t('card.parentSuffix', {
+									name: data.parent.name
+								})}
 						</CardDescription>
 					</div>
 					<div className='hidden gap-2 transition-all group-hover:flex self-start'>
@@ -92,7 +97,7 @@ export default function UnitCard({ data, onEdit, onDelete }: UnitCardProps) {
 							asChild
 							type='button'
 							aria-label='Manage'
-							title='Quản lý đơn vị'
+							title={t('card.manage')}
 							variant='ghost'
 							className='text-emerald-600'
 							size='icon'
@@ -104,7 +109,7 @@ export default function UnitCard({ data, onEdit, onDelete }: UnitCardProps) {
 						<Button
 							type='button'
 							aria-label='Edit'
-							title='Chỉnh sửa'
+							title={t('card.edit')}
 							variant='ghost'
 							className='text-sky-600'
 							size='icon'
@@ -117,7 +122,7 @@ export default function UnitCard({ data, onEdit, onDelete }: UnitCardProps) {
 								type='button'
 								variant='ghost'
 								aria-label='Delete'
-								title='Xoá'
+								title={t('card.delete')}
 								className='text-destructive'
 								size='icon'
 								onClick={() => setOpenDelete(true)}
@@ -130,7 +135,9 @@ export default function UnitCard({ data, onEdit, onDelete }: UnitCardProps) {
 				{data.children !== undefined && data.children.length > 0 && (
 					<CardFooter className='flex-col items-start gap-1.5 text-sm'>
 						<div className='text-muted-foreground'>
-							Số đơn vị trực thuộc: {data.children.length}
+							{t('card.childCount', {
+								count: data.children.length
+							})}
 						</div>
 					</CardFooter>
 				)}
@@ -139,7 +146,7 @@ export default function UnitCard({ data, onEdit, onDelete }: UnitCardProps) {
 			<Dialog open={openEdit} onOpenChange={setOpenEdit}>
 				<DialogContent className='backdrop-blur-sm flex items-center justify-center'>
 					<DialogTitle className='sr-only'>
-						Chỉnh sửa đơn vị
+						{t('card.editTitle')}
 					</DialogTitle>
 					<UnitEditForm
 						unitData={data}
@@ -155,17 +162,27 @@ export default function UnitCard({ data, onEdit, onDelete }: UnitCardProps) {
 			<Dialog open={openDelete} onOpenChange={setOpenDelete}>
 				<DialogContent className='max-w-md max-h-1/3'>
 					<DialogTitle className='sr-only'>
-						Xác nhận xoá đơn vị
+						{t('card.deleteTitle')}
 					</DialogTitle>
 					<div className='flex flex-col gap-4'>
 						<div className='font-semibold text-lg text-center'>
-							Xác nhận xoá đơn vị?
+							{t('card.deleteHeading')}
 						</div>
 						<div className='text-center text-muted-foreground'>
-							Bạn có chắc muốn xoá đơn vị{' '}
-							<b className='text-red-600'>{data.name}</b> không?
+							<Trans
+								t={t}
+								i18nKey='card.deleteConfirm'
+								values={{ name: data.name }}
+								components={{
+									name: <b className='text-red-600' />
+								}}
+							/>
 							<p>
-								Hành động này <b>không thể hoàn tác.</b>
+								<Trans
+									t={t}
+									i18nKey='card.irreversible'
+									components={{ strong: <b /> }}
+								/>
 							</p>
 						</div>
 						<div className='flex justify-end gap-2 mt-4'>
@@ -175,7 +192,7 @@ export default function UnitCard({ data, onEdit, onDelete }: UnitCardProps) {
 								onClick={() => setOpenDelete(false)}
 								disabled={deleteUnitMutation.isPending}
 							>
-								Huỷ
+								{t('card.cancel')}
 							</button>
 							<button
 								type='button'
@@ -184,8 +201,8 @@ export default function UnitCard({ data, onEdit, onDelete }: UnitCardProps) {
 								disabled={deleteUnitMutation.isPending}
 							>
 								{deleteUnitMutation.isPending
-									? 'Đang xoá...'
-									: 'Xoá'}
+									? t('card.deleting')
+									: t('card.delete')}
 							</button>
 						</div>
 					</div>

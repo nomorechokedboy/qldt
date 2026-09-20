@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { useState } from 'react'
 import { X } from 'lucide-react'
 import { toast } from 'sonner'
@@ -19,6 +20,7 @@ export default function RoomEditForm({
 	onUpdate,
 	onClose
 }: RoomEditFormProps) {
+	const { t } = useTranslation('units')
 	const [name, setName] = useState(data.name)
 	const [type, setType] = useState(data.type ?? '')
 	const [description, setDescription] = useState(data.description ?? '')
@@ -39,12 +41,12 @@ export default function RoomEditForm({
 					}
 				]
 			})
-			toast.success('Cập nhật phòng thành công')
+			toast.success(t('facilities.room.updated'))
 			onUpdate()
 			onClose()
 		} catch (err) {
 			console.error('Error updating room:', err)
-			toast.error(getErrorMessage(err, 'Cập nhật phòng thất bại!'))
+			toast.error(getErrorMessage(err, t('facilities.room.updateFailed')))
 		}
 	}
 
@@ -62,7 +64,9 @@ export default function RoomEditForm({
 
 			<form onSubmit={handleSubmit} className='space-y-4'>
 				<div className='space-y-2'>
-					<Label htmlFor='edit-room-name'>Tên phòng</Label>
+					<Label htmlFor='edit-room-name'>
+						{t('facilities.room.name')}
+					</Label>
 					<Input
 						id='edit-room-name'
 						value={name}
@@ -72,7 +76,9 @@ export default function RoomEditForm({
 				</div>
 
 				<div className='space-y-2'>
-					<Label htmlFor='edit-room-type'>Loại phòng</Label>
+					<Label htmlFor='edit-room-type'>
+						{t('facilities.room.type')}
+					</Label>
 					<Input
 						id='edit-room-type'
 						value={type}
@@ -81,7 +87,9 @@ export default function RoomEditForm({
 				</div>
 
 				<div className='space-y-2'>
-					<Label htmlFor='edit-room-description'>Mô tả</Label>
+					<Label htmlFor='edit-room-description'>
+						{t('facilities.common.description')}
+					</Label>
 					<Input
 						id='edit-room-description'
 						value={description}
@@ -91,10 +99,12 @@ export default function RoomEditForm({
 
 				<div className='flex justify-end gap-2'>
 					<Button type='button' variant='outline' onClick={onClose}>
-						Hủy
+						{t('facilities.common.cancel')}
 					</Button>
 					<Button type='submit' disabled={updateMutation.isPending}>
-						{updateMutation.isPending ? 'Đang lưu...' : 'Lưu'}
+						{updateMutation.isPending
+							? t('facilities.common.saving')
+							: t('facilities.common.save')}
 					</Button>
 				</div>
 			</form>

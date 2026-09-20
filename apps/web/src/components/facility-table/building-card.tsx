@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import { History, Pencil, Trash, DoorOpen } from 'lucide-react'
+import { Trans, useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import {
 	Card,
@@ -33,6 +34,7 @@ interface BuildingCardProps {
 }
 
 export default function BuildingCard({ data, onChanged }: BuildingCardProps) {
+	const { t } = useTranslation('units')
 	const [openEdit, setOpenEdit] = useState(false)
 	const [openDelete, setOpenDelete] = useState(false)
 	const [openRooms, setOpenRooms] = useState(false)
@@ -41,10 +43,10 @@ export default function BuildingCard({ data, onChanged }: BuildingCardProps) {
 	const handleDelete = async () => {
 		try {
 			await deleteBuildingMutation.mutateAsync([data.id])
-			toast.success(`Đã xoá nhà "${data.name}" thành công!`)
+			toast.success(t('facilities.building.deleted', { name: data.name }))
 			onChanged?.()
 		} catch (error) {
-			toast.error('Có lỗi xảy ra khi xoá nhà')
+			toast.error(t('facilities.building.deleteFailed'))
 		} finally {
 			setOpenDelete(false)
 		}
@@ -68,7 +70,7 @@ export default function BuildingCard({ data, onChanged }: BuildingCardProps) {
 						<Button
 							type='button'
 							aria-label='Edit'
-							title='Chỉnh sửa'
+							title={t('facilities.common.edit')}
 							variant='ghost'
 							className='text-sky-600'
 							size='icon'
@@ -80,7 +82,7 @@ export default function BuildingCard({ data, onChanged }: BuildingCardProps) {
 							type='button'
 							variant='ghost'
 							aria-label='Delete'
-							title='Xoá'
+							title={t('facilities.common.delete')}
 							className='text-destructive'
 							size='icon'
 							onClick={() => setOpenDelete(true)}
@@ -91,7 +93,9 @@ export default function BuildingCard({ data, onChanged }: BuildingCardProps) {
 				</CardHeader>
 				<CardFooter className='flex-col items-start gap-2 text-sm'>
 					<div className='text-muted-foreground'>
-						Số phòng: {data.rooms?.length ?? 0}
+						{t('facilities.building.roomCount', {
+							count: data.rooms?.length ?? 0
+						})}
 					</div>
 					<Button
 						size='sm'
@@ -99,14 +103,16 @@ export default function BuildingCard({ data, onChanged }: BuildingCardProps) {
 						onClick={() => setOpenRooms(true)}
 					>
 						<DoorOpen className='w-4 h-4 mr-2' />
-						Quản lý phòng
+						{t('facilities.building.manageRooms')}
 					</Button>
 				</CardFooter>
 			</Card>
 
 			<Dialog open={openEdit} onOpenChange={setOpenEdit}>
 				<DialogContent className='backdrop-blur-sm flex items-center justify-center'>
-					<DialogTitle className='sr-only'>Chỉnh sửa nhà</DialogTitle>
+					<DialogTitle className='sr-only'>
+						{t('facilities.building.editTitle')}
+					</DialogTitle>
 					<BuildingEditForm
 						data={data}
 						onUpdate={() => onChanged?.()}
@@ -118,17 +124,27 @@ export default function BuildingCard({ data, onChanged }: BuildingCardProps) {
 			<Dialog open={openDelete} onOpenChange={setOpenDelete}>
 				<DialogContent className='max-w-md max-h-1/3'>
 					<DialogTitle className='sr-only'>
-						Xác nhận xoá nhà
+						{t('facilities.building.deleteDialogTitle')}
 					</DialogTitle>
 					<div className='flex flex-col gap-4'>
 						<div className='font-semibold text-lg text-center'>
-							Xác nhận xoá nhà?
+							{t('facilities.building.deleteHeading')}
 						</div>
 						<div className='text-center text-muted-foreground'>
-							Bạn có chắc muốn xoá nhà{' '}
-							<b className='text-red-600'>{data.name}</b> không?
+							<Trans
+								t={t}
+								i18nKey='facilities.building.deleteConfirm'
+								values={{ name: data.name }}
+								components={{
+									name: <b className='text-red-600' />
+								}}
+							/>
 							<p>
-								Hành động này <b>không thể hoàn tác.</b>
+								<Trans
+									t={t}
+									i18nKey='facilities.building.irreversible'
+									components={{ b: <b /> }}
+								/>
 							</p>
 						</div>
 						<div className='flex justify-end gap-2 mt-4'>
@@ -138,7 +154,7 @@ export default function BuildingCard({ data, onChanged }: BuildingCardProps) {
 								onClick={() => setOpenDelete(false)}
 								disabled={deleteBuildingMutation.isPending}
 							>
-								Huỷ
+								{t('facilities.common.dismiss')}
 							</button>
 							<button
 								type='button'
@@ -147,8 +163,8 @@ export default function BuildingCard({ data, onChanged }: BuildingCardProps) {
 								disabled={deleteBuildingMutation.isPending}
 							>
 								{deleteBuildingMutation.isPending
-									? 'Đang xoá...'
-									: 'Xoá'}
+									? t('facilities.common.deleting')
+									: t('facilities.common.delete')}
 							</button>
 						</div>
 					</div>
@@ -158,7 +174,11 @@ export default function BuildingCard({ data, onChanged }: BuildingCardProps) {
 			<Sheet open={openRooms} onOpenChange={setOpenRooms}>
 				<SheetContent className='w-full sm:max-w-lg'>
 					<SheetHeader>
-						<SheetTitle>Danh sách phòng - {data.name}</SheetTitle>
+						<SheetTitle>
+							{t('facilities.building.roomsTitle', {
+								name: data.name
+							})}
+						</SheetTitle>
 					</SheetHeader>
 					<RoomsPanel
 						buildingId={data.id}
@@ -184,6 +204,7 @@ function RoomsPanel({
 	onChanged?: () => void
 }) {
 	const { data: rooms, refetch } = useRoomsData({ buildingId }, { enabled })
+	const { t } = useTranslation('units')
 	const [editingRoomId, setEditingRoomId] = useState<number | null>(null)
 	const [historyRoomId, setHistoryRoomId] = useState<number | null>(null)
 	const deleteRoomMutation = useDeleteRooms()
@@ -194,13 +215,13 @@ function RoomsPanel({
 	}
 
 	const handleDeleteRoom = async (id: number, name: string) => {
-		if (!confirm(`Bạn có chắc muốn xoá phòng "${name}"?`)) return
+		if (!confirm(t('facilities.room.deleteConfirm', { name }))) return
 		try {
 			await deleteRoomMutation.mutateAsync([id])
-			toast.success('Xoá phòng thành công')
+			toast.success(t('facilities.room.deleted'))
 			handleChanged()
 		} catch (err) {
-			toast.error('Xoá phòng thất bại!')
+			toast.error(t('facilities.room.deleteFailed'))
 		}
 	}
 
@@ -217,7 +238,7 @@ function RoomsPanel({
 			<div className='space-y-2'>
 				{rooms?.length === 0 && (
 					<p className='text-muted-foreground text-sm'>
-						Nhà này chưa có phòng nào.
+						{t('facilities.room.empty')}
 					</p>
 				)}
 				{rooms?.map((room) => (
@@ -244,7 +265,7 @@ function RoomsPanel({
 							<Button
 								size='icon'
 								variant='ghost'
-								title='Lịch sử kiểm kê'
+								title={t('facilities.room.inventoryHistory')}
 								onClick={() => setHistoryRoomId(room.id)}
 							>
 								<History size={16} />
@@ -277,7 +298,7 @@ function RoomsPanel({
 			>
 				<DialogContent className='backdrop-blur-sm flex items-center justify-center'>
 					<DialogTitle className='sr-only'>
-						Chỉnh sửa phòng
+						{t('facilities.room.editTitle')}
 					</DialogTitle>
 					{editingRoom && (
 						<RoomEditForm

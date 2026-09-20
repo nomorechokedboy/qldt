@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { EduLevelOptions } from '@/components/data-table/data/data'
 import { EhtnicOptions } from '@/data/ethnicities'
 import useDataTableToolbarConfig from '@/hooks/useDataTableToolbarConfig'
@@ -13,6 +14,7 @@ export default function useUnitFacetedFilters({
 	troopers,
 	unit
 }: UseUnitFacetedFiltersParams) {
+	const { t } = useTranslation('units')
 	const { createFacetedFilter } = useDataTableToolbarConfig()
 
 	const militaryRankOptions = useMemo(() => {
@@ -31,15 +33,15 @@ export default function useUnitFacetedFilters({
 
 	return useMemo(
 		() => [
-			createFacetedFilter('unit.name', 'Đơn vị', unitOptions),
-			createFacetedFilter('rank', 'Cấp bậc', militaryRankOptions),
-			createFacetedFilter('ethnic', 'Dân tộc', EhtnicOptions),
+			createFacetedFilter('unit.name', t('filters.unit'), unitOptions),
+			createFacetedFilter('rank', t('filters.rank'), militaryRankOptions),
+			createFacetedFilter('ethnic', t('filters.ethnic'), EhtnicOptions),
 			createFacetedFilter(
 				'educationLevel',
-				'Trình độ học vấn',
+				t('filters.educationLevel'),
 				EduLevelOptions
 			)
 		],
-		[createFacetedFilter, unitOptions, militaryRankOptions]
+		[t, createFacetedFilter, unitOptions, militaryRankOptions]
 	)
 }

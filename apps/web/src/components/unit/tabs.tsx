@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { buildBattalionStudentColumnsWithoutAction } from '@/components/student-table/columns'
 import { defaultBirthdayColumnVisibility } from '@/components/student-table/default-columns-visibility'
@@ -38,14 +39,17 @@ export default function UnitTabs({
 	unitsById,
 	unitId
 }: UnitTabsProps) {
+	const { t } = useTranslation('units')
 	const filename = `danh-sach-quan-nhan-${alias}`
 
 	return (
 		<Tabs defaultValue='students'>
 			<TabsList>
-				<TabsTrigger value='students'>Quân nhân</TabsTrigger>
-				<TabsTrigger value='facilities'>Cơ sở vật chất</TabsTrigger>
-				<TabsTrigger value='weapons'>Vũ khí/trang bị</TabsTrigger>
+				<TabsTrigger value='students'>{t('tabs.students')}</TabsTrigger>
+				<TabsTrigger value='facilities'>
+					{t('tabs.facilities')}
+				</TabsTrigger>
+				<TabsTrigger value='weapons'>{t('tabs.weapons')}</TabsTrigger>
 			</TabsList>
 
 			<TabsContent value='students'>
@@ -64,7 +68,7 @@ export default function UnitTabs({
 						actionColumn
 					]}
 					facetedFilters={facetedFilters}
-					placeholder='Chưa có thông tin quân nhân.'
+					placeholder={t('tabs.noStudentInfo')}
 					exportConfig={{
 						filename,
 						defaultExportValues: {
