@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 
@@ -9,6 +10,7 @@ export default function RefreshButton({
 }: {
 	onRefresh: () => unknown
 }) {
+	const { t } = useTranslation()
 	const [pending, setPending] = useState(false)
 
 	const handleClick = async () => {
@@ -25,8 +27,8 @@ export default function RefreshButton({
 			type='button'
 			onClick={handleClick}
 			disabled={pending}
-			aria-label='Làm mới'
-			title='Làm mới'
+			aria-label={t('actions.refresh')}
+			title={t('actions.refresh')}
 		>
 			<RefreshCw className={pending ? 'animate-spin' : undefined} />
 		</Button>

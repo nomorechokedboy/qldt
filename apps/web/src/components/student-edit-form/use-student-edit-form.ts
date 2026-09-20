@@ -1,3 +1,4 @@
+import i18n from '@/i18n'
 import { toast } from 'sonner'
 import { useAppForm } from '@/hooks/use-app-form'
 import usePatchStudentInfo from '@/hooks/usePatchStudentInfo'
@@ -5,7 +6,7 @@ import useUploadFiles from '@/hooks/useUploadFiles'
 import { getErrorMessage } from '@/lib/utils'
 import type { Student } from '@/types'
 import {
-	DATE_FORMAT_ERROR,
+	dateFormatError,
 	invalidDateFields,
 	toFormValues,
 	toPatchPayload
@@ -27,7 +28,7 @@ export default function useStudentEditForm(
 
 				return {
 					fields: Object.fromEntries(
-						invalid.map((name) => [name, DATE_FORMAT_ERROR])
+						invalid.map((name) => [name, dateFormatError()])
 					)
 				}
 			}
@@ -46,10 +47,7 @@ export default function useStudentEditForm(
 			} catch (err) {
 				console.error('UpdateStudentInfo err: ', err)
 				toast.error(
-					getErrorMessage(
-						err,
-						'Chỉnh sửa thông tin quân nhân không thành công!'
-					)
+					getErrorMessage(err, i18n.t('student:editForm.saveFailed'))
 				)
 			}
 		}

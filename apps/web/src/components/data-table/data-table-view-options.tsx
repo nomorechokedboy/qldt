@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 import type { Table } from '@tanstack/react-table'
 import { Settings2 } from 'lucide-react'
@@ -18,6 +19,7 @@ interface DataTableViewOptionsProps<TData> {
 export function DataTableViewOptions<TData>({
 	table
 }: DataTableViewOptionsProps<TData>) {
+	const { t } = useTranslation('table')
 	return (
 		<DropdownMenu>
 			<DropdownMenuTrigger asChild>
@@ -27,11 +29,11 @@ export function DataTableViewOptions<TData>({
 					className='ml-auto hidden h-8 lg:flex'
 				>
 					<Settings2 />
-					Hiển thị các cột
+					{t('viewOptions.trigger')}
 				</Button>
 			</DropdownMenuTrigger>
 			<DropdownMenuContent align='end' className='w-[150px] no-scrollbar'>
-				<DropdownMenuLabel>Đang được hiển thị</DropdownMenuLabel>
+				<DropdownMenuLabel>{t('viewOptions.label')}</DropdownMenuLabel>
 				<DropdownMenuSeparator />
 				{table
 					.getAllColumns()

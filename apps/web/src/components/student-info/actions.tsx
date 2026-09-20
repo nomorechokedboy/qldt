@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import {
 	Dialog,
@@ -25,6 +26,7 @@ export default function StudentActions({
 	student: Student
 	readOnly?: boolean
 }) {
+	const { t } = useTranslation('student')
 	const [open, setOpen] = useState(false)
 	const queryClient = useQueryClient()
 	const { mutateAsync: updateStudent, isPending: isUpdating } =
@@ -35,9 +37,7 @@ export default function StudentActions({
 		!readOnly && (isSuperAdmin() || student.status !== 'confirmed')
 
 	const handleConfirmStudent = async () => {
-		const confirmed = confirm(
-			'Bạn có chắc chắn muốn xác nhận thông tin quân nhân này không? Bạn sẽ không thể chỉnh sửa thông tin quân nhân sau khi xác nhận.'
-		)
+		const confirmed = confirm(t('actions.confirmPrompt'))
 		if (!confirmed) return
 
 		try {
@@ -50,7 +50,7 @@ export default function StudentActions({
 					}
 				]
 			})
-			toast.success('Xác nhận quân nhân thành công!')
+			toast.success(t('actions.confirmSuccess'))
 			queryClient.invalidateQueries({
 				queryKey: ['students'],
 				type: 'all'
@@ -60,7 +60,7 @@ export default function StudentActions({
 				type: 'all'
 			})
 		} catch (error) {
-			toast.error('Xác nhận quân nhân thất bại!')
+			toast.error(t('actions.confirmFailed'))
 			console.error(error)
 		}
 	}
@@ -79,7 +79,7 @@ export default function StudentActions({
 			>
 				<Button variant='outline'>
 					<FileDown className='mr-2 h-4 w-4' />
-					Tải trích ngang
+					{t('actions.downloadSummary')}
 				</Button>
 			</ExportStudentDataDialog>
 
@@ -89,7 +89,8 @@ export default function StudentActions({
 					disabled={isUpdating}
 					className='hidden bg-green-600 hover:bg-green-700'
 				>
-					<CheckCircle className='mr-2 h-4 w-4' /> Xác nhận
+					<CheckCircle className='mr-2 h-4 w-4' />{' '}
+					{t('actions.confirm')}
 				</Button>
 			)}
 
@@ -98,16 +99,16 @@ export default function StudentActions({
 					<DialogTrigger asChild>
 						<Button>
 							<UserPen className='mr-2 h-4 w-4' />
-							Chỉnh sửa
+							{t('actions.edit')}
 						</Button>
 					</DialogTrigger>
 					<DialogContent className='grid-cols-1 grid-rows-[minmax(0,1fr)] gap-0 overflow-hidden p-0 lg:h-[85vh] lg:max-w-5xl'>
 						<DialogHeader className='sr-only'>
-							<DialogTitle>
-								Chỉnh sửa thông tin quân nhân
-							</DialogTitle>
+							<DialogTitle>{t('actions.editTitle')}</DialogTitle>
 							<DialogDescription>
-								Sửa hồ sơ của {student.fullName}.
+								{t('actions.editDescription', {
+									name: student.fullName
+								})}
 							</DialogDescription>
 						</DialogHeader>
 						<StudentEditForm

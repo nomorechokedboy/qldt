@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { EduLevelOptions } from '@/components/data-table/data/data'
 import { EhtnicOptions } from '@/data/ethnicities'
 import useActionColumn from '@/hooks/useActionColumn'
@@ -107,6 +108,7 @@ export default function StudentTable({
 	onDeleteRows,
 	onConfirmRows
 }: StudentTableProps) {
+	const { t } = useTranslation('table')
 	const { createFacetedFilter } = useDataTableToolbarConfig()
 	const actionColumn = useActionColumn(handleRefreshStudents, readOnly)
 	const [exportFileOpen, setExportFileOpen] = useState(false)
@@ -169,24 +171,24 @@ export default function StudentTable({
 		}))
 
 		const statusOptions = [
-			{ label: 'Chưa xác nhận', value: 'pending' },
-			{ label: 'Đã xác nhận', value: 'confirmed' }
+			{ label: t('values.pending'), value: 'pending' },
+			{ label: t('values.confirmed'), value: 'confirmed' }
 		]
 
 		resolvedFacetedFilters = [
-			createFacetedFilter('rank', 'Cấp bậc', militaryRankOptions),
+			createFacetedFilter('rank', t('columns.rank'), militaryRankOptions),
 			createFacetedFilter(
 				'previousUnit',
-				'Đơn vị cũ',
+				t('columns.previousUnit'),
 				previousUnitOptions
 			),
-			createFacetedFilter('ethnic', 'Dân tộc', EhtnicOptions),
+			createFacetedFilter('ethnic', t('columns.ethnic'), EhtnicOptions),
 			createFacetedFilter(
 				'educationLevel',
-				'Trình độ học vấn',
+				t('columns.educationLevel'),
 				EduLevelOptions
 			),
-			createFacetedFilter('status', 'Trạng thái', statusOptions)
+			createFacetedFilter('status', t('columns.status'), statusOptions)
 		]
 	}
 
@@ -198,7 +200,7 @@ export default function StudentTable({
 			{enableCreation && (
 				<Button variant='outline' onClick={() => setImportOpen(true)}>
 					<Upload />
-					Import
+					{t('studentTable.import')}
 				</Button>
 			)}
 			{showRefreshButton && <RefreshButton onRefresh={handleRefresh} />}
@@ -241,14 +243,18 @@ export default function StudentTable({
 											<ExportTemplateManager resourceType='students'>
 												<Button variant='outline'>
 													<Settings />
-													Quản lý mẫu
+													{t(
+														'studentTable.manageTemplates'
+													)}
 												</Button>
 											</ExportTemplateManager>
 											<DropdownMenu>
 												<DropdownMenuTrigger asChild>
 													<Button>
 														<ArrowDownToLine />
-														Xuất dữ liệu
+														{t(
+															'studentTable.exportData'
+														)}
 													</Button>
 												</DropdownMenuTrigger>
 												<DropdownMenuContent align='end'>
@@ -259,7 +265,9 @@ export default function StudentTable({
 															)
 														}
 													>
-														Xuất danh sách biên chế
+														{t(
+															'studentTable.exportRoster'
+														)}
 													</DropdownMenuItem>
 													<DropdownMenuItem
 														onSelect={() =>
@@ -268,7 +276,9 @@ export default function StudentTable({
 															)
 														}
 													>
-														Xuất file
+														{t(
+															'studentTable.exportFile'
+														)}
 													</DropdownMenuItem>
 												</DropdownMenuContent>
 											</DropdownMenu>
@@ -317,7 +327,7 @@ export default function StudentTable({
 										>
 											<Button>
 												<ArrowDownToLine />
-												Xuất file
+												{t('studentTable.exportFile')}
 											</Button>
 										</ExportStudentDataDialog>
 									)

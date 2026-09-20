@@ -1,3 +1,4 @@
+import i18n from '@/i18n'
 import { GetUserInfo, Login } from '@/api'
 import { AuthController } from '@/biz'
 import { getErrorMessage } from '@/lib/utils'
@@ -31,7 +32,7 @@ export default function useAuth() {
 		onSuccess: async ({ refreshToken, accessToken }) => {
 			// Store token
 			AuthController.setTokens({ accessToken, refreshToken })
-			toast.info('Đăng nhập thành công')
+			toast.info(i18n.t('auth:login.success'))
 
 			const { data: user } = await refetchUser()
 
@@ -44,7 +45,7 @@ export default function useAuth() {
 		},
 		onError: (error) => {
 			console.error('Login failed:', error)
-			toast.error(getErrorMessage(error, 'Đăng nhập thất bại'))
+			toast.error(getErrorMessage(error, i18n.t('auth:login.failed')))
 		}
 	})
 

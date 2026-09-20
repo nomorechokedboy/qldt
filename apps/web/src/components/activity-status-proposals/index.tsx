@@ -165,8 +165,12 @@ export default function ActivityStatusProposalsTab() {
 					</SelectContent>
 				</Select>
 
-				<RefreshButton onRefresh={() => refetch()} />
-				<CreateActivityStatusProposalForm onSuccess={() => refetch()} />
+				<div className='flex items-center gap-3'>
+					<CreateActivityStatusProposalForm
+						onSuccess={() => refetch()}
+					/>
+					<RefreshButton onRefresh={() => refetch()} />
+				</div>
 			</div>
 
 			{isLoading ? (

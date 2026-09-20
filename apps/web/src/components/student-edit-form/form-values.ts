@@ -1,3 +1,4 @@
+import i18n from '@/i18n'
 import { toDdMmYyyy, toIsoDate } from '@/common'
 import type { Student } from '@/types'
 
@@ -19,7 +20,7 @@ export type StudentFormValues = Omit<Student, StringifiedField> &
 
 const DATE_PATTERN = /^\d{2}\/\d{2}\/\d{4}$/
 
-export const DATE_FORMAT_ERROR = 'Hãy nhập ngày theo định dạng dd/mm/yyyy'
+export const dateFormatError = () => i18n.t('student:validation.editDateFormat')
 
 const asText = (value: number | null | undefined) =>
 	value === undefined || value === null ? '' : String(value)

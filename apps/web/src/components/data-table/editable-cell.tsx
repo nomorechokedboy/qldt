@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import usePatchStudent from '@/hooks/usePatchStudent'
 import type { Student } from '@/types'
 import type { CellContext } from '@tanstack/react-table'
@@ -15,6 +16,7 @@ export default function EditableCell({
 	column,
 	row
 }: EditableCellProps) {
+	const { t } = useTranslation('table')
 	const { handlePatchStudentData, isPending } = usePatchStudent(row, column)
 	return (
 		<ToggleInput
@@ -26,7 +28,7 @@ export default function EditableCell({
 			isLoading={isPending}
 			placeholder={
 				<Badge variant='secondary' className='font-bold'>
-					Chưa có thông tin...
+					{t('cells.empty')}
 				</Badge>
 			}
 		/>

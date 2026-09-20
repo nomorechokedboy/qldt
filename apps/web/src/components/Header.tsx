@@ -12,10 +12,11 @@ import { NotificationBell } from './notification-bell'
 import React, { useMemo } from 'react'
 import { useLocation } from '@tanstack/react-router'
 import { UserNav } from './data-table/user-nav'
-import { routeSegmentLabels } from '@/data/route-labels'
+import { useTranslation } from 'react-i18next'
 import useUnitsData from '@/hooks/useUnitsData'
 
 export default function Header() {
+	const { t, i18n } = useTranslation('nav')
 	const location = useLocation()
 	const path = location.pathname
 	const segments = path.split('/').filter(Boolean)
@@ -31,15 +32,18 @@ export default function Header() {
 
 	const segmentLabel = (seg: string) => {
 		const decoded = decodeURIComponent(seg)
+		const known = `breadcrumb.${decoded}`
 		return (
-			routeSegmentLabels[decoded] ??
+			(i18n.exists(known, { ns: 'nav' })
+				? t(known as never)
+				: undefined) ??
 			unitNameByAlias.get(decoded) ??
 			decoded
 		)
 	}
 
 	const breadcrumbItems = [
-		{ label: 'Trang chủ', href: '/' },
+		{ label: t('items.home'), href: '/' },
 		...segments.map((seg, idx) => ({
 			label: segmentLabel(seg),
 			href: '/' + segments.slice(0, idx + 1).join('/')

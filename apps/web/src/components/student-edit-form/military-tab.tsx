@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import {
 	RecordGrid,
 	RecordSection,
@@ -11,65 +12,72 @@ import useUnitOptions from '@/hooks/useUnitOptions'
 import StudentField from './student-field'
 
 export default function MilitaryTab() {
+	const { t } = useTranslation('student')
 	const positionOptions = usePositionOptions()
 	const { options: unitOptions } = useUnitOptions()
 
 	return (
 		<StepBody>
-			<RecordSection title='Quân sự'>
+			<RecordSection title={t('sections.military')}>
 				<RecordGrid columns={3}>
 					<StudentField
 						name='rank'
-						label='Cấp bậc'
+						label={t('fields.rank')}
 						kind='select'
 						options={rankOptions}
 					/>
 					<StudentField
 						name='positionId'
-						label='Chức vụ'
+						label={t('fields.position')}
 						kind='select'
 						options={positionOptions}
 					/>
 					<StudentField
 						name='unitId'
-						label='Đơn vị'
+						label={t('fields.unit')}
 						kind='select'
 						options={unitOptions}
 					/>
 					<StudentField
 						name='enlistmentPeriod'
-						label='Ngày nhập ngũ'
+						label={t('fields.enlistmentDate')}
 					/>
-					<StudentField name='previousUnit' label='Đơn vị cũ' />
-					<StudentField name='previousPosition' label='Chức vụ cũ' />
+					<StudentField
+						name='previousUnit'
+						label={t('fields.previousUnit')}
+					/>
+					<StudentField
+						name='previousPosition'
+						label={t('fields.previousPosition')}
+					/>
 					<StudentField
 						name='activityStatus'
-						label='Tình trạng'
+						label={t('fields.activityStatus')}
 						kind='select'
 						options={activityStatusOptions}
 					/>
 				</RecordGrid>
 			</RecordSection>
 
-			<RecordSection title='Chính trị'>
+			<RecordSection title={t('sections.politics')}>
 				<RecordGrid columns={3}>
 					<StudentField
 						name='politicalOrg'
-						label='Tổ chức'
+						label={t('recordFields.politicalOrg')}
 						kind='select'
 						options={politicalOptions}
 					/>
 					<StudentField
 						name='politicalOrgOfficialDate'
-						label='Ngày vào Đoàn'
+						label={t('fields.youthJoinDate')}
 						kind='date'
 					/>
 					<StudentField
 						name='cpvOfficialAt'
-						label='Ngày vào Đảng'
+						label={t('fields.partyJoinDate')}
 						kind='date'
 					/>
-					<StudentField name='cpvId' label='Số thẻ Đảng' />
+					<StudentField name='cpvId' label={t('fields.cpvId')} />
 				</RecordGrid>
 			</RecordSection>
 		</StepBody>

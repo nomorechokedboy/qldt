@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { useMemo } from 'react'
 import { useStore } from '@tanstack/react-form'
 import useProvinces from '@/hooks/useProvinces'
@@ -11,13 +12,13 @@ import useWards from '@/hooks/useWards'
 // place.
 export default function PlacePickerFields({
 	form,
-	prefix,
-	label
+	prefix
 }: {
 	form: any
 	prefix: 'birthPlace' | 'address'
-	label: string
 }) {
+	const { t } = useTranslation('student')
+	const place = t(`place.${prefix}`)
 	const provinceField = `${prefix}ProvinceCode`
 	const wardField = `${prefix}WardCode`
 
@@ -42,9 +43,9 @@ export default function PlacePickerFields({
 			<form.AppField name={provinceField}>
 				{(field: any) => (
 					<field.Combobox
-						label={`Tỉnh/Thành (${label})`}
+						label={t('place.province', { place })}
 						values={provinceOptions}
-						placeholder='Chọn tỉnh/thành'
+						placeholder={t('place.chooseProvince')}
 						onChange={() => form.setFieldValue(wardField, '')}
 					/>
 				)}
@@ -53,12 +54,12 @@ export default function PlacePickerFields({
 			<form.AppField name={wardField}>
 				{(field: any) => (
 					<field.Combobox
-						label={`Phường/Xã (${label})`}
+						label={t('place.ward', { place })}
 						values={wardOptions}
 						placeholder={
 							provinceCode
-								? 'Chọn phường/xã'
-								: 'Chọn tỉnh/thành trước'
+								? t('place.chooseWard')
+								: t('place.chooseProvinceFirst')
 						}
 					/>
 				)}
@@ -66,7 +67,7 @@ export default function PlacePickerFields({
 
 			<form.AppField name={prefix}>
 				{(field: any) => (
-					<field.TextField label={`Số nhà, đường (${label})`} />
+					<field.TextField label={t('place.street', { place })} />
 				)}
 			</form.AppField>
 		</>

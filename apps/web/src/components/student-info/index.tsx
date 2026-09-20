@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import {
 	CompactFrame,
 	CoverFrame,
@@ -31,6 +32,7 @@ export default function StudentInfo({
 	student,
 	readOnly = false
 }: StudentInfoProps) {
+	const { t } = useTranslation('student')
 	const [sectionId, setSectionId] = useState<SectionId>(RECORD_SECTIONS[0].id)
 	const scrollRef = useRef<HTMLDivElement>(null)
 	const section =
@@ -57,12 +59,14 @@ export default function StudentInfo({
 				badge={
 					<>
 						<p className='truncate pt-1 text-sm text-sidebar-foreground/70'>
-							Mã quân nhân: {student.studentId || 'chưa có'}
+							{t('info.studentId', {
+								id: student.studentId || t('info.noStudentId')
+							})}
 						</p>
 						{student.status === 'confirmed' && (
 							<p className='flex items-center gap-1.5 pt-1 text-sm text-gold'>
 								<CheckCircle className='size-4' aria-hidden />
-								Đã xác nhận
+								{t('info.confirmed')}
 							</p>
 						)}
 					</>
@@ -73,8 +77,8 @@ export default function StudentInfo({
 
 			<div className='flex min-h-0 flex-col bg-card'>
 				<CompactFrame
-					title={student.fullName ?? 'Thông tin quân nhân'}
-					subtitle={section.label}
+					title={student.fullName ?? t('info.title')}
+					subtitle={t(`record.sections.${section.id}.label`)}
 					photo={<Portrait src={photoSrc} />}
 				>
 					<SectionPills current={sectionId} onSelect={setSectionId} />
@@ -86,10 +90,10 @@ export default function StudentInfo({
 				>
 					<div className='mb-6 hidden lg:block'>
 						<h2 className='font-serif text-2xl font-semibold'>
-							{section.label}
+							{t(`record.sections.${section.id}.label`)}
 						</h2>
 						<p className='text-sm text-muted-foreground'>
-							{section.hint}
+							{t(`record.sections.${section.id}.hint`)}
 						</p>
 					</div>
 					<div

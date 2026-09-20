@@ -8,7 +8,6 @@ import {
 export const STEPS = [
 	{
 		id: 'personal',
-		title: 'Thông tin cá nhân',
 		fields: [
 			'fullName',
 			'unitId',
@@ -28,7 +27,6 @@ export const STEPS = [
 	},
 	{
 		id: 'other',
-		title: 'Thông tin khác',
 		fields: [
 			'rank',
 			'positionId',
@@ -51,7 +49,6 @@ export const STEPS = [
 	},
 	{
 		id: 'parent',
-		title: 'Thông tin bố mẹ',
 		fields: [
 			'familySize',
 			'familyBirthOrder',
@@ -70,7 +67,6 @@ export const STEPS = [
 	},
 	{
 		id: 'family',
-		title: 'Thông tin vợ/chồng và con',
 		fields: [
 			'spouseName',
 			'spouseDob',
@@ -80,4 +76,4 @@ export const STEPS = [
 		],
 		validationSchema: familyInfoSchema
 	}
-]
+] as const

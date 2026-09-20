@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import * as React from 'react'
 import { Check, PlusCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -52,6 +53,7 @@ export default function FacetedFilter({
 	onSelect,
 	onClear
 }: FacetedFilterUIProps) {
+	const { t } = useTranslation('table')
 	const renderOption = (option: Option) => {
 		const isSelected = selectedValues.has(option.value)
 		return (
@@ -114,7 +116,9 @@ export default function FacetedFilter({
 										variant='secondary'
 										className='rounded-sm px-1 font-normal'
 									>
-										{selectedValues.size} selected
+										{t('facetedFilter.selected', {
+											count: selectedValues.size
+										})}
 									</Badge>
 								) : (
 									Array.from(selectedValues).map((value) => {
@@ -145,7 +149,9 @@ export default function FacetedFilter({
 				<Command>
 					<CommandInput placeholder={title} />
 					<CommandList>
-						<CommandEmpty>No results found.</CommandEmpty>
+						<CommandEmpty>
+							{t('facetedFilter.noResults')}
+						</CommandEmpty>
 
 						{options.map((opt, idx) =>
 							isGroup(opt) ? (
@@ -172,7 +178,7 @@ export default function FacetedFilter({
 										onSelect={onClear}
 										className='justify-center text-center'
 									>
-										Clear filters
+										{t('facetedFilter.clear')}
 									</CommandItem>
 								</CommandGroup>
 							</>

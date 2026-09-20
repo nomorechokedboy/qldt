@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import useUpdateStudent from '@/hooks/useUpdateStudent'
 import type { Student } from '@/types'
 import type { CellContext } from '@tanstack/react-table'
@@ -18,6 +19,7 @@ export default function EditablePosition({
 	readOnly,
 	row
 }: EditablePositionProps) {
+	const { t } = useTranslation('table')
 	const { mutateAsync, isPending } = useUpdateStudent({
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['students'] })
@@ -31,10 +33,10 @@ export default function EditablePosition({
 			await mutateAsync({
 				data: [{ id: row.original.id, positionId: Number(value) }]
 			})
-			toast.success('Cập nhật thông tin quân nhân thành công')
+			toast.success(t('cells.updateSuccess'))
 		} catch (err) {
 			console.error(err)
-			toast.error('Cập nhật thông tin quân nhân thất bại!')
+			toast.error(t('cells.updateFailed'))
 		}
 	}
 

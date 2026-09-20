@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { useStore } from '@tanstack/react-form'
 import ChildrenInfo from '@/components/children-info'
 import {
@@ -10,26 +11,22 @@ import type { StudentFormValues } from './form-values'
 import StudentField from './student-field'
 import { useStudentForm } from './student-form-context'
 
-function ParentSection({
-	title,
-	prefix
-}: {
-	title: string
-	prefix: 'father' | 'mother'
-}) {
+function ParentSection({ prefix }: { prefix: 'father' | 'mother' }) {
+	const { t } = useTranslation('student')
+
 	return (
-		<RecordSection title={title}>
+		<RecordSection title={t(`sections.${prefix}`)}>
 			<RecordGrid columns={1}>
-				<StudentField name={`${prefix}Name`} label='Họ tên' />
+				<StudentField name={`${prefix}Name`} label={t('fields.name')} />
 				<StudentField
 					name={`${prefix}Dob`}
-					label='Ngày sinh'
+					label={t('fields.dob')}
 					kind='date'
 				/>
-				<StudentField name={`${prefix}Job`} label='Nghề nghiệp' />
+				<StudentField name={`${prefix}Job`} label={t('fields.job')} />
 				<StudentField
 					name={`${prefix}PhoneNumber`}
-					label='Số điện thoại'
+					label={t('fields.phone')}
 				/>
 			</RecordGrid>
 		</RecordSection>
@@ -37,6 +34,7 @@ function ParentSection({
 }
 
 export default function FamilyTab() {
+	const { t } = useTranslation('student')
 	const form = useStudentForm()
 	const isMarried = useStore(
 		form.store,
@@ -55,61 +53,68 @@ export default function FamilyTab() {
 	return (
 		<StepBody>
 			<RecordGrid>
-				<ParentSection title='Cha' prefix='father' />
-				<ParentSection title='Mẹ' prefix='mother' />
+				<ParentSection prefix='father' />
+				<ParentSection prefix='mother' />
 			</RecordGrid>
 
-			<RecordSection title='Vợ/chồng'>
+			<RecordSection title={t('sections.spouse')}>
 				<RecordGrid>
 					<StudentField
 						name='isMarried'
-						label='Đã kết hôn'
+						label={t('recordFields.married')}
 						kind='switch'
 					/>
 					{isMarried && (
 						<>
 							<StudentField
 								name='spouseName'
-								label='Họ tên vợ/chồng'
+								label={t('recordFields.spouseName')}
 							/>
 							<StudentField
 								name='spouseDob'
-								label='Ngày sinh'
+								label={t('fields.dob')}
 								kind='date'
 							/>
 							<StudentField
 								name='spouseJob'
-								label='Nghề nghiệp'
+								label={t('fields.job')}
 							/>
 							<StudentField
 								name='spousePhoneNumber'
-								label='SĐT vợ/chồng'
+								label={t('recordFields.spousePhone')}
 							/>
 						</>
 					)}
 				</RecordGrid>
 			</RecordSection>
 
-			<RecordSection title={`Con (${childCount})`}>
+			<RecordSection
+				title={t('sections.childrenCount', { count: childCount })}
+			>
 				<ChildrenInfo form={form} />
 			</RecordSection>
 
-			<RecordSection title={`Anh, chị, em ruột (${siblingCount})`}>
+			<RecordSection
+				title={t('sections.siblingsCount', { count: siblingCount })}
+			>
 				<SiblingInfo form={form} />
 			</RecordSection>
 
-			<RecordSection title='Hoàn cảnh gia đình'>
+			<RecordSection title={t('sections.familyBackground')}>
 				<RecordGrid columns={3}>
 					<StudentField
 						name='familyBackground'
-						label='Hoàn cảnh gia đình'
+						label={t('recordFields.familyBackground')}
 					/>
 					<StudentField
 						name='familySize'
-						label='Số lượng thành viên'
+						label={t('recordFields.familySize')}
 						kind='number'
 					/>
-					<StudentField name='familyBirthOrder' label='Con thứ mấy' />
+					<StudentField
+						name='familyBirthOrder'
+						label={t('recordFields.birthOrder')}
+					/>
 				</RecordGrid>
 			</RecordSection>
 		</StepBody>

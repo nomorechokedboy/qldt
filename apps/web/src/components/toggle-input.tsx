@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import type React from 'react'
 import {
 	useState,
@@ -132,7 +133,7 @@ export default function ToggleInput<T extends InputType>(
 	const {
 		type,
 		initialValue,
-		placeholder = 'Click to edit...',
+		placeholder: placeholderProp,
 		onSave,
 		onChange,
 		onCancel,
@@ -144,6 +145,8 @@ export default function ToggleInput<T extends InputType>(
 		...restProps
 	} = props
 
+	const { t } = useTranslation('table')
+	const placeholder = placeholderProp ?? t('toggleInput.clickToEdit')
 	const [isEditing, setIsEditing] = useState(false)
 	const [value, setValue] = useState(
 		initialValue ?? (type === 'date' ? null : '')
@@ -409,13 +412,13 @@ export default function ToggleInput<T extends InputType>(
 								<CommandInput
 									placeholder={
 										comboboxProps.searchPlaceholder ||
-										'Search...'
+										t('toggleInput.search')
 									}
 								/>
 								<CommandList>
 									<CommandEmpty>
 										{comboboxProps.emptyMessage ||
-											'No options found.'}
+											t('toggleInput.noOptions')}
 									</CommandEmpty>
 									<ScrollArea>
 										{groupOptions(

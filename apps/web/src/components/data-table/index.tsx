@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import RefreshButton from '@/components/refresh-button'
 import {
 	Table,
@@ -87,7 +88,7 @@ export function DataTable<TData, TValue>({
 	tableClassName,
 	pagination = true,
 	toolbarVisible = true,
-	placeholder = 'Không có dữ liệu nào',
+	placeholder,
 	onRefresh,
 	onDeleteRows,
 	onConfirmRows,
@@ -96,6 +97,8 @@ export function DataTable<TData, TValue>({
 	withDynamicColsData = true,
 	getRowClassName
 }: DataTableProps<TData, TValue>) {
+	const { t } = useTranslation('table')
+	const emptyText = placeholder ?? t('emptyTable')
 	const [rowSelection, setRowSelection] = useState({})
 	const [columnVisibility, setColumnVisibility] = useState<VisibilityState>(
 		defaultColumnVisibility
@@ -176,20 +179,16 @@ export function DataTable<TData, TValue>({
 
 		try {
 			setIsDeleting(true)
-			if (
-				confirm(
-					'Bạn có chắc muốn xóa các mục đã chọn không? Hành động này không thể hoàn tác!'
-				)
-			) {
+			if (confirm(t('selection.deleteConfirm'))) {
 				await onDeleteRows(ids)
 				toast.dismiss(deleteDataToastId)
-				toast.success('Xóa dữ liệu thành công!')
+				toast.success(t('selection.deleteSuccess'))
 				table.resetRowSelection()
 			} else {
 				handleReset()
 			}
 		} catch (err) {
-			toast.error('Xóa dữ liệu bị lỗi!')
+			toast.error(t('selection.deleteFailed'))
 			if (err instanceof AxiosError) {
 				console.error('Http error: ', err.response?.data)
 			}
@@ -208,20 +207,16 @@ export function DataTable<TData, TValue>({
 
 		try {
 			setIsDeleting(true)
-			if (
-				confirm(
-					'Bạn có chắc muốn xác nhận thông tin các mục đã chọn không? \nBạn không thể chỉnh sửa thông tin sau khi xác nhận!'
-				)
-			) {
+			if (confirm(t('selection.confirmConfirm'))) {
 				await onConfirmRows(ids)
 				toast.dismiss(deleteDataToastId)
-				toast.success('Xác nhận thành công!')
+				toast.success(t('selection.confirmSuccess'))
 				table.resetRowSelection()
 			} else {
 				handleReset()
 			}
 		} catch (err) {
-			toast.error('Xác nhận thất bại!')
+			toast.error(t('selection.confirmFailed'))
 			if (err instanceof AxiosError) {
 				console.error('Http error: ', err.response?.data)
 			}
@@ -244,7 +239,7 @@ export function DataTable<TData, TValue>({
 			duration: Number.POSITIVE_INFINITY,
 			closeButton: false,
 			position: 'bottom-center',
-			description: `Đang chọn ${selectedRows.length}`,
+			description: t('selection.count', { count: selectedRows.length }),
 			cancel: (
 				<Button
 					variant='outline'
@@ -253,7 +248,7 @@ export function DataTable<TData, TValue>({
 					className='text-xs h-7 bg-transparent'
 					disabled={isDeleting}
 				>
-					Bỏ chọn
+					{t('selection.clear')}
 				</Button>
 			),
 			action: (
@@ -266,7 +261,7 @@ export function DataTable<TData, TValue>({
 							className='text-xs h-7'
 							disabled={isDeleting}
 						>
-							Xóa dữ liệu
+							{t('selection.delete')}
 						</Button>
 					)}
 					{onConfirmRows && (
@@ -277,13 +272,13 @@ export function DataTable<TData, TValue>({
 							className='text-xs h-7 mt-2'
 							disabled={isDeleting}
 						>
-							Xác nhận thông tin quân nhân
+							{t('selection.confirm')}
 						</Button>
 					)}
 				</div>
 			)
 		})
-	}, [selectedRows, isDeleting, onDeleteRows, onConfirmRows])
+	}, [selectedRows, isDeleting, onDeleteRows, onConfirmRows, t])
 
 	const renderTableView = () => {
 		return (
@@ -342,7 +337,7 @@ export function DataTable<TData, TValue>({
 									colSpan={columns.length}
 									className='h-24 text-center'
 								>
-									{placeholder}
+									{emptyText}
 								</TableCell>
 							</TableRow>
 						)}
@@ -366,7 +361,7 @@ export function DataTable<TData, TValue>({
 		if (!rows?.length) {
 			return (
 				<div className='text-center py-8 text-muted-foreground'>
-					{placeholder}
+					{emptyText}
 				</div>
 			)
 		}

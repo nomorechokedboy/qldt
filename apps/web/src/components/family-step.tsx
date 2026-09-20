@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import ChildrenInfo from './children-info'
 import { RecordGrid, RecordSection, StepBody } from './record-section'
 
@@ -6,37 +7,39 @@ export interface FamilyStepProps {
 }
 
 export default function FamilyStep({ form }: FamilyStepProps) {
+	const { t } = useTranslation('student')
+
 	return (
 		<StepBody>
 			<RecordSection
-				title='Vợ/chồng'
-				hint='Bỏ trống nếu quân nhân chưa kết hôn.'
+				title={t('sections.spouse')}
+				hint={t('sections.spouseHint')}
 			>
 				<RecordGrid>
 					<form.AppField name='spouseName'>
 						{(field: any) => (
-							<field.TextField label='Tên vợ/chồng' />
+							<field.TextField label={t('create.spouseName')} />
 						)}
 					</form.AppField>
 					<form.AppField name='spouseDob'>
 						{(field: any) => (
-							<field.DatePicker label='Ngày sinh của vợ/chồng' />
+							<field.DatePicker label={t('create.spouseDob')} />
 						)}
 					</form.AppField>
 					<form.AppField name='spousePhoneNumber'>
 						{(field: any) => (
-							<field.TextField label='Số điện thoại vợ/chồng' />
+							<field.TextField label={t('create.spousePhone')} />
 						)}
 					</form.AppField>
 					<form.AppField name='spouseJob'>
 						{(field: any) => (
-							<field.TextField label='Nghề nghiệp vợ/chồng' />
+							<field.TextField label={t('create.spouseJob')} />
 						)}
 					</form.AppField>
 				</RecordGrid>
 			</RecordSection>
 
-			<RecordSection title='Con'>
+			<RecordSection title={t('sections.children')}>
 				<ChildrenInfo form={form} />
 			</RecordSection>
 		</StepBody>

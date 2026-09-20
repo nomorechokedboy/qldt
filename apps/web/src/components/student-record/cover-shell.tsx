@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import type { ReactNode } from 'react'
 import PhotoSlot from './photo-slot'
@@ -40,6 +41,8 @@ export function Portrait({
 	src: string
 	className?: string
 }) {
+	const { t } = useTranslation('student')
+
 	return (
 		<div
 			className={cn(
@@ -49,7 +52,7 @@ export function Portrait({
 		>
 			<img
 				src={src}
-				alt='Ảnh 3x4 của quân nhân'
+				alt={t('record.photo.alt')}
 				className='size-full object-cover'
 			/>
 		</div>
@@ -69,6 +72,8 @@ export function CoverFrame({
 	badge?: ReactNode
 	children: ReactNode
 }) {
+	const { t } = useTranslation('student')
+
 	return (
 		<aside className='hidden min-h-0 flex-col gap-6 overflow-y-auto bg-sidebar p-6 text-sidebar-foreground [background-image:var(--sidebar-gradient)] lg:flex'>
 			{photo}
@@ -80,11 +85,14 @@ export function CoverFrame({
 						!summary.fullName && 'text-sidebar-foreground/45'
 					)}
 				>
-					{summary.fullName ?? 'Họ và tên'}
+					{summary.fullName ?? t('record.cover.fullName')}
 				</p>
-				<Line value={summary.rank} empty='Cấp bậc' />
-				<Line value={summary.position} empty='Chức vụ' />
-				<Line value={summary.unit} empty='Đơn vị' />
+				<Line value={summary.rank} empty={t('record.cover.rank')} />
+				<Line
+					value={summary.position}
+					empty={t('record.cover.position')}
+				/>
+				<Line value={summary.unit} empty={t('record.cover.unit')} />
 				{badge}
 			</div>
 

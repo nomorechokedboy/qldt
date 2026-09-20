@@ -1,5 +1,6 @@
 import { positionName } from '@/lib/position-name'
 import type { Student } from '@/types'
+import i18n from '@/i18n'
 
 export interface StudentExportField {
 	key: string
@@ -15,169 +16,304 @@ function joinChildren(list?: { fullName?: string; dob?: string }[]): string {
 }
 
 export const studentExportFields: StudentExportField[] = [
-	{ key: 'fullName', label: 'Họ và tên', getValue: (s) => s.fullName ?? '' },
-	{ key: 'dob', label: 'Ngày sinh', getValue: (s) => s.dob ?? '' },
-	{ key: 'rank', label: 'Cấp bậc', getValue: (s) => s.rank ?? '' },
+	{
+		key: 'fullName',
+		get label() {
+			return i18n.t('table:columns.fullName')
+		},
+		getValue: (s) => s.fullName ?? ''
+	},
+	{
+		key: 'dob',
+		get label() {
+			return i18n.t('table:columns.dob')
+		},
+		getValue: (s) => s.dob ?? ''
+	},
+	{
+		key: 'rank',
+		get label() {
+			return i18n.t('table:columns.rank')
+		},
+		getValue: (s) => s.rank ?? ''
+	},
 	{
 		key: 'position',
-		label: 'Chức vụ',
+		get label() {
+			return i18n.t('table:columns.position')
+		},
 		getValue: (s) => positionName(s) ?? ''
 	},
 	{
 		key: 'previousUnit',
-		label: 'Đơn vị cũ',
+		get label() {
+			return i18n.t('table:columns.previousUnit')
+		},
 		getValue: (s) => s.previousUnit ?? ''
 	},
 	{
 		key: 'previousPosition',
-		label: 'Chức vụ cũ',
+		get label() {
+			return i18n.t('table:columns.previousPosition')
+		},
 		getValue: (s) => s.previousPosition ?? ''
 	},
 	{
 		key: 'birthPlace',
-		label: 'Quê quán',
+		get label() {
+			return i18n.t('table:columns.birthPlace')
+		},
 		getValue: (s) => s.birthPlace ?? ''
 	},
-	{ key: 'address', label: 'Trú quán', getValue: (s) => s.address ?? '' },
+	{
+		key: 'address',
+		get label() {
+			return i18n.t('table:columns.address')
+		},
+		getValue: (s) => s.address ?? ''
+	},
 	{
 		key: 'enlistmentPeriod',
-		label: 'Thời gian nhập ngũ',
+		get label() {
+			return i18n.t('table:columns.enlistmentPeriod')
+		},
 		getValue: (s) => s.enlistmentPeriod ?? ''
 	},
-	{ key: 'ethnic', label: 'Dân tộc', getValue: (s) => s.ethnic ?? '' },
-	{ key: 'religion', label: 'Tôn giáo', getValue: (s) => s.religion ?? '' },
+	{
+		key: 'ethnic',
+		get label() {
+			return i18n.t('table:columns.ethnic')
+		},
+		getValue: (s) => s.ethnic ?? ''
+	},
+	{
+		key: 'religion',
+		get label() {
+			return i18n.t('table:columns.religion')
+		},
+		getValue: (s) => s.religion ?? ''
+	},
 	{
 		key: 'educationLevel',
-		label: 'Học vấn',
+		get label() {
+			return i18n.t('table:columns.education')
+		},
 		getValue: (s) => s.educationLevel ?? ''
 	},
 	{
 		key: 'schoolName',
-		label: 'Tên trường',
+		get label() {
+			return i18n.t('table:columns.schoolName')
+		},
 		getValue: (s) => s.schoolName ?? ''
 	},
-	{ key: 'major', label: 'Chuyên ngành', getValue: (s) => s.major ?? '' },
+	{
+		key: 'major',
+		get label() {
+			return i18n.t('table:columns.major')
+		},
+		getValue: (s) => s.major ?? ''
+	},
 	{
 		key: 'isGraduated',
-		label: 'Đã tốt nghiệp',
-		getValue: (s) => (s.isGraduated ? 'Có' : 'Không')
+		get label() {
+			return i18n.t('table:columns.graduated')
+		},
+		getValue: (s) =>
+			s.isGraduated
+				? i18n.t('table:values.yes')
+				: i18n.t('table:values.no')
 	},
-	{ key: 'phone', label: 'Số điện thoại', getValue: (s) => s.phone ?? '' },
+	{
+		key: 'phone',
+		get label() {
+			return i18n.t('table:columns.phone')
+		},
+		getValue: (s) => s.phone ?? ''
+	},
 	{
 		key: 'policyBeneficiaryGroup',
-		label: 'Đối tượng chính sách',
+		get label() {
+			return i18n.t('table:columns.policyGroup')
+		},
 		getValue: (s) => s.policyBeneficiaryGroup ?? ''
 	},
 	{
 		key: 'politicalOrg',
-		label: 'Đoàn/Đảng',
-		getValue: (s) => (s.politicalOrg === 'cpv' ? 'Đảng viên' : 'Đoàn viên')
+		get label() {
+			return i18n.t('table:columns.politicalOrg')
+		},
+		getValue: (s) =>
+			s.politicalOrg === 'cpv'
+				? i18n.t('table:values.cpvMember')
+				: i18n.t('table:values.hcyuMember')
 	},
 	{
 		key: 'politicalOrgOfficialDate',
-		label: 'Ngày vào Đoàn',
+		get label() {
+			return i18n.t('table:columns.hcyuDate')
+		},
 		getValue: (s) => s.politicalOrgOfficialDate ?? ''
 	},
-	{ key: 'cpvId', label: 'Số thẻ Đảng', getValue: (s) => s.cpvId ?? '' },
+	{
+		key: 'cpvId',
+		get label() {
+			return i18n.t('table:columns.cpvId')
+		},
+		getValue: (s) => s.cpvId ?? ''
+	},
 	{
 		key: 'cpvOfficialAt',
-		label: 'Ngày vào Đảng',
+		get label() {
+			return i18n.t('table:columns.cpvDate')
+		},
 		getValue: (s) => s.cpvOfficialAt ?? ''
 	},
 	{
 		key: 'shortcoming',
-		label: 'Khuyết điểm',
+		get label() {
+			return i18n.t('table:columns.shortcoming')
+		},
 		getValue: (s) => s.shortcoming ?? ''
 	},
-	{ key: 'talent', label: 'Tài năng', getValue: (s) => s.talent ?? '' },
+	{
+		key: 'talent',
+		get label() {
+			return i18n.t('table:columns.talent')
+		},
+		getValue: (s) => s.talent ?? ''
+	},
 	{
 		key: 'fatherName',
-		label: 'Họ tên bố',
+		get label() {
+			return i18n.t('table:columns.fatherName')
+		},
 		getValue: (s) => s.fatherName ?? ''
 	},
 	{
 		key: 'fatherJob',
-		label: 'Nghề nghiệp của bố',
+		get label() {
+			return i18n.t('table:columns.fatherJob')
+		},
 		getValue: (s) => s.fatherJob ?? ''
 	},
 	{
 		key: 'fatherPhoneNumber',
-		label: 'SĐT bố',
+		get label() {
+			return i18n.t('table:columns.fatherPhone')
+		},
 		getValue: (s) => s.fatherPhoneNumber ?? ''
 	},
 	{
 		key: 'motherName',
-		label: 'Họ tên mẹ',
+		get label() {
+			return i18n.t('table:columns.motherName')
+		},
 		getValue: (s) => s.motherName ?? ''
 	},
 	{
 		key: 'motherJob',
-		label: 'Nghề nghiệp của mẹ',
+		get label() {
+			return i18n.t('table:columns.motherJob')
+		},
 		getValue: (s) => s.motherJob ?? ''
 	},
 	{
 		key: 'motherPhoneNumber',
-		label: 'SĐT mẹ',
+		get label() {
+			return i18n.t('table:columns.motherPhone')
+		},
 		getValue: (s) => s.motherPhoneNumber ?? ''
 	},
 	{
 		key: 'isMarried',
-		label: 'Đã kết hôn',
-		getValue: (s) => (s.isMarried ? 'Có' : 'Không')
+		get label() {
+			return i18n.t('table:columns.married')
+		},
+		getValue: (s) =>
+			s.isMarried ? i18n.t('table:values.yes') : i18n.t('table:values.no')
 	},
 	{
 		key: 'spouseName',
-		label: 'Họ tên vợ/chồng',
+		get label() {
+			return i18n.t('table:columns.spouseName')
+		},
 		getValue: (s) => s.spouseName ?? ''
 	},
 	{
 		key: 'spouseJob',
-		label: 'Nghề nghiệp vợ/chồng',
+		get label() {
+			return i18n.t('table:columns.spouseJob')
+		},
 		getValue: (s) => s.spouseJob ?? ''
 	},
 	{
 		key: 'spousePhoneNumber',
-		label: 'SĐT vợ/chồng',
+		get label() {
+			return i18n.t('table:columns.spousePhone')
+		},
 		getValue: (s) => s.spousePhoneNumber ?? ''
 	},
 	{
 		key: 'familySize',
-		label: 'Số nhân khẩu',
+		get label() {
+			return i18n.t('table:columns.familySize')
+		},
 		getValue: (s) =>
 			s.familySize !== undefined ? String(s.familySize) : ''
 	},
 	{
 		key: 'familyBackground',
-		label: 'Thành phần gia đình',
+		get label() {
+			return i18n.t('table:columns.familyBackground')
+		},
 		getValue: (s) => s.familyBackground ?? ''
 	},
 	{
 		key: 'achievement',
-		label: 'Thành tích',
+		get label() {
+			return i18n.t('table:columns.achievement')
+		},
 		getValue: (s) => s.achievement ?? ''
 	},
 	{
 		key: 'disciplinaryHistory',
-		label: 'Kỷ luật',
+		get label() {
+			return i18n.t('table:columns.discipline')
+		},
 		getValue: (s) => s.disciplinaryHistory ?? ''
 	},
 	{
 		key: 'childrenInfos',
-		label: 'Con cái',
+		get label() {
+			return i18n.t('table:columns.children')
+		},
 		getValue: (s) => joinChildren(s.childrenInfos)
 	},
 	{
 		key: 'studentId',
-		label: 'Mã học viên',
+		get label() {
+			return i18n.t('table:columns.studentId')
+		},
 		getValue: (s) => s.studentId ?? ''
 	},
 	{
 		key: 'status',
-		label: 'Trạng thái',
+		get label() {
+			return i18n.t('table:columns.status')
+		},
 		getValue: (s) =>
-			s.status === 'confirmed' ? 'Đã xác nhận' : 'Chưa xác nhận'
+			s.status === 'confirmed'
+				? i18n.t('table:values.confirmed')
+				: i18n.t('table:values.pending')
 	},
-	{ key: 'unit', label: 'Đơn vị', getValue: (s) => s.unit?.name ?? '' }
+	{
+		key: 'unit',
+		get label() {
+			return i18n.t('table:columns.unit')
+		},
+		getValue: (s) => s.unit?.name ?? ''
+	}
 ]
 
 export function buildStudentExportRow(

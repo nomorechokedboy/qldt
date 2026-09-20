@@ -12,8 +12,10 @@ import {
 } from '@/components/ui/dropdown-menu'
 import useAuth from '@/hooks/useAuth'
 import { useNavigate } from '@tanstack/react-router'
+import { useTranslation } from 'react-i18next'
 
 export function UserNav() {
+	const { t } = useTranslation('nav')
 	const { logout, user } = useAuth()
 	const navigate = useNavigate()
 
@@ -54,12 +56,14 @@ export function UserNav() {
 				</DropdownMenuLabel>
 				<DropdownMenuSeparator />
 				<DropdownMenuItem onClick={() => navigate({ to: '/profile' })}>
-					Trang cá nhân
+					{t('user.profile')}
 					<DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
 				</DropdownMenuItem>
 				<DropdownMenuGroup></DropdownMenuGroup>
 				<DropdownMenuSeparator />
-				<DropdownMenuItem onClick={logout}>Đăng xuất</DropdownMenuItem>
+				<DropdownMenuItem onClick={logout}>
+					{t('user.logout')}
+				</DropdownMenuItem>
 			</DropdownMenuContent>
 		</DropdownMenu>
 	)

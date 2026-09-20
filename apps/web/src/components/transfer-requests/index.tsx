@@ -140,8 +140,10 @@ export default function TransferRequestsTab() {
 					</SelectContent>
 				</Select>
 
-				<RefreshButton onRefresh={() => refetch()} />
-				<CreateTransferRequestForm onSuccess={() => refetch()} />
+				<div className='flex items-center gap-3'>
+					<CreateTransferRequestForm onSuccess={() => refetch()} />
+					<RefreshButton onRefresh={() => refetch()} />
+				</div>
 			</div>
 
 			{isLoading ? (

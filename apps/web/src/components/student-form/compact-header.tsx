@@ -1,6 +1,7 @@
 import { STEPS } from '@/data'
 import { CompactHeader as RecordHeader } from '@/components/student-record/cover-shell'
 import { cn } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 import type useStudentWizard from './use-student-wizard'
 
 type Wizard = ReturnType<typeof useStudentWizard>
@@ -12,14 +13,19 @@ export default function CompactHeader({
 	form: any
 	wizard: Wizard
 }) {
+	const { t } = useTranslation('student')
 	const step = STEPS[wizard.currentStep]
 
 	return (
 		<RecordHeader
 			form={form}
 			photoField='avatar'
-			title='Thêm quân nhân'
-			subtitle={`Bước ${wizard.currentStep + 1}/${STEPS.length}: ${step.title}`}
+			title={t('wizard.add')}
+			subtitle={t('wizard.stepOf', {
+				current: wizard.currentStep + 1,
+				total: STEPS.length,
+				title: t(`steps.${step.id}.title`)
+			})}
 		>
 			<div
 				role='progressbar'
