@@ -1,5 +1,6 @@
 import type { Student } from '@/types'
 import { toast } from 'sonner'
+import i18n from '@/i18n'
 import useUpdateStudent from './useUpdateStudent'
 import { queryClient } from '@/integrations/tanstack-query/root-provider'
 
@@ -16,10 +17,10 @@ export default function usePatchStudentInfo(_student: Student) {
 			await mutateAsync({
 				data: [_student]
 			})
-			toast.success('Cập nhật thông tin quân nhân thành công')
+			toast.success(i18n.t('table:cells.updateSuccess'))
 		} catch (err) {
 			console.error(err)
-			toast.error('Cập nhật thông tin quân nhân thất bại!')
+			toast.error(i18n.t('table:cells.updateFailed'))
 		}
 	}
 

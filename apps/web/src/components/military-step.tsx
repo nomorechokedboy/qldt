@@ -6,6 +6,7 @@ import { RecordGrid, RecordSection, StepBody } from './record-section'
 
 export default function MilitaryStep({ form }: { form: any }) {
 	const { t } = useTranslation('student')
+	const { t: tStats } = useTranslation('stats')
 	const positionOptions = usePositionOptions()
 
 	return (
@@ -58,8 +59,14 @@ export default function MilitaryStep({ form }: { form: any }) {
 							<field.Select
 								label={t('create.politicalOrg')}
 								values={[
-									{ label: 'Đoàn', value: 'hcyu' },
-									{ label: 'Đảng', value: 'cpv' }
+									{
+										label: tStats('politicalOrg.hcyu'),
+										value: 'hcyu'
+									},
+									{
+										label: tStats('politicalOrg.cpv'),
+										value: 'cpv'
+									}
 								]}
 							/>
 						)}
