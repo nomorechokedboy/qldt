@@ -14,7 +14,8 @@ import {
 	History,
 	ArrowLeftRight,
 	ClipboardCheck,
-	TrendingUp
+	TrendingUp,
+	Languages
 } from 'lucide-react'
 import {
 	Sidebar,
@@ -158,6 +159,11 @@ const data = {
 					title: 'nav:items.positions',
 					url: '/chuc-vu',
 					icon: List
+				},
+				{
+					title: 'nav:items.langPacks',
+					url: '/cai-dat-ngon-ngu',
+					icon: Languages
 				}
 			]
 		}

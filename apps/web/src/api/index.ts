@@ -36,6 +36,7 @@ import Client, {
 	type export_templates,
 	type facilities,
 	type inventory_sessions,
+	type lang_packs,
 	type locations,
 	type materials,
 	type positions,
@@ -392,6 +393,21 @@ export function DeleteBuildings(ids: number[]) {
 
 export function GetAuditLogs(params?: audit_logs.GetAuditLogsQuery) {
 	return requestClient.audit_logs.GetAuditLogs(params ?? {})
+}
+
+export function GetLangPacks() {
+	return requestClient.lang_packs.GetLangPacks().then((resp) => resp.packs)
+}
+
+export function SetLangPack(
+	language: string,
+	pack: lang_packs.SetLangPackRequest['pack']
+) {
+	return requestClient.lang_packs.SetLangPack(language, { pack })
+}
+
+export function DeleteLangPack(language: string) {
+	return requestClient.lang_packs.DeleteLangPack(language)
 }
 
 export function GetRooms(params?: facilities.GetRoomsQuery) {

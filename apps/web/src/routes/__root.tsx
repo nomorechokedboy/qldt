@@ -23,6 +23,7 @@ import Cdhc2Logo from '@/assets/artillery-icon.png'
 import useIsInitAdmin from '@/hooks/useIsInitAdmin'
 import useIsInitRootUnit from '@/hooks/useIsInitRootUnit'
 import useUnitsData from '@/hooks/useUnitsData'
+import { useLangPacks } from '@/hooks/useLangPacks'
 import { useLocation } from '@tanstack/react-router'
 
 interface MyRouterContext {
@@ -38,6 +39,8 @@ function RootLayout() {
 	const { data: isInitAdmin } = useIsInitAdmin()
 	const { data: rootUnitStatus } = useIsInitRootUnit()
 	const location = useLocation()
+
+	useLangPacks()
 
 	const { data: units, isLoading: isUnitsLoading } = useUnitsData(undefined, {
 		enabled: isAuthenticated && isInitAdmin === true

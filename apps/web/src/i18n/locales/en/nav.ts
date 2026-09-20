@@ -26,7 +26,8 @@ const nav: Messages<typeof vi> = {
 		userList: 'Users',
 		roleList: 'Roles',
 		activityLog: 'Activity log',
-		positions: 'Positions'
+		positions: 'Positions',
+		langPacks: 'Language packs'
 	},
 	breadcrumb: {
 		'dai-doi': 'Company',
@@ -43,6 +44,7 @@ const nav: Messages<typeof vi> = {
 		'vai-tro': 'Roles',
 		'cac-quyen': 'Permissions',
 		'nhat-ky-hoat-dong': 'Activity log',
+		'cai-dat-ngon-ngu': 'Language packs',
 		'chuc-vu': 'Positions',
 		'thong-ke-doanh-trai': 'Unit rollup',
 		'thong-ke-chinh-tri': 'Political statistics',

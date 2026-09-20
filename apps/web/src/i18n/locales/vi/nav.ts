@@ -23,7 +23,8 @@ const nav = {
 		userList: 'Danh sách người dùng',
 		roleList: 'Danh sách vai trò',
 		activityLog: 'Nhật ký hoạt động',
-		positions: 'Chức vụ'
+		positions: 'Chức vụ',
+		langPacks: 'Gói ngôn ngữ'
 	},
 	breadcrumb: {
 		'dai-doi': 'Đại đội',
@@ -40,6 +41,7 @@ const nav = {
 		'vai-tro': 'Danh sách vai trò',
 		'cac-quyen': 'Phân quyền',
 		'nhat-ky-hoat-dong': 'Nhật ký hoạt động',
+		'cai-dat-ngon-ngu': 'Gói ngôn ngữ',
 		'chuc-vu': 'Chức vụ',
 		'thong-ke-doanh-trai': 'Tổng hợp đơn vị',
 		'thong-ke-chinh-tri': 'Thống kê chính trị',
