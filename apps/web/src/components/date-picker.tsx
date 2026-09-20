@@ -10,6 +10,8 @@ import {
 	PopoverTrigger
 } from '@/components/ui/popover'
 import { useFieldContext } from '@/hooks/form-context'
+import i18n from '@/i18n'
+import { useTranslation } from 'react-i18next'
 import { useStore } from '@tanstack/react-form'
 import { ErrorMessages } from './FormComponents'
 import dayjs from 'dayjs'
@@ -230,13 +232,13 @@ function validateDateFormat(value: string, label: string): string | null {
 	// Check if format is complete (should be exactly dd/mm/yyyy)
 	const ddmmyyyyRegex = /^\d{2}\/\d{2}\/\d{4}$/
 	if (!ddmmyyyyRegex.test(value)) {
-		return `Hãy nhập ${label} theo định dạng dd/mm/yyyy`
+		return i18n.t('stats:datePicker.formatHint', { label })
 	}
 
 	// Check if it's a valid date
 	const date = parseDate(value)
 	if (!date) {
-		return 'Vui lòng nhập một ngày hợp lệ'
+		return i18n.t('stats:datePicker.invalid')
 	}
 
 	return null // No error
@@ -251,6 +253,7 @@ const currentYear = dayjs().year()
 const endMonth = new Date(currentYear + 10, 11)
 
 export default function DatePicker({ label, placeholder }: DatePickerProps) {
+	const { t } = useTranslation('stats')
 	const field = useFieldContext<string>()
 	const errors = useStore(field.store, (state) => state.meta.errors)
 	const [open, setOpen] = React.useState(false)
@@ -354,7 +357,7 @@ export default function DatePicker({ label, placeholder }: DatePickerProps) {
 					ref={inputRef}
 					id={field.name}
 					value={field.state.value}
-					placeholder={placeholder || 'Ngày/tháng/năm'}
+					placeholder={placeholder || t('datePicker.placeholder')}
 					className='bg-background pr-10'
 					onBlur={handleBlur}
 					onChange={handleInputChange}

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { useStore } from '@tanstack/react-form'
 import { useFieldContext, useFormContext } from '../hooks/form-context'
 import { Button } from '@/components/ui/button'
@@ -236,6 +237,7 @@ export function Combobox({
 	defaultValue?: string
 	onChange?: (value: string) => void
 }) {
+	const { t } = useTranslation('common')
 	const [open, setOpen] = useState(false)
 	const field = useFieldContext<string>()
 	const errors = useStore(field.store, (state) => state.meta.errors)
@@ -265,7 +267,9 @@ export function Combobox({
 				<PopoverContent className='w-full p-0'>
 					<Command>
 						<CommandInput
-							placeholder={`Tìm ${label.toLowerCase()}...`}
+							placeholder={t('form.searchPlaceholder', {
+								label: label.toLowerCase()
+							})}
 						/>
 						<CommandList>
 							<CommandEmpty>No option found.</CommandEmpty>
@@ -376,6 +380,7 @@ export function UploadField({
 	browseText = 'or click to browse files',
 	dragDropSize = 'default'
 }: UploadFieldProps) {
+	const { t } = useTranslation('common')
 	const field = useFieldContext<File | null>()
 	const errors = useStore(field.store, (s) => s.meta.errors)
 	const [isDragOver, setIsDragOver] = useState(false)
@@ -485,7 +490,7 @@ export function UploadField({
 						<Paperclip />
 						<EllipsisText>
 							{field.state.value === null
-								? 'Chọn hoặc kéo thả để tải lên'
+								? t('form.uploadPrompt')
 								: field.state.value.name}
 						</EllipsisText>
 					</div>
