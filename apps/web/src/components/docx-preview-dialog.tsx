@@ -9,6 +9,7 @@ import {
 import { DocxEditor, type DocxEditorRef } from '@docx-editor.dev/react'
 import '@docx-editor.dev/core/styles/editor.css'
 import { useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 
 export interface DocxPreviewDialogProps {
@@ -24,6 +25,7 @@ export function DocxPreviewDialog({
 	document: doc,
 	filename
 }: DocxPreviewDialogProps) {
+	const { t } = useTranslation('io')
 	const editorRef = useRef<DocxEditorRef>(null)
 	const [isDownloading, setIsDownloading] = useState(false)
 
@@ -32,7 +34,7 @@ export function DocxPreviewDialog({
 		try {
 			const bytes = await editorRef.current?.save()
 			if (!bytes) {
-				toast.error('Chưa thể tải file, đã có lỗi xảy ra!')
+				toast.error(t('preview.failed'))
 				return
 			}
 
@@ -50,7 +52,7 @@ export function DocxPreviewDialog({
 			window.URL.revokeObjectURL(link.href)
 		} catch (err) {
 			console.error('handleDownload error', err)
-			toast.error('Chưa thể tải file, đã có lỗi xảy ra!')
+			toast.error(t('preview.failed'))
 		} finally {
 			setIsDownloading(false)
 		}
@@ -60,7 +62,7 @@ export function DocxPreviewDialog({
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent className='container h-[95vh] w-[95vw] max-w-[95vw] overflow-hidden flex flex-col sm:max-w-[95vw]'>
 				<DialogHeader>
-					<DialogTitle>Xem trước file xuất</DialogTitle>
+					<DialogTitle>{t('preview.title')}</DialogTitle>
 				</DialogHeader>
 				<div className='flex-1 overflow-auto rounded-md border'>
 					{doc !== null && (
@@ -69,7 +71,9 @@ export function DocxPreviewDialog({
 				</div>
 				<DialogFooter>
 					<Button onClick={handleDownload} disabled={isDownloading}>
-						{isDownloading ? 'Đang tải xuống...' : 'Tải xuống'}
+						{isDownloading
+							? t('preview.downloading')
+							: t('preview.download')}
 					</Button>
 				</DialogFooter>
 			</DialogContent>

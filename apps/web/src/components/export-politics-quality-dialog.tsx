@@ -1,6 +1,7 @@
 import { Button } from '@/components/ui/button'
 import { useAppForm } from '@/hooks/use-app-form'
 import { type ReactNode, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
 	Dialog,
 	DialogClose,
@@ -28,6 +29,7 @@ export default function ExportPoliticsQualityDialog({
 	data: { total, data },
 	defaultFilename
 }: ExportPoliticsQualityDialogProps) {
+	const { t } = useTranslation('stats')
 	const { onExport } = useExportPoliticsQualityReport({
 		filename: defaultFilename
 	})
@@ -60,9 +62,9 @@ export default function ExportPoliticsQualityDialog({
 				<DialogTrigger asChild>{children}</DialogTrigger>
 				<DialogContent className='sm:max-w-[425px] h-auto'>
 					<DialogHeader>
-						<DialogTitle>Xuất dữ liệu</DialogTitle>
+						<DialogTitle>{t('exportDialog.title')}</DialogTitle>
 						<DialogDescription>
-							Hãy điền những thông tin cần thiết để xuất dữ liệu
+							{t('exportDialog.description')}
 						</DialogDescription>
 					</DialogHeader>
 					<div className='grid gap-4'>
@@ -71,12 +73,14 @@ export default function ExportPoliticsQualityDialog({
 							validators={{
 								onBlur: ({ value }) =>
 									!value
-										? 'Tiêu đề của file thống kê không được bỏ trống'
+										? t('exportDialog.titleRequired')
 										: undefined
 							}}
 						>
 							{(field) => (
-								<field.TextField label='Tiêu đề của file thống kê' />
+								<field.TextField
+									label={t('exportDialog.titleLabel')}
+								/>
 							)}
 						</form.AppField>
 						<form.AppField
@@ -84,16 +88,22 @@ export default function ExportPoliticsQualityDialog({
 							validators={{
 								onBlur: ({ value }) =>
 									!value
-										? 'Tên file không được bỏ trống'
+										? t('exportDialog.filenameRequired')
 										: undefined
 							}}
 						>
-							{(field) => <field.TextField label='Tên file' />}
+							{(field) => (
+								<field.TextField
+									label={t('exportDialog.filenameLabel')}
+								/>
+							)}
 						</form.AppField>
 					</div>
 					<DialogFooter>
 						<DialogClose asChild>
-							<Button variant='outline'>Hủy</Button>
+							<Button variant='outline'>
+								{t('exportDialog.cancel')}
+							</Button>
 						</DialogClose>
 						<form.Subscribe
 							selector={(state) => [
@@ -107,8 +117,8 @@ export default function ExportPoliticsQualityDialog({
 									disabled={!canSubmit}
 								>
 									{isSubmitting
-										? 'Đang xuất file...'
-										: 'Xác nhận'}
+										? t('exportDialog.exporting')
+										: t('exportDialog.confirm')}
 								</Button>
 							)}
 						/>

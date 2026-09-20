@@ -21,6 +21,7 @@ import {
 } from 'lucide-react'
 import type React from 'react'
 import { useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { downloadImportTemplate } from './build-import-template'
 import { parseImportFile } from './parse-import-file'
 import { reviewInputClass } from './review-input-class'
@@ -47,6 +48,7 @@ export function ImportStudentsDialog({
 	onClose,
 	onSuccess
 }: ImportStudentsDialogProps) {
+	const { t } = useTranslation('io')
 	const { options: unitOptions } = useUnitOptions({ enabled: isOpen })
 	const { data: provinces = [] } = useProvinces({ enabled: isOpen })
 	// Unfiltered - the whole ward list is needed up front to build the
@@ -214,27 +216,27 @@ export function ImportStudentsDialog({
 					setUploadStatus('ready')
 					if (rowErrors.length > 0) {
 						setUploadMessage(
-							`Đã đọc file, nhưng có ${rowErrors.length} dòng chứa lỗi tham chiếu (đơn vị/chức vụ không hợp lệ).`
+							t('importDialog.messages.refErrors', {
+								count: rowErrors.length
+							})
 						)
 					}
 				} catch (error) {
 					console.error('Error parsing file:', error)
-					setUploadMessage(
-						'Lỗi đọc file. Vui lòng kiểm tra định dạng file.'
-					)
+					setUploadMessage(t('importDialog.messages.readFormat'))
 					setUploadStatus('error')
 				}
 			}
 
 			reader.onerror = (error) => {
 				console.error('FileReader error:', error)
-				setUploadMessage('Lỗi đọc file. Vui lòng thử lại.')
+				setUploadMessage(t('importDialog.messages.readRetry'))
 				setUploadStatus('error')
 			}
 
 			reader.readAsArrayBuffer(file)
 		} else {
-			setUploadMessage('Vui lòng chọn file CSV hoặc Excel (.xlsx, .xls)')
+			setUploadMessage(t('importDialog.messages.invalidType'))
 			setUploadStatus('error')
 		}
 	}
@@ -247,15 +249,13 @@ export function ImportStudentsDialog({
 
 	const handleImport = async () => {
 		if (!selectedFile) {
-			setUploadMessage('Vui lòng chọn file để import')
+			setUploadMessage(t('importDialog.messages.noFile'))
 			setUploadStatus('error')
 			return
 		}
 
 		if (errorRowCount > 0) {
-			setUploadMessage(
-				'Vui lòng sửa các dòng có lỗi tham chiếu trước khi import.'
-			)
+			setUploadMessage(t('importDialog.messages.fixRefErrors'))
 			setUploadStatus('error')
 			setImportResults({
 				successCount: 0,
@@ -267,7 +267,7 @@ export function ImportStudentsDialog({
 		}
 
 		setUploadStatus('uploading')
-		setUploadMessage('Đang xử lý file...')
+		setUploadMessage(t('importDialog.messages.processing'))
 
 		try {
 			// Read the form's current values, not the frozen `rows` snapshot -
@@ -285,13 +285,20 @@ export function ImportStudentsDialog({
 			setUploadStatus('success')
 			setImportResults(results)
 			setUploadMessage(
-				`Import hoàn tất! Thành công: ${results.successCount}/${results.totalCount} quân nhân`
+				t('importDialog.messages.done', {
+					success: results.successCount,
+					total: results.totalCount
+				})
 			)
 			onSuccess?.(results)
 		} catch (error) {
 			console.error('Import error:', error)
 			setUploadStatus('error')
-			setUploadMessage(`Lỗi import: ${error?.message || error}`)
+			setUploadMessage(
+				t('importDialog.messages.failed', {
+					message: error?.message || String(error)
+				})
+			)
 
 			// Set error results
 			const errorResults = {
@@ -372,11 +379,10 @@ export function ImportStudentsDialog({
 		>
 			<DialogContent className='max-w-9/10'>
 				<DialogHeader>
-					<DialogTitle>Import danh sách quân nhân</DialogTitle>
+					<DialogTitle>{t('importDialog.title')}</DialogTitle>
 					{!isReviewing && (
 						<DialogDescription>
-							Tải lên file Excel hoặc CSV để thêm nhiều quân nhân
-							cùng lúc.
+							{t('importDialog.description')}
 						</DialogDescription>
 					)}
 				</DialogHeader>
@@ -435,7 +441,7 @@ export function ImportStudentsDialog({
 					{importResults && (
 						<div className='space-y-3 rounded-lg border bg-muted/30 p-4'>
 							<h4 className='font-medium text-foreground'>
-								Kết quả import:
+								{t('importDialog.results.title')}
 							</h4>
 							<div className='grid grid-cols-3 gap-4 text-sm'>
 								<div className='text-center'>
@@ -443,7 +449,7 @@ export function ImportStudentsDialog({
 										{importResults.successCount}
 									</div>
 									<div className='text-muted-foreground'>
-										Thành công
+										{t('importDialog.results.success')}
 									</div>
 								</div>
 								<div className='text-center'>
@@ -451,7 +457,7 @@ export function ImportStudentsDialog({
 										{importResults.errorCount}
 									</div>
 									<div className='text-muted-foreground'>
-										Lỗi
+										{t('importDialog.results.errors')}
 									</div>
 								</div>
 								<div className='text-center'>
@@ -459,7 +465,7 @@ export function ImportStudentsDialog({
 										{importResults.totalCount}
 									</div>
 									<div className='text-muted-foreground'>
-										Tổng cộng
+										{t('importDialog.results.total')}
 									</div>
 								</div>
 							</div>
@@ -468,7 +474,7 @@ export function ImportStudentsDialog({
 								importResults.errors.length > 0 && (
 									<div className='space-y-2 pt-1'>
 										<h5 className='font-medium text-destructive'>
-											Chi tiết lỗi:
+											{t('importDialog.results.details')}
 										</h5>
 										<div className='max-h-32 overflow-y-auto space-y-1'>
 											{importResults.errors.map(
@@ -477,8 +483,14 @@ export function ImportStudentsDialog({
 														key={index}
 														className='rounded border bg-background p-2 text-sm text-destructive'
 													>
-														Dòng {error.row}:{' '}
-														{error.message}
+														{t(
+															'importDialog.results.row',
+															{
+																row: error.row,
+																message:
+																	error.message
+															}
+														)}
 													</div>
 												)
 											)}
@@ -491,7 +503,9 @@ export function ImportStudentsDialog({
 
 				<DialogFooter>
 					<Button variant='secondary' onClick={handleClose}>
-						{uploadStatus === 'success' ? 'Đóng' : 'Hủy'}
+						{uploadStatus === 'success'
+							? t('importDialog.actions.close')
+							: t('importDialog.actions.cancel')}
 					</Button>
 
 					{isReviewing && (
@@ -503,19 +517,19 @@ export function ImportStudentsDialog({
 							}
 							title={
 								errorRowCount > 0
-									? 'Vui lòng sửa các dòng có lỗi trước khi import'
+									? t('importDialog.actions.fixErrorsTooltip')
 									: undefined
 							}
 						>
 							{uploadStatus === 'uploading' ? (
 								<>
 									<Loader2 className='h-4 w-4 animate-spin' />
-									Đang import...
+									{t('importDialog.actions.importing')}
 								</>
 							) : (
 								<>
 									<Upload className='h-4 w-4' />
-									Xác nhận &amp; Import
+									{t('importDialog.actions.confirm')}
 									<ArrowRight className='h-4 w-4' />
 								</>
 							)}

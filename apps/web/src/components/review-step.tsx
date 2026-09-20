@@ -1,8 +1,10 @@
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import useProvinces from '@/hooks/useProvinces'
 import useWards from '@/hooks/useWards'
 
 export default function ReviewStep({ values }: { values: any }) {
+	const { t } = useTranslation('io')
 	const { data: provinces = [] } = useProvinces()
 	// Unfiltered - the review step doesn't know in advance which
 	// province(s) the selected wards belong to, and the full ward list
@@ -35,24 +37,24 @@ export default function ReviewStep({ values }: { values: any }) {
 	return (
 		<div className='space-y-6'>
 			<h2 className='text-2xl font-bold text-center mb-8'>
-				Xem lại thông tin nhập liệu
+				{t('studentReview.title')}
 			</h2>
 			<div className='space-y-6 bg-muted/50 p-6 rounded-lg border'>
 				{/* Personal Information */}
 				<div>
 					<h3 className='font-semibold mb-3 text-lg border-b border-border pb-2'>
-						Thông tin cá nhân
+						{t('studentReview.personal')}
 					</h3>
 					<div className='grid grid-cols-1 md:grid-cols-2 gap-3 text-sm'>
 						<p>
 							<strong className='text-muted-foreground'>
-								Họ và tên:
+								{t('studentReview.fields.fullName')}
 							</strong>{' '}
 							{values.fullName}
 						</p>
 						<p>
 							<strong className='text-muted-foreground'>
-								Quê quán:
+								{t('studentReview.fields.birthPlace')}
 							</strong>{' '}
 							{formatPlace(
 								values.birthPlace,
@@ -62,7 +64,7 @@ export default function ReviewStep({ values }: { values: any }) {
 						</p>
 						<p>
 							<strong className='text-muted-foreground'>
-								Trú quán:
+								{t('studentReview.fields.address')}
 							</strong>{' '}
 							{formatPlace(
 								values.address,
@@ -72,43 +74,43 @@ export default function ReviewStep({ values }: { values: any }) {
 						</p>
 						<p>
 							<strong className='text-muted-foreground'>
-								Dân tộc:
+								{t('studentReview.fields.ethnic')}
 							</strong>{' '}
 							{values.ethnic}
 						</p>
 						<p>
 							<strong className='text-muted-foreground'>
-								Tôn giáo:
+								{t('studentReview.fields.religion')}
 							</strong>{' '}
 							{values.religion}
 						</p>
 						<p>
 							<strong className='text-muted-foreground'>
-								Trình độ học vấn:
+								{t('studentReview.fields.educationLevel')}
 							</strong>{' '}
 							{values.educationLevel}
 						</p>
 						<p>
 							<strong className='text-muted-foreground'>
-								Tên trường:
+								{t('studentReview.fields.schoolName')}
 							</strong>{' '}
 							{values.schoolName}
 						</p>
 						<p>
 							<strong className='text-muted-foreground'>
-								Ngành:
+								{t('studentReview.fields.major')}
 							</strong>{' '}
 							{values.major}
 						</p>
 						<p>
 							<strong className='text-muted-foreground'>
-								Phone:
+								{t('studentReview.fields.phone')}
 							</strong>{' '}
 							{values.phone}
 						</p>
 						<p>
 							<strong className='text-muted-foreground'>
-								Sinh nhật:
+								{t('studentReview.fields.dob')}
 							</strong>{' '}
 							{values.dob}
 						</p>
@@ -118,30 +120,32 @@ export default function ReviewStep({ values }: { values: any }) {
 				{/* Military Information */}
 				<div>
 					<h3 className='font-semibold mb-3 text-lg border-b border-border pb-2'>
-						Thông tin quân nhân
+						{t('studentReview.military')}
 					</h3>
 					<div className='grid grid-cols-1 md:grid-cols-2 gap-3 text-sm'>
 						<p>
 							<strong className='text-muted-foreground'>
-								Ngày nhập ngũ:
+								{t('studentReview.fields.enlistmentPeriod')}
 							</strong>{' '}
 							{values.enlistmentPeriod}
 						</p>
 						<p>
 							<strong className='text-muted-foreground'>
-								Đơn vị cũ:
+								{t('studentReview.fields.previousUnit')}
 							</strong>{' '}
 							{values.previousUnit}
 						</p>
 						<p>
 							<strong className='text-muted-foreground'>
-								Chức vụ tại đơn vị cũ:
+								{t('studentReview.fields.previousPosition')}
 							</strong>{' '}
 							{values.previousPosition}
 						</p>
 						<p>
 							<strong className='text-muted-foreground'>
-								Diện chính sách:
+								{t(
+									'studentReview.fields.policyBeneficiaryGroup'
+								)}
 							</strong>{' '}
 							{values.policyBeneficiaryGroup}
 						</p>
@@ -151,28 +155,30 @@ export default function ReviewStep({ values }: { values: any }) {
 				{/* Family Information */}
 				<div>
 					<h3 className='font-semibold mb-3 text-lg border-b border-border pb-2'>
-						Thông tin gia đình
+						{t('studentReview.family')}
 					</h3>
 					<div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
 						{/* Father */}
 						<div>
-							<h4 className='font-medium mb-2'>Cha</h4>
+							<h4 className='font-medium mb-2'>
+								{t('studentReview.father')}
+							</h4>
 							<div className='space-y-1 text-sm'>
 								<p>
 									<strong className='text-muted-foreground'>
-										Tên:
+										{t('studentReview.fields.name')}
 									</strong>{' '}
 									{values.fatherName}
 								</p>
 								<p>
 									<strong className='text-muted-foreground'>
-										SĐT:
+										{t('studentReview.fields.phoneNumber')}
 									</strong>{' '}
 									{values.fatherPhoneNumber}
 								</p>
 								<p>
 									<strong className='text-muted-foreground'>
-										Nghề:
+										{t('studentReview.fields.job')}
 									</strong>{' '}
 									{values.fatherJob}
 								</p>
@@ -191,23 +197,25 @@ export default function ReviewStep({ values }: { values: any }) {
 
 						{/* Mother */}
 						<div>
-							<h4 className='font-medium mb-2'>Mẹ</h4>
+							<h4 className='font-medium mb-2'>
+								{t('studentReview.mother')}
+							</h4>
 							<div className='space-y-1 text-sm'>
 								<p>
 									<strong className='text-muted-foreground'>
-										Tên:
+										{t('studentReview.fields.name')}
 									</strong>{' '}
 									{values.motherName}
 								</p>
 								<p>
 									<strong className='text-muted-foreground'>
-										SĐT:
+										{t('studentReview.fields.phoneNumber')}
 									</strong>{' '}
 									{values.motherPhoneNumber}
 								</p>
 								<p>
 									<strong className='text-muted-foreground'>
-										Nghề:
+										{t('studentReview.fields.job')}
 									</strong>{' '}
 									{values.motherJob}
 								</p>

@@ -9,6 +9,7 @@ import { cn } from '@/lib/utils'
 import dayjs from 'dayjs'
 import { CalendarIcon } from 'lucide-react'
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { reviewInputClass } from './review-input-class'
 
 // Standalone Calendar+Popover date field that speaks the same "YYYY-MM-DD"
@@ -28,6 +29,7 @@ export function ReviewDateField({
 	value: string | null | undefined
 	onChange: (value: string | undefined) => void
 }) {
+	const { t } = useTranslation('io')
 	const [open, setOpen] = useState(false)
 	const parsed = value ? dayjs(value, 'YYYY-MM-DD') : undefined
 	const selectedDate =
@@ -48,7 +50,7 @@ export function ReviewDateField({
 					<CalendarIcon className='mr-2 h-4 w-4 shrink-0' />
 					{selectedDate
 						? dayjs(selectedDate).format('DD/MM/YYYY')
-						: 'Chọn ngày'}
+						: t('importDialog.cells.pickDate')}
 				</Button>
 			</PopoverTrigger>
 			<PopoverContent className='w-auto p-0' align='start'>

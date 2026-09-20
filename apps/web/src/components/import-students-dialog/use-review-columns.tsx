@@ -4,6 +4,7 @@ import { useStore } from '@tanstack/react-form'
 import type { ColumnDef } from '@tanstack/react-table'
 import { AlertCircle, CheckCircle } from 'lucide-react'
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ReviewComboboxCell } from './review-combobox-cell'
 import { ReviewDateField } from './review-date-field'
 import { reviewInputClass } from './review-input-class'
@@ -20,6 +21,7 @@ interface SelectOption {
 }
 
 function RowStatusCell({ form, index }: { form: ReviewForm; index: number }) {
+	const { t } = useTranslation('io')
 	const messages = useStore(form.store, (state) =>
 		TRACKED_ERROR_FIELDS.flatMap((field) =>
 			fieldErrorMessages(state.fieldMeta, index, field)
@@ -32,12 +34,12 @@ function RowStatusCell({ form, index }: { form: ReviewForm; index: number }) {
 			title={messages.join('\n')}
 		>
 			<AlertCircle className='h-4 w-4 flex-shrink-0' />
-			Lỗi
+			{t('importDialog.rowStatus.error')}
 		</span>
 	) : (
 		<span className='flex items-center gap-1 text-green-700 dark:text-green-400'>
 			<CheckCircle className='h-4 w-4 flex-shrink-0' />
-			OK
+			{t('importDialog.rowStatus.ok')}
 		</span>
 	)
 }
@@ -59,6 +61,7 @@ export function useReviewColumns({
 	provinceSelectOptions,
 	wardSelectOptionsByProvinceCode
 }: UseReviewColumnsParams): ColumnDef<StudentBody>[] {
+	const { t } = useTranslation('io')
 	return useMemo<ColumnDef<StudentBody>[]>(
 		() => [
 			{
@@ -72,14 +75,14 @@ export function useReviewColumns({
 			},
 			{
 				id: 'status',
-				header: 'Trạng thái',
+				header: t('importDialog.columns.status'),
 				cell: ({ row }) => (
 					<RowStatusCell form={form} index={row.index} />
 				)
 			},
 			{
 				accessorKey: 'fullName',
-				header: 'Họ và tên',
+				header: t('importDialog.columns.fullName'),
 				cell: ({ row }) => (
 					<form.Field name={`rows[${row.index}].fullName`}>
 						{(field) => (
@@ -97,7 +100,7 @@ export function useReviewColumns({
 			},
 			{
 				accessorKey: 'studentId',
-				header: 'Mã số QN',
+				header: t('importDialog.columns.studentId'),
 				cell: ({ row }) => (
 					<form.Field name={`rows[${row.index}].studentId`}>
 						{(field) => (
@@ -115,7 +118,7 @@ export function useReviewColumns({
 			},
 			{
 				accessorKey: 'unitId',
-				header: 'Đơn vị',
+				header: t('importDialog.columns.unit'),
 				cell: ({ row }) => (
 					<form.Field name={`rows[${row.index}].unitId`}>
 						{(field) => (
@@ -134,7 +137,9 @@ export function useReviewColumns({
 										clearFieldError(row.index, 'unitId')
 								}}
 								options={unitSelectOptions}
-								placeholder='-- Chọn đơn vị --'
+								placeholder={t(
+									'importDialog.placeholders.unit'
+								)}
 							/>
 						)}
 					</form.Field>
@@ -142,7 +147,7 @@ export function useReviewColumns({
 			},
 			{
 				accessorKey: 'positionId',
-				header: 'Chức vụ',
+				header: t('importDialog.columns.position'),
 				cell: ({ row }) => (
 					<form.Field name={`rows[${row.index}].positionId`}>
 						{(field) => (
@@ -161,7 +166,9 @@ export function useReviewColumns({
 										clearFieldError(row.index, 'positionId')
 								}}
 								options={positionComboboxOptions}
-								placeholder='-- Chọn chức vụ --'
+								placeholder={t(
+									'importDialog.placeholders.position'
+								)}
 							/>
 						)}
 					</form.Field>
@@ -169,7 +176,7 @@ export function useReviewColumns({
 			},
 			{
 				accessorKey: 'rank',
-				header: 'Cấp bậc',
+				header: t('importDialog.columns.rank'),
 				cell: ({ row }) => (
 					<form.Field name={`rows[${row.index}].rank`}>
 						{(field) => (
@@ -187,7 +194,7 @@ export function useReviewColumns({
 			},
 			{
 				accessorKey: 'dob',
-				header: 'Ngày sinh',
+				header: t('importDialog.columns.dob'),
 				cell: ({ row }) => (
 					<form.Field name={`rows[${row.index}].dob`}>
 						{(field) => (
@@ -203,7 +210,7 @@ export function useReviewColumns({
 			},
 			{
 				accessorKey: 'phone',
-				header: 'SĐT',
+				header: t('importDialog.columns.phone'),
 				cell: ({ row }) => (
 					<form.Field name={`rows[${row.index}].phone`}>
 						{(field) => (
@@ -221,7 +228,7 @@ export function useReviewColumns({
 			},
 			{
 				accessorKey: 'activityStatus',
-				header: 'Tình trạng',
+				header: t('importDialog.columns.activityStatus'),
 				enableHiding: true,
 				cell: ({ row }) => (
 					<form.Field name={`rows[${row.index}].activityStatus`}>
@@ -234,7 +241,9 @@ export function useReviewColumns({
 									)
 								}
 								options={activityStatusOptions}
-								placeholder='-- Chọn tình trạng --'
+								placeholder={t(
+									'importDialog.placeholders.activityStatus'
+								)}
 							/>
 						)}
 					</form.Field>
@@ -243,7 +252,7 @@ export function useReviewColumns({
 			{
 				accessorKey: 'birthPlaceProvinceCode',
 				id: 'birthPlaceProvinceCode',
-				header: 'Tỉnh/Thành (Quê quán)',
+				header: t('importDialog.columns.birthProvince'),
 				enableHiding: true,
 				cell: ({ row }) => (
 					<form.Field
@@ -262,7 +271,9 @@ export function useReviewColumns({
 									)
 								}}
 								options={provinceSelectOptions}
-								placeholder='-- Chọn tỉnh/thành --'
+								placeholder={t(
+									'importDialog.placeholders.province'
+								)}
 							/>
 						)}
 					</form.Field>
@@ -271,7 +282,7 @@ export function useReviewColumns({
 			{
 				accessorKey: 'birthPlaceWardCode',
 				id: 'birthPlaceWardCode',
-				header: 'Phường/Xã (Quê quán)',
+				header: t('importDialog.columns.birthWard'),
 				enableHiding: true,
 				cell: ({ row }) => (
 					<form.Field
@@ -310,7 +321,9 @@ export function useReviewColumns({
 												}
 											}}
 											options={wardChoices}
-											placeholder='-- Chọn phường/xã --'
+											placeholder={t(
+												'importDialog.placeholders.ward'
+											)}
 										/>
 									)}
 								</form.Field>
@@ -321,7 +334,7 @@ export function useReviewColumns({
 			},
 			{
 				accessorKey: 'birthPlace',
-				header: 'Chi tiết (Quê quán)',
+				header: t('importDialog.columns.birthDetail'),
 				enableHiding: true,
 				cell: ({ row }) => (
 					<form.Field name={`rows[${row.index}].birthPlace`}>
@@ -341,7 +354,7 @@ export function useReviewColumns({
 			{
 				accessorKey: 'addressProvinceCode',
 				id: 'addressProvinceCode',
-				header: 'Tỉnh/Thành (Trú quán)',
+				header: t('importDialog.columns.addressProvince'),
 				enableHiding: true,
 				cell: ({ row }) => (
 					<form.Field name={`rows[${row.index}].addressProvinceCode`}>
@@ -358,7 +371,9 @@ export function useReviewColumns({
 									)
 								}}
 								options={provinceSelectOptions}
-								placeholder='-- Chọn tỉnh/thành --'
+								placeholder={t(
+									'importDialog.placeholders.province'
+								)}
 							/>
 						)}
 					</form.Field>
@@ -367,7 +382,7 @@ export function useReviewColumns({
 			{
 				accessorKey: 'addressWardCode',
 				id: 'addressWardCode',
-				header: 'Phường/Xã (Trú quán)',
+				header: t('importDialog.columns.addressWard'),
 				enableHiding: true,
 				cell: ({ row }) => (
 					<form.Field name={`rows[${row.index}].addressProvinceCode`}>
@@ -404,7 +419,9 @@ export function useReviewColumns({
 												}
 											}}
 											options={wardChoices}
-											placeholder='-- Chọn phường/xã --'
+											placeholder={t(
+												'importDialog.placeholders.ward'
+											)}
 										/>
 									)}
 								</form.Field>
@@ -415,7 +432,7 @@ export function useReviewColumns({
 			},
 			{
 				accessorKey: 'address',
-				header: 'Chi tiết (Trú quán)',
+				header: t('importDialog.columns.addressDetail'),
 				enableHiding: true,
 				cell: ({ row }) => (
 					<form.Field name={`rows[${row.index}].address`}>
@@ -439,7 +456,8 @@ export function useReviewColumns({
 			unitSelectOptions,
 			positionComboboxOptions,
 			provinceSelectOptions,
-			wardSelectOptionsByProvinceCode
+			wardSelectOptionsByProvinceCode,
+			t
 		]
 	)
 }

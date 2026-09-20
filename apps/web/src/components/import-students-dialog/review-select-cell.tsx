@@ -8,6 +8,7 @@ import {
 } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import { useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { reviewInputClass } from './review-input-class'
 
 // Lists shorter than this render without the search box - it's not worth
@@ -31,7 +32,7 @@ export function ReviewSelectCell({
 	options,
 	placeholder,
 	disabled,
-	searchPlaceholder = 'Tìm kiếm...'
+	searchPlaceholder
 }: {
 	value: string
 	onChange: (value: string) => void
@@ -40,6 +41,7 @@ export function ReviewSelectCell({
 	disabled?: boolean
 	searchPlaceholder?: string
 }) {
+	const { t } = useTranslation('io')
 	const [search, setSearch] = useState('')
 	// `search` drives the input's own value so typing itself stays instant;
 	// `debouncedSearch` is what actually filters/re-renders the (possibly
@@ -102,14 +104,17 @@ export function ReviewSelectCell({
 								if (e.key === 'Escape') return
 								e.stopPropagation()
 							}}
-							placeholder={searchPlaceholder}
+							placeholder={
+								searchPlaceholder ??
+								t('importDialog.cells.search')
+							}
 							className='w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground'
 						/>
 					</div>
 				)}
 				{searchable && filteredOptions.length === 0 ? (
 					<div className='px-2 py-1.5 text-sm text-muted-foreground'>
-						Không tìm thấy.
+						{t('importDialog.cells.notFound')}
 					</div>
 				) : (
 					filteredOptions.map((o) => (
