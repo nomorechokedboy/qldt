@@ -1,5 +1,6 @@
 import type { ColumnDef } from '@tanstack/react-table'
 import { AlertCircle, CheckCircle } from 'lucide-react'
+import i18n from '@/i18n'
 
 export function indexColumn<Row>(): ColumnDef<Row> {
 	return {
@@ -16,7 +17,7 @@ export function statusColumn<Row>(
 ): ColumnDef<Row> {
 	return {
 		id: 'status',
-		header: 'Trạng thái',
+		header: () => i18n.t('materials:import.review.status'),
 		cell: ({ row }) => {
 			const rowErrors = errorsByRowIndex.get(row.index)
 			return rowErrors !== undefined ? (
@@ -25,7 +26,7 @@ export function statusColumn<Row>(
 					title={rowErrors.join('\n')}
 				>
 					<AlertCircle className='h-4 w-4 flex-shrink-0' />
-					Lỗi
+					{i18n.t('materials:import.review.error')}
 				</span>
 			) : (
 				<span className='flex items-center gap-1 text-green-700 dark:text-green-400'>

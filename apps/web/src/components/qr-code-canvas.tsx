@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { useEffect, useRef, useState } from 'react'
 import { Download } from 'lucide-react'
 import QRCode from 'qrcode'
@@ -19,18 +20,19 @@ export default function QrCodeCanvas({
 	downloadFilename,
 	ariaLabel
 }: QrCodeCanvasProps) {
+	const { t } = useTranslation('materials')
 	const canvasRef = useRef<HTMLCanvasElement>(null)
-	const [error, setError] = useState<string | null>(null)
+	const [tooLarge, setTooLarge] = useState(false)
 
 	useEffect(() => {
 		if (!canvasRef.current) return
-		setError(null)
+		setTooLarge(false)
 		QRCode.toCanvas(canvasRef.current, value, {
 			width: 320,
 			margin: 2,
 			errorCorrectionLevel: 'L'
 		}).catch(() => {
-			setError('Không thể tạo mã QR - dữ liệu quá lớn cho một mã QR.')
+			setTooLarge(true)
 		})
 	}, [value])
 
@@ -48,8 +50,10 @@ export default function QrCodeCanvas({
 		document.body.removeChild(link)
 	}
 
-	if (error) {
-		return <p className='text-destructive text-sm'>{error}</p>
+	if (tooLarge) {
+		return (
+			<p className='text-destructive text-sm'>{t('qrCode.tooLarge')}</p>
+		)
 	}
 
 	return (
@@ -61,7 +65,7 @@ export default function QrCodeCanvas({
 			/>
 			<Button type='button' variant='outline' onClick={handleDownload}>
 				<Download className='w-4 h-4 mr-2' />
-				Tải xuống mã QR
+				{t('qrCode.download')}
 			</Button>
 		</div>
 	)

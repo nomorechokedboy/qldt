@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import QrCodeCanvas from '@/components/qr-code-canvas'
 
 interface ChallengeQrProps {
@@ -9,11 +10,12 @@ export default function ChallengeQr({
 	value,
 	downloadFilename = 'ma-qr-kiem-ke'
 }: ChallengeQrProps) {
+	const { t } = useTranslation('materials')
 	return (
 		<QrCodeCanvas
 			value={value}
 			downloadFilename={downloadFilename}
-			ariaLabel='Mã QR phiên kiểm kê'
+			ariaLabel={t('inventory.challengeQrLabel')}
 		/>
 	)
 }

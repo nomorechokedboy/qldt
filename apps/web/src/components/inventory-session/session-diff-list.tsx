@@ -1,7 +1,8 @@
+import { useTranslation } from 'react-i18next'
 import { Badge } from '@/components/ui/badge'
 import type { inventory_sessions } from '@/api/client'
 import { AssetDiffColor, AssetDiffStatusIcon } from './diff-status'
-import { DIFF_STATUS_LABEL } from './diff-status-labels'
+import { DIFF_STATUS_VARIANT } from './diff-status-labels'
 import {
 	materialConditionColors,
 	materialConditionLabels
@@ -13,15 +14,16 @@ interface InventorySessionDiffListProps {
 }
 
 // Shared between the create-session flow's review step and the room's
-// "Lịch sử kiểm kê" history sheet, so a session's diff always reads the same
+// inventory history sheet, so a session's diff always reads the same
 // way wherever it's shown.
 export default function InventorySessionDiffList({
 	diff
 }: InventorySessionDiffListProps) {
+	const { t } = useTranslation('materials')
 	if (diff.length === 0) {
 		return (
 			<p className='text-muted-foreground text-sm text-center'>
-				Không có dữ liệu chênh lệch.
+				{t('inventory.diff.empty')}
 			</p>
 		)
 	}
@@ -36,7 +38,7 @@ export default function InventorySessionDiffList({
 					<div className='flex flex-col gap-2'>
 						<span className='font-mono'>{item.serial}</span>
 						<span className='font-mono'>
-							Tình trạng dự kiến:{' '}
+							{t('inventory.diff.expectedCondition')}{' '}
 							<Badge
 								className={cn(
 									item.expectedCondition
@@ -51,11 +53,11 @@ export default function InventorySessionDiffList({
 									? materialConditionLabels[
 											item.expectedCondition
 										]
-									: 'Không có'}
+									: t('inventory.diff.none')}
 							</Badge>
 						</span>
 						<span className='font-mono'>
-							Tình trạng thực tế:{' '}
+							{t('inventory.diff.observedCondition')}{' '}
 							<Badge
 								className={cn(
 									item.observedCondition
@@ -70,15 +72,15 @@ export default function InventorySessionDiffList({
 									? materialConditionLabels[
 											item.observedCondition
 										]
-									: 'Không có'}
+									: t('inventory.diff.none')}
 							</Badge>
 						</span>
 					</div>
 					<Badge
 						className={AssetDiffColor(item.status)}
-						variant={DIFF_STATUS_LABEL[item.status].variant}
+						variant={DIFF_STATUS_VARIANT[item.status]}
 					>
-						{DIFF_STATUS_LABEL[item.status].label}
+						{t(`inventory.diffStatus.${item.status}`)}
 						<AssetDiffStatusIcon status={item.status} />
 					</Badge>
 				</div>

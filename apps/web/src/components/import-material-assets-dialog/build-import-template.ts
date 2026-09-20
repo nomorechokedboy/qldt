@@ -9,8 +9,8 @@ import {
 	saveWorkbook
 } from '@/components/material-import/template-helpers'
 import {
-	materialAssetStatusOptions,
-	materialConditionOptions
+	materialAssetStatusOptionsVi,
+	materialConditionOptionsVi
 } from '@/data/material-categories'
 import ExcelJS from 'exceljs'
 import { studentLabel, type AssetImportLookups } from './build-lookups'
@@ -117,13 +117,13 @@ export async function downloadAssetImportTemplate(
 		sheet,
 		HEADERS,
 		'condition',
-		materialConditionOptions.map((o) => o.label)
+		materialConditionOptionsVi.map((o) => o.label)
 	)
 	addInlineListValidation(
 		sheet,
 		HEADERS,
 		'status',
-		materialAssetStatusOptions.map((o) => o.label)
+		materialAssetStatusOptionsVi.map((o) => o.label)
 	)
 
 	addInstructionSheet(

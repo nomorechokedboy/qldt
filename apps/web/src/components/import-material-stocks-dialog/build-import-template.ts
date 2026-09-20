@@ -8,7 +8,7 @@ import {
 	addUnitCascadeValidation,
 	saveWorkbook
 } from '@/components/material-import/template-helpers'
-import { materialConditionOptions } from '@/data/material-categories'
+import { materialConditionOptionsVi } from '@/data/material-categories'
 import ExcelJS from 'exceljs'
 import type { StockImportLookups } from './build-lookups'
 
@@ -52,7 +52,7 @@ export async function downloadStockImportTemplate(
 		sheet,
 		HEADERS,
 		'condition',
-		materialConditionOptions.map((o) => o.label)
+		materialConditionOptionsVi.map((o) => o.label)
 	)
 
 	const lastUnitRow = addReferenceSheet(

@@ -3,7 +3,7 @@ import {
 	groupByUnit,
 	indexNamesByUnit
 } from '@/components/material-import/lookups'
-import { materialConditionOptions } from '@/data/material-categories'
+import { materialConditionOptionsVi } from '@/data/material-categories'
 import { buildMaterialTypeOptions } from '@/lib/material-type-options'
 import type { Room } from '@/types'
 import type { MaterialConditionName } from './types'
@@ -55,7 +55,7 @@ export function buildStockImportLookups({
 			(r) => r.id
 		),
 		conditionLabelToValue: buildLabelMap(
-			materialConditionOptions,
+			materialConditionOptionsVi,
 			(o) => o.label,
 			(o) => o.value as MaterialConditionName
 		)

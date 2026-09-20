@@ -7,6 +7,7 @@ import {
 	Info
 } from 'lucide-react'
 import type React from 'react'
+import { useTranslation } from 'react-i18next'
 
 export interface UploadStepProps {
 	itemNoun: string
@@ -29,6 +30,7 @@ export function UploadStep({
 	onDrop,
 	onFileInputChange
 }: UploadStepProps) {
+	const { t } = useTranslation('materials')
 	return (
 		<>
 			<div className='flex items-start gap-3 rounded-lg border bg-muted/30 p-4'>
@@ -36,15 +38,15 @@ export function UploadStep({
 				<ol className='space-y-1.5 text-sm text-muted-foreground'>
 					<li>
 						<span className='font-medium text-foreground'>1.</span>{' '}
-						Tải xuống file mẫu
+						{t('import.upload.step1')}
 					</li>
 					<li>
 						<span className='font-medium text-foreground'>2.</span>{' '}
-						Điền thông tin {itemNoun} theo định dạng mẫu
+						{t('import.upload.step2', { itemNoun })}
 					</li>
 					<li>
 						<span className='font-medium text-foreground'>3.</span>{' '}
-						Tải file lên và nhấn Import
+						{t('import.upload.step3')}
 					</li>
 				</ol>
 			</div>
@@ -54,22 +56,22 @@ export function UploadStep({
 					<FileSpreadsheet className='h-8 w-8 text-emerald-600 dark:text-emerald-500' />
 					<div>
 						<h3 className='font-medium text-foreground'>
-							File mẫu Excel
+							{t('import.upload.templateTitle')}
 						</h3>
 						<p className='text-sm text-muted-foreground'>
-							Tải xuống để có cấu trúc dữ liệu chính xác
+							{t('import.upload.templateHint')}
 						</p>
 					</div>
 				</div>
 				<Button variant='outline' onClick={downloadTemplate}>
 					<Download className='h-4 w-4' />
-					Tải xuống
+					{t('import.upload.download')}
 				</Button>
 			</div>
 
 			<div className='space-y-4'>
 				<h3 className='font-medium text-foreground'>
-					Chọn file để import
+					{t('import.upload.chooseHeading')}
 				</h3>
 
 				<div
@@ -112,7 +114,7 @@ export function UploadStep({
 								size='sm'
 								onClick={() => fileInputRef.current?.click()}
 							>
-								Chọn file khác
+								{t('import.upload.chooseAnother')}
 							</Button>
 						</div>
 					) : (
@@ -120,18 +122,18 @@ export function UploadStep({
 							<FileUp className='h-12 w-12 text-muted-foreground mx-auto' />
 							<div>
 								<p className='text-muted-foreground'>
-									Kéo thả file vào đây hoặc{' '}
+									{t('import.upload.dropHint')}{' '}
 									<button
 										onClick={() =>
 											fileInputRef.current?.click()
 										}
 										className='text-primary hover:underline font-medium'
 									>
-										chọn file
+										{t('import.upload.pick')}
 									</button>
 								</p>
 								<p className='text-sm text-muted-foreground mt-1'>
-									Hỗ trợ file CSV, Excel (.xlsx, .xls)
+									{t('import.upload.supported')}
 								</p>
 							</div>
 						</div>

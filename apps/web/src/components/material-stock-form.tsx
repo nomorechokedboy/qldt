@@ -24,6 +24,7 @@ import { useAddMaterialStock } from '@/hooks/useAddMaterialStock'
 import { materialConditionOptions } from '@/data/material-categories'
 import type { MaterialType, Room, Unit } from '@/types'
 import { getErrorMessage } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 const NONE = 'none'
 
@@ -42,6 +43,7 @@ export default function MaterialStockForm({
 	materialTypeOptions,
 	onSuccess
 }: MaterialStockFormProps) {
+	const { t } = useTranslation('materials')
 	const [open, setOpen] = useState(false)
 	const [materialTypeId, setMaterialTypeId] = useState('')
 	const [unitId, setUnitId] = useState<string>(
@@ -74,13 +76,13 @@ export default function MaterialStockForm({
 				quantity: Number(quantity),
 				condition
 			})
-			toast.success('Thêm vật tư thành công')
+			toast.success(t('stockForm.created'))
 			onSuccess?.()
 			resetForm()
 			setOpen(false)
 		} catch (err) {
 			console.error('Error adding material stock:', err)
-			toast.error(getErrorMessage(err, 'Thêm vật tư thất bại!'))
+			toast.error(getErrorMessage(err, t('stockForm.createFailed')))
 		}
 	}
 
@@ -95,22 +97,26 @@ export default function MaterialStockForm({
 			<DialogTrigger asChild>
 				<Button>
 					<Plus className='w-4 h-4 mr-2' />
-					Thêm vật tư
+					{t('stockForm.trigger')}
 				</Button>
 			</DialogTrigger>
 			<DialogContent className='sm:max-w-md h-auto'>
 				<DialogHeader>
-					<DialogTitle>Biểu mẫu thêm vật tư</DialogTitle>
+					<DialogTitle>{t('stockForm.title')}</DialogTitle>
 				</DialogHeader>
 				<form className='space-y-4' onSubmit={handleSubmit}>
 					<div className='space-y-2'>
-						<Label htmlFor='stock-material-type'>Loại vật tư</Label>
+						<Label htmlFor='stock-material-type'>
+							{t('columns.stockType')}
+						</Label>
 						<Select
 							value={materialTypeId}
 							onValueChange={setMaterialTypeId}
 						>
 							<SelectTrigger id='stock-material-type'>
-								<SelectValue placeholder='Chọn loại vật tư' />
+								<SelectValue
+									placeholder={t('stockForm.pickType')}
+								/>
 							</SelectTrigger>
 							<SelectContent>
 								{materialTypeOptions.map((t) => (
@@ -123,7 +129,7 @@ export default function MaterialStockForm({
 					</div>
 
 					<div className='space-y-2'>
-						<Label htmlFor='stock-unit'>Thuộc đơn vị</Label>
+						<Label htmlFor='stock-unit'>{t('form.unit')}</Label>
 						<Select
 							value={unitId}
 							onValueChange={(value) => {
@@ -132,7 +138,7 @@ export default function MaterialStockForm({
 							}}
 						>
 							<SelectTrigger id='stock-unit'>
-								<SelectValue placeholder='Chọn đơn vị' />
+								<SelectValue placeholder={t('form.pickUnit')} />
 							</SelectTrigger>
 							<SelectContent>
 								{unitOptions.map((u) => (
@@ -145,14 +151,16 @@ export default function MaterialStockForm({
 					</div>
 
 					<div className='space-y-2'>
-						<Label htmlFor='stock-room'>Vị trí</Label>
+						<Label htmlFor='stock-room'>{t('columns.room')}</Label>
 						<Select value={roomId} onValueChange={setRoomId}>
 							<SelectTrigger id='stock-room'>
-								<SelectValue placeholder='Chọn vị trí (tuỳ chọn)' />
+								<SelectValue
+									placeholder={t('form.pickRoomOptional')}
+								/>
 							</SelectTrigger>
 							<SelectContent>
 								<SelectItem value={NONE}>
-									Chưa có vị trí cụ thể
+									{t('shared.noSpecificRoom')}
 								</SelectItem>
 								{roomsForUnit.map((r) => (
 									<SelectItem key={r.id} value={String(r.id)}>
@@ -164,7 +172,9 @@ export default function MaterialStockForm({
 					</div>
 
 					<div className='space-y-2'>
-						<Label htmlFor='stock-quantity'>Số lượng</Label>
+						<Label htmlFor='stock-quantity'>
+							{t('columns.quantity')}
+						</Label>
 						<Input
 							id='stock-quantity'
 							type='number'
@@ -176,10 +186,14 @@ export default function MaterialStockForm({
 					</div>
 
 					<div className='space-y-2'>
-						<Label htmlFor='stock-condition'>Tình trạng</Label>
+						<Label htmlFor='stock-condition'>
+							{t('columns.condition')}
+						</Label>
 						<Select value={condition} onValueChange={setCondition}>
 							<SelectTrigger id='stock-condition'>
-								<SelectValue placeholder='Chọn tình trạng' />
+								<SelectValue
+									placeholder={t('form.pickCondition')}
+								/>
 							</SelectTrigger>
 							<SelectContent>
 								{materialConditionOptions.map((opt) => (
@@ -196,7 +210,9 @@ export default function MaterialStockForm({
 
 					<DialogFooter>
 						<DialogClose asChild>
-							<Button variant='outline'>Hủy</Button>
+							<Button variant='outline'>
+								{t('form.cancel')}
+							</Button>
 						</DialogClose>
 						<Button
 							type='submit'
@@ -206,7 +222,9 @@ export default function MaterialStockForm({
 								!unitId
 							}
 						>
-							{createMutation.isPending ? 'Đang thêm...' : 'Thêm'}
+							{createMutation.isPending
+								? t('form.adding')
+								: t('form.add')}
 						</Button>
 					</DialogFooter>
 				</form>

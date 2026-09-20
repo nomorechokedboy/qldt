@@ -8,6 +8,7 @@ import {
 	CheckCircle,
 	ClipboardList
 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 export interface ReviewStepProps<Row> {
 	rows: Row[]
@@ -26,6 +27,7 @@ export function ReviewStep<Row>({
 	isUploading,
 	onChooseAnotherFile
 }: ReviewStepProps<Row>) {
+	const { t } = useTranslation('materials')
 	return (
 		<div className='space-y-4'>
 			<div className='flex items-center justify-between'>
@@ -33,11 +35,10 @@ export function ReviewStep<Row>({
 					<ClipboardList className='h-6 w-6 text-primary' />
 					<div>
 						<h3 className='font-medium text-foreground'>
-							Xem trước dữ liệu import
+							{t('import.review.title')}
 						</h3>
 						<p className='text-sm text-muted-foreground'>
-							Kiểm tra và chỉnh sửa dữ liệu bên dưới trước khi
-							import vào hệ thống
+							{t('import.review.description')}
 						</p>
 					</div>
 				</div>
@@ -48,13 +49,13 @@ export function ReviewStep<Row>({
 					disabled={isUploading}
 				>
 					<ArrowLeft className='h-4 w-4' />
-					Chọn file khác
+					{t('import.review.chooseAnother')}
 				</Button>
 			</div>
 
 			<div className='flex flex-wrap items-center gap-3 text-sm'>
 				<span className='text-muted-foreground'>
-					Tổng số:{' '}
+					{t('import.review.total')}{' '}
 					<span className='font-medium text-foreground'>
 						{rows.length}
 					</span>
@@ -64,12 +65,14 @@ export function ReviewStep<Row>({
 					className='gap-1 border-green-400 text-green-700 dark:border-green-800 dark:text-green-400'
 				>
 					<CheckCircle className='h-3.5 w-3.5' />
-					Hợp lệ: {validRowCount}
+					{t('import.review.valid', { count: validRowCount })}
 				</Badge>
 				{errorsByRowIndex.size > 0 && (
 					<Badge variant='destructive' className='gap-1'>
 						<AlertCircle className='h-3.5 w-3.5' />
-						Lỗi: {errorsByRowIndex.size}
+						{t('import.review.errorCount', {
+							count: errorsByRowIndex.size
+						})}
 					</Badge>
 				)}
 			</div>
@@ -78,7 +81,7 @@ export function ReviewStep<Row>({
 				columns={columns}
 				data={rows}
 				toolbarVisible={false}
-				placeholder='Không có dữ liệu'
+				placeholder={t('import.review.empty')}
 				getRowClassName={(_row, index) =>
 					errorsByRowIndex.has(index)
 						? 'bg-destructive/5 hover:bg-destructive/10'
@@ -88,7 +91,7 @@ export function ReviewStep<Row>({
 
 			{errorsByRowIndex.size > 0 && (
 				<p className='text-sm text-muted-foreground'>
-					Di chuột vào nhãn "Lỗi" của từng dòng để xem chi tiết.
+					{t('import.review.hint')}
 				</p>
 			)}
 		</div>

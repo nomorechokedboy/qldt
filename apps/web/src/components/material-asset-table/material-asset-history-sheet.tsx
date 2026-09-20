@@ -10,20 +10,19 @@ import {
 	materialAssetStatusLabels,
 	materialConditionLabels
 } from '@/data/material-categories'
+import i18n from '@/i18n'
 import { formatDbTimestamp } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 import type { MaterialAssetEvent, MaterialAssetEventType } from '@/types'
 
-const eventTypeLabels: Record<MaterialAssetEventType, string> = {
-	assigned: 'Cấp phát',
-	unassigned: 'Thu hồi',
-	condition_changed: 'Đổi tình trạng',
-	status_changed: 'Đổi trạng thái',
-	transferred: 'Chuyển đơn vị/vị trí'
-}
+const eventTypeLabel = (type: MaterialAssetEventType): string =>
+	i18n.t(`materials:assetHistory.events.${type}`)
 
 const trooperLabel = (value?: Record<string, unknown> | null): string => {
 	const name = value?.assignedTrooperName
-	return typeof name === 'string' && name.length > 0 ? name : 'Chưa cấp phát'
+	return typeof name === 'string' && name.length > 0
+		? name
+		: i18n.t('materials:shared.notAssigned')
 }
 
 const unitRoomLabel = (value?: Record<string, unknown> | null): string => {
@@ -32,11 +31,11 @@ const unitRoomLabel = (value?: Record<string, unknown> | null): string => {
 	const unitPart =
 		typeof unitName === 'string' && unitName.length > 0
 			? unitName
-			: 'Không rõ đơn vị'
+			: i18n.t('materials:assetHistory.unknownUnit')
 	const roomPart =
 		typeof roomName === 'string' && roomName.length > 0
 			? roomName
-			: 'Chưa có vị trí'
+			: i18n.t('materials:assetHistory.noRoom')
 	return `${unitPart} / ${roomPart}`
 }
 
@@ -46,11 +45,11 @@ function EventDetail({ event }: { event: MaterialAssetEvent }) {
 		case 'unassigned':
 			return (
 				<p className='text-sm'>
-					Từ:{' '}
+					{i18n.t('materials:assetHistory.from')}{' '}
 					<span className='font-medium'>
 						{trooperLabel(event.previousValue)}
 					</span>{' '}
-					→ Đến:{' '}
+					{i18n.t('materials:assetHistory.to')}{' '}
 					<span className='font-medium'>
 						{trooperLabel(event.newValue)}
 					</span>
@@ -59,11 +58,11 @@ function EventDetail({ event }: { event: MaterialAssetEvent }) {
 		case 'transferred':
 			return (
 				<p className='text-sm'>
-					Từ:{' '}
+					{i18n.t('materials:assetHistory.from')}{' '}
 					<span className='font-medium'>
 						{unitRoomLabel(event.previousValue)}
 					</span>{' '}
-					→ Đến:{' '}
+					{i18n.t('materials:assetHistory.to')}{' '}
 					<span className='font-medium'>
 						{unitRoomLabel(event.newValue)}
 					</span>
@@ -79,11 +78,11 @@ function EventDetail({ event }: { event: MaterialAssetEvent }) {
 			}
 			return (
 				<p className='text-sm'>
-					Từ:{' '}
+					{i18n.t('materials:assetHistory.from')}{' '}
 					<span className='font-medium'>
 						{conditionLabel(event.previousValue)}
 					</span>{' '}
-					→ Đến:{' '}
+					{i18n.t('materials:assetHistory.to')}{' '}
 					<span className='font-medium'>
 						{conditionLabel(event.newValue)}
 					</span>
@@ -100,11 +99,11 @@ function EventDetail({ event }: { event: MaterialAssetEvent }) {
 			}
 			return (
 				<p className='text-sm'>
-					Từ:{' '}
+					{i18n.t('materials:assetHistory.from')}{' '}
 					<span className='font-medium'>
 						{statusLabel(event.previousValue)}
 					</span>{' '}
-					→ Đến:{' '}
+					{i18n.t('materials:assetHistory.to')}{' '}
 					<span className='font-medium'>
 						{statusLabel(event.newValue)}
 					</span>
@@ -127,18 +126,19 @@ export default function MaterialAssetHistorySheet({
 	open,
 	onOpenChange
 }: MaterialAssetHistorySheetProps) {
+	const { t } = useTranslation('materials')
 	const { data: events } = useMaterialAssetEvents(assetId, { enabled: open })
 
 	return (
 		<Sheet open={open} onOpenChange={onOpenChange}>
 			<SheetContent className='w-full sm:max-w-lg'>
 				<SheetHeader>
-					<SheetTitle>Lịch sử khí tài</SheetTitle>
+					<SheetTitle>{t('assetHistory.title')}</SheetTitle>
 				</SheetHeader>
 				<div className='px-4 pb-4 space-y-3'>
 					{events?.length === 0 && (
 						<p className='text-muted-foreground text-sm'>
-							Chưa có lịch sử thay đổi.
+							{t('assetHistory.empty')}
 						</p>
 					)}
 					{events?.map((ev) => (
@@ -148,7 +148,7 @@ export default function MaterialAssetHistorySheet({
 						>
 							<div className='flex items-center justify-between'>
 								<Badge variant='secondary'>
-									{eventTypeLabels[ev.eventType]}
+									{eventTypeLabel(ev.eventType)}
 								</Badge>
 								<span className='text-xs text-muted-foreground'>
 									{formatDbTimestamp(ev.createdAt)}
@@ -158,7 +158,9 @@ export default function MaterialAssetHistorySheet({
 							{ev.note && <p className='text-sm'>{ev.note}</p>}
 							{ev.actor?.displayName && (
 								<p className='text-xs text-muted-foreground'>
-									Thực hiện bởi: {ev.actor.displayName}
+									{t('assetHistory.by', {
+										name: ev.actor.displayName
+									})}
 								</p>
 							)}
 						</div>

@@ -9,6 +9,7 @@ import {
 } from '@/components/ui/dialog'
 import type { ColumnDef } from '@tanstack/react-table'
 import { ArrowRight, Loader2, Upload } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { ImportResultsPanel, UploadMessage } from './import-feedback'
 import { ReviewStep } from './review-step'
 import type { ImportDialogState } from './use-import-dialog-state'
@@ -31,6 +32,7 @@ export function ImportDialogShell<Row>({
 	columns,
 	downloadTemplate
 }: ImportDialogShellProps<Row>) {
+	const { t } = useTranslation('materials')
 	const isUploading = state.uploadStatus === 'uploading'
 
 	return (
@@ -85,7 +87,9 @@ export function ImportDialogShell<Row>({
 
 				<DialogFooter>
 					<Button variant='secondary' onClick={state.handleClose}>
-						{state.uploadStatus === 'success' ? 'Đóng' : 'Hủy'}
+						{state.uploadStatus === 'success'
+							? t('import.close')
+							: t('import.cancel')}
 					</Button>
 
 					{state.isReviewing && (
@@ -96,19 +100,19 @@ export function ImportDialogShell<Row>({
 							}
 							title={
 								state.parseErrors.length > 0
-									? 'Vui lòng sửa các dòng có lỗi trước khi import'
+									? t('import.fixErrorsFirst')
 									: undefined
 							}
 						>
 							{isUploading ? (
 								<>
 									<Loader2 className='h-4 w-4 animate-spin' />
-									Đang import...
+									{t('import.importing')}
 								</>
 							) : (
 								<>
 									<Upload className='h-4 w-4' />
-									Xác nhận &amp; Import
+									{t('import.confirm')}
 									<ArrowRight className='h-4 w-4' />
 								</>
 							)}

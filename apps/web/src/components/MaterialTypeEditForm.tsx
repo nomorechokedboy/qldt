@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { MaterialImagesUpload } from '@/components/material-images-upload'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -30,6 +31,7 @@ export default function MaterialTypeEditForm({
 	onUpdate,
 	onClose
 }: MaterialTypeEditFormProps) {
+	const { t } = useTranslation('materials')
 	const [name, setName] = useState(data.name)
 	const [category, setCategory] = useState(data.category)
 	const [unitOfMeasure, setUnitOfMeasure] = useState(data.unitOfMeasure ?? '')
@@ -54,14 +56,12 @@ export default function MaterialTypeEditForm({
 					}
 				]
 			})
-			toast.success('Cập nhật danh mục vật tư thành công')
+			toast.success(t('typeEdit.updated'))
 			onUpdate()
 			onClose()
 		} catch (err) {
 			console.error('Error updating material type:', err)
-			toast.error(
-				getErrorMessage(err, 'Cập nhật danh mục vật tư thất bại!')
-			)
+			toast.error(getErrorMessage(err, t('typeEdit.updateFailed')))
 		}
 	}
 
@@ -79,7 +79,9 @@ export default function MaterialTypeEditForm({
 
 			<form onSubmit={handleSubmit} className='space-y-4'>
 				<div className='space-y-2'>
-					<Label htmlFor='edit-material-type-name'>Tên vật tư</Label>
+					<Label htmlFor='edit-material-type-name'>
+						{t('columns.name')}
+					</Label>
 					<Input
 						id='edit-material-type-name'
 						maxLength={MAX_MATERIAL_TYPE_NAME_LENGTH}
@@ -91,7 +93,7 @@ export default function MaterialTypeEditForm({
 
 				<div className='space-y-2'>
 					<Label htmlFor='edit-material-type-category'>
-						Phân loại
+						{t('columns.category')}
 					</Label>
 					<Select
 						value={category}
@@ -100,7 +102,9 @@ export default function MaterialTypeEditForm({
 						}
 					>
 						<SelectTrigger id='edit-material-type-category'>
-							<SelectValue placeholder='Chọn phân loại' />
+							<SelectValue
+								placeholder={t('typeForm.pickCategory')}
+							/>
 						</SelectTrigger>
 						<SelectContent>
 							{materialCategoryOptions.map((opt) => (
@@ -113,7 +117,9 @@ export default function MaterialTypeEditForm({
 				</div>
 
 				<div className='space-y-2'>
-					<Label htmlFor='edit-material-type-uom'>Đơn vị tính</Label>
+					<Label htmlFor='edit-material-type-uom'>
+						{t('columns.unitOfMeasure')}
+					</Label>
 					<Input
 						id='edit-material-type-uom'
 						value={unitOfMeasure}
@@ -128,21 +134,23 @@ export default function MaterialTypeEditForm({
 						onCheckedChange={(value) => setIsSerialized(!!value)}
 					/>
 					<Label htmlFor='edit-material-type-serialized'>
-						Quản lý theo số sê-ri riêng lẻ
+						{t('typeEdit.serialized')}
 					</Label>
 				</div>
 
 				<div className='space-y-2'>
-					<Label>Hình ảnh</Label>
+					<Label>{t('columns.images')}</Label>
 					<MaterialImagesUpload value={images} onChange={setImages} />
 				</div>
 
 				<div className='flex justify-end gap-2'>
 					<Button type='button' variant='outline' onClick={onClose}>
-						Hủy
+						{t('form.cancel')}
 					</Button>
 					<Button type='submit' disabled={updateMutation.isPending}>
-						{updateMutation.isPending ? 'Đang lưu...' : 'Lưu'}
+						{updateMutation.isPending
+							? t('form.saving')
+							: t('form.save')}
 					</Button>
 				</div>
 			</form>

@@ -1,4 +1,5 @@
 import { lazy, Suspense } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ImportDialogSkeleton } from './import-dialog-skeleton'
 import type { ImportMaterialStocksDialogProps } from './import-material-stocks-dialog'
 
@@ -11,6 +12,7 @@ const ImportMaterialStocksDialog = lazy(() =>
 export function LazyImportMaterialStocksDialog(
 	props: ImportMaterialStocksDialogProps
 ) {
+	const { t } = useTranslation('materials')
 	if (!props.isOpen) {
 		return null
 	}
@@ -20,7 +22,7 @@ export function LazyImportMaterialStocksDialog(
 				<ImportDialogSkeleton
 					isOpen={props.isOpen}
 					onClose={props.onClose}
-					title='Import vật tư sinh hoạt'
+					title={t('importStocks.title')}
 				/>
 			}
 		>

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import type { inventory_sessions } from '@/api/client'
@@ -25,7 +26,7 @@ function stockKey(materialTypeId: number, condition: string): string {
 // (there's nothing for a human to decide there), but an unmatched extra
 // asset serial or a short/over/extra stock line only gets written into
 // material_assets/material_stocks when the reviewer explicitly checks it
-// here and hits "Áp dụng vào tồn kho" - everything left unchecked stays
+// here and hits the apply button - everything left unchecked stays
 // flagged in the diff for a later pass instead of being silently applied or
 // silently dropped.
 export default function InventorySessionApplyPanel({
@@ -34,6 +35,7 @@ export default function InventorySessionApplyPanel({
 	stockDiff,
 	onApplied
 }: InventorySessionApplyPanelProps) {
+	const { t } = useTranslation('materials')
 	const [selectedSerials, setSelectedSerials] = useState<Set<string>>(
 		new Set()
 	)
@@ -46,7 +48,7 @@ export default function InventorySessionApplyPanel({
 	if (session.appliedAt !== null) {
 		return (
 			<p className='text-muted-foreground text-sm text-center'>
-				Kết quả kiểm kê đã được áp dụng vào tồn kho.
+				{t('inventory.apply.applied')}
 			</p>
 		)
 	}
@@ -93,7 +95,14 @@ export default function InventorySessionApplyPanel({
 				}))
 			})
 			toast.success(
-				`Đã áp dụng vào tồn kho: ${result.data.missingApplied} thiếu, ${result.data.conditionChangedApplied} đổi tình trạng, ${result.data.extraAssetsApplied} tài sản phát sinh, ${result.data.stockShortOverApplied + result.data.stockExtraApplied} dòng vật tư`
+				t('inventory.apply.success', {
+					missing: result.data.missingApplied,
+					conditionChanged: result.data.conditionChangedApplied,
+					extraAssets: result.data.extraAssetsApplied,
+					stockLines:
+						result.data.stockShortOverApplied +
+						result.data.stockExtraApplied
+				})
 			)
 			onApplied({
 				session: result.data.session,
@@ -102,9 +111,7 @@ export default function InventorySessionApplyPanel({
 			})
 		} catch (err) {
 			toast.error(
-				err instanceof Error
-					? err.message
-					: 'Không thể áp dụng kết quả kiểm kê vào tồn kho'
+				err instanceof Error ? err.message : t('inventory.apply.failed')
 			)
 		}
 	}
@@ -119,20 +126,21 @@ export default function InventorySessionApplyPanel({
 
 	return (
 		<div className='flex flex-col gap-3 rounded-md border p-3'>
-			<p className='text-sm font-medium'>Áp dụng vào tồn kho</p>
+			<p className='text-sm font-medium'>{t('inventory.apply.title')}</p>
 
 			{(missingCount > 0 || conditionChangedCount > 0) && (
 				<p className='text-muted-foreground text-xs'>
-					Tự động áp dụng: {missingCount} tài sản sẽ được đánh dấu
-					&quot;Mất&quot;, {conditionChangedCount} tài sản sẽ được cập
-					nhật tình trạng.
+					{t('inventory.apply.automatic', {
+						missing: missingCount,
+						conditionChanged: conditionChangedCount
+					})}
 				</p>
 			)}
 
 			{extraAssets.length > 0 && (
 				<div className='flex flex-col gap-1.5'>
 					<p className='text-xs font-medium'>
-						Tài sản phát sinh - chọn để chuyển vào phòng này
+						{t('inventory.apply.extraAssets')}
 					</p>
 					{extraAssets.map((d) => (
 						<label
@@ -163,7 +171,7 @@ export default function InventorySessionApplyPanel({
 			{resolvableStockLines.length > 0 && (
 				<div className='flex flex-col gap-1.5'>
 					<p className='text-xs font-medium'>
-						Dòng vật tư chênh lệch - chọn để cập nhật số lượng
+						{t('inventory.apply.stockLines')}
 					</p>
 					{resolvableStockLines.map((s) => {
 						const key = stockKey(s.materialTypeId, s.condition)
@@ -183,7 +191,10 @@ export default function InventorySessionApplyPanel({
 									{materialConditionOptions.find(
 										(o) => o.value === s.condition
 									)?.label ?? s.condition}
-									) - thực tế {s.observedQuantity}
+									) -{' '}
+									{t('inventory.apply.observedQuantity', {
+										count: s.observedQuantity
+									})}
 								</span>
 							</label>
 						)
@@ -197,8 +208,8 @@ export default function InventorySessionApplyPanel({
 				size='sm'
 			>
 				{applyResults.isPending
-					? 'Đang áp dụng...'
-					: 'Áp dụng vào tồn kho'}
+					? t('inventory.apply.applying')
+					: t('inventory.apply.title')}
 			</Button>
 		</div>
 	)

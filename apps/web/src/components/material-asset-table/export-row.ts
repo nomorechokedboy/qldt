@@ -1,6 +1,6 @@
 import {
-	materialAssetStatusLabels,
-	materialConditionLabels
+	materialAssetStatusLabelsVi,
+	materialConditionLabelsVi
 } from '@/data/material-categories'
 import type { MaterialAsset } from '@/types'
 
@@ -41,7 +41,8 @@ export const materialAssetExportFields: MaterialAssetExportField[] = [
 		label: 'Tình trạng',
 		getValue: (asset) =>
 			asset.condition
-				? (materialConditionLabels[asset.condition] ?? asset.condition)
+				? (materialConditionLabelsVi[asset.condition] ??
+					asset.condition)
 				: ''
 	},
 	{
@@ -49,7 +50,7 @@ export const materialAssetExportFields: MaterialAssetExportField[] = [
 		label: 'Trạng thái',
 		getValue: (asset) =>
 			asset.status
-				? (materialAssetStatusLabels[asset.status] ?? asset.status)
+				? (materialAssetStatusLabelsVi[asset.status] ?? asset.status)
 				: ''
 	}
 ]

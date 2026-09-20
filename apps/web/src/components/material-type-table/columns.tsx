@@ -1,6 +1,8 @@
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import { materialCategoryLabels } from '@/data/material-categories'
+import i18n from '@/i18n'
+import { localizedHeader } from '@/lib/material-column-header'
 import { getMediaUri } from '@/lib/utils'
 import type { MaterialType } from '@/types'
 import type { ColumnDef } from '@tanstack/react-table'
@@ -38,7 +40,7 @@ export function buildMaterialTypeColumns(
 		},
 		{
 			id: 'images',
-			header: 'Hình ảnh',
+			...localizedHeader('columns.images'),
 			cell: ({ row }) => {
 				const images = row.original.images
 				if (!images || images.length === 0) return '—'
@@ -54,11 +56,11 @@ export function buildMaterialTypeColumns(
 		},
 		{
 			accessorKey: 'name',
-			header: 'Tên vật tư'
+			...localizedHeader('columns.name')
 		},
 		{
 			accessorKey: 'category',
-			header: 'Phân loại',
+			...localizedHeader('columns.category'),
 			cell: ({ row }) => {
 				const category = row.getValue(
 					'category'
@@ -73,17 +75,19 @@ export function buildMaterialTypeColumns(
 		},
 		{
 			accessorKey: 'unitOfMeasure',
-			header: 'Đơn vị tính',
+			...localizedHeader('columns.unitOfMeasure'),
 			cell: ({ row }) => row.getValue('unitOfMeasure') ?? '—'
 		},
 		{
 			accessorKey: 'isSerialized',
-			header: 'Loại quản lý',
+			...localizedHeader('columns.managementType'),
 			cell: ({ row }) =>
 				row.getValue('isSerialized') ? (
-					<Badge>Theo số sê-ri</Badge>
+					<Badge>{i18n.t('materials:typeTable.bySerial')}</Badge>
 				) : (
-					<Badge variant='outline'>Theo số lượng</Badge>
+					<Badge variant='outline'>
+						{i18n.t('materials:typeTable.byQuantity')}
+					</Badge>
 				)
 		},
 		{

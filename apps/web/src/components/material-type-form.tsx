@@ -27,12 +27,14 @@ import { getErrorMessage } from '@/lib/utils'
 import { Plus } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 
 export interface MaterialTypeFormProps {
 	onSuccess?: () => void
 }
 
 export default function MaterialTypeForm({ onSuccess }: MaterialTypeFormProps) {
+	const { t } = useTranslation('materials')
 	const [open, setOpen] = useState(false)
 	const [name, setName] = useState('')
 	const [category, setCategory] =
@@ -62,15 +64,13 @@ export default function MaterialTypeForm({ onSuccess }: MaterialTypeFormProps) {
 				isSerialized,
 				images
 			})
-			toast.success('Thêm mới danh mục vật tư thành công')
+			toast.success(t('typeForm.created'))
 			onSuccess?.()
 			resetForm()
 			setOpen(false)
 		} catch (err) {
 			console.error('Error creating material type:', err)
-			toast.error(
-				getErrorMessage(err, 'Thêm mới danh mục vật tư thất bại!')
-			)
+			toast.error(getErrorMessage(err, t('typeForm.createFailed')))
 		}
 	}
 
@@ -85,29 +85,31 @@ export default function MaterialTypeForm({ onSuccess }: MaterialTypeFormProps) {
 			<DialogTrigger asChild>
 				<Button>
 					<Plus className='w-4 h-4 mr-2' />
-					Thêm danh mục
+					{t('typeForm.trigger')}
 				</Button>
 			</DialogTrigger>
 			<DialogContent className='sm:max-w-md h-auto'>
 				<DialogHeader>
-					<DialogTitle>Biểu mẫu thêm danh mục vật tư</DialogTitle>
+					<DialogTitle>{t('typeForm.title')}</DialogTitle>
 				</DialogHeader>
 				<form className='space-y-4' onSubmit={handleSubmit}>
 					<div className='space-y-2'>
-						<Label htmlFor='material-type-name'>Tên vật tư</Label>
+						<Label htmlFor='material-type-name'>
+							{t('columns.name')}
+						</Label>
 						<Input
 							id='material-type-name'
 							value={name}
 							onChange={(e) => setName(e.target.value)}
 							maxLength={MAX_MATERIAL_TYPE_NAME_LENGTH}
-							placeholder='vd: Súng AK, Ghế, Giường'
+							placeholder={t('typeForm.namePlaceholder')}
 							required
 						/>
 					</div>
 
 					<div className='space-y-2'>
 						<Label htmlFor='material-type-category'>
-							Phân loại
+							{t('columns.category')}
 						</Label>
 						<Select
 							value={category}
@@ -118,7 +120,9 @@ export default function MaterialTypeForm({ onSuccess }: MaterialTypeFormProps) {
 							}
 						>
 							<SelectTrigger id='material-type-category'>
-								<SelectValue placeholder='Chọn phân loại' />
+								<SelectValue
+									placeholder={t('typeForm.pickCategory')}
+								/>
 							</SelectTrigger>
 							<SelectContent>
 								{materialCategoryOptions.map((opt) => (
@@ -134,12 +138,14 @@ export default function MaterialTypeForm({ onSuccess }: MaterialTypeFormProps) {
 					</div>
 
 					<div className='space-y-2'>
-						<Label htmlFor='material-type-uom'>Đơn vị tính</Label>
+						<Label htmlFor='material-type-uom'>
+							{t('columns.unitOfMeasure')}
+						</Label>
 						<Input
 							id='material-type-uom'
 							value={unitOfMeasure}
 							onChange={(e) => setUnitOfMeasure(e.target.value)}
-							placeholder='vd: cái, chiếc, bộ'
+							placeholder={t('typeForm.uomPlaceholder')}
 						/>
 					</div>
 
@@ -152,12 +158,12 @@ export default function MaterialTypeForm({ onSuccess }: MaterialTypeFormProps) {
 							}
 						/>
 						<Label htmlFor='material-type-serialized'>
-							Quản lý theo số sê-ri riêng lẻ (vũ khí, xe, ...)
+							{t('typeForm.serialized')}
 						</Label>
 					</div>
 
 					<div className='space-y-2'>
-						<Label>Hình ảnh</Label>
+						<Label>{t('columns.images')}</Label>
 						<MaterialImagesUpload
 							value={images}
 							onChange={setImages}
@@ -166,13 +172,17 @@ export default function MaterialTypeForm({ onSuccess }: MaterialTypeFormProps) {
 
 					<DialogFooter>
 						<DialogClose asChild>
-							<Button variant='outline'>Hủy</Button>
+							<Button variant='outline'>
+								{t('form.cancel')}
+							</Button>
 						</DialogClose>
 						<Button
 							type='submit'
 							disabled={createMutation.isPending}
 						>
-							{createMutation.isPending ? 'Đang thêm...' : 'Thêm'}
+							{createMutation.isPending
+								? t('form.adding')
+								: t('form.add')}
 						</Button>
 					</DialogFooter>
 				</form>

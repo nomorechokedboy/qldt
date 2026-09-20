@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import useUploadFiles from '@/hooks/useUploadFiles'
 import { cn, getMediaUri } from '@/lib/utils'
 import { Loader2, Upload, X } from 'lucide-react'
@@ -18,6 +19,7 @@ export function MaterialImagesUpload({
 	onChange,
 	className
 }: MaterialImagesUploadProps) {
+	const { t } = useTranslation('materials')
 	const fileInputRef = useRef<HTMLInputElement>(null)
 	const { mutateAsync: uploadFiles, isPending } = useUploadFiles()
 
@@ -55,7 +57,7 @@ export function MaterialImagesUpload({
 							type='button'
 							onClick={() => handleRemove(uri)}
 							className='absolute right-1 top-1 flex size-5 items-center justify-center rounded-full bg-destructive text-destructive-foreground opacity-0 transition-opacity group-hover:opacity-100'
-							aria-label='Xóa ảnh'
+							aria-label={t('imagesUpload.remove')}
 						>
 							<X className='size-3' />
 						</button>
@@ -73,7 +75,7 @@ export function MaterialImagesUpload({
 					) : (
 						<Upload className='size-5' />
 					)}
-					<span className='text-[11px]'>Thêm ảnh</span>
+					<span className='text-[11px]'>{t('imagesUpload.add')}</span>
 				</button>
 			</div>
 

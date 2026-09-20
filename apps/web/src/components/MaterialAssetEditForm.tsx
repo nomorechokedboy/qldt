@@ -19,6 +19,7 @@ import type { MaterialAsset, MaterialAssetStatus, Room, Student } from '@/types'
 import { X } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { useTranslation } from 'react-i18next'
 
 const NONE = 'none'
 
@@ -37,6 +38,7 @@ export default function MaterialAssetEditForm({
 	onUpdate,
 	onClose
 }: MaterialAssetEditFormProps) {
+	const { t } = useTranslation('materials')
 	const [status, setStatus] = useState<MaterialAssetStatus>(
 		data.status ?? 'in_service'
 	)
@@ -76,12 +78,12 @@ export default function MaterialAssetEditForm({
 					images
 				}
 			])
-			toast.success('Cập nhật khí tài thành công')
+			toast.success(t('assetEdit.updated'))
 			onUpdate()
 			onClose()
 		} catch (err) {
 			console.error('Error updating material asset:', err)
-			toast.error(getErrorMessage(err, 'Cập nhật khí tài thất bại!'))
+			toast.error(getErrorMessage(err, t('assetEdit.updateFailed')))
 		}
 	}
 
@@ -99,14 +101,16 @@ export default function MaterialAssetEditForm({
 
 			<form onSubmit={handleSubmit} className='space-y-4'>
 				<div className='space-y-1'>
-					<Label>Số sê-ri</Label>
+					<Label>{t('columns.serialNumber')}</Label>
 					<p className='text-sm text-muted-foreground'>
 						{data.serialNumber}
 					</p>
 				</div>
 
 				<div className='space-y-2'>
-					<Label htmlFor='edit-asset-status'>Trạng thái</Label>
+					<Label htmlFor='edit-asset-status'>
+						{t('columns.status')}
+					</Label>
 					<Select
 						value={status}
 						onValueChange={(value) =>
@@ -114,7 +118,9 @@ export default function MaterialAssetEditForm({
 						}
 					>
 						<SelectTrigger id='edit-asset-status'>
-							<SelectValue placeholder='Chọn trạng thái' />
+							<SelectValue
+								placeholder={t('assetEdit.pickStatus')}
+							/>
 						</SelectTrigger>
 						<SelectContent>
 							{materialAssetStatusOptions.map((opt) => (
@@ -127,10 +133,14 @@ export default function MaterialAssetEditForm({
 				</div>
 
 				<div className='space-y-2'>
-					<Label htmlFor='edit-asset-condition'>Tình trạng</Label>
+					<Label htmlFor='edit-asset-condition'>
+						{t('columns.condition')}
+					</Label>
 					<Select value={condition} onValueChange={setCondition}>
 						<SelectTrigger id='edit-asset-condition'>
-							<SelectValue placeholder='Chọn tình trạng' />
+							<SelectValue
+								placeholder={t('form.pickCondition')}
+							/>
 						</SelectTrigger>
 						<SelectContent>
 							{materialConditionOptions.map((opt) => (
@@ -143,14 +153,16 @@ export default function MaterialAssetEditForm({
 				</div>
 
 				<div className='space-y-2'>
-					<Label htmlFor='edit-asset-room'>Vị trí</Label>
+					<Label htmlFor='edit-asset-room'>{t('columns.room')}</Label>
 					<Select value={roomId} onValueChange={setRoomId}>
 						<SelectTrigger id='edit-asset-room'>
-							<SelectValue placeholder='Chọn vị trí (tuỳ chọn)' />
+							<SelectValue
+								placeholder={t('form.pickRoomOptional')}
+							/>
 						</SelectTrigger>
 						<SelectContent>
 							<SelectItem value={NONE}>
-								Chưa có vị trí cụ thể
+								{t('shared.noSpecificRoom')}
 							</SelectItem>
 							{roomsForUnit.map((r) => (
 								<SelectItem key={r.id} value={String(r.id)}>
@@ -163,17 +175,21 @@ export default function MaterialAssetEditForm({
 
 				<div className='space-y-2'>
 					<Label htmlFor='edit-asset-trooper'>
-						Cấp phát cho quân nhân
+						{t('assetForm.assignTrooper')}
 					</Label>
 					<Select
 						value={assignedTrooperId}
 						onValueChange={setAssignedTrooperId}
 					>
 						<SelectTrigger id='edit-asset-trooper'>
-							<SelectValue placeholder='Chọn quân nhân' />
+							<SelectValue
+								placeholder={t('assetEdit.pickTrooper')}
+							/>
 						</SelectTrigger>
 						<SelectContent>
-							<SelectItem value={NONE}>Chưa cấp phát</SelectItem>
+							<SelectItem value={NONE}>
+								{t('shared.notAssigned')}
+							</SelectItem>
 							{studentOptions.map((s) => (
 								<SelectItem key={s.id} value={String(s.id)}>
 									{s.fullName}
@@ -184,26 +200,30 @@ export default function MaterialAssetEditForm({
 				</div>
 
 				<div className='space-y-2'>
-					<Label htmlFor='edit-asset-note'>Ghi chú thay đổi</Label>
+					<Label htmlFor='edit-asset-note'>
+						{t('assetEdit.note')}
+					</Label>
 					<Textarea
 						id='edit-asset-note'
 						value={note}
 						onChange={(e) => setNote(e.target.value)}
-						placeholder='Lý do thay đổi (tuỳ chọn)'
+						placeholder={t('assetEdit.notePlaceholder')}
 					/>
 				</div>
 
 				<div className='space-y-2'>
-					<Label>Hình ảnh</Label>
+					<Label>{t('columns.images')}</Label>
 					<MaterialImagesUpload value={images} onChange={setImages} />
 				</div>
 
 				<div className='flex justify-end gap-2'>
 					<Button type='button' variant='outline' onClick={onClose}>
-						Hủy
+						{t('form.cancel')}
 					</Button>
 					<Button type='submit' disabled={updateMutation.isPending}>
-						{updateMutation.isPending ? 'Đang lưu...' : 'Lưu'}
+						{updateMutation.isPending
+							? t('form.saving')
+							: t('form.save')}
 					</Button>
 				</div>
 			</form>

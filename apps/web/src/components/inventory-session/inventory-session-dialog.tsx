@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ScanLine } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
@@ -31,6 +32,7 @@ export default function InventorySessionDialog({
 	roomId,
 	roomName
 }: InventorySessionDialogProps) {
+	const { t } = useTranslation('materials')
 	const [open, setOpen] = useState(false)
 	const [step, setStep] = useState<Step>('start')
 	const [challenge, setChallenge] =
@@ -84,7 +86,7 @@ export default function InventorySessionDialog({
 			toast.error(
 				err instanceof Error
 					? err.message
-					: 'Không thể tạo phiên kiểm kê cho phòng này'
+					: t('inventory.dialog.createFailed')
 			)
 		}
 	}
@@ -100,7 +102,7 @@ export default function InventorySessionDialog({
 		try {
 			payload = JSON.parse(text)
 		} catch {
-			setScanError('Mã QR không hợp lệ, vui lòng thử lại')
+			setScanError(t('inventory.dialog.invalidQr'))
 			return
 		}
 		if (
@@ -109,7 +111,7 @@ export default function InventorySessionDialog({
 			!Array.isArray(payload?.results) ||
 			!Array.isArray(payload?.stockResults)
 		) {
-			setScanError('Mã QR không đúng định dạng kết quả kiểm kê')
+			setScanError(t('inventory.dialog.wrongFormat'))
 			return
 		}
 
@@ -121,7 +123,7 @@ export default function InventorySessionDialog({
 			setScanError(
 				err instanceof Error
 					? err.message
-					: 'Không thể ghi nhận kết quả kiểm kê - mã QR có thể đã bị thay đổi hoặc phiên đã đóng'
+					: t('inventory.dialog.submitFailed')
 			)
 		}
 	}
@@ -131,12 +133,12 @@ export default function InventorySessionDialog({
 		try {
 			const result = await markReviewed.mutateAsync(review.session.id)
 			setReview(result)
-			toast.success('Đã xác nhận kiểm tra kết quả kiểm kê')
+			toast.success(t('inventory.dialog.confirmed'))
 		} catch (err) {
 			toast.error(
 				err instanceof Error
 					? err.message
-					: 'Không thể xác nhận kết quả kiểm kê'
+					: t('inventory.dialog.confirmFailed')
 			)
 		}
 	}
@@ -146,7 +148,7 @@ export default function InventorySessionDialog({
 			<Button
 				size='icon'
 				variant='ghost'
-				title='Kiểm kê bằng mã QR'
+				title={t('inventory.dialog.triggerTitle')}
 				onClick={() => setOpen(true)}
 			>
 				<ScanLine size={16} />
@@ -154,14 +156,14 @@ export default function InventorySessionDialog({
 
 			<Dialog open={open} onOpenChange={handleOpenChange}>
 				<DialogContent className='max-w-md h-auto'>
-					<DialogTitle>Kiểm kê - {roomName}</DialogTitle>
+					<DialogTitle>
+						{t('inventory.dialog.title', { roomName })}
+					</DialogTitle>
 
 					{step === 'start' && (
 						<div className='flex flex-col gap-4'>
 							<p className='text-muted-foreground text-sm'>
-								Tạo mã QR để bắt đầu phiên kiểm kê vũ khí/trang
-								bị trong phòng này. Dùng ứng dụng trên điện
-								thoại để quét mã và kiểm kê ngoại tuyến.
+								{t('inventory.dialog.intro')}
 							</p>
 							<Button
 								onClick={handleStart}
@@ -171,10 +173,10 @@ export default function InventorySessionDialog({
 								}
 							>
 								{openSession.isPending
-									? 'Đang kiểm tra phiên...'
+									? t('inventory.dialog.checking')
 									: createSession.isPending
-										? 'Đang tạo...'
-										: 'Tạo mã QR kiểm kê'}
+										? t('inventory.dialog.creating')
+										: t('inventory.dialog.create')}
 							</Button>
 						</div>
 					)}
@@ -186,14 +188,13 @@ export default function InventorySessionDialog({
 								downloadFilename={`kiem-ke-${roomName}-${challenge.sid}`}
 							/>
 							<p className='text-muted-foreground text-sm text-center'>
-								{challenge.expected.length} vật tư cần kiểm kê,{' '}
-								{challenge.expectedStocks.length} dòng vật tư
-								theo số lượng cần kiểm đếm. Quét mã này bằng ứng
-								dụng trên điện thoại, sau khi hoàn tất kiểm kê
-								hãy bấm nút bên dưới để quét lại kết quả.
+								{t('inventory.dialog.challengeSummary', {
+									assets: challenge.expected.length,
+									stocks: challenge.expectedStocks.length
+								})}
 							</p>
 							<Button onClick={() => setStep('scan')}>
-								Quét kết quả từ điện thoại
+								{t('inventory.dialog.scanResults')}
 							</Button>
 						</div>
 					)}
@@ -221,14 +222,14 @@ export default function InventorySessionDialog({
 										variant='outline'
 										onClick={() => setScanError(null)}
 									>
-										Quét lại
+										{t('inventory.dialog.retryScan')}
 									</Button>
 								</div>
 							) : (
 								<p className='text-muted-foreground text-sm text-center'>
 									{submitResults.isPending
-										? 'Đang ghi nhận kết quả...'
-										: 'Đưa mã QR kết quả trên điện thoại vào khung hình.'}
+										? t('inventory.dialog.recording')
+										: t('inventory.dialog.aimAtQr')}
 								</p>
 							)}
 						</div>
@@ -244,7 +245,7 @@ export default function InventorySessionDialog({
 							</div>
 							{review.session.status === 'reviewed' ? (
 								<p className='text-muted-foreground text-sm text-center'>
-									Đã xác nhận kiểm tra kết quả này.
+									{t('inventory.dialog.reviewedNote')}
 								</p>
 							) : (
 								<Button
@@ -252,8 +253,8 @@ export default function InventorySessionDialog({
 									disabled={markReviewed.isPending}
 								>
 									{markReviewed.isPending
-										? 'Đang xác nhận...'
-										: 'Xác nhận đã kiểm tra'}
+										? t('inventory.dialog.confirming')
+										: t('inventory.dialog.confirm')}
 								</Button>
 							)}
 							{review.session.status === 'reviewed' && (
@@ -268,7 +269,7 @@ export default function InventorySessionDialog({
 								variant='outline'
 								onClick={() => handleOpenChange(false)}
 							>
-								Xong
+								{t('inventory.dialog.done')}
 							</Button>
 						</div>
 					)}

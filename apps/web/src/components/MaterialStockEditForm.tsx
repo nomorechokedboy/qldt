@@ -15,6 +15,7 @@ import { useUpdateMaterialStock } from '@/hooks/useUpdateMaterialStock'
 import { materialConditionOptions } from '@/data/material-categories'
 import type { MaterialStock, Room } from '@/types'
 import { getErrorMessage } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
 
 const NONE = 'none'
 
@@ -31,6 +32,7 @@ export default function MaterialStockEditForm({
 	onUpdate,
 	onClose
 }: MaterialStockEditFormProps) {
+	const { t } = useTranslation('materials')
 	const [quantity, setQuantity] = useState(String(data.quantity))
 	const [condition, setCondition] = useState(data.condition ?? 'good')
 	const [roomId, setRoomId] = useState<string>(
@@ -55,12 +57,12 @@ export default function MaterialStockEditForm({
 					roomId: roomId === NONE ? null : Number(roomId)
 				}
 			])
-			toast.success('Cập nhật vật tư thành công')
+			toast.success(t('stockEdit.updated'))
 			onUpdate()
 			onClose()
 		} catch (err) {
 			console.error('Error updating material stock:', err)
-			toast.error(getErrorMessage(err, 'Cập nhật vật tư thất bại!'))
+			toast.error(getErrorMessage(err, t('stockEdit.updateFailed')))
 		}
 	}
 
@@ -78,14 +80,16 @@ export default function MaterialStockEditForm({
 
 			<form onSubmit={handleSubmit} className='space-y-4'>
 				<div className='space-y-1'>
-					<Label>Loại vật tư</Label>
+					<Label>{t('columns.stockType')}</Label>
 					<p className='text-sm text-muted-foreground'>
 						{data.materialType?.name}
 					</p>
 				</div>
 
 				<div className='space-y-2'>
-					<Label htmlFor='edit-stock-quantity'>Số lượng</Label>
+					<Label htmlFor='edit-stock-quantity'>
+						{t('columns.quantity')}
+					</Label>
 					<Input
 						id='edit-stock-quantity'
 						type='number'
@@ -97,14 +101,16 @@ export default function MaterialStockEditForm({
 				</div>
 
 				<div className='space-y-2'>
-					<Label htmlFor='edit-stock-room'>Vị trí</Label>
+					<Label htmlFor='edit-stock-room'>{t('columns.room')}</Label>
 					<Select value={roomId} onValueChange={setRoomId}>
 						<SelectTrigger id='edit-stock-room'>
-							<SelectValue placeholder='Chọn vị trí (tuỳ chọn)' />
+							<SelectValue
+								placeholder={t('form.pickRoomOptional')}
+							/>
 						</SelectTrigger>
 						<SelectContent>
 							<SelectItem value={NONE}>
-								Chưa có vị trí cụ thể
+								{t('shared.noSpecificRoom')}
 							</SelectItem>
 							{roomsForUnit.map((r) => (
 								<SelectItem key={r.id} value={String(r.id)}>
@@ -116,10 +122,14 @@ export default function MaterialStockEditForm({
 				</div>
 
 				<div className='space-y-2'>
-					<Label htmlFor='edit-stock-condition'>Tình trạng</Label>
+					<Label htmlFor='edit-stock-condition'>
+						{t('columns.condition')}
+					</Label>
 					<Select value={condition} onValueChange={setCondition}>
 						<SelectTrigger id='edit-stock-condition'>
-							<SelectValue placeholder='Chọn tình trạng' />
+							<SelectValue
+								placeholder={t('form.pickCondition')}
+							/>
 						</SelectTrigger>
 						<SelectContent>
 							{materialConditionOptions.map((opt) => (
@@ -133,10 +143,12 @@ export default function MaterialStockEditForm({
 
 				<div className='flex justify-end gap-2'>
 					<Button type='button' variant='outline' onClick={onClose}>
-						Hủy
+						{t('form.cancel')}
 					</Button>
 					<Button type='submit' disabled={updateMutation.isPending}>
-						{updateMutation.isPending ? 'Đang lưu...' : 'Lưu'}
+						{updateMutation.isPending
+							? t('form.saving')
+							: t('form.save')}
 					</Button>
 				</div>
 			</form>

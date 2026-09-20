@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Badge } from '@/components/ui/badge'
 import type { inventory_sessions } from '@/api/client'
 import {
@@ -5,7 +6,7 @@ import {
 	materialConditionLabels
 } from '@/data/material-categories'
 import { StockDiffColor, StockDiffStatusIcon } from './diff-status'
-import { STOCK_DIFF_STATUS_LABEL } from './diff-status-labels'
+import { STOCK_DIFF_STATUS_VARIANT } from './diff-status-labels'
 import { cn } from '@/lib/utils'
 
 interface InventorySessionStockDiffListProps {
@@ -22,10 +23,11 @@ interface InventorySessionStockDiffListProps {
 export default function InventorySessionStockDiffList({
 	stockDiff
 }: InventorySessionStockDiffListProps) {
+	const { t } = useTranslation('materials')
 	if (stockDiff.length === 0) {
 		return (
 			<p className='text-muted-foreground text-sm text-center'>
-				Không có vật tư kiểm kê theo số lượng.
+				{t('inventory.stockDiff.empty')}
 			</p>
 		)
 	}
@@ -50,15 +52,17 @@ export default function InventorySessionStockDiffList({
 							</Badge>
 						</span>
 						<span className='text-muted-foreground text-xs'>
-							Dự kiến: {item.expectedQuantity ?? '0'} - Thực tế:{' '}
-							{item.observedQuantity}
+							{t('inventory.stockDiff.quantities', {
+								expected: item.expectedQuantity ?? '0',
+								observed: item.observedQuantity
+							})}
 						</span>
 					</div>
 					<Badge
 						className={StockDiffColor(item.status)}
-						variant={STOCK_DIFF_STATUS_LABEL[item.status].variant}
+						variant={STOCK_DIFF_STATUS_VARIANT[item.status]}
 					>
-						{STOCK_DIFF_STATUS_LABEL[item.status].label}
+						{t(`inventory.stockDiffStatus.${item.status}`)}
 						<StockDiffStatusIcon status={item.status} />
 					</Badge>
 				</div>

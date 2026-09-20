@@ -1,4 +1,5 @@
 import { AlertCircle, CheckCircle, Loader2 } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import type { ImportResults, UploadStatus } from './types'
 
 export function UploadMessage({
@@ -35,34 +36,43 @@ export function UploadMessage({
 }
 
 export function ImportResultsPanel({ results }: { results: ImportResults }) {
+	const { t } = useTranslation('materials')
 	return (
 		<div className='space-y-3 rounded-lg border bg-muted/30 p-4'>
-			<h4 className='font-medium text-foreground'>Kết quả import:</h4>
+			<h4 className='font-medium text-foreground'>
+				{t('import.results.title')}
+			</h4>
 			<div className='grid grid-cols-3 gap-4 text-sm'>
 				<div className='text-center'>
 					<div className='text-2xl font-bold text-green-600 dark:text-green-400'>
 						{results.successCount}
 					</div>
-					<div className='text-muted-foreground'>Thành công</div>
+					<div className='text-muted-foreground'>
+						{t('import.results.success')}
+					</div>
 				</div>
 				<div className='text-center'>
 					<div className='text-2xl font-bold text-destructive'>
 						{results.errorCount}
 					</div>
-					<div className='text-muted-foreground'>Lỗi</div>
+					<div className='text-muted-foreground'>
+						{t('import.results.errors')}
+					</div>
 				</div>
 				<div className='text-center'>
 					<div className='text-2xl font-bold text-foreground'>
 						{results.totalCount}
 					</div>
-					<div className='text-muted-foreground'>Tổng cộng</div>
+					<div className='text-muted-foreground'>
+						{t('import.results.total')}
+					</div>
 				</div>
 			</div>
 
 			{results.errors && results.errors.length > 0 && (
 				<div className='space-y-2 pt-1'>
 					<h5 className='font-medium text-destructive'>
-						Chi tiết lỗi:
+						{t('import.results.errorDetails')}
 					</h5>
 					<div className='max-h-32 overflow-y-auto space-y-1'>
 						{results.errors.map((error, index) => (
@@ -70,7 +80,10 @@ export function ImportResultsPanel({ results }: { results: ImportResults }) {
 								key={index}
 								className='rounded border bg-background p-2 text-sm text-destructive'
 							>
-								Dòng {error.row}: {error.message}
+								{t('import.results.row', {
+									row: error.row,
+									message: error.message
+								})}
 							</div>
 						))}
 					</div>
