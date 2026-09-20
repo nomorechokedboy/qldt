@@ -232,6 +232,13 @@
 			"when": 1789810988437,
 			"tag": "0032_material_types_name_unit_unique",
 			"breakpoints": true
+		},
+		{
+			"idx": 33,
+			"version": "6",
+			"when": 1789891090619,
+			"tag": "0033_lang_packs",
+			"breakpoints": true
 		}
 	]
 }
