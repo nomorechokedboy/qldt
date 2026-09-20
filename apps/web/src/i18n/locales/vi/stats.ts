@@ -118,7 +118,10 @@ const stats = {
 		chooseBattalion: '--Chọn tiểu đoàn--',
 		chooseCompany: '--Chọn đại đội--',
 		chooseClass: '--Chọn lớp--',
-		filter: 'Lọc'
+		filter: 'Lọc',
+		tabWeek: 'Tuần',
+		tabMonth: 'Tháng',
+		tabQuarter: 'Quý'
 	}
 } as const
 

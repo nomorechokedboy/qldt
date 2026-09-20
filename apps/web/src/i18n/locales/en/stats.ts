@@ -119,7 +119,10 @@ const stats: Messages<typeof vi> = {
 		chooseBattalion: '--Select battalion--',
 		chooseCompany: '--Select company--',
 		chooseClass: '--Select class--',
-		filter: 'Filter'
+		filter: 'Filter',
+		tabWeek: 'Week',
+		tabMonth: 'Month',
+		tabQuarter: 'Quarter'
 	}
 }
 
