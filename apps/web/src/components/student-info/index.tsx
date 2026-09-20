@@ -15,6 +15,7 @@ import { getMediaUri } from '@/lib/utils'
 import type { Student } from '@/types'
 import { CheckCircle } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { positionName } from '@/lib/position-name'
 import StudentActions from './actions'
 import { PANELS } from './panels'
 
@@ -44,7 +45,7 @@ export default function StudentInfo({
 	const summary = {
 		fullName: student.fullName,
 		rank: student.rank,
-		position: student.position,
+		position: positionName(student),
 		unit: student.unit?.name
 	}
 

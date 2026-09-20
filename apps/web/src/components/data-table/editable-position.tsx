@@ -3,10 +3,10 @@ import type { Student } from '@/types'
 import type { CellContext } from '@tanstack/react-table'
 import ToggleInput from '@/components/toggle-input'
 import { Badge } from '@/components/ui/badge'
-import usePositionsData from '@/hooks/usePositionsData'
+import usePositionOptions from '@/hooks/usePositionOptions'
 import { queryClient } from '@/integrations/tanstack-query/root-provider'
+import { positionName } from '@/lib/position-name'
 import { toast } from 'sonner'
-import { unitLevelLabels, unitLevelOrder } from '@/data/unit-levels'
 
 export type EditablePositionProps = CellContext<Student, unknown> & {
 	className?: string
@@ -18,27 +18,13 @@ export default function EditablePosition({
 	readOnly,
 	row
 }: EditablePositionProps) {
-	const { data: positions } = usePositionsData()
 	const { mutateAsync, isPending } = useUpdateStudent({
 		onSuccess: () => {
 			queryClient.invalidateQueries({ queryKey: ['students'] })
 		}
 	})
 
-	const positionOptions = [...(positions ?? [])]
-		.sort((a, b) => {
-			const levelDiff =
-				unitLevelOrder.indexOf(a.level as never) -
-				unitLevelOrder.indexOf(b.level as never)
-			if (levelDiff !== 0) return levelDiff
-
-			return a.priority - b.priority
-		})
-		.map((p) => ({
-			label: p.name,
-			value: String(p.id),
-			group: unitLevelLabels[p.level as never] ?? p.level
-		}))
+	const positionOptions = usePositionOptions()
 
 	const handleSave = async (value: string) => {
 		try {
@@ -67,7 +53,9 @@ export default function EditablePosition({
 			}
 			isLoading={isPending}
 			placeholder={
-				<Badge className='font-bold'>{row.original.position}</Badge>
+				<Badge className='font-bold'>
+					{positionName(row.original)}
+				</Badge>
 			}
 		/>
 	)

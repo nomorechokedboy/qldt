@@ -1,3 +1,4 @@
+import { positionName } from '@/lib/position-name'
 import type { Student } from '@/types'
 
 export interface StudentExportField {
@@ -17,7 +18,11 @@ export const studentExportFields: StudentExportField[] = [
 	{ key: 'fullName', label: 'Họ và tên', getValue: (s) => s.fullName ?? '' },
 	{ key: 'dob', label: 'Ngày sinh', getValue: (s) => s.dob ?? '' },
 	{ key: 'rank', label: 'Cấp bậc', getValue: (s) => s.rank ?? '' },
-	{ key: 'position', label: 'Chức vụ', getValue: (s) => s.position ?? '' },
+	{
+		key: 'position',
+		label: 'Chức vụ',
+		getValue: (s) => positionName(s) ?? ''
+	},
 	{
 		key: 'previousUnit',
 		label: 'Đơn vị cũ',

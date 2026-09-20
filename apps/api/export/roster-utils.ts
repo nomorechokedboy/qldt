@@ -232,6 +232,9 @@ export interface RosterStudent {
 	fullName: string
 	rank: string
 	position: string
+	// Readable name of the position; `position` (its code) stays the key for
+	// sorting and classification.
+	positionName?: string
 	enlistmentPeriod: string
 	unitId: number | null | undefined
 }
@@ -427,7 +430,7 @@ export function buildRosterRows(
 			stt,
 			fullName: s.fullName,
 			rank: formatRankAbbrev(s.rank),
-			position: s.position,
+			position: s.positionName || s.position,
 			enlistmentPeriod: s.enlistmentPeriod,
 			note: ''
 		}

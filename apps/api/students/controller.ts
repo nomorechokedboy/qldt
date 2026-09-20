@@ -901,6 +901,7 @@ export class Controller {
 			fullName: s.fullName ?? '',
 			rank: s.rank ?? '',
 			position: s.position ?? '',
+			positionName: s.positionRef?.name,
 			enlistmentPeriod: s.enlistmentPeriod ?? '',
 			unitId: s.unit?.id
 		}))
