@@ -83,6 +83,20 @@ export function levelOptionsUnderRoot(rootLevel: UnitLevel | undefined) {
 	)
 }
 
+// Levels a unit in the system can sit at, smallest first: the root's own
+// level and everything below it (the root sits at the top of the hierarchy,
+// so nothing above it exists). Pass undefined when the root isn't known yet
+// (falls back to every level).
+export function levelsUpToRoot(rootLevel: UnitLevel | undefined): UnitLevel[] {
+	if (rootLevel === undefined) {
+		return unitLevelOrder
+	}
+
+	return unitLevelOrder.filter(
+		(level) => level === rootLevel || !isLargerUnitLevel(level, rootLevel)
+	)
+}
+
 export function isCompanyOrAboveLevel(level: UnitLevel): boolean {
 	return unitLevelOrder.indexOf(level) >= unitLevelOrder.indexOf('company')
 }
