@@ -10,6 +10,7 @@ import {
 } from '@tanstack/react-router'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest'
+import i18n from '@/i18n'
 import StudentInfo from '.'
 
 vi.setConfig({ testTimeout: 20_000 })
@@ -135,6 +136,22 @@ describe('StudentInfo', () => {
 		openSection(/Gia đình/)
 
 		expect(screen.getByText('Chưa có thông tin con cái')).toBeTruthy()
+	})
+
+	it('renders in English once the language is switched', async () => {
+		await i18n.changeLanguage('en')
+		try {
+			await setup({ ...student, status: 'confirmed' })
+
+			expect(screen.getByText('Confirmed')).toBeTruthy()
+			expect(screen.getByText('Personnel ID: SV1')).toBeTruthy()
+			expect(
+				screen.getAllByRole('button', { name: /Family/ }).length
+			).toBeGreaterThan(0)
+			expect(screen.queryByText('Đã xác nhận')).toBeNull()
+		} finally {
+			await i18n.changeLanguage('vi')
+		}
 	})
 
 	it('opens the edit form from the action bar', async () => {

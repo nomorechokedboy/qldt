@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import type { Column } from '@tanstack/react-table'
 import { ArrowDown, ArrowUp, ChevronsUpDown, EyeOff } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -24,6 +25,7 @@ export function DataTableColumnHeader<TData, TValue>({
 	title,
 	className
 }: DataTableColumnHeaderProps<TData, TValue>) {
+	const { t } = useTranslation('table')
 	if (!column.getCanSort()) {
 		return <div className={cn(className)}>{title}</div>
 	}
@@ -74,7 +76,7 @@ export function DataTableColumnHeader<TData, TValue>({
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align='start'>
 					<Input
-						placeholder='Tìm kiếm...'
+						placeholder={t('columnHeader.search')}
 						value={searchValue}
 						onChange={handleSearchChange}
 						type='search'
@@ -83,20 +85,20 @@ export function DataTableColumnHeader<TData, TValue>({
 						onClick={() => column.toggleSorting(false)}
 					>
 						<ArrowUp className='h-3.5 w-3.5 text-muted-foreground/70' />
-						Từ A-Z
+						{t('columnHeader.sortAsc')}
 					</DropdownMenuItem>
 					<DropdownMenuItem
 						onClick={() => column.toggleSorting(true)}
 					>
 						<ArrowDown className='h-3.5 w-3.5 text-muted-foreground/70' />
-						Từ Z-A
+						{t('columnHeader.sortDesc')}
 					</DropdownMenuItem>
 					<DropdownMenuSeparator />
 					<DropdownMenuItem
 						onClick={() => column.toggleVisibility(false)}
 					>
 						<EyeOff className='h-3.5 w-3.5 text-muted-foreground/70' />
-						Ẩn cột
+						{t('columnHeader.hide')}
 					</DropdownMenuItem>
 				</DropdownMenuContent>
 			</DropdownMenu>

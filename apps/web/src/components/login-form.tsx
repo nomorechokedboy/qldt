@@ -1,10 +1,31 @@
-import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { useTranslation } from 'react-i18next'
+import Monument from '@/assets/lu75.jpg'
 import { ArtilleryEmblem } from '@/components/artillery-emblem'
+import { LanguageSwitcher } from '@/components/language-switcher'
+import PasswordInput from '@/components/password-input'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { useAppForm } from '@/hooks/use-app-form'
 import useAuth from '@/hooks/useAuth'
 
+const APP_VERSION = '1.0'
+
+function FieldError({ id, errors }: { id: string; errors: unknown[] }) {
+	const message = errors
+		.map((e) => (typeof e === 'string' ? e : (e as any)?.message))
+		.find(Boolean)
+	if (!message) return null
+
+	return (
+		<p id={id} role='alert' className='mt-1.5 text-sm text-destructive'>
+			{message}
+		</p>
+	)
+}
+
 export function LoginForm() {
+	const { t } = useTranslation('auth')
 	const { login } = useAuth()
 
 	const form = useAppForm({
@@ -18,117 +39,193 @@ export function LoginForm() {
 	})
 
 	return (
-		<div className='w-screen h-screen flex flex-col items-center bg-background overflow-auto'>
-			{/* Pattern chấm mờ */}
-			<div className='absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(99,102,241,0.15),transparent_50%),radial-gradient(circle_at_bottom_right,rgba(139,92,246,0.15),transparent_50%)]'></div>
+		<main className='grid min-h-svh grid-cols-[minmax(0,1fr)] bg-background lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]'>
+			<aside className="relative isolate flex min-h-64 flex-col justify-end overflow-hidden bg-sidebar text-sidebar-foreground after:absolute after:inset-x-0 after:bottom-0 after:h-[3px] after:bg-[image:var(--gradient-header)] after:content-[''] lg:min-h-svh lg:after:inset-x-auto lg:after:inset-y-0 lg:after:right-0 lg:after:h-auto lg:after:w-[3px]">
+				<img
+					src={Monument}
+					alt=''
+					className='absolute inset-0 -z-30 size-full object-cover object-[50%_18%] grayscale contrast-125'
+				/>
+				<div className='absolute inset-0 -z-20 bg-primary/60 mix-blend-multiply' />
+				<div className='absolute inset-0 -z-10 bg-[linear-gradient(to_top,oklch(0.14_0.012_40)_6%,oklch(0.14_0.012_40/0.72)_38%,oklch(0.14_0.012_40/0.1)_75%)]' />
+				<div
+					className='absolute inset-0 -z-10 opacity-[0.1]'
+					style={{ backgroundImage: 'var(--sidebar-texture)' }}
+				/>
 
-			{/* Nội dung chính */}
-			<div className='z-10 w-full max-w-md px-4 animate-fadeInUp'>
-				{/* Logo + tiêu đề */}
-				<div className='flex flex-col items-center mb-8 pt-3'>
+				<div className='flex items-end gap-4 p-6 lg:flex-col lg:items-start lg:gap-6 lg:p-12'>
 					<ArtilleryEmblem
 						variant='badge'
-						className='h-28 w-28 mb-3 text-primary drop-shadow-md'
+						className='size-16 shrink-0 rounded-lg drop-shadow-lg lg:size-24'
 					/>
-					<h1 className='text-2xl uppercase font-extrabold text-foreground text-center'>
-						Lữ đoàn 75, Quân khu 7
-					</h1>
-					<p className='text-muted-foreground font-medium uppercase'>
-						phần mềm quản lý đơn vị & vktb
-					</p>
+					<div className='max-w-md'>
+						<h2 className='font-serif text-2xl font-bold leading-tight text-sidebar-foreground lg:text-4xl'>
+							{t('brand.unit')}
+						</h2>
+						<p className='mt-1 text-sm text-sidebar-foreground/80 lg:mt-3 lg:text-base'>
+							{t('brand.product')}
+						</p>
+						<p className='mt-6 hidden text-sm leading-relaxed text-sidebar-foreground/65 lg:block'>
+							{t('brand.tagline')}
+						</p>
+					</div>
+				</div>
+			</aside>
+
+			<section className='flex flex-col'>
+				<div className='flex justify-end p-4 lg:p-6'>
+					<LanguageSwitcher />
 				</div>
 
-				{/* Form login */}
-				<Card className='shadow-xl border backdrop-blur bg-card/90'>
-					<CardHeader>
-						<CardTitle className='text-center text-primary'>
-							Đăng nhập hệ thống
-						</CardTitle>
-						<p className='text-center text-muted-foreground text-sm'>
-							Phiên bản 1.0
+				<div className='flex flex-1 items-center justify-center px-6 pb-10'>
+					<div className='w-full max-w-sm motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-bottom-3 motion-safe:duration-500'>
+						<h1 className='font-serif text-3xl font-bold text-foreground'>
+							{t('login.title')}
+						</h1>
+						<p className='mt-2 text-muted-foreground'>
+							{t('login.subtitle')}
 						</p>
-					</CardHeader>
-					<CardContent>
+
 						<form
+							noValidate
 							onSubmit={(e) => {
 								e.preventDefault()
 								e.stopPropagation()
 								form.handleSubmit()
 							}}
-							className='space-y-4'
+							className='mt-8 space-y-5'
 						>
-							<form.AppField
+							<form.Field
 								name='username'
 								validators={{
 									onBlur: ({ value }) =>
 										!value
-											? 'Tên đăng nhập là bắt buộc'
+											? t('login.usernameRequired')
+											: undefined,
+									onSubmit: ({ value }) =>
+										!value
+											? t('login.usernameRequired')
 											: undefined
 								}}
 							>
-								{(field) => (
-									<field.TextField label='Tên đăng nhập' />
-								)}
-							</form.AppField>
+								{(field) => {
+									const invalid =
+										field.state.meta.errors.length > 0
+									return (
+										<div>
+											<Label
+												htmlFor={field.name}
+												className='mb-2'
+											>
+												{t('login.username')}
+											</Label>
+											<Input
+												id={field.name}
+												name={field.name}
+												autoComplete='username'
+												autoFocus
+												className='h-11'
+												aria-invalid={invalid}
+												aria-describedby={
+													invalid
+														? `${field.name}-error`
+														: undefined
+												}
+												value={field.state.value}
+												onBlur={field.handleBlur}
+												onChange={(e) =>
+													field.handleChange(
+														e.target.value
+													)
+												}
+											/>
+											<FieldError
+												id={`${field.name}-error`}
+												errors={field.state.meta.errors}
+											/>
+										</div>
+									)
+								}}
+							</form.Field>
 
-							<form.AppField
+							<form.Field
 								name='password'
 								validators={{
 									onBlur: ({ value }) =>
 										!value
-											? 'Mật khẩu là bắt buộc'
+											? t('login.passwordRequired')
+											: undefined,
+									onSubmit: ({ value }) =>
+										!value
+											? t('login.passwordRequired')
 											: undefined
 								}}
 							>
-								{(field) => (
-									<field.TextField
-										type='password'
-										label='Mật khẩu'
-									/>
-								)}
-							</form.AppField>
-
-							<div className='text-sm text-primary hover:underline cursor-pointer'>
-								Quên mật khẩu?
-							</div>
+								{(field) => {
+									const invalid =
+										field.state.meta.errors.length > 0
+									return (
+										<div>
+											<Label
+												htmlFor={field.name}
+												className='mb-2'
+											>
+												{t('login.password')}
+											</Label>
+											<PasswordInput
+												id={field.name}
+												name={field.name}
+												autoComplete='current-password'
+												className='h-11'
+												aria-invalid={invalid}
+												aria-describedby={
+													invalid
+														? `${field.name}-error`
+														: undefined
+												}
+												value={field.state.value}
+												onBlur={field.handleBlur}
+												onChange={(e) =>
+													field.handleChange(
+														e.target.value
+													)
+												}
+											/>
+											<FieldError
+												id={`${field.name}-error`}
+												errors={field.state.meta.errors}
+											/>
+										</div>
+									)
+								}}
+							</form.Field>
 
 							<form.Subscribe
-								selector={(state) => [
-									state.canSubmit,
-									state.isSubmitting
-								]}
-								children={([canSubmit, isSubmitting]) => (
+								selector={(state) => state.isSubmitting}
+								children={(isSubmitting) => (
 									<Button
 										type='submit'
-										disabled={!canSubmit}
-										className='w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold shadow-md disabled:opacity-50'
+										disabled={isSubmitting}
+										className='h-11 w-full text-base'
 									>
 										{isSubmitting
-											? 'Đang đăng nhập...'
-											: 'Đăng nhập'}
+											? t('login.submitting')
+											: t('login.submit')}
 									</Button>
 								)}
 							/>
 						</form>
-					</CardContent>
-				</Card>
-			</div>
 
-			{/* Wave bottom */}
-			<div className='absolute bottom-0 left-0 w-full overflow-hidden leading-none rotate-180'>
-				<svg
-					className='relative block w-full h-20'
-					xmlns='http://www.w3.org/2000/svg'
-					preserveAspectRatio='none'
-					viewBox='0 0 1200 120'
-				>
-					<path
-						d='M0,0V46.29c47.79,22,103.24,29,158,17,72.47-15.71,136.9-57.45,209-66,71.13-8.38,142.3,15.88,213,35.34,66.24,18.24,132.57,27.45,198,13,61.47-13.48,113-53.84,172-61,66-8.07,130,20.36,196,32V0Z'
-						fill='#6366f1'
-						fillOpacity='0.25'
-					></path>
-				</svg>
-			</div>
-		</div>
+						<p className='mt-6 text-sm text-muted-foreground'>
+							{t('login.forgot')}
+						</p>
+					</div>
+				</div>
+
+				<p className='px-6 pb-6 text-xs text-muted-foreground lg:px-12'>
+					{t('login.version', { version: APP_VERSION })}
+				</p>
+			</section>
+		</main>
 	)
 }

@@ -1,6 +1,7 @@
 import type { Student } from '@/types'
 import type { Column, Row } from '@tanstack/react-table'
 import { toast } from 'sonner'
+import i18n from '@/i18n'
 import useUpdateStudent from './useUpdateStudent'
 import { queryClient } from '@/integrations/tanstack-query/root-provider'
 
@@ -24,10 +25,10 @@ export default function usePatchStudent(
 					}
 				]
 			})
-			toast.success('Cập nhật thông tin quân nhân thành công')
+			toast.success(i18n.t('table:cells.updateSuccess'))
 		} catch (err) {
 			console.error(err)
-			toast.error('Cập nhật thông tin quân nhân thất bại!')
+			toast.error(i18n.t('table:cells.updateFailed'))
 		}
 	}
 

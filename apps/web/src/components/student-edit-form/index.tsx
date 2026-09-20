@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import {
 	CompactHeader,
@@ -32,6 +33,7 @@ export default function StudentEditForm({
 	student,
 	onClose
 }: StudentEditFormProps) {
+	const { t } = useTranslation('student')
 	const { form, isPending } = useStudentEditForm(student, onClose)
 	const [sectionId, setSectionId] = useState<SectionId>(RECORD_SECTIONS[0].id)
 	const scrollRef = useRef<HTMLFormElement>(null)
@@ -61,8 +63,8 @@ export default function StudentEditForm({
 				<div className='flex min-h-0 flex-col bg-card'>
 					<CompactHeader
 						{...cover}
-						title={student.fullName ?? 'Chỉnh sửa quân nhân'}
-						subtitle={section.label}
+						title={student.fullName ?? t('editForm.title')}
+						subtitle={t(`record.sections.${section.id}.label`)}
 					>
 						<SectionPills
 							current={sectionId}
@@ -81,10 +83,10 @@ export default function StudentEditForm({
 					>
 						<div className='mb-6 hidden lg:block'>
 							<h2 className='font-serif text-2xl font-semibold'>
-								{section.label}
+								{t(`record.sections.${section.id}.label`)}
 							</h2>
 							<p className='text-sm text-muted-foreground'>
-								{section.hint}
+								{t(`record.sections.${section.id}.hint`)}
 							</p>
 						</div>
 						<div
@@ -101,14 +103,16 @@ export default function StudentEditForm({
 							variant='outline'
 							onClick={onClose}
 						>
-							Hủy
+							{t('editForm.cancel')}
 						</Button>
 						<Button
 							type='submit'
 							form={FORM_ID}
 							disabled={isPending}
 						>
-							{isPending ? 'Đang lưu...' : 'Lưu thay đổi'}
+							{isPending
+								? t('editForm.saving')
+								: t('editForm.save')}
 						</Button>
 					</footer>
 				</div>

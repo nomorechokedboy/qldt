@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { LayoutGrid, TableIcon, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { DataTableViewOptions } from './data-table-view-options'
@@ -47,11 +48,12 @@ export function DataTableToolbar<TData>({
 	facetedFilters = [],
 	showColumnVisibility = true,
 	showResetButton = true,
-	resetButton: ResetButton = 'Reset',
+	resetButton: ResetButton,
 	className = '',
 	searchContainerClassName = '',
 	rightContainerClassName = ''
 }: DataTableToolbarProps<TData>) {
+	const { t } = useTranslation('table')
 	const isFiltered = table.getState().columnFilters.length > 0
 
 	// Render faceted filters
@@ -91,7 +93,7 @@ export function DataTableToolbar<TData>({
 						onClick={handleResetColumnFilter}
 						className='h-8 px-2 lg:px-3'
 					>
-						{ResetButton}
+						{ResetButton ?? t('toolbar.reset')}
 						<X />
 					</Button>
 				)}

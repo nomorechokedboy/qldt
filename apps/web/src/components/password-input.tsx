@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Eye, EyeOff } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -10,6 +11,7 @@ interface PasswordInputProps extends React.ComponentProps<'input'> {
 
 const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
 	({ className, ...props }, ref) => {
+		const { t } = useTranslation('auth')
 		const [showPassword, setShowPassword] = useState(false)
 
 		const togglePasswordVisibility = () => {
@@ -31,7 +33,7 @@ const PasswordInput = forwardRef<HTMLInputElement, PasswordInputProps>(
 					className='absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent'
 					onClick={togglePasswordVisibility}
 					aria-label={
-						showPassword ? 'Hide password' : 'Show password'
+						showPassword ? t('password.hide') : t('password.show')
 					}
 				>
 					{showPassword ? (

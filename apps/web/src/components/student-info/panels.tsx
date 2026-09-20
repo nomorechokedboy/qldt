@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { RecordSection, StepBody } from '@/components/record-section'
 import { politicalOptions } from '@/data/political-status'
 import { positionName } from '@/lib/position-name'
@@ -9,26 +10,45 @@ import { dateText, EmptyNote, Fact, Facts } from './fact'
 type Panel = ComponentType<{ student: Student }>
 
 function PersonalPanel({ student }: { student: Student }) {
+	const { t } = useTranslation('student')
 	return (
 		<StepBody>
-			<RecordSection title='Họ tên và nhận dạng'>
+			<RecordSection title={t('sections.identity')}>
 				<Facts>
-					<Fact label='Họ và tên' value={student.fullName} />
-					<Fact label='Mã quân nhân' value={student.studentId} />
-					<Fact label='Ngày sinh' value={dateText(student.dob)} />
-					<Fact label='Số điện thoại' value={student.phone} />
+					<Fact
+						label={t('fields.fullName')}
+						value={student.fullName}
+					/>
+					<Fact
+						label={t('recordFields.studentId')}
+						value={student.studentId}
+					/>
+					<Fact
+						label={t('fields.dob')}
+						value={dateText(student.dob)}
+					/>
+					<Fact label={t('fields.phone')} value={student.phone} />
 				</Facts>
 			</RecordSection>
-			<RecordSection title='Dân tộc và tôn giáo'>
+			<RecordSection title={t('sections.ethnicityReligion')}>
 				<Facts>
-					<Fact label='Dân tộc' value={student.ethnic} />
-					<Fact label='Tôn giáo' value={student.religion} />
+					<Fact label={t('fields.ethnic')} value={student.ethnic} />
+					<Fact
+						label={t('fields.religion')}
+						value={student.religion}
+					/>
 				</Facts>
 			</RecordSection>
-			<RecordSection title='Quê quán và trú quán'>
+			<RecordSection title={t('sections.places')}>
 				<Facts>
-					<Fact label='Quê quán' value={student.birthPlace} />
-					<Fact label='Trú quán' value={student.address} />
+					<Fact
+						label={t('sections.birthPlaceLabel')}
+						value={student.birthPlace}
+					/>
+					<Fact
+						label={t('sections.addressLabel')}
+						value={student.address}
+					/>
 				</Facts>
 			</RecordSection>
 		</StepBody>
@@ -36,40 +56,50 @@ function PersonalPanel({ student }: { student: Student }) {
 }
 
 function MilitaryPanel({ student }: { student: Student }) {
+	const { t } = useTranslation('student')
 	const politicalOrg = politicalOptions.find(
 		(o) => o.value === student.politicalOrg
 	)?.label
 
 	return (
 		<StepBody>
-			<RecordSection title='Quân sự'>
+			<RecordSection title={t('sections.military')}>
 				<Facts columns={3}>
-					<Fact label='Cấp bậc' value={student.rank} />
-					<Fact label='Chức vụ' value={positionName(student)} />
-					<Fact label='Đơn vị' value={student.unit?.name} />
+					<Fact label={t('fields.rank')} value={student.rank} />
 					<Fact
-						label='Ngày nhập ngũ'
+						label={t('fields.position')}
+						value={positionName(student)}
+					/>
+					<Fact label={t('fields.unit')} value={student.unit?.name} />
+					<Fact
+						label={t('fields.enlistmentDate')}
 						value={student.enlistmentPeriod}
 					/>
-					<Fact label='Đơn vị cũ' value={student.previousUnit} />
-					<Fact label='Chức vụ cũ' value={student.previousPosition} />
+					<Fact
+						label={t('fields.previousUnit')}
+						value={student.previousUnit}
+					/>
+					<Fact
+						label={t('fields.previousPosition')}
+						value={student.previousPosition}
+					/>
 				</Facts>
 			</RecordSection>
-			<RecordSection title='Chính trị'>
+			<RecordSection title={t('sections.politics')}>
 				<Facts columns={3}>
 					<Fact
-						label='Tổ chức'
+						label={t('recordFields.politicalOrg')}
 						value={politicalOrg ?? student.politicalOrg}
 					/>
 					<Fact
-						label='Ngày vào Đoàn'
+						label={t('fields.youthJoinDate')}
 						value={dateText(student.politicalOrgOfficialDate)}
 					/>
 					<Fact
-						label='Ngày vào Đảng'
+						label={t('fields.partyJoinDate')}
 						value={dateText(student.cpvOfficialAt)}
 					/>
-					<Fact label='Số thẻ Đảng' value={student.cpvId} />
+					<Fact label={t('fields.cpvId')} value={student.cpvId} />
 				</Facts>
 			</RecordSection>
 		</StepBody>
@@ -77,25 +107,42 @@ function MilitaryPanel({ student }: { student: Student }) {
 }
 
 function EducationPanel({ student }: { student: Student }) {
+	const { t } = useTranslation('student')
 	return (
 		<StepBody>
-			<RecordSection title='Học vấn'>
+			<RecordSection title={t('sections.education')}>
 				<Facts columns={3}>
-					<Fact label='Trường' value={student.schoolName} />
-					<Fact label='Chuyên ngành' value={student.major} />
-					<Fact label='Trình độ' value={student.educationLevel} />
 					<Fact
-						label='Đã tốt nghiệp'
-						value={student.isGraduated ? 'Có' : 'Chưa'}
+						label={t('recordFields.schoolName')}
+						value={student.schoolName}
+					/>
+					<Fact
+						label={t('recordFields.major')}
+						value={student.major}
+					/>
+					<Fact
+						label={t('recordFields.educationLevel')}
+						value={student.educationLevel}
+					/>
+					<Fact
+						label={t('fields.graduated')}
+						value={
+							student.isGraduated
+								? t('info.yes')
+								: t('info.notYet')
+						}
 					/>
 				</Facts>
 			</RecordSection>
-			<RecordSection title='Kỹ năng và chính sách'>
+			<RecordSection title={t('sections.skillsAndPolicy')}>
 				<Facts columns={3}>
-					<Fact label='Sở trường' value={student.talent} />
-					<Fact label='Sở đoản' value={student.shortcoming} />
+					<Fact label={t('fields.talent')} value={student.talent} />
 					<Fact
-						label='Đối tượng chính sách'
+						label={t('fields.shortcoming')}
+						value={student.shortcoming}
+					/>
+					<Fact
+						label={t('fields.policyGroup')}
 						value={student.policyBeneficiaryGroup}
 					/>
 				</Facts>
@@ -105,25 +152,27 @@ function EducationPanel({ student }: { student: Student }) {
 }
 
 function ParentBlock({
-	title,
+	prefix,
 	name,
 	dob,
 	job,
 	phone
 }: {
-	title: string
+	prefix: 'father' | 'mother'
 	name?: string | null
 	dob?: string | null
 	job?: string | null
 	phone?: string | null
 }) {
+	const { t } = useTranslation('student')
+
 	return (
-		<RecordSection title={title}>
+		<RecordSection title={t(`sections.${prefix}`)}>
 			<Facts columns={1}>
-				<Fact label='Họ tên' value={name} />
-				<Fact label='Ngày sinh' value={dateText(dob)} />
-				<Fact label='Nghề nghiệp' value={job} />
-				<Fact label='Số điện thoại' value={phone} />
+				<Fact label={t('fields.name')} value={name} />
+				<Fact label={t('fields.dob')} value={dateText(dob)} />
+				<Fact label={t('fields.job')} value={job} />
+				<Fact label={t('fields.phone')} value={phone} />
 			</Facts>
 		</RecordSection>
 	)
@@ -136,6 +185,8 @@ function PersonList({
 	people?: { fullName: string; dob: string }[]
 	empty: string
 }) {
+	const { t } = useTranslation('student')
+
 	if (!people?.length) return <EmptyNote>{empty}</EmptyNote>
 
 	return (
@@ -146,8 +197,14 @@ function PersonList({
 					className='rounded-md border p-3'
 				>
 					<Facts columns={1}>
-						<Fact label='Họ tên' value={person.fullName} />
-						<Fact label='Ngày sinh' value={dateText(person.dob)} />
+						<Fact
+							label={t('fields.name')}
+							value={person.fullName}
+						/>
+						<Fact
+							label={t('fields.dob')}
+							value={dateText(person.dob)}
+						/>
 					</Facts>
 				</li>
 			))}
@@ -156,46 +213,51 @@ function PersonList({
 }
 
 function FamilyPanel({ student }: { student: Student }) {
+	const { t } = useTranslation('student')
 	return (
 		<StepBody>
 			<div className='grid gap-x-5 gap-y-8 sm:grid-cols-2'>
 				<ParentBlock
-					title='Cha'
+					prefix='father'
 					name={student.fatherName}
 					dob={student.fatherDob}
 					job={student.fatherJob}
 					phone={student.fatherPhoneNumber}
 				/>
 				<ParentBlock
-					title='Mẹ'
+					prefix='mother'
 					name={student.motherName}
 					dob={student.motherDob}
 					job={student.motherJob}
 					phone={student.motherPhoneNumber}
 				/>
 			</div>
-			<RecordSection title='Vợ/chồng'>
+			<RecordSection title={t('sections.spouse')}>
 				<Facts>
 					<Fact
-						label='Tình trạng'
-						value={student.isMarried ? 'Đã kết hôn' : 'Độc thân'}
+						label={t('recordFields.status')}
+						value={
+							student.isMarried
+								? t('info.married')
+								: t('info.single')
+						}
 					/>
 					{student.isMarried && (
 						<>
 							<Fact
-								label='Họ tên vợ/chồng'
+								label={t('recordFields.spouseName')}
 								value={student.spouseName}
 							/>
 							<Fact
-								label='Ngày sinh'
+								label={t('fields.dob')}
 								value={dateText(student.spouseDob)}
 							/>
 							<Fact
-								label='Nghề nghiệp'
+								label={t('fields.job')}
 								value={student.spouseJob}
 							/>
 							<Fact
-								label='SĐT vợ/chồng'
+								label={t('recordFields.spousePhone')}
 								value={student.spousePhoneNumber}
 							/>
 						</>
@@ -203,33 +265,37 @@ function FamilyPanel({ student }: { student: Student }) {
 				</Facts>
 			</RecordSection>
 			<RecordSection
-				title={`Con (${student.childrenInfos?.length ?? 0})`}
+				title={t('sections.childrenCount', {
+					count: student.childrenInfos?.length ?? 0
+				})}
 			>
 				<PersonList
 					people={student.childrenInfos}
-					empty='Chưa có thông tin con cái'
+					empty={t('info.noChildren')}
 				/>
 			</RecordSection>
 			<RecordSection
-				title={`Anh, chị, em ruột (${student.siblings?.length ?? 0})`}
+				title={t('sections.siblingsCount', {
+					count: student.siblings?.length ?? 0
+				})}
 			>
 				<PersonList
 					people={student.siblings}
-					empty='Chưa có thông tin anh chị em'
+					empty={t('info.noSiblings')}
 				/>
 			</RecordSection>
-			<RecordSection title='Hoàn cảnh gia đình'>
+			<RecordSection title={t('sections.familyBackground')}>
 				<Facts columns={3}>
 					<Fact
-						label='Hoàn cảnh gia đình'
+						label={t('recordFields.familyBackground')}
 						value={student.familyBackground}
 					/>
 					<Fact
-						label='Số lượng thành viên'
+						label={t('recordFields.familySize')}
 						value={student.familySize}
 					/>
 					<Fact
-						label='Con thứ mấy'
+						label={t('recordFields.birthOrder')}
 						value={student.familyBirthOrder}
 					/>
 				</Facts>
@@ -239,34 +305,44 @@ function FamilyPanel({ student }: { student: Student }) {
 }
 
 function HistoryPanel({ student }: { student: Student }) {
+	const { t } = useTranslation('student')
 	return (
 		<StepBody>
-			<RecordSection title='Lịch sử'>
+			<RecordSection title={t('sections.history')}>
 				<Facts>
-					<Fact label='Khen thưởng' value={student.achievement} />
-					<Fact label='Kỷ luật' value={student.disciplinaryHistory} />
+					<Fact
+						label={t('recordFields.achievement')}
+						value={student.achievement}
+					/>
+					<Fact
+						label={t('fields.discipline')}
+						value={student.disciplinaryHistory}
+					/>
 				</Facts>
 			</RecordSection>
 			<RecordSection
-				title='Người báo tin'
-				hint='Người cần liên lạc khi có việc của quân nhân.'
+				title={t('sections.contact')}
+				hint={t('sections.contactHint')}
 			>
 				<Facts columns={3}>
-					<Fact label='Họ tên' value={student.contactPerson?.name} />
 					<Fact
-						label='Số điện thoại'
+						label={t('fields.name')}
+						value={student.contactPerson?.name}
+					/>
+					<Fact
+						label={t('fields.phone')}
 						value={student.contactPerson?.phoneNumber}
 					/>
 					<Fact
-						label='Địa chỉ'
+						label={t('fields.address')}
 						value={student.contactPerson?.address}
 					/>
 				</Facts>
 			</RecordSection>
-			<RecordSection title='Tài liệu'>
+			<RecordSection title={t('sections.documents')}>
 				<Facts columns={1}>
 					<Fact
-						label='Hồ sơ đi kèm'
+						label={t('fields.documents')}
 						value={student.relatedDocumentations}
 					/>
 				</Facts>

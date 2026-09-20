@@ -142,8 +142,12 @@ export default function RankPromotionProposalsTab() {
 					</SelectContent>
 				</Select>
 
-				<RefreshButton onRefresh={() => refetch()} />
-				<CreateRankPromotionProposalForm onSuccess={() => refetch()} />
+				<div className='flex items-center gap-3'>
+					<CreateRankPromotionProposalForm
+						onSuccess={() => refetch()}
+					/>
+					<RefreshButton onRefresh={() => refetch()} />
+				</div>
 			</div>
 
 			{isLoading ? (

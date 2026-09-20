@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { EhtnicOptions } from '@/data/ethnicities'
 import { religionOptions } from '@/data/religions'
 import { eduLevelOptions } from '@/data/education-levels'
@@ -6,32 +7,35 @@ import PlacePickerFields from '@/components/place-picker-fields'
 import { RecordGrid, RecordSection, StepBody } from './record-section'
 
 export default function PersonalStep({ form }: { form: any }) {
+	const { t } = useTranslation('student')
 	const { options: unitOptions } = useUnitOptions()
 
 	return (
 		<StepBody>
-			<RecordSection title='Họ tên và nhận dạng'>
+			<RecordSection title={t('sections.identity')}>
 				<RecordGrid>
 					<form.AppField name='fullName'>
-						{(field: any) => <field.TextField label='Họ và tên' />}
+						{(field: any) => (
+							<field.TextField label={t('fields.fullName')} />
+						)}
 					</form.AppField>
 					<form.AppField name='studentId'>
 						{(field: any) => (
-							<field.TextField label='Mã số quân nhân' />
+							<field.TextField label={t('create.studentId')} />
 						)}
 					</form.AppField>
 					<form.AppField name='dob'>
 						{(field: any) => (
 							<field.DatePicker
-								label='Ngày sinh'
-								placeholder='Ngày/tháng/năm'
+								label={t('fields.dob')}
+								placeholder={t('create.datePlaceholder')}
 							/>
 						)}
 					</form.AppField>
 					<form.AppField name='phone'>
 						{(field: any) => (
 							<field.TextField
-								label='Số điện thoại'
+								label={t('fields.phone')}
 								placeholder='0912 345 678'
 							/>
 						)}
@@ -39,47 +43,39 @@ export default function PersonalStep({ form }: { form: any }) {
 				</RecordGrid>
 			</RecordSection>
 
-			<RecordSection title='Đơn vị công tác'>
+			<RecordSection title={t('sections.workUnit')}>
 				<RecordGrid>
 					<form.AppField name='unitId'>
 						{(field: any) => (
 							<field.Select
 								values={unitOptions}
-								label='Đơn vị'
-								placeholder='Chọn đơn vị'
+								label={t('fields.unit')}
+								placeholder={t('create.chooseUnit')}
 							/>
 						)}
 					</form.AppField>
 				</RecordGrid>
 			</RecordSection>
 
-			<RecordSection title='Quê quán và trú quán'>
+			<RecordSection title={t('sections.places')}>
 				<RecordGrid>
 					<div className='space-y-4'>
-						<PlacePickerFields
-							form={form}
-							prefix='birthPlace'
-							label='quê quán'
-						/>
+						<PlacePickerFields form={form} prefix='birthPlace' />
 					</div>
 					<div className='space-y-4'>
-						<PlacePickerFields
-							form={form}
-							prefix='address'
-							label='trú quán'
-						/>
+						<PlacePickerFields form={form} prefix='address' />
 					</div>
 				</RecordGrid>
 			</RecordSection>
 
-			<RecordSection title='Dân tộc, tôn giáo và học vấn'>
+			<RecordSection title={t('sections.ethnicityReligionEducation')}>
 				<RecordGrid>
 					<form.AppField name='ethnic'>
 						{(field: any) => (
 							<field.Combobox
 								values={EhtnicOptions}
-								label='Dân tộc'
-								placeholder='Chọn dân tộc'
+								label={t('fields.ethnic')}
+								placeholder={t('create.chooseEthnic')}
 								defaultValue={eduLevelOptions[0].value}
 								className=''
 							/>
@@ -89,8 +85,8 @@ export default function PersonalStep({ form }: { form: any }) {
 						{(field: any) => (
 							<field.Select
 								values={religionOptions}
-								label='Tôn giáo'
-								placeholder='Chọn tôn giáo'
+								label={t('fields.religion')}
+								placeholder={t('create.chooseReligion')}
 								defaultValue={religionOptions[0].value}
 							/>
 						)}
@@ -98,18 +94,22 @@ export default function PersonalStep({ form }: { form: any }) {
 					<form.AppField name='educationLevel'>
 						{(field: any) => (
 							<field.Select
-								label='Trình độ học vấn'
-								placeholder='Chọn trình độ học vấn'
+								label={t('create.educationLevel')}
+								placeholder={t('create.chooseEducation')}
 								values={eduLevelOptions}
 								defaultValue={eduLevelOptions[5].value}
 							/>
 						)}
 					</form.AppField>
 					<form.AppField name='schoolName'>
-						{(field: any) => <field.TextField label='Tên trường' />}
+						{(field: any) => (
+							<field.TextField label={t('create.schoolName')} />
+						)}
 					</form.AppField>
 					<form.AppField name='major'>
-						{(field: any) => <field.TextField label='Ngành' />}
+						{(field: any) => (
+							<field.TextField label={t('create.major')} />
+						)}
 					</form.AppField>
 				</RecordGrid>
 			</RecordSection>

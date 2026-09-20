@@ -1,21 +1,23 @@
+import { useTranslation } from 'react-i18next'
 import { rankOptions } from '@/data/ranks'
 import usePositionOptions from '@/hooks/usePositionOptions'
 import { activityStatusOptions } from '@/data/activity-statuses'
 import { RecordGrid, RecordSection, StepBody } from './record-section'
 
 export default function MilitaryStep({ form }: { form: any }) {
+	const { t } = useTranslation('student')
 	const positionOptions = usePositionOptions()
 
 	return (
 		<StepBody>
-			<RecordSection title='Quân sự'>
+			<RecordSection title={t('sections.military')}>
 				<RecordGrid>
 					<form.AppField name='rank'>
 						{(field: any) => (
 							<field.Select
 								values={rankOptions}
-								label='Cấp bậc'
-								placeholder='Chọn cấp bậc'
+								label={t('fields.rank')}
+								placeholder={t('create.chooseRank')}
 								defaultValue={rankOptions[0].value}
 							/>
 						)}
@@ -24,22 +26,24 @@ export default function MilitaryStep({ form }: { form: any }) {
 						{(field: any) => (
 							<field.Select
 								values={positionOptions}
-								label='Chức vụ'
-								placeholder='Chọn chức vụ'
+								label={t('fields.position')}
+								placeholder={t('create.choosePosition')}
 							/>
 						)}
 					</form.AppField>
 					<form.AppField name='enlistmentPeriod'>
 						{(field: any) => (
-							<field.TextField label='Ngày nhập ngũ' />
+							<field.TextField
+								label={t('fields.enlistmentDate')}
+							/>
 						)}
 					</form.AppField>
 					<form.AppField name='activityStatus'>
 						{(field: any) => (
 							<field.Select
 								values={activityStatusOptions}
-								label='Tình trạng'
-								placeholder='Chọn tình trạng'
+								label={t('fields.activityStatus')}
+								placeholder={t('create.chooseStatus')}
 								defaultValue='serving'
 							/>
 						)}
@@ -47,12 +51,12 @@ export default function MilitaryStep({ form }: { form: any }) {
 				</RecordGrid>
 			</RecordSection>
 
-			<RecordSection title='Chính trị'>
+			<RecordSection title={t('sections.politics')}>
 				<RecordGrid>
 					<form.AppField name='politicalOrg'>
 						{(field: any) => (
 							<field.Select
-								label='Đoàn/Đảng'
+								label={t('create.politicalOrg')}
 								values={[
 									{ label: 'Đoàn', value: 'hcyu' },
 									{ label: 'Đảng', value: 'cpv' }
@@ -62,56 +66,70 @@ export default function MilitaryStep({ form }: { form: any }) {
 					</form.AppField>
 					<form.AppField name='politicalOrgOfficialDate'>
 						{(field: any) => (
-							<field.DatePicker label='Ngày vào Đoàn' />
+							<field.DatePicker
+								label={t('fields.youthJoinDate')}
+							/>
 						)}
 					</form.AppField>
 					<form.AppField name='cpvId'>
 						{(field: any) => (
-							<field.TextField label='Số thẻ Đảng' />
+							<field.TextField label={t('fields.cpvId')} />
 						)}
 					</form.AppField>
 					<form.AppField name='cpvOfficialAt'>
 						{(field: any) => (
-							<field.DatePicker label='Ngày vào Đảng' />
+							<field.DatePicker
+								label={t('fields.partyJoinDate')}
+							/>
 						)}
 					</form.AppField>
 				</RecordGrid>
 			</RecordSection>
 
 			<RecordSection
-				title='Người báo tin'
-				hint='Người cần liên lạc khi có việc của quân nhân.'
+				title={t('sections.contact')}
+				hint={t('sections.contactHint')}
 			>
 				<RecordGrid columns={3}>
 					<form.AppField name='contactPerson.name'>
 						{(field: any) => (
-							<field.TextField label='Khi cần báo tin cho' />
+							<field.TextField label={t('create.contactName')} />
 						)}
 					</form.AppField>
 					<form.AppField name='contactPerson.phoneNumber'>
 						{(field: any) => (
-							<field.TextField label='Số điện thoại' />
+							<field.TextField label={t('fields.phone')} />
 						)}
 					</form.AppField>
 					<form.AppField name='contactPerson.address'>
-						{(field: any) => <field.TextField label='Địa chỉ' />}
+						{(field: any) => (
+							<field.TextField label={t('fields.address')} />
+						)}
 					</form.AppField>
 				</RecordGrid>
 			</RecordSection>
 
-			<RecordSection title='Nhận xét'>
+			<RecordSection title={t('sections.remarks')}>
 				<RecordGrid>
 					<form.AppField name='talent'>
-						{(field: any) => <field.TextArea label='Sở trường' />}
+						{(field: any) => (
+							<field.TextArea label={t('fields.talent')} />
+						)}
 					</form.AppField>
 					<form.AppField name='shortcoming'>
-						{(field: any) => <field.TextArea label='Sở đoản' />}
+						{(field: any) => (
+							<field.TextArea label={t('fields.shortcoming')} />
+						)}
 					</form.AppField>
 					<form.AppField name='achievement'>
-						{(field: any) => <field.TextArea label='Thành tích' />}
+						{(field: any) => (
+							<field.TextArea label={t('create.achievement')} />
+						)}
 					</form.AppField>
 					<form.AppField name='disciplinaryHistory'>
-						{(field: any) => <field.TextArea label='Kỷ luật' />}
+						{(field: any) => (
+							<field.TextArea label={t('fields.discipline')} />
+						)}
 					</form.AppField>
 				</RecordGrid>
 			</RecordSection>

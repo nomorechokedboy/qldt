@@ -141,7 +141,7 @@ describe('UnitRollupTables', () => {
 		await setup()
 		await screen.findByText('Nguyen Van A', {}, { timeout: 10_000 })
 
-		fireEvent.keyDown(screen.getByText('Open menu').closest('button')!, {
+		fireEvent.keyDown(screen.getByText('Mở menu').closest('button')!, {
 			key: 'Enter'
 		})
 		expect(await screen.findByText('Chi tiết')).toBeTruthy()

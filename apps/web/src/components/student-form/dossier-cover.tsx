@@ -2,7 +2,7 @@ import { STEPS } from '@/data'
 import { CoverShell } from '@/components/student-record/cover-shell'
 import { cn } from '@/lib/utils'
 import { Check } from 'lucide-react'
-import { STEP_HINTS } from './step-hints'
+import { useTranslation } from 'react-i18next'
 import type useStudentWizard from './use-student-wizard'
 
 type Wizard = ReturnType<typeof useStudentWizard>
@@ -15,9 +15,11 @@ export default function DossierCover({
 	form: any
 	wizard: Wizard
 }) {
+	const { t } = useTranslation('student')
+
 	return (
 		<CoverShell form={form} photoField='avatar'>
-			<nav aria-label='Các bước'>
+			<nav aria-label={t('wizard.stepsNav')}>
 				<ol className='space-y-1 border-t border-sidebar-border pt-4'>
 					{STEPS.map((step, index) => {
 						const current = index === wizard.currentStep
@@ -51,7 +53,7 @@ export default function DossierCover({
 										{done && !current ? (
 											<Check
 												className='size-4'
-												aria-label='Đã xong'
+												aria-label={t('wizard.done')}
 											/>
 										) : (
 											index + 1
@@ -59,10 +61,10 @@ export default function DossierCover({
 									</span>
 									<span className='min-w-0'>
 										<span className='block truncate text-sm font-medium'>
-											{step.title}
+											{t(`steps.${step.id}.title`)}
 										</span>
 										<span className='block truncate text-xs text-sidebar-foreground/60'>
-											{STEP_HINTS[step.id]}
+											{t(`steps.${step.id}.hint`)}
 										</span>
 									</span>
 								</button>

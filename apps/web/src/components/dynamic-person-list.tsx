@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { Trash2, Plus } from 'lucide-react'
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -20,6 +21,8 @@ export default function DynamicPersonList({
 	fieldName,
 	config
 }: DynamicPersonListProps) {
+	const { t } = useTranslation('student')
+
 	return (
 		<form.AppField name={fieldName}>
 			{(field: any) => {
@@ -76,7 +79,9 @@ export default function DynamicPersonList({
 											name={`${fieldName}[${index}].dob`}
 										>
 											{(subField: any) => (
-												<subField.DatePicker label='Ngày sinh' />
+												<subField.DatePicker
+													label={t('fields.dob')}
+												/>
 											)}
 										</form.AppField>
 									</CardContent>

@@ -1,29 +1,41 @@
+import i18n from '@/i18n'
 import dayjs from 'dayjs'
 import * as z from 'zod'
 import customParseFormat from 'dayjs/plugin/customParseFormat'
 
 dayjs.extend(customParseFormat)
 
+// Zod calls `error` while parsing, so messages follow the language in use at
+// that moment instead of the one the module was loaded in.
+const msg = (key: string) => ({
+	error: () => i18n.t(key as never) as string
+})
+
 const dateRegex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/
 
 const optionalDate = z
 	.string()
 	.trim()
-	.refine((val) => val === '' || dateRegex.test(val), {
-		message: 'Hãy dùng định dạng Ngày/tháng/năm'
-	})
-	.refine((val) => val === '' || dayjs(val, 'DD/MM/YYYY', true).isValid(), {
-		message: 'Ngày không hợp lệ'
-	})
+	.refine(
+		(val) => val === '' || dateRegex.test(val),
+		msg('student:validation.dateFormat')
+	)
+	.refine(
+		(val) => val === '' || dayjs(val, 'DD/MM/YYYY', true).isValid(),
+		msg('student:validation.invalidDate')
+	)
 	.optional()
 
 const isoDateSchema = z
 	.string()
 	.regex(
 		/^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[0-2])\/\d{4}$/,
-		'Hãy dùng định dạng Ngày/tháng/năm'
+		msg('student:validation.dateFormat')
 	)
-	.refine((s) => dayjs(s, 'DD/MM/YYYY', true).isValid(), 'Ngày không hợp lệ')
+	.refine(
+		(s) => dayjs(s, 'DD/MM/YYYY', true).isValid(),
+		msg('student:validation.invalidDate')
+	)
 	.transform((s) => dayjs(s, 'DD/MM/YYYY').toISOString())
 
 const toOptionalNumber = (val: unknown) => {
@@ -44,13 +56,15 @@ export const personalInfoSchema = z.object({
 		.mime(['image/png', 'image/webp', 'image/jpeg', 'image/svg+xml'])
 		.max(2_000_000)
 		.nullable(),
-	fullName: z.string().nonempty('Họ và tên không được bỏ trống'),
+	fullName: z.string().nonempty(msg('student:validation.fullNameRequired')),
 	unitId: z.preprocess(toOptionalNumber, z.number().min(1)),
 	birthPlace: z.string().optional(),
 	address: z.string().optional(),
-	ethnic: z.string().nonempty('Dân tộc không được bỏ trống'),
-	religion: z.string().nonempty('Tôn giáo không được bỏ trống'),
-	educationLevel: z.string().nonempty('Trình độ học vấn không được bỏ trống'),
+	ethnic: z.string().nonempty(msg('student:validation.ethnicRequired')),
+	religion: z.string().nonempty(msg('student:validation.religionRequired')),
+	educationLevel: z
+		.string()
+		.nonempty(msg('student:validation.educationRequired')),
 	schoolName: z.string().optional(),
 	major: z.string().optional(),
 	phone: z.string().optional(),
@@ -62,7 +76,7 @@ export const militaryInfoSchema = z.object({
 	rank: z.string(),
 	positionId: z.preprocess(
 		toOptionalNumber,
-		z.number().min(1, 'Chức vụ không được bỏ trống')
+		z.number().min(1, msg('student:validation.positionRequired'))
 	),
 	enlistmentPeriod: z.string().optional(),
 	policyBeneficiaryGroup: z.string().optional(),
@@ -89,7 +103,7 @@ export const militaryInfoSchema = z.object({
 })
 
 export const ChildrenInfoSchema = z.object({
-	fullName: z.string().nonempty('Họ tên không được bỏ trống'),
+	fullName: z.string().nonempty(msg('student:validation.nameRequired')),
 	dob: isoDateSchema
 })
 

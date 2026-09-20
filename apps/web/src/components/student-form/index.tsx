@@ -16,9 +16,9 @@ import type { Student, StudentBody } from '@/types'
 import type { VariantProps } from 'class-variance-authority'
 import { ChevronLeft, ChevronRight, Plus } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import CompactHeader from './compact-header'
 import DossierCover from './dossier-cover'
-import { STEP_HINTS } from './step-hints'
 import useCreateStudentForm from './use-create-student-form'
 import useStudentWizard from './use-student-wizard'
 
@@ -38,6 +38,7 @@ export default function StudentForm({
 	onSuccess,
 	buttonProps
 }: StudentFormProps) {
+	const { t } = useTranslation('student')
 	const [open, setOpen] = useState(false)
 	const afterCreate = useRef(() => {})
 	const scrollRef = useRef<HTMLFormElement>(null)
@@ -64,15 +65,14 @@ export default function StudentForm({
 			<DialogTrigger asChild>
 				<Button {...buttonProps}>
 					<Plus className='w-4 h-4 mr-2' />
-					Thêm quân nhân
+					{t('wizard.add')}
 				</Button>
 			</DialogTrigger>
 			<DialogContent className='grid-cols-1 grid-rows-[minmax(0,1fr)] gap-0 overflow-hidden p-0 lg:h-[85vh] lg:max-w-5xl lg:grid-cols-[18rem_minmax(0,1fr)]'>
 				<DialogHeader className='sr-only'>
-					<DialogTitle>Thêm quân nhân</DialogTitle>
+					<DialogTitle>{t('wizard.add')}</DialogTitle>
 					<DialogDescription>
-						Điền lần lượt {STEPS.length} bước để tạo hồ sơ quân
-						nhân.
+						{t('wizard.description', { count: STEPS.length })}
 					</DialogDescription>
 				</DialogHeader>
 
@@ -94,10 +94,10 @@ export default function StudentForm({
 					>
 						<div className='mb-6 hidden lg:block'>
 							<h2 className='font-serif text-2xl font-semibold'>
-								{step.title}
+								{t(`steps.${step.id}.title`)}
 							</h2>
 							<p className='text-sm text-muted-foreground'>
-								{STEP_HINTS[step.id]}
+								{t(`steps.${step.id}.hint`)}
 							</p>
 						</div>
 						<div
@@ -116,7 +116,7 @@ export default function StudentForm({
 							disabled={wizard.currentStep === 0}
 						>
 							<ChevronLeft className='mr-1 size-4' />
-							Quay lại
+							{t('wizard.back')}
 						</Button>
 						{wizard.isLastStep ? (
 							<form.Subscribe
@@ -132,14 +132,14 @@ export default function StudentForm({
 										disabled={!canSubmit}
 									>
 										{isSubmitting
-											? 'Đang thêm quân nhân...'
-											: 'Thêm quân nhân'}
+											? t('wizard.adding')
+											: t('wizard.add')}
 									</Button>
 								)}
 							</form.Subscribe>
 						) : (
 							<Button type='button' onClick={wizard.next}>
-								Tiếp theo
+								{t('wizard.next')}
 								<ChevronRight className='ml-1 size-4' />
 							</Button>
 						)}

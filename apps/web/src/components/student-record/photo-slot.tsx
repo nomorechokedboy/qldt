@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { ErrorMessages } from '@/components/FormComponents'
 import { cn } from '@/lib/utils'
 import { Camera } from 'lucide-react'
@@ -18,6 +19,7 @@ export default function PhotoSlot({
 	// The photo already saved on the record, shown until a new one is chosen.
 	currentSrc?: string
 }) {
+	const { t } = useTranslation('student')
 	const file: File | null = field.state.value
 	const inputRef = useRef<HTMLInputElement>(null)
 	const [tooLarge, setTooLarge] = useState(false)
@@ -48,22 +50,24 @@ export default function PhotoSlot({
 				{previewUrl ? (
 					<img
 						src={previewUrl}
-						alt='Ảnh 3x4 của quân nhân'
+						alt={t('record.photo.alt')}
 						className='size-full object-cover'
 					/>
 				) : (
 					<span className='flex size-full flex-col items-center justify-center gap-2 px-3 text-center text-sm text-sidebar-foreground/70'>
 						<Camera className='size-6' aria-hidden />
 						{compact ? (
-							<span className='sr-only'>Chọn ảnh 3x4</span>
+							<span className='sr-only'>
+								{t('record.photo.choose')}
+							</span>
 						) : (
-							'Chọn ảnh 3x4'
+							t('record.photo.choose')
 						)}
 					</span>
 				)}
 				{previewUrl && !compact && (
 					<span className='absolute inset-x-0 bottom-0 bg-black/60 py-1.5 text-center text-xs text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100'>
-						Đổi ảnh
+						{t('record.photo.change')}
 					</span>
 				)}
 			</button>
@@ -72,7 +76,7 @@ export default function PhotoSlot({
 				type='file'
 				accept='image/png,image/jpeg,image/webp'
 				className='hidden'
-				aria-label='Ảnh quân nhân'
+				aria-label={t('record.photo.inputLabel')}
 				onBlur={field.handleBlur}
 				onChange={(e) => {
 					const picked = e.target.files?.[0] ?? null
@@ -83,7 +87,7 @@ export default function PhotoSlot({
 			/>
 			{!compact && (
 				<p className='text-xs text-sidebar-foreground/60'>
-					JPG, PNG hoặc WebP, tối đa 2 MB
+					{t('record.photo.formats')}
 				</p>
 			)}
 			{tooLarge && (
@@ -91,7 +95,7 @@ export default function PhotoSlot({
 					role='alert'
 					className={cn('text-sm text-gold', compact && 'sr-only')}
 				>
-					Ảnh vượt quá 2 MB, hãy chọn ảnh nhỏ hơn.
+					{t('record.photo.tooLarge')}
 				</p>
 			)}
 			{field.state.meta.isTouched && errors.length > 0 && (

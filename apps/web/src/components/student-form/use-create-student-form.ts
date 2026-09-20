@@ -7,6 +7,7 @@ import useUploadFiles from '@/hooks/useUploadFiles'
 import { getErrorMessage } from '@/lib/utils'
 import type { ContactPerson, Student, StudentBody } from '@/types'
 import { useMutation } from '@tanstack/react-query'
+import i18n from '@/i18n'
 import { toast } from 'sonner'
 import { validateAndSetErrors } from './validation'
 
@@ -105,13 +106,13 @@ export default function useCreateStudentForm({
 				}
 
 				await mutateAsync({ ...withIsoDates(value), avatar: avatarUri })
-				toast.success('Thêm mới quân nhân thành công!')
+				toast.success(i18n.t('student:wizard.created'))
 				formApi.reset()
 				onCreated()
 			} catch (err) {
 				console.error(err)
 				toast.error(
-					getErrorMessage(err, 'Thêm mới quân nhân thất bại!')
+					getErrorMessage(err, i18n.t('student:wizard.createFailed'))
 				)
 			}
 		},

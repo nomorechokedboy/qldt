@@ -45,24 +45,35 @@ import { ThemeToggle } from './theme-toggle'
 import useAuth from '@/hooks/useAuth'
 import type { GetUnitQuery } from '@/types'
 import { isSuperAdmin } from '@/lib/utils'
+import { useTranslation } from 'react-i18next'
+import { LanguageSwitcher } from './language-switcher'
+
+// Static entries carry an i18n key ('nav:...') as their title; titles built
+// from data (unit names) are shown as they are.
+function useNavLabel() {
+	const { t } = useTranslation()
+	return (title: string) =>
+		title.startsWith('nav:') ? t(title as never) : title
+}
+
 // Updated data structure to support unlimited nesting and icons
 const data = {
 	versions: ['1.0.1', '1.1.0-alpha', '2.0.0-beta1'],
 	navMain: [
 		{
-			title: 'Chung',
+			title: 'nav:groups.general',
 			url: '#',
 			superAdminOnly: false,
-			items: [{ title: 'Trang chủ', url: '/', icon: Home }]
+			items: [{ title: 'nav:items.home', url: '/', icon: Home }]
 		},
 		{
-			title: 'Thống kê đơn vị',
+			title: 'nav:groups.unitStats',
 			url: '#',
 			superAdminOnly: false,
 			icon: PieChart,
 			items: [
 				{
-					title: 'Tổng hợp đơn vị',
+					title: 'nav:items.unitRollup',
 					url: '/thong-ke-doanh-trai',
 					icon: PieChart
 				}
@@ -87,64 +98,64 @@ const data = {
             ]
         }, */
 		{
-			title: 'Vật tư',
+			title: 'nav:groups.materials',
 			url: '#',
 			superAdminOnly: false,
 			icon: Package,
 			items: [
 				{
-					title: 'Danh mục vật tư',
+					title: 'nav:items.materialCatalog',
 					url: '/quan-ly-vat-tu/danh-muc',
 					icon: Package
 				},
 				{
-					title: 'Bàn giao quân số/vật chất',
+					title: 'nav:items.handover',
 					url: '/chuyen-giao-tai-san',
 					icon: ArrowLeftRight
 				}
 			]
 		},
 		{
-			title: 'Quân nhân',
+			title: 'nav:groups.personnel',
 			url: '#',
 			superAdminOnly: false,
 			icon: ClipboardCheck,
 			items: [
 				{
-					title: 'Đề xuất chế độ',
+					title: 'nav:items.benefitProposals',
 					url: '/de-xuat-che-do',
 					icon: ClipboardCheck
 				},
 				{
-					title: 'Đề xuất thăng quân hàm',
+					title: 'nav:items.promotionProposals',
 					url: '/de-xuat-thang-quan-ham',
 					icon: TrendingUp
 				}
 			]
 		},
 		{
-			title: 'Quản lý người dùng',
+			title: 'nav:groups.userAdmin',
 			url: '#',
 			superAdminOnly: true,
 			icon: Calendar,
 			items: [
 				{
-					title: 'Danh sách người dùng',
+					title: 'nav:items.userList',
 					url: '/list-user',
 					icon: List
 				},
 				{
-					title: 'Danh sách vai trò',
+					title: 'nav:items.roleList',
 					url: '/vai-tro',
 					icon: UserRoundCog
 				},
 				{
-					title: 'Nhật ký hoạt động',
+					title: 'nav:items.activityLog',
 					url: '/nhat-ky-hoat-dong',
 					icon: History
 				},
 				{
-					title: 'Chức vụ',
+					title: 'nav:items.positions',
 					url: '/chuc-vu',
 					icon: List
 				}
@@ -198,6 +209,7 @@ const navButtonClass =
 	'flex items-center gap-3 rounded-xl px-4 py-2 font-medium text-sidebar-foreground/85 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground focus-visible:bg-sidebar-accent cursor-pointer border-l-2 border-transparent data-[active=true]:border-primary data-[active=true]:text-sidebar-foreground'
 
 function NavMenuItem({ item, level }: { item: NavItem; level: number }) {
+	const label = useNavLabel()
 	const { state } = useSidebar()
 	const isCollapsed = state === 'collapsed'
 	const location = useLocation()
@@ -221,7 +233,9 @@ function NavMenuItem({ item, level }: { item: NavItem; level: number }) {
 						<CollapsibleTrigger asChild>
 							<SidebarMenuButton className={navButtonClass}>
 								{Icon && <Icon className='w-5 h-5' />}
-								{!isCollapsed && <span>{item.title}</span>}
+								{!isCollapsed && (
+									<span>{label(item.title)}</span>
+								)}
 								{!isCollapsed && (
 									<ChevronDown
 										className={`ml-auto transition-transform ${isOpen ? 'rotate-180' : ''}`}
@@ -254,7 +268,7 @@ function NavMenuItem({ item, level }: { item: NavItem; level: number }) {
 							className='flex items-center gap-3 w-full'
 						>
 							{Icon && <Icon className='w-5 h-5' />}
-							{!isCollapsed && <span>{item.title}</span>}
+							{!isCollapsed && <span>{label(item.title)}</span>}
 						</Link>
 					</SidebarMenuButton>
 				</SidebarMenuItem>
@@ -269,7 +283,7 @@ function NavMenuItem({ item, level }: { item: NavItem; level: number }) {
 					<CollapsibleTrigger asChild>
 						<SidebarMenuSubButton className={navButtonClass}>
 							{Icon && <Icon className='w-5 h-5  ' />}
-							{!isCollapsed && <span>{item.title}</span>}
+							{!isCollapsed && <span>{label(item.title)}</span>}
 							{!isCollapsed && (
 								<ChevronDown
 									className={`ml-auto transition-transform ${isOpen ? 'rotate-180' : ''}`}
@@ -298,7 +312,7 @@ function NavMenuItem({ item, level }: { item: NavItem; level: number }) {
 						className='flex items-center gap-3 w-full'
 					>
 						{Icon && <Icon className='w-5 h-5  ' />}
-						{!isCollapsed && <span>{item.title}</span>}
+						{!isCollapsed && <span>{label(item.title)}</span>}
 					</Link>
 				</SidebarMenuSubButton>
 			)}
@@ -310,6 +324,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 	const { state } = useSidebar()
 	const isCollapsed = state === 'collapsed'
 	const { user } = useAuth()
+	const { t } = useTranslation('nav')
+	const label = useNavLabel()
 
 	const getUnitsQuery: GetUnitQuery | undefined =
 		user?.isSuperUser === true
@@ -339,7 +355,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 				url: '#',
 				items: [
 					{
-						title: 'Tổng quan',
+						title: 'nav:items.unitOverview',
 						url: `/${unit.level === 'company' ? 'dai-doi' : 'don-vi'}/${unit.alias}`,
 						search: {
 							level: unit.level,
@@ -370,11 +386,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 	const allNavItems = [
 		firstNavItem,
 		{
-			title: 'Đơn vị',
+			title: 'nav:groups.units',
 			url: '#',
 			items: [
 				{
-					title: 'Quản lý đơn vị',
+					title: 'nav:items.unitManagement',
 					url: '/quan-ly-don-vi',
 					icon: Building2
 				},
@@ -407,10 +423,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 					{!isCollapsed && (
 						<div className='flex flex-col'>
 							<span className='text-sm font-serif font-semibold text-sidebar-foreground tracking-wide'>
-								Quản lý đơn vị
+								{t('app.title')}
 							</span>
 							<span className='text-xs text-sidebar-foreground/60'>
-								Tiểu đoàn 1, Lữ đoàn 75
+								{t('app.subtitle')}
 							</span>
 						</div>
 					)}
@@ -428,7 +444,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 							{!isCollapsed && (
 								<SidebarGroupLabel asChild>
 									<CollapsibleTrigger>
-										{item.title}
+										{label(item.title)}
 										<ChevronDown className='ml-auto transition-transform group-data-[state=open]/collapsible:rotate-180' />
 									</CollapsibleTrigger>
 								</SidebarGroupLabel>
@@ -453,7 +469,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 			<SidebarRail />
 			<SidebarFooter>
 				<div className='w-full flex items-center justify-between'>
-					<div></div>
+					<LanguageSwitcher tone='onDark' />
 					<div className=''>
 						<ThemeToggle />
 					</div>

@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Bell } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
@@ -7,6 +8,7 @@ import { useClickAway, useKey } from 'react-use'
 import useUnreadNotificationCount from '@/hooks/useUnreadNotificationCount'
 
 export function NotificationBell() {
+	const { t } = useTranslation('nav')
 	const [isOpen, setIsOpen] = useState(false)
 	const dropdownRef = useRef<HTMLDivElement>(null)
 	const { data: unreadCount } = useUnreadNotificationCount()
@@ -50,7 +52,9 @@ export function NotificationBell() {
 			{isOpen && (
 				<div className='absolute right-0 top-full mt-2 w-80 bg-popover text-popover-foreground rounded-lg shadow-lg border z-50'>
 					<div className='p-4 border-b'>
-						<h3 className='font-semibold text-lg'>Thông báo</h3>
+						<h3 className='font-semibold text-lg'>
+							{t('notifications.title')}
+						</h3>
 					</div>
 					<NotificationList onItemClick={handleCloseDropdown} />
 				</div>

@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import type { Row } from '@tanstack/react-table'
 import { MoreHorizontal } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -37,6 +38,7 @@ export function DataTableRowActions<TData>({
 	readOnly = false
 }: DataTableRowActionsProps<TData>) {
 	const student = row.original as unknown as Student
+	const { t } = useTranslation('table')
 	const [dialogOpen, setDialogOpen] = useState(false)
 	const { mutateAsync: deleteStudentMutate, isPending: isDeletingStudent } =
 		useDeleteStudents()
@@ -50,19 +52,15 @@ export function DataTableRowActions<TData>({
 
 	async function handleDeleteRow(_: MouseEvent<HTMLDivElement>) {
 		try {
-			if (
-				!confirm(
-					'Bạn có chắc chắn muốn xóa quân nhân này không? Hành động này không thể hoàn tác.'
-				)
-			) {
+			if (!confirm(t('rowActions.deleteConfirm'))) {
 				return
 			}
 			await deleteStudentMutate({ ids: [student.id] }).then(() =>
 				onDeleteRows?.([student.id])
 			)
-			toast.success('Xóa dữ liệu thành công!')
+			toast.success(t('rowActions.deleteSuccess'))
 		} catch (err) {
-			toast.error('Xóa dữ liệu bị lỗi!')
+			toast.error(t('rowActions.deleteFailed'))
 			if (err instanceof AxiosError) {
 				console.error('Http error: ', err.response?.data)
 			}
@@ -79,12 +77,14 @@ export function DataTableRowActions<TData>({
 						disabled={isDeletingStudent}
 					>
 						<MoreHorizontal />
-						<span className='sr-only'>Open menu</span>
+						<span className='sr-only'>
+							{t('rowActions.openMenu')}
+						</span>
 					</Button>
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align='end' className='w-[160px]'>
 					<DropdownMenuItem onClick={handleOpenDialog}>
-						Chi tiết
+						{t('rowActions.details')}
 					</DropdownMenuItem>
 					{canDelete && (
 						<>
@@ -93,7 +93,7 @@ export function DataTableRowActions<TData>({
 								disabled={isDeletingStudent}
 								onClick={handleDeleteRow}
 							>
-								Xóa
+								{t('rowActions.delete')}
 								<DropdownMenuShortcut>⌘⌫</DropdownMenuShortcut>
 							</DropdownMenuItem>
 						</>
@@ -103,9 +103,11 @@ export function DataTableRowActions<TData>({
 			<Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
 				<DialogContent className='grid-cols-1 grid-rows-[minmax(0,1fr)] gap-0 overflow-hidden p-0 lg:h-[85vh] lg:max-w-5xl'>
 					<DialogHeader className='sr-only'>
-						<DialogTitle>Thông tin quân nhân</DialogTitle>
+						<DialogTitle>{t('rowActions.dialogTitle')}</DialogTitle>
 						<DialogDescription>
-							Hồ sơ của {student.fullName}.
+							{t('rowActions.dialogDescription', {
+								name: student.fullName
+							})}
 						</DialogDescription>
 					</DialogHeader>
 

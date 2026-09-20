@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import PlacePickerFields from '@/components/place-picker-fields'
 import {
 	RecordGrid,
@@ -11,50 +12,53 @@ import { useStudentForm } from './student-form-context'
 
 export default function PersonalTab() {
 	const form = useStudentForm()
+	const { t } = useTranslation('student')
 
 	return (
 		<StepBody>
-			<RecordSection title='Họ tên và nhận dạng'>
+			<RecordSection title={t('sections.identity')}>
 				<RecordGrid>
-					<StudentField name='fullName' label='Họ và tên' />
-					<StudentField name='studentId' label='Mã quân nhân' />
-					<StudentField name='dob' label='Ngày sinh' kind='date' />
-					<StudentField name='phone' label='Số điện thoại' />
+					<StudentField
+						name='fullName'
+						label={t('fields.fullName')}
+					/>
+					<StudentField
+						name='studentId'
+						label={t('recordFields.studentId')}
+					/>
+					<StudentField
+						name='dob'
+						label={t('fields.dob')}
+						kind='date'
+					/>
+					<StudentField name='phone' label={t('fields.phone')} />
 				</RecordGrid>
 			</RecordSection>
 
-			<RecordSection title='Dân tộc và tôn giáo'>
+			<RecordSection title={t('sections.ethnicityReligion')}>
 				<RecordGrid>
 					<StudentField
 						name='ethnic'
-						label='Dân tộc'
+						label={t('fields.ethnic')}
 						kind='select'
 						options={EhtnicOptions}
 					/>
 					<StudentField
 						name='religion'
-						label='Tôn giáo'
+						label={t('fields.religion')}
 						kind='select'
 						options={religionOptions}
 					/>
 				</RecordGrid>
 			</RecordSection>
 
-			<RecordSection title='Quê quán và trú quán'>
+			<RecordSection title={t('sections.places')}>
 				<RecordGrid>
 					<div className='space-y-4'>
-						<PlacePickerFields
-							form={form}
-							prefix='birthPlace'
-							label='quê quán'
-						/>
+						<PlacePickerFields form={form} prefix='birthPlace' />
 					</div>
 					<div className='space-y-4'>
-						<PlacePickerFields
-							form={form}
-							prefix='address'
-							label='trú quán'
-						/>
+						<PlacePickerFields form={form} prefix='address' />
 					</div>
 				</RecordGrid>
 			</RecordSection>

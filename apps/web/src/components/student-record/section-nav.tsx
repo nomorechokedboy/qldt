@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 import { RECORD_SECTIONS as SECTIONS, type SectionId } from './sections'
 
@@ -8,10 +9,11 @@ interface SectionNavProps {
 
 // Sections can be edited in any order, so they get icons, not step numbers.
 export function SectionList({ current, onSelect }: SectionNavProps) {
+	const { t } = useTranslation('student')
 	return (
-		<nav aria-label='Các mục'>
+		<nav aria-label={t('record.sectionsNav')}>
 			<ul className='space-y-1 border-t border-sidebar-border pt-4'>
-				{SECTIONS.map(({ id, label, hint, icon: Icon }) => (
+				{SECTIONS.map(({ id, icon: Icon }) => (
 					<li key={id}>
 						<button
 							type='button'
@@ -34,10 +36,10 @@ export function SectionList({ current, onSelect }: SectionNavProps) {
 							</span>
 							<span className='min-w-0'>
 								<span className='block truncate text-sm font-medium'>
-									{label}
+									{t(`record.sections.${id}.label`)}
 								</span>
 								<span className='block truncate text-xs text-sidebar-foreground/60'>
-									{hint}
+									{t(`record.sections.${id}.hint`)}
 								</span>
 							</span>
 						</button>
@@ -49,10 +51,14 @@ export function SectionList({ current, onSelect }: SectionNavProps) {
 }
 
 export function SectionPills({ current, onSelect }: SectionNavProps) {
+	const { t } = useTranslation('student')
 	return (
-		<nav aria-label='Các mục' className='-mx-4 overflow-x-auto px-4 pb-1'>
+		<nav
+			aria-label={t('record.sectionsNav')}
+			className='-mx-4 overflow-x-auto px-4 pb-1'
+		>
 			<ul className='flex w-max gap-2'>
-				{SECTIONS.map(({ id, label, icon: Icon }) => (
+				{SECTIONS.map(({ id, icon: Icon }) => (
 					<li key={id}>
 						<button
 							type='button'
@@ -66,7 +72,7 @@ export function SectionPills({ current, onSelect }: SectionNavProps) {
 							)}
 						>
 							<Icon className='size-3.5' aria-hidden />
-							{label}
+							{t(`record.sections.${id}.label`)}
 						</button>
 					</li>
 				))}
