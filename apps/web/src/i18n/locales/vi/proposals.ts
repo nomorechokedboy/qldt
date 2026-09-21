@@ -45,7 +45,6 @@ const proposals = {
 		pickDate: 'Chọn ngày',
 		itemEffectiveDate: 'Ngày hiệu lực: {{date}}',
 		itemAppliedAt: 'Đã áp dụng: {{date}}',
-		effectiveDateRequired: 'Vui lòng chọn ngày hiệu lực',
 		pickApprover: 'Chọn người phê duyệt',
 		approverNeedsUnit: 'Chọn đơn vị để xem người có thể phê duyệt',
 		approverNone: 'Không có người phê duyệt hợp lệ cho đơn vị này',
@@ -59,7 +58,18 @@ const proposals = {
 		selectAll: 'Chọn tất cả',
 		shownCount: '({{count}} hiển thị)',
 		noTroopersInUnit: 'Không có quân nhân nào thuộc đơn vị này',
-		selectAtLeastOneTrooper: 'Vui lòng chọn ít nhất một quân nhân'
+		onlySelected: 'Chỉ hiện đã chọn',
+		noneSelectedYet: 'Chưa chọn quân nhân nào',
+		ineligibleHeading: 'Không đủ điều kiện ({{count}})',
+		droppedNotice: 'Đã bỏ chọn {{count}} quân nhân không còn phù hợp',
+		dismiss: 'Đóng',
+		overrideChip: 'Riêng: {{value}}',
+		missing: {
+			unit: 'Chọn đơn vị',
+			approver: 'Chọn người phê duyệt',
+			effectiveDate: 'Chọn ngày hiệu lực',
+			troopers: 'Chọn ít nhất một quân nhân'
+		}
 	},
 	reject: {
 		reasonLabel: 'Lý do từ chối',
@@ -87,7 +97,12 @@ const proposals = {
 		dateRangeOwn: 'Khoảng ngày (riêng)',
 		useSharedDates: 'Dùng ngày chung',
 		customDates: 'Tuỳ chỉnh ngày riêng',
-		pickRangeDates: 'Vui lòng chọn ngày bắt đầu và kết thúc',
+		missingStatus: 'Chọn chế độ',
+		missingDates: 'Chọn khoảng ngày',
+		summaryRange:
+			'Chuyển chế độ {{status}} cho {{count}} quân nhân, từ {{start}} đến {{end}}',
+		summaryDate:
+			'Chuyển chế độ {{status}} cho {{count}} quân nhân, hiệu lực {{date}}',
 		created: 'Tạo đề xuất chế độ thành công',
 		createFailed: 'Tạo đề xuất chế độ thất bại!',
 		submit: 'Tạo đề xuất',
@@ -110,6 +125,12 @@ const proposals = {
 		formTitle: 'Đề xuất thăng quân hàm',
 		pickRank: 'Chọn quân hàm',
 		rankOwn: 'Quân hàm (riêng)',
+		missingRank: 'Chọn quân hàm đề xuất',
+		summary:
+			'Thăng Quân hàm {{rank}} cho {{count}} quân nhân, hiệu lực {{date}}',
+		reasonLocked: 'Đang thuộc đề xuất khác',
+		reasonAlready: 'Đã là {{rank}}',
+		reasonNotAdjacent: 'Không thể thăng trực tiếp lên {{rank}}',
 		useShared: 'Dùng chung',
 		customize: 'Tuỳ chỉnh riêng',
 		noEligibleTroopers:
