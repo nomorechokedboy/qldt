@@ -17,6 +17,14 @@ import {
 } from '@/data/activity-statuses'
 import { unitLabelWithAncestry } from '@/lib/unit-labels'
 import { EllipsisText } from '../data-table/ellipsis-text'
+import {
+	badgeCell,
+	columnLabel,
+	labelMeta,
+	matchesAnyOf,
+	minWidthCell,
+	studentColumn
+} from './column-helpers'
 
 function isoToDdMmYyyy(isoDate: string): string {
 	const [year, month, day] = isoDate.split('-')
@@ -87,7 +95,7 @@ export function buildBattalionUnitColumnWithParent(
 	return {
 		id: 'unit.name',
 		accessorFn: (row) => row.unit?.name ?? '',
-		header: () => i18n.t('table:columns.unit'),
+		header: () => columnLabel('unit'),
 		cell: ({ row }) => (
 			<UnitBadge>
 				{row.original.unit !== undefined
@@ -95,104 +103,36 @@ export function buildBattalionUnitColumnWithParent(
 					: row.getValue('unit.name')}
 			</UnitBadge>
 		),
-		filterFn: (row, id, value) => {
-			return value.includes(row.getValue(id))
-		},
-		meta: {
-			get label() {
-				return i18n.t('table:columns.unit')
-			}
-		}
+		filterFn: matchesAnyOf,
+		meta: labelMeta('unit')
 	}
 }
 
-export const fullNameColumn: ColumnDef<Student> = {
-	accessorKey: 'fullName',
-	header: ({ column }) => (
-		<DataTableColumnHeader
-			column={column}
-			title={i18n.t('table:columns.fullName')}
-		/>
-	),
-	cell: EditableCell,
-	meta: {
-		get label() {
-			return i18n.t('table:columns.fullName')
-		}
-	}
-}
+export const fullNameColumn = studentColumn('fullName', 'fullName')
 
 // Battalion tables receive dob as an ISO date string; other tables use
 // toDdMmYyyy (see baseStudentsColumns) on an already-formatted value.
 export const dobColumnIso: ColumnDef<Student> = {
 	accessorKey: 'dob',
-	header: () => i18n.t('table:columns.yearOfBirth'),
+	header: () => columnLabel('yearOfBirth'),
 	cell: ({ row }) => (
 		<div className=''>{isoToDdMmYyyy(row.getValue('dob'))}</div>
 	),
-	meta: {
-		get label() {
-			return i18n.t('table:columns.yearOfBirth')
-		}
-	}
+	meta: labelMeta('yearOfBirth')
 }
 
-export const birthPlaceColumn: ColumnDef<Student> = {
-	accessorKey: 'birthPlace',
-	header: () => i18n.t('table:columns.birthPlace'),
-	cell: EditableCell,
-	enableHiding: true,
-	meta: {
-		get label() {
-			return i18n.t('table:columns.birthPlace')
-		}
-	}
-}
+export const birthPlaceColumn = studentColumn('birthPlace', 'birthPlace', {
+	sortable: false
+})
+export const addressColumn = studentColumn('address', 'address')
 
-export const addressColumn: ColumnDef<Student> = {
-	accessorKey: 'address',
-	header: ({ column }) => (
-		<DataTableColumnHeader
-			column={column}
-			title={i18n.t('table:columns.address')}
-		/>
-	),
-	cell: EditableCell,
-	enableHiding: true,
-	meta: {
-		get label() {
-			return i18n.t('table:columns.address')
-		}
-	}
-}
+export const enlistmentPeriodColumn = studentColumn(
+	'enlistmentPeriod',
+	'enlistmentPeriod',
+	{ cell: minWidthCell('enlistmentPeriod', 'min-w-32') }
+)
 
-export const enlistmentPeriodColumn: ColumnDef<Student> = {
-	accessorKey: 'enlistmentPeriod',
-	header: ({ column }) => (
-		<DataTableColumnHeader
-			column={column}
-			title={i18n.t('table:columns.enlistmentPeriod')}
-		/>
-	),
-	cell: ({ row }) => (
-		<div className='min-w-32'>{row.getValue('enlistmentPeriod')}</div>
-	),
-	enableHiding: true,
-	meta: {
-		get label() {
-			return i18n.t('table:columns.enlistmentPeriod')
-		}
-	}
-}
-
-export const isGraduatedColumn: ColumnDef<Student> = {
-	accessorKey: 'isGraduated',
-	header: ({ column }) => (
-		<DataTableColumnHeader
-			column={column}
-			title={i18n.t('table:columns.graduated')}
-		/>
-	),
+export const isGraduatedColumn = studentColumn('isGraduated', 'graduated', {
 	cell: ({ row }) => (
 		<Badge
 			className={
@@ -203,520 +143,136 @@ export const isGraduatedColumn: ColumnDef<Student> = {
 				? i18n.t('table:values.yes')
 				: i18n.t('table:values.no')}
 		</Badge>
-	),
-	enableHiding: true,
-	meta: {
-		get label() {
-			return i18n.t('table:columns.graduated')
+	)
+})
+
+export const majorColumn = studentColumn('major', 'major')
+export const phoneColumn = studentColumn('phone', 'phone')
+export const policyBeneficiaryGroupColumn = studentColumn(
+	'policyBeneficiaryGroup',
+	'policyGroup'
+)
+
+export const politicalOrgColumn = studentColumn(
+	'politicalOrg',
+	'politicalOrg',
+	{
+		cell: ({ row }) => {
+			const val = row.getValue('politicalOrg')
+			const org =
+				val === '' || val === undefined
+					? 'N/A'
+					: val === 'cpv'
+						? i18n.t('table:values.cpvMember')
+						: i18n.t('table:values.hcyuMember')
+
+			return (
+				<Badge className='bg-purple-500 text-white font-bold'>
+					{org}
+				</Badge>
+			)
 		}
 	}
-}
+)
 
-export const majorColumn: ColumnDef<Student> = {
-	accessorKey: 'major',
-	header: ({ column }) => (
-		<DataTableColumnHeader
-			column={column}
-			title={i18n.t('table:columns.major')}
-		/>
-	),
-	cell: EditableCell,
-	enableHiding: true,
-	meta: {
-		get label() {
-			return i18n.t('table:columns.major')
-		}
-	}
-}
-
-export const phoneColumn: ColumnDef<Student> = {
-	accessorKey: 'phone',
-	header: ({ column }) => (
-		<DataTableColumnHeader
-			column={column}
-			title={i18n.t('table:columns.phone')}
-		/>
-	),
-	cell: EditableCell,
-	enableHiding: true,
-	meta: {
-		get label() {
-			return i18n.t('table:columns.phone')
-		}
-	}
-}
-
-export const policyBeneficiaryGroupColumn: ColumnDef<Student> = {
-	accessorKey: 'policyBeneficiaryGroup',
-	header: ({ column }) => (
-		<DataTableColumnHeader
-			column={column}
-			title={i18n.t('table:columns.policyGroup')}
-		/>
-	),
-	cell: EditableCell,
-	enableHiding: true,
-	meta: {
-		get label() {
-			return i18n.t('table:columns.policyGroup')
-		}
-	}
-}
-
-export const politicalOrgColumn: ColumnDef<Student> = {
-	accessorKey: 'politicalOrg',
-	header: ({ column }) => (
-		<DataTableColumnHeader
-			column={column}
-			title={i18n.t('table:columns.politicalOrg')}
-		/>
-	),
-	cell: ({ row }) => {
-		const val = row.getValue('politicalOrg')
-		const org =
-			val === '' || val === undefined
-				? 'N/A'
-				: val === 'cpv'
-					? i18n.t('table:values.cpvMember')
-					: i18n.t('table:values.hcyuMember')
-
-		return (
-			<Badge className='bg-purple-500 text-white font-bold'>{org}</Badge>
+export const politicalOrgOfficialDateColumn = studentColumn(
+	'politicalOrgOfficialDate',
+	'hcyuDate',
+	{
+		cell: minWidthCell('politicalOrgOfficialDate', 'min-w-28', (date) =>
+			date ? isoToDdMmYyyy(date) : 'N/A'
 		)
-	},
-	enableHiding: true,
-	meta: {
-		get label() {
-			return i18n.t('table:columns.politicalOrg')
-		}
 	}
-}
+)
 
-export const politicalOrgOfficialDateColumn: ColumnDef<Student> = {
-	accessorKey: 'politicalOrgOfficialDate',
-	header: ({ column }) => (
-		<DataTableColumnHeader
-			column={column}
-			title={i18n.t('table:columns.hcyuDate')}
-		/>
-	),
-	cell: ({ row }) => (
-		<div className='min-w-28'>
-			{row.getValue('politicalOrgOfficialDate')
-				? isoToDdMmYyyy(row.getValue('politicalOrgOfficialDate'))
-				: 'N/A'}
-		</div>
-	),
-	enableHiding: true,
-	meta: {
-		get label() {
-			return i18n.t('table:columns.hcyuDate')
-		}
+export const cpvIdColumn = studentColumn('cpvId', 'cpvId')
+export const cpvOfficialAtColumn = studentColumn('cpvOfficialAt', 'cpvDate')
+export const previousPositionColumn = studentColumn(
+	'previousPosition',
+	'previousPosition'
+)
+
+export const religionColumn = studentColumn('religion', 'religion', {
+	filter: true,
+	cell: badgeCell('religion', 'bg-orange-500 text-white font-bold')
+})
+
+export const schoolNameColumn = studentColumn('schoolName', 'schoolName')
+export const shortcomingColumn = studentColumn('shortcoming', 'shortcoming')
+export const talentColumn = studentColumn('talent', 'talent')
+
+// Some columns come twice: with plain text as the heading, and (`...Sortable`)
+// with the sort/filter menu.
+export const rankColumn = studentColumn('rank', 'rank', {
+	sortable: false,
+	filter: true,
+	cell: EditableMilitaryRank
+})
+export const rankColumnSortable = studentColumn('rank', 'rank', {
+	filter: true,
+	cell: EditableMilitaryRank
+})
+
+export const positionColumn = studentColumn('position', 'position', {
+	sortable: false,
+	cell: EditablePosition
+})
+
+export const previousUnitColumn = studentColumn(
+	'previousUnit',
+	'previousUnit',
+	{
+		sortable: false,
+		filter: true
 	}
-}
+)
+export const previousUnitColumnSortable = studentColumn(
+	'previousUnit',
+	'previousUnit',
+	{ filter: true }
+)
 
-export const cpvIdColumn: ColumnDef<Student> = {
-	accessorKey: 'cpvId',
-	header: ({ column }) => (
-		<DataTableColumnHeader
-			column={column}
-			title={i18n.t('table:columns.cpvId')}
-		/>
-	),
-	cell: EditableCell,
-	enableHiding: true,
-	meta: {
-		get label() {
-			return i18n.t('table:columns.cpvId')
-		}
-	}
-}
+const ethnicCell = badgeCell('ethnic', 'bg-cyan-500 text-white font-bold')
+export const ethnicColumn = studentColumn('ethnic', 'ethnic', {
+	sortable: false,
+	filter: true,
+	cell: ethnicCell
+})
+export const ethnicColumnSortable = studentColumn('ethnic', 'ethnic', {
+	filter: true,
+	cell: ethnicCell
+})
 
-export const cpvOfficialAtColumn: ColumnDef<Student> = {
-	accessorKey: 'cpvOfficialAt',
-	header: ({ column }) => (
-		<DataTableColumnHeader
-			column={column}
-			title={i18n.t('table:columns.cpvDate')}
-		/>
-	),
-	cell: EditableCell,
-	enableHiding: true,
-	meta: {
-		get label() {
-			return i18n.t('table:columns.cpvDate')
-		}
-	}
-}
+const educationLevelCell = badgeCell(
+	'educationLevel',
+	'bg-blue-500 dark:bg-blue-600 text-white font-bold'
+)
+export const educationLevelColumn = studentColumn(
+	'educationLevel',
+	'education',
+	{ sortable: false, filter: true, cell: educationLevelCell }
+)
+export const educationLevelColumnSortable = studentColumn(
+	'educationLevel',
+	'education',
+	{ filter: true, cell: educationLevelCell }
+)
 
-export const previousPositionColumn: ColumnDef<Student> = {
-	accessorKey: 'previousPosition',
-	header: ({ column }) => (
-		<DataTableColumnHeader
-			column={column}
-			title={i18n.t('table:columns.previousPosition')}
-		/>
-	),
-	cell: EditableCell,
-	enableHiding: true,
-	meta: {
-		get label() {
-			return i18n.t('table:columns.previousPosition')
-		}
-	}
-}
+export const fatherNameColumn = studentColumn('fatherName', 'fatherName')
+export const fatherJobColumn = studentColumn('fatherJob', 'fatherJob')
+export const fatherPhoneNumberColumn = studentColumn(
+	'fatherPhoneNumber',
+	'fatherPhone'
+)
+export const motherNameColumn = studentColumn('motherName', 'motherName')
+export const motherJobColumn = studentColumn('motherJob', 'motherJob')
+export const motherPhoneNumberColumn = studentColumn(
+	'motherPhoneNumber',
+	'motherPhone'
+)
 
-export const religionColumn: ColumnDef<Student> = {
-	accessorKey: 'religion',
-	header: ({ column }) => (
-		<DataTableColumnHeader
-			column={column}
-			title={i18n.t('table:columns.religion')}
-		/>
-	),
-	cell: ({ row }) => (
-		<Badge className='bg-orange-500 text-white font-bold'>
-			{row.getValue('religion')}
-		</Badge>
-	),
-	filterFn: (row, id, value) => {
-		return value.includes(row.getValue(id))
-	},
-	enableHiding: true,
-	meta: {
-		get label() {
-			return i18n.t('table:columns.religion')
-		}
-	}
-}
-
-export const schoolNameColumn: ColumnDef<Student> = {
-	accessorKey: 'schoolName',
-	header: ({ column }) => (
-		<DataTableColumnHeader
-			column={column}
-			title={i18n.t('table:columns.schoolName')}
-		/>
-	),
-	cell: EditableCell,
-	enableHiding: true,
-	meta: {
-		get label() {
-			return i18n.t('table:columns.schoolName')
-		}
-	}
-}
-
-export const shortcomingColumn: ColumnDef<Student> = {
-	accessorKey: 'shortcoming',
-	header: ({ column }) => (
-		<DataTableColumnHeader
-			column={column}
-			title={i18n.t('table:columns.shortcoming')}
-		/>
-	),
-	cell: EditableCell,
-	enableHiding: true,
-	meta: {
-		get label() {
-			return i18n.t('table:columns.shortcoming')
-		}
-	}
-}
-
-export const talentColumn: ColumnDef<Student> = {
-	accessorKey: 'talent',
-	header: ({ column }) => (
-		<DataTableColumnHeader
-			column={column}
-			title={i18n.t('table:columns.talent')}
-		/>
-	),
-	cell: EditableCell,
-	enableHiding: true,
-	meta: {
-		get label() {
-			return i18n.t('table:columns.talent')
-		}
-	}
-}
-
-export const rankColumn: ColumnDef<Student> = {
-	accessorKey: 'rank',
-	header: () => i18n.t('table:columns.rank'),
-	cell: EditableMilitaryRank,
-	filterFn: (row, id, value) => {
-		return value.includes(row.getValue(id))
-	},
-	enableHiding: true,
-	meta: {
-		get label() {
-			return i18n.t('table:columns.rank')
-		}
-	}
-}
-
-export const rankColumnSortable: ColumnDef<Student> = {
-	accessorKey: 'rank',
-	header: ({ column }) => (
-		<DataTableColumnHeader
-			column={column}
-			title={i18n.t('table:columns.rank')}
-		/>
-	),
-	cell: EditableMilitaryRank,
-	filterFn: (row, id, value) => {
-		return value.includes(row.getValue(id))
-	},
-	enableHiding: true,
-	meta: {
-		get label() {
-			return i18n.t('table:columns.rank')
-		}
-	}
-}
-
-export const positionColumn: ColumnDef<Student> = {
-	accessorKey: 'position',
-	header: () => i18n.t('table:columns.position'),
-	cell: EditablePosition,
-	enableHiding: true,
-	meta: {
-		get label() {
-			return i18n.t('table:columns.position')
-		}
-	}
-}
-
-export const previousUnitColumn: ColumnDef<Student> = {
-	accessorKey: 'previousUnit',
-	header: () => i18n.t('table:columns.previousUnit'),
-	cell: EditableCell,
-	enableHiding: true,
-	filterFn: (row, id, value) => {
-		return value.includes(row.getValue(id))
-	},
-	meta: {
-		get label() {
-			return i18n.t('table:columns.previousUnit')
-		}
-	}
-}
-
-export const previousUnitColumnSortable: ColumnDef<Student> = {
-	accessorKey: 'previousUnit',
-	header: ({ column }) => (
-		<DataTableColumnHeader
-			column={column}
-			title={i18n.t('table:columns.previousUnit')}
-		/>
-	),
-	cell: EditableCell,
-	enableHiding: true,
-	filterFn: (row, id, value) => {
-		return value.includes(row.getValue(id))
-	},
-	meta: {
-		get label() {
-			return i18n.t('table:columns.previousUnit')
-		}
-	}
-}
-
-export const ethnicColumn: ColumnDef<Student> = {
-	accessorKey: 'ethnic',
-	header: () => i18n.t('table:columns.ethnic'),
-	cell: ({ row }) => (
-		<Badge className='bg-cyan-500 text-white font-bold'>
-			{row.getValue('ethnic')}
-		</Badge>
-	),
-	enableHiding: true,
-	filterFn: (row, id, value) => {
-		return value.includes(row.getValue(id))
-	},
-	meta: {
-		get label() {
-			return i18n.t('table:columns.ethnic')
-		}
-	}
-}
-
-export const ethnicColumnSortable: ColumnDef<Student> = {
-	accessorKey: 'ethnic',
-	header: ({ column }) => (
-		<DataTableColumnHeader
-			column={column}
-			title={i18n.t('table:columns.ethnic')}
-		/>
-	),
-	cell: ({ row }) => (
-		<Badge className='bg-cyan-500 text-white font-bold'>
-			{row.getValue('ethnic')}
-		</Badge>
-	),
-	enableHiding: true,
-	filterFn: (row, id, value) => {
-		return value.includes(row.getValue(id))
-	},
-	meta: {
-		get label() {
-			return i18n.t('table:columns.ethnic')
-		}
-	}
-}
-
-export const educationLevelColumn: ColumnDef<Student> = {
-	accessorKey: 'educationLevel',
-	header: () => i18n.t('table:columns.education'),
-	cell: ({ row }) => (
-		<Badge className='bg-blue-500 dark:bg-blue-600 text-white font-bold'>
-			{row.getValue('educationLevel')}
-		</Badge>
-	),
-	enableHiding: true,
-	filterFn: (row, id, value) => {
-		return value.includes(row.getValue(id))
-	},
-	meta: {
-		get label() {
-			return i18n.t('table:columns.education')
-		}
-	}
-}
-
-export const educationLevelColumnSortable: ColumnDef<Student> = {
-	accessorKey: 'educationLevel',
-	header: ({ column }) => (
-		<DataTableColumnHeader
-			column={column}
-			title={i18n.t('table:columns.education')}
-		/>
-	),
-	cell: ({ row }) => (
-		<Badge className='bg-blue-500 dark:bg-blue-600 text-white font-bold'>
-			{row.getValue('educationLevel')}
-		</Badge>
-	),
-	enableHiding: true,
-	filterFn: (row, id, value) => {
-		return value.includes(row.getValue(id))
-	},
-	meta: {
-		get label() {
-			return i18n.t('table:columns.education')
-		}
-	}
-}
-
-export const fatherNameColumn: ColumnDef<Student> = {
-	accessorKey: 'fatherName',
-	header: ({ column }) => (
-		<DataTableColumnHeader
-			column={column}
-			title={i18n.t('table:columns.fatherName')}
-		/>
-	),
-	cell: EditableCell,
-	meta: {
-		get label() {
-			return i18n.t('table:columns.fatherName')
-		}
-	}
-}
-
-export const fatherJobColumn: ColumnDef<Student> = {
-	accessorKey: 'fatherJob',
-	header: ({ column }) => (
-		<DataTableColumnHeader
-			column={column}
-			title={i18n.t('table:columns.fatherJob')}
-		/>
-	),
-	cell: EditableCell,
-	enableHiding: true,
-	meta: {
-		get label() {
-			return i18n.t('table:columns.fatherJob')
-		}
-	}
-}
-
-export const fatherPhoneNumberColumn: ColumnDef<Student> = {
-	accessorKey: 'fatherPhoneNumber',
-	header: ({ column }) => (
-		<DataTableColumnHeader
-			column={column}
-			title={i18n.t('table:columns.fatherPhone')}
-		/>
-	),
-	cell: EditableCell,
-	enableHiding: true,
-	meta: {
-		get label() {
-			return i18n.t('table:columns.fatherPhone')
-		}
-	}
-}
-
-export const motherNameColumn: ColumnDef<Student> = {
-	accessorKey: 'motherName',
-	header: ({ column }) => (
-		<DataTableColumnHeader
-			column={column}
-			title={i18n.t('table:columns.motherName')}
-		/>
-	),
-	cell: EditableCell,
-	meta: {
-		get label() {
-			return i18n.t('table:columns.motherName')
-		}
-	}
-}
-
-export const motherJobColumn: ColumnDef<Student> = {
-	accessorKey: 'motherJob',
-	header: ({ column }) => (
-		<DataTableColumnHeader
-			column={column}
-			title={i18n.t('table:columns.motherJob')}
-		/>
-	),
-	cell: EditableCell,
-	enableHiding: true,
-	meta: {
-		get label() {
-			return i18n.t('table:columns.motherJob')
-		}
-	}
-}
-
-export const motherPhoneNumberColumn: ColumnDef<Student> = {
-	accessorKey: 'motherPhoneNumber',
-	header: ({ column }) => (
-		<DataTableColumnHeader
-			column={column}
-			title={i18n.t('table:columns.motherPhone')}
-		/>
-	),
-	cell: EditableCell,
-	enableHiding: true,
-	meta: {
-		get label() {
-			return i18n.t('table:columns.motherPhone')
-		}
-	}
-}
-
-export const statusColumn: ColumnDef<Student> = {
-	accessorKey: 'status',
-	header: ({ column }) => (
-		<DataTableColumnHeader
-			column={column}
-			title={i18n.t('table:columns.status')}
-		/>
-	),
+export const statusColumn = studentColumn('status', 'status', {
+	filter: true,
 	cell: ({ row }) => {
 		const status = row.getValue('status') as 'pending' | 'confirmed'
 		return (
@@ -730,80 +286,90 @@ export const statusColumn: ColumnDef<Student> = {
 					: i18n.t('table:values.pending')}
 			</Badge>
 		)
-	},
-	filterFn: (row, id, value) => {
-		return value.includes(row.getValue(id))
-	},
-	enableHiding: true,
-	meta: {
-		get label() {
-			return i18n.t('table:columns.status')
-		}
 	}
-}
+})
 
-export const activityStatusColumn: ColumnDef<Student> = {
-	accessorKey: 'activityStatus',
-	header: ({ column }) => (
-		<DataTableColumnHeader
-			column={column}
-			title={i18n.t('table:columns.activityStatus')}
-		/>
-	),
-	cell: ({ row }) => {
-		const activityStatus = row.getValue('activityStatus') as
-			| ActivityStatus
-			| undefined
-		if (activityStatus === undefined) return null
-		return (
-			<Badge className={activityStatusColors[activityStatus]}>
-				{activityStatusLabels[activityStatus]}
-			</Badge>
-		)
-	},
-	filterFn: (row, id, value) => {
-		return value.includes(row.getValue(id))
-	},
-	enableHiding: true,
-	meta: {
-		get label() {
-			return i18n.t('table:columns.activityStatus')
+export const activityStatusColumn = studentColumn(
+	'activityStatus',
+	'activityStatus',
+	{
+		filter: true,
+		cell: ({ row }) => {
+			const activityStatus = row.getValue('activityStatus') as
+				| ActivityStatus
+				| undefined
+			if (activityStatus === undefined) return null
+			return (
+				<Badge className={activityStatusColors[activityStatus]}>
+					{activityStatusLabels[activityStatus]}
+				</Badge>
+			)
 		}
 	}
-}
+)
 
 export const actionsColumn: ColumnDef<Student> = {
 	id: 'actions',
 	cell: ({ row }) => <DataTableRowActions row={row} />
 }
 
+// The columns the tables have in common, in the order they are shown; each
+// table lists the ones it has, with its own between them.
+const enlistmentToPartyColumns = [
+	enlistmentPeriodColumn,
+	isGraduatedColumn,
+	majorColumn,
+	phoneColumn,
+	policyBeneficiaryGroupColumn,
+	politicalOrgColumn,
+	politicalOrgOfficialDateColumn,
+	cpvIdColumn,
+	cpvOfficialAtColumn
+]
+
+const backgroundColumns = [
+	religionColumn,
+	schoolNameColumn,
+	shortcomingColumn,
+	talentColumn
+]
+
+const familyColumns = [
+	fatherNameColumn,
+	fatherJobColumn,
+	fatherPhoneNumberColumn,
+	motherNameColumn,
+	motherJobColumn,
+	motherPhoneNumberColumn
+]
+
+// The rank, position, previous unit, ethnic group and education. Tables that
+// let the user filter on the headings use the sortable variants.
+const standingColumns = [
+	rankColumn,
+	positionColumn,
+	previousUnitColumn,
+	ethnicColumn,
+	educationLevelColumn
+]
+
 export const baseStudentsColumns: ColumnDef<Student>[] = [
 	{
 		id: 'unit.name',
 		accessorFn: (row) => row.unit?.name,
-		header: () => i18n.t('table:columns.unit'),
+		header: () => columnLabel('unit'),
 		cell: ({ row }) => <UnitBadge>{row.getValue('unit.name')}</UnitBadge>,
-		filterFn: (row, id, value) => {
-			return value.includes(row.getValue(id))
-		},
-		meta: {
-			get label() {
-				return i18n.t('table:columns.unit')
-			}
-		}
+		filterFn: matchesAnyOf,
+		meta: labelMeta('unit')
 	},
 	fullNameColumn,
 	{
 		accessorKey: 'dob',
-		header: () => i18n.t('table:columns.yearOfBirth'),
+		header: () => columnLabel('yearOfBirth'),
 		cell: ({ row }) => (
 			<div className=''>{toDdMmYyyy(row.getValue('dob'))}</div>
 		),
-		meta: {
-			get label() {
-				return i18n.t('table:columns.yearOfBirth')
-			}
-		},
+		meta: labelMeta('yearOfBirth'),
 		enableHiding: true
 	}
 ]
@@ -818,31 +384,11 @@ export function buildBattalionStudentColumnsWithoutAction(
 		dobColumnIso,
 		birthPlaceColumn,
 		addressColumn,
-		enlistmentPeriodColumn,
-		isGraduatedColumn,
-		majorColumn,
-		phoneColumn,
-		policyBeneficiaryGroupColumn,
-		politicalOrgColumn,
-		politicalOrgOfficialDateColumn,
-		cpvIdColumn,
-		cpvOfficialAtColumn,
+		...enlistmentToPartyColumns,
 		previousPositionColumn,
-		religionColumn,
-		schoolNameColumn,
-		shortcomingColumn,
-		talentColumn,
-		rankColumn,
-		positionColumn,
-		previousUnitColumn,
-		ethnicColumn,
-		educationLevelColumn,
-		fatherNameColumn,
-		fatherJobColumn,
-		fatherPhoneNumberColumn,
-		motherNameColumn,
-		motherJobColumn,
-		motherPhoneNumberColumn
+		...backgroundColumns,
+		...standingColumns,
+		...familyColumns
 	]
 }
 
@@ -872,30 +418,10 @@ export const columnsWithoutAction: ColumnDef<Student>[] = [
 	...baseStudentsColumns,
 	birthPlaceColumn,
 	addressColumn,
-	enlistmentPeriodColumn,
-	isGraduatedColumn,
-	majorColumn,
-	phoneColumn,
-	policyBeneficiaryGroupColumn,
-	politicalOrgColumn,
-	politicalOrgOfficialDateColumn,
-	cpvIdColumn,
-	cpvOfficialAtColumn,
-	religionColumn,
-	schoolNameColumn,
-	shortcomingColumn,
-	talentColumn,
-	rankColumn,
-	positionColumn,
-	previousUnitColumn,
-	ethnicColumn,
-	educationLevelColumn,
-	fatherNameColumn,
-	fatherJobColumn,
-	fatherPhoneNumberColumn,
-	motherNameColumn,
-	motherJobColumn,
-	motherPhoneNumberColumn,
+	...enlistmentToPartyColumns,
+	...backgroundColumns,
+	...standingColumns,
+	...familyColumns,
 	statusColumn,
 	activityStatusColumn
 ]
@@ -905,31 +431,11 @@ export const hcyuTableColumns: ColumnDef<Student>[] = [
 	...baseStudentsColumns,
 	birthPlaceColumn,
 	addressColumn,
-	enlistmentPeriodColumn,
-	isGraduatedColumn,
-	majorColumn,
-	phoneColumn,
-	policyBeneficiaryGroupColumn,
-	politicalOrgColumn,
-	politicalOrgOfficialDateColumn,
-	cpvIdColumn,
-	cpvOfficialAtColumn,
+	...enlistmentToPartyColumns,
 	previousPositionColumn,
-	religionColumn,
-	schoolNameColumn,
-	shortcomingColumn,
-	talentColumn,
-	rankColumn,
-	positionColumn,
-	previousUnitColumn,
-	ethnicColumn,
-	educationLevelColumn,
-	fatherNameColumn,
-	fatherJobColumn,
-	fatherPhoneNumberColumn,
-	motherNameColumn,
-	motherJobColumn,
-	motherPhoneNumberColumn,
+	...backgroundColumns,
+	...standingColumns,
+	...familyColumns,
 	statusColumn,
 	activityStatusColumn,
 	actionsColumn
@@ -945,7 +451,7 @@ export const adversityTableColumns: ColumnDef<Student>[] = [
 		header: ({ column }) => (
 			<DataTableColumnHeader
 				column={column}
-				title={i18n.t('table:columns.familyCircumstances')}
+				title={columnLabel('familyCircumstances')}
 			/>
 		),
 		cell: ({ row }) => (
@@ -956,35 +462,15 @@ export const adversityTableColumns: ColumnDef<Student>[] = [
 			</div>
 		),
 		enableHiding: true,
-		meta: {
-			get label() {
-				return i18n.t('table:columns.familyCircumstances')
-			}
-		}
+		meta: labelMeta('familyCircumstances')
 	},
-	enlistmentPeriodColumn,
-	isGraduatedColumn,
-	majorColumn,
-	phoneColumn,
-	policyBeneficiaryGroupColumn,
-	politicalOrgColumn,
-	politicalOrgOfficialDateColumn,
-	cpvIdColumn,
-	cpvOfficialAtColumn,
+	...enlistmentToPartyColumns,
 	previousPositionColumn,
-	religionColumn,
-	schoolNameColumn,
-	shortcomingColumn,
-	talentColumn,
+	...backgroundColumns,
 	rankColumnSortable,
 	positionColumn,
 	previousUnitColumnSortable,
 	ethnicColumnSortable,
 	educationLevelColumnSortable,
-	fatherNameColumn,
-	fatherJobColumn,
-	fatherPhoneNumberColumn,
-	motherNameColumn,
-	motherJobColumn,
-	motherPhoneNumberColumn
+	...familyColumns
 ]

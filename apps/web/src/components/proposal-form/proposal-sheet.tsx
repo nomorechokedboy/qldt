@@ -66,7 +66,7 @@ export default function ProposalSheet({
 				</SheetHeader>
 				<form
 					id={formId}
-					className='grid min-h-0 flex-1 gap-6 overflow-y-auto px-4 pb-4 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] md:overflow-hidden'
+					className='grid min-h-0 flex-1 grid-cols-1 gap-6 overflow-y-auto px-4 pb-4 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] md:overflow-hidden'
 					onSubmit={onSubmit}
 				>
 					<div className='space-y-4 md:overflow-y-auto md:pr-1'>
