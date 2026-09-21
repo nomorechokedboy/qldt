@@ -20,6 +20,8 @@ import ProposalDetailSheet from './proposal-detail-sheet'
 import RejectDialog from './reject-dialog'
 import { STATUS_VALUES } from './status'
 
+const useNoExtraAction = () => null
+
 export default function ProposalsTab<TRow extends ProposalRow>({
 	adapter
 }: {
@@ -39,6 +41,7 @@ export default function ProposalsTab<TRow extends ProposalRow>({
 
 	const approveMutation = adapter.useApprove()
 	const cancelMutation = adapter.useCancel()
+	const extraAction = (adapter.useExtraAction ?? useNoExtraAction)()
 
 	const canApprove = hasPermission(`${adapter.permissionPrefix}:approve`)
 	const canReject = hasPermission(`${adapter.permissionPrefix}:reject`)
@@ -76,7 +79,11 @@ export default function ProposalsTab<TRow extends ProposalRow>({
 		() =>
 			getProposalColumns<TRow>({
 				t,
-				targetColumn: adapter.targetColumn(t),
+				middleColumns: adapter.middleColumns(t),
+				requestedByLabel: t(
+					adapter.requestedByKey ?? 'common.requestedBy'
+				),
+				extraAction,
 				currentUserId: user?.id,
 				canApprove,
 				canReject,
@@ -90,6 +97,7 @@ export default function ProposalsTab<TRow extends ProposalRow>({
 		[
 			t,
 			adapter,
+			extraAction,
 			user?.id,
 			canApprove,
 			canReject,
