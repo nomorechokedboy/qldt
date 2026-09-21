@@ -10,6 +10,7 @@ import {
 	SheetTitle,
 	SheetTrigger
 } from '@/components/ui/sheet'
+import { cn } from '@/lib/utils'
 
 interface ProposalSheetProps {
 	open: boolean
@@ -20,12 +21,21 @@ interface ProposalSheetProps {
 	onSubmit: (e: FormEvent) => void
 	submitLabel: string
 	isPending: boolean
-	submitDisabled: boolean
-	children: ReactNode
+	// What the proposal will do, in a sentence; shown once nothing is missing.
+	summary: string
+	// The next thing the person still has to fill in, or null when the form is
+	// complete. Doubles as the reason the submit button is disabled.
+	missing: string | null
+	// The proposal's own fields (left pane).
+	fields: ReactNode
+	// The trooper picker (right pane).
+	troopers: ReactNode
 }
 
-// The "create proposal" button and the side sheet it opens: title, the form
-// body (its fields are `children`), and a submit button in the footer.
+// The "create proposal" button and the side sheet it opens: the fields beside
+// the trooper list, and a footer that says what will be submitted (or what is
+// still missing) next to the submit button. The panes sit side by side from
+// the md breakpoint up and stack below it.
 export default function ProposalSheet({
 	open,
 	onOpenChange,
@@ -35,8 +45,10 @@ export default function ProposalSheet({
 	onSubmit,
 	submitLabel,
 	isPending,
-	submitDisabled,
-	children
+	summary,
+	missing,
+	fields,
+	troopers
 }: ProposalSheetProps) {
 	const { t } = useTranslation('proposals')
 
@@ -48,22 +60,37 @@ export default function ProposalSheet({
 					{triggerLabel}
 				</Button>
 			</SheetTrigger>
-			<SheetContent className='w-full overflow-hidden sm:max-w-xl'>
+			<SheetContent className='w-full gap-0 overflow-hidden sm:max-w-xl md:max-w-4xl'>
 				<SheetHeader>
 					<SheetTitle>{title}</SheetTitle>
 				</SheetHeader>
 				<form
 					id={formId}
-					className='flex min-h-0 flex-1 flex-col space-y-4 overflow-hidden px-4 pb-4'
+					className='grid min-h-0 flex-1 gap-6 overflow-y-auto px-4 pb-4 md:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] md:overflow-hidden'
 					onSubmit={onSubmit}
 				>
-					{children}
+					<div className='space-y-4 md:overflow-y-auto md:pr-1'>
+						{fields}
+					</div>
+					<div className='flex h-[28rem] min-h-0 flex-col md:h-auto md:border-l md:pl-6'>
+						{troopers}
+					</div>
 				</form>
-				<SheetFooter>
+				<SheetFooter className='border-t sm:flex-row sm:items-center sm:justify-between'>
+					<p
+						aria-live='polite'
+						className={cn(
+							'text-sm',
+							missing ? 'text-muted-foreground' : 'font-medium'
+						)}
+					>
+						{missing ?? summary}
+					</p>
 					<Button
 						type='submit'
 						form={formId}
-						disabled={isPending || submitDisabled}
+						className='shrink-0'
+						disabled={isPending || missing !== null}
 					>
 						{isPending ? t('common.creating') : submitLabel}
 					</Button>

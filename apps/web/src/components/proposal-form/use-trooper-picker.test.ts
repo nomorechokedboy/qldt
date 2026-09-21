@@ -163,4 +163,52 @@ describe('useTrooperPicker', () => {
 		expect(result.current.allVisibleSelected).toBe(false)
 		expect(result.current.someVisibleSelected).toBe(true)
 	})
+
+	describe('showing only the selected', () => {
+		it('hides everyone who is not selected', () => {
+			const { result } = setup()
+			act(() => result.current.toggle(2))
+
+			act(() => result.current.setOnlySelected(true))
+
+			expect(result.current.visible).toEqual([tran])
+		})
+
+		it('combines with the name search', () => {
+			const { result } = setup()
+			act(() => {
+				result.current.toggle(1)
+				result.current.toggle(2)
+			})
+
+			act(() => {
+				result.current.setOnlySelected(true)
+				result.current.setSearch('tran')
+			})
+
+			expect(result.current.visible).toEqual([tran])
+		})
+
+		it('shows everyone again when switched off, keeping the selection', () => {
+			const { result } = setup()
+			act(() => {
+				result.current.toggle(1)
+				result.current.setOnlySelected(true)
+			})
+
+			act(() => result.current.setOnlySelected(false))
+
+			expect(result.current.visible).toEqual(roster)
+			expect([...result.current.selectedIds]).toEqual([1])
+		})
+
+		it('is switched off by a reset', () => {
+			const { result } = setup()
+			act(() => result.current.setOnlySelected(true))
+
+			act(() => result.current.reset())
+
+			expect(result.current.onlySelected).toBe(false)
+		})
+	})
 })

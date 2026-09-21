@@ -12,23 +12,26 @@ import {
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
-import { useRejectRankPromotionProposal } from '@/hooks/useRankPromotionProposalActions'
 import { toastApiError } from '@/lib/api-error'
+import type { ProposalAdapter, ProposalRow } from './proposal-adapter'
 
-export default function RejectDialog({
+export default function RejectDialog<TRow extends ProposalRow>({
+	adapter,
 	id,
 	open,
 	onOpenChange,
 	onSuccess
 }: {
+	adapter: ProposalAdapter<TRow>
 	id: number
 	open: boolean
 	onOpenChange: (open: boolean) => void
 	onSuccess?: () => void
 }) {
 	const { t } = useTranslation('proposals')
+	const { kind } = adapter
 	const [reason, setReason] = useState('')
-	const rejectMutation = useRejectRankPromotionProposal()
+	const rejectMutation = adapter.useReject()
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
@@ -38,12 +41,12 @@ export default function RejectDialog({
 		}
 		try {
 			await rejectMutation.mutateAsync({ id, reason })
-			toast.success(t('rank.rejected'))
+			toast.success(t(`${kind}.rejected`))
 			setReason('')
 			onOpenChange(false)
 			onSuccess?.()
 		} catch (err) {
-			toastApiError(t('rank.rejectFailed'), err)
+			toastApiError(t(`${kind}.rejectFailed`), err)
 		}
 	}
 
@@ -51,7 +54,7 @@ export default function RejectDialog({
 		<Dialog open={open} onOpenChange={onOpenChange}>
 			<DialogContent className='sm:max-w-md h-auto'>
 				<DialogHeader>
-					<DialogTitle>{t('rank.rejectTitle')}</DialogTitle>
+					<DialogTitle>{t(`${kind}.rejectTitle`)}</DialogTitle>
 				</DialogHeader>
 				<form className='space-y-4' onSubmit={handleSubmit}>
 					<div className='space-y-2'>

@@ -48,7 +48,6 @@ const proposals: Messages<typeof vi> = {
 		pickDate: 'Pick a date',
 		itemEffectiveDate: 'Effective date: {{date}}',
 		itemAppliedAt: 'Applied: {{date}}',
-		effectiveDateRequired: 'Please pick an effective date',
 		pickApprover: 'Pick an approver',
 		approverNeedsUnit: 'Pick a unit to see who can approve',
 		approverNone: 'There is no eligible approver for this unit',
@@ -62,7 +61,18 @@ const proposals: Messages<typeof vi> = {
 		selectAll: 'Select all',
 		shownCount: '({{count}} shown)',
 		noTroopersInUnit: 'There is no personnel in this unit',
-		selectAtLeastOneTrooper: 'Please select at least one person'
+		onlySelected: 'Show selected only',
+		noneSelectedYet: 'No personnel selected yet',
+		ineligibleHeading: 'Not eligible ({{count}})',
+		droppedNotice: 'Deselected {{count}} personnel who no longer qualify',
+		dismiss: 'Dismiss',
+		overrideChip: 'Own: {{value}}',
+		missing: {
+			unit: 'Pick a unit',
+			approver: 'Pick an approver',
+			effectiveDate: 'Pick an effective date',
+			troopers: 'Select at least one person'
+		}
 	},
 	reject: {
 		reasonLabel: 'Rejection reason',
@@ -90,7 +100,12 @@ const proposals: Messages<typeof vi> = {
 		dateRangeOwn: 'Date range (individual)',
 		useSharedDates: 'Use shared dates',
 		customDates: 'Set individual dates',
-		pickRangeDates: 'Please pick a start and an end date',
+		missingStatus: 'Pick a status',
+		missingDates: 'Pick a date range',
+		summaryRange:
+			'Change to {{status}} for {{count}} personnel, from {{start}} to {{end}}',
+		summaryDate:
+			'Change to {{status}} for {{count}} personnel, effective {{date}}',
 		created: 'Status proposal created',
 		createFailed: 'Failed to create the status proposal!',
 		submit: 'Create proposal',
@@ -115,6 +130,12 @@ const proposals: Messages<typeof vi> = {
 		formTitle: 'Rank promotion proposal',
 		pickRank: 'Pick a rank',
 		rankOwn: 'Rank (individual)',
+		missingRank: 'Pick a proposed rank',
+		summary:
+			'Promote to {{rank}} for {{count}} personnel, effective {{date}}',
+		reasonLocked: 'Already in another proposal',
+		reasonAlready: 'Already {{rank}}',
+		reasonNotAdjacent: 'Cannot be promoted directly to {{rank}}',
 		useShared: 'Use shared',
 		customize: 'Set individually',
 		noEligibleTroopers:

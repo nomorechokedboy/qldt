@@ -10,12 +10,16 @@ import {
 	SelectTrigger,
 	SelectValue
 } from '@/components/ui/select'
-import { targetActivityStatusOptions } from '@/data/activity-statuses'
+import {
+	activityStatusLabel,
+	targetActivityStatusOptions
+} from '@/data/activity-statuses'
 import { useCreateActivityStatusProposal } from '@/hooks/useCreateActivityStatusProposal'
 import useActivityStatusProposalEligibleApprovers from '@/hooks/useActivityStatusProposalEligibleApprovers'
 import type { activity_status_proposals } from '@/api/client'
 import { toastApiError } from '@/lib/api-error'
 import ProposalDateField from '@/components/proposal-form/date-field'
+import formatProposalDate from '@/components/proposal-form/format-date'
 import {
 	ApproverField,
 	EffectiveDateField,
@@ -75,22 +79,39 @@ export default function CreateActivityStatusProposalForm({
 		picker.reset()
 	}
 
+	// The next thing still to fill in, in the order the form is read.
+	const missing = !unitId
+		? t('common.missing.unit')
+		: !targetActivityStatus
+			? t('activity.missingStatus')
+			: !approverUserId
+				? t('common.missing.approver')
+				: ranged && (!startDate || !endDate)
+					? t('activity.missingDates')
+					: !ranged && !effectiveDate
+						? t('common.missing.effectiveDate')
+						: picker.selectedIds.size === 0
+							? t('common.missing.troopers')
+							: null
+	const summaryValues = {
+		status: activityStatusLabel(targetActivityStatus),
+		count: picker.selectedIds.size
+	}
+	const summary = ranged
+		? t('activity.summaryRange', {
+				...summaryValues,
+				start: startDate ? formatProposalDate(startDate) : '',
+				end: endDate ? formatProposalDate(endDate) : ''
+			})
+		: t('activity.summaryDate', {
+				...summaryValues,
+				date: effectiveDate ? formatProposalDate(effectiveDate) : ''
+			})
+
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
 
-		if (picker.selectedIds.size === 0) {
-			toast.error(t('common.selectAtLeastOneTrooper'))
-			return
-		}
-
-		if (ranged && (!startDate || !endDate)) {
-			toast.error(t('activity.pickRangeDates'))
-			return
-		}
-		if (!ranged && !effectiveDate) {
-			toast.error(t('common.effectiveDateRequired'))
-			return
-		}
+		if (missing !== null) return
 
 		const body: activity_status_proposals.CreateActivityStatusProposalBody =
 			{
@@ -146,96 +167,103 @@ export default function CreateActivityStatusProposalForm({
 			onSubmit={handleSubmit}
 			submitLabel={t('activity.submit')}
 			isPending={createMutation.isPending}
-			submitDisabled={
-				!unitId ||
-				!approverUserId ||
-				!targetActivityStatus ||
-				(ranged ? !startDate || !endDate : !effectiveDate)
-			}
-		>
-			<UnitField
-				options={unitOptions}
-				value={unitId}
-				onValueChange={(v) => {
-					setUnitId(v)
-					setApproverUserId('')
-					picker.reset()
-				}}
-			/>
-
-			<div className='grid grid-cols-2 gap-4'>
-				<div className='space-y-2'>
-					<Label>{t('activity.targetStatus')}</Label>
-					<Select
-						value={targetActivityStatus}
+			summary={summary}
+			missing={missing}
+			fields={
+				<>
+					<UnitField
+						options={unitOptions}
+						value={unitId}
 						onValueChange={(v) => {
-							setTargetActivityStatus(v)
-							setEffectiveDate(undefined)
-							setStartDate(undefined)
-							setEndDate(undefined)
-							// The shared dates changed shape, so per-trooper ones no
-							// longer apply.
-							picker.clearOverrides()
+							setUnitId(v)
+							setApproverUserId('')
+							picker.reset()
 						}}
-					>
-						<SelectTrigger>
-							<SelectValue
-								placeholder={t('activity.pickStatus')}
-							/>
-						</SelectTrigger>
-						<SelectContent>
-							{targetActivityStatusOptions.map((o) => (
-								<SelectItem key={o.value} value={o.value}>
-									{t(`activityStatus.${o.value}`)}
-								</SelectItem>
-							))}
-						</SelectContent>
-					</Select>
-				</div>
-
-				<ApproverField
-					value={approverUserId}
-					onValueChange={setApproverUserId}
-					hasUnit={!!unitId}
-					approvers={eligibleApprovers}
-				/>
-			</div>
-
-			{targetActivityStatus &&
-				(ranged ? (
-					<div className='space-y-2'>
-						<Label>{t('activity.dateRange')}</Label>
-						<DateRangePicker
-							value={toDateRange(startDate, endDate)}
-							onChange={(range) => {
-								const dates = fromDateRange(range)
-								setStartDate(dates.startDate)
-								setEndDate(dates.endDate)
-							}}
-							placeholder={t('activity.pickDateRange')}
-							className='w-full'
-						/>
-					</div>
-				) : (
-					<EffectiveDateField
-						value={effectiveDate}
-						onChange={setEffectiveDate}
 					/>
-				))}
 
-			<NoteField value={note} onChange={setNote} />
+					<div className='space-y-2'>
+						<Label>{t('activity.targetStatus')}</Label>
+						<Select
+							value={targetActivityStatus}
+							onValueChange={(v) => {
+								setTargetActivityStatus(v)
+								setEffectiveDate(undefined)
+								setStartDate(undefined)
+								setEndDate(undefined)
+								// The shared dates changed shape, so per-trooper ones
+								// no longer apply.
+								picker.clearOverrides()
+							}}
+						>
+							<SelectTrigger className='w-full'>
+								<SelectValue
+									placeholder={t('activity.pickStatus')}
+								/>
+							</SelectTrigger>
+							<SelectContent>
+								{targetActivityStatusOptions.map((o) => (
+									<SelectItem key={o.value} value={o.value}>
+										{t(`activityStatus.${o.value}`)}
+									</SelectItem>
+								))}
+							</SelectContent>
+						</Select>
+					</div>
 
-			<TrooperPickerList
-				hasUnit={!!unitId}
-				unitTroopers={unitStudents}
-				candidates={unitStudents}
-				picker={picker}
-				canCustomize={!!targetActivityStatus}
-				customizeLabel={t('activity.customDates')}
-				useSharedLabel={t('activity.useSharedDates')}
-				renderOverride={(student, override) => (
-					<div className='mt-2 pl-6'>
-						{ranged ? (
+					<ApproverField
+						value={approverUserId}
+						onValueChange={setApproverUserId}
+						hasUnit={!!unitId}
+						approvers={eligibleApprovers}
+					/>
+
+					{targetActivityStatus &&
+						(ranged ? (
+							<div className='space-y-2'>
+								<Label>{t('activity.dateRange')}</Label>
+								<DateRangePicker
+									value={toDateRange(startDate, endDate)}
+									onChange={(range) => {
+										const dates = fromDateRange(range)
+										setStartDate(dates.startDate)
+										setEndDate(dates.endDate)
+									}}
+									placeholder={t('activity.pickDateRange')}
+									className='w-full'
+								/>
+							</div>
+						) : (
+							<EffectiveDateField
+								value={effectiveDate}
+								onChange={setEffectiveDate}
+							/>
+						))}
+
+					<NoteField value={note} onChange={setNote} />
+				</>
+			}
+			troopers={
+				<TrooperPickerList
+					hasUnit={!!unitId}
+					unitTroopers={unitStudents}
+					candidates={unitStudents}
+					picker={picker}
+					canCustomize={!!targetActivityStatus}
+					customizeLabel={t('activity.customDates')}
+					useSharedLabel={t('activity.useSharedDates')}
+					summarizeOverride={(o) => {
+						if (!ranged) {
+							return o.effectiveDate
+								? formatProposalDate(o.effectiveDate)
+								: undefined
+						}
+						if (!o.startDate && !o.endDate) return undefined
+						const fmt = (d: string | undefined) =>
+							d ? formatProposalDate(d) : '…'
+						return `${fmt(o.startDate)} → ${fmt(o.endDate)}`
+					}}
+					renderOverride={(student, override) =>
+						ranged ? (
 							<DateRangePicker
 								value={toDateRange(
 									override?.startDate,
@@ -260,10 +288,10 @@ export default function CreateActivityStatusProposalForm({
 								}
 								placeholder={t('common.effectiveDateOwn')}
 							/>
-						)}
-					</div>
-				)}
-			/>
-		</ProposalSheet>
+						)
+					}
+				/>
+			}
+		/>
 	)
 }

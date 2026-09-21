@@ -18,6 +18,7 @@ import type { rank_promotion_proposals } from '@/api/client'
 import { toastApiError } from '@/lib/api-error'
 import type { Student } from '@/types'
 import ProposalDateField from '@/components/proposal-form/date-field'
+import formatProposalDate from '@/components/proposal-form/format-date'
 import {
 	ApproverField,
 	EffectiveDateField,
@@ -91,7 +92,7 @@ function RankSelect({
 }) {
 	return (
 		<Select value={value} onValueChange={onValueChange}>
-			<SelectTrigger id={triggerId}>
+			<SelectTrigger id={triggerId} className='w-full'>
 				<SelectValue placeholder={placeholder} />
 			</SelectTrigger>
 			<SelectContent>
@@ -117,6 +118,8 @@ export default function CreateRankPromotionProposalForm({
 	const [targetRank, setTargetRank] = useState('')
 	const [note, setNote] = useState('')
 	const [effectiveDate, setEffectiveDate] = useState<string | undefined>()
+	// How many picks the last target-rank change dropped (0 = nothing to say).
+	const [droppedCount, setDroppedCount] = useState(0)
 
 	const { unitOptions, unitStudents } = useUnitTroopers({ unitId, open })
 	const { data: eligibleApprovers } =
@@ -148,31 +151,53 @@ export default function CreateRankPromotionProposalForm({
 		setTargetRank('')
 		setNote('')
 		setEffectiveDate(undefined)
+		setDroppedCount(0)
 		picker.reset()
 	}
 
 	const handleTargetRankChange = (rank: string) => {
 		setTargetRank(rank)
 		// Troopers no longer exactly one rank junior to the new target rank must
-		// be dropped from the selection - otherwise a hidden (filtered-out)
+		// be dropped from the selection - otherwise a greyed-out (ineligible)
 		// trooper could stay checked and get submitted anyway.
-		picker.retainOnly(
-			new Set(promotable(unitStudents, lockedIds, rank).map((s) => s.id))
+		const allowed = new Set(
+			promotable(unitStudents, lockedIds, rank).map((s) => s.id)
 		)
+		setDroppedCount(
+			[...picker.selectedIds].filter((id) => !allowed.has(id)).length
+		)
+		picker.retainOnly(allowed)
 	}
+
+	const ineligibleReason = (student: Student) => {
+		if (lockedIds.has(student.id)) return t('rank.reasonLocked')
+		return student.rank === targetRank
+			? t('rank.reasonAlready', { rank: targetRank })
+			: t('rank.reasonNotAdjacent', { rank: targetRank })
+	}
+
+	// The next thing still to fill in, in the order the form is read.
+	const missing = !unitId
+		? t('common.missing.unit')
+		: !targetRank
+			? t('rank.missingRank')
+			: !approverUserId
+				? t('common.missing.approver')
+				: !effectiveDate
+					? t('common.missing.effectiveDate')
+					: picker.selectedIds.size === 0
+						? t('common.missing.troopers')
+						: null
+	const summary = t('rank.summary', {
+		rank: targetRank,
+		count: picker.selectedIds.size,
+		date: effectiveDate ? formatProposalDate(effectiveDate) : ''
+	})
 
 	const handleSubmit = async (e: React.FormEvent) => {
 		e.preventDefault()
 
-		if (picker.selectedIds.size === 0) {
-			toast.error(t('common.selectAtLeastOneTrooper'))
-			return
-		}
-
-		if (!effectiveDate) {
-			toast.error(t('common.effectiveDateRequired'))
-			return
-		}
+		if (missing !== null) return
 
 		const body: rank_promotion_proposals.CreateRankPromotionProposalBody = {
 			unitId: Number(unitId),
@@ -214,80 +239,104 @@ export default function CreateRankPromotionProposalForm({
 			onSubmit={handleSubmit}
 			submitLabel={t('rank.submit')}
 			isPending={createMutation.isPending}
-			submitDisabled={
-				!unitId || !approverUserId || !targetRank || !effectiveDate
-			}
-		>
-			<UnitField
-				options={unitOptions}
-				value={unitId}
-				onValueChange={(v) => {
-					setUnitId(v)
-					setApproverUserId('')
-					picker.reset()
-				}}
-			/>
-
-			<div className='grid grid-cols-2 gap-4'>
-				<div className='space-y-2'>
-					<Label htmlFor='targetRank'>{t('rank.targetRank')}</Label>
-					<RankSelect
-						value={targetRank}
-						onValueChange={handleTargetRankChange}
-						placeholder={t('rank.pickRank')}
-						triggerId='targetRank'
+			summary={summary}
+			missing={missing}
+			fields={
+				<>
+					<UnitField
+						options={unitOptions}
+						value={unitId}
+						onValueChange={(v) => {
+							setUnitId(v)
+							setApproverUserId('')
+							setDroppedCount(0)
+							picker.reset()
+						}}
 					/>
-				</div>
 
-				<ApproverField
-					value={approverUserId}
-					onValueChange={setApproverUserId}
-					hasUnit={!!unitId}
-					approvers={eligibleApprovers}
-				/>
-			</div>
-
-			<EffectiveDateField
-				value={effectiveDate}
-				onChange={setEffectiveDate}
-			/>
-
-			<NoteField value={note} onChange={setNote} />
-
-			<TrooperPickerList
-				hasUnit={!!unitId}
-				unitTroopers={unitStudents}
-				candidates={eligibleStudents}
-				picker={picker}
-				noCandidatesMessage={t('rank.noEligibleTroopers')}
-				formatLabel={(s) =>
-					`${s.fullName}${s.rank ? ` (${s.rank})` : ''}`
-				}
-				customizeLabel={t('rank.customize')}
-				useSharedLabel={t('rank.useShared')}
-				renderOverride={(student, override) => (
-					<div className='mt-2 space-y-2 pl-6'>
+					<div className='space-y-2'>
+						<Label htmlFor='targetRank'>
+							{t('rank.targetRank')}
+						</Label>
 						<RankSelect
-							value={override?.targetRank ?? ''}
-							onValueChange={(v) =>
-								picker.setOverride(student.id, {
-									targetRank: v
-								})
-							}
-							placeholder={t('rank.rankOwn')}
-						/>
-						<ProposalDateField
-							value={override?.effectiveDate}
-							onChange={(v) =>
-								picker.setOverride(student.id, {
-									effectiveDate: v
-								})
-							}
-							placeholder={t('common.effectiveDateOwn')}
+							value={targetRank}
+							onValueChange={handleTargetRankChange}
+							placeholder={t('rank.pickRank')}
+							triggerId='targetRank'
 						/>
 					</div>
-				)}
-			/>
-		</ProposalSheet>
+
+					<ApproverField
+						value={approverUserId}
+						onValueChange={setApproverUserId}
+						hasUnit={!!unitId}
+						approvers={eligibleApprovers}
+					/>
+
+					<EffectiveDateField
+						value={effectiveDate}
+						onChange={setEffectiveDate}
+					/>
+
+					<NoteField value={note} onChange={setNote} />
+				</>
+			}
+			troopers={
+				<TrooperPickerList
+					hasUnit={!!unitId}
+					unitTroopers={unitStudents}
+					candidates={eligibleStudents}
+					picker={picker}
+					ineligibleReason={ineligibleReason}
+					noCandidatesMessage={t('rank.noEligibleTroopers')}
+					notice={
+						droppedCount > 0
+							? {
+									message: t('common.droppedNotice', {
+										count: droppedCount
+									}),
+									onDismiss: () => setDroppedCount(0)
+								}
+							: undefined
+					}
+					formatLabel={(s) =>
+						`${s.fullName}${s.rank ? ` (${s.rank})` : ''}`
+					}
+					customizeLabel={t('rank.customize')}
+					useSharedLabel={t('rank.useShared')}
+					summarizeOverride={(o) =>
+						[
+							o.targetRank,
+							o.effectiveDate &&
+								formatProposalDate(o.effectiveDate)
+						]
+							.filter(Boolean)
+							.join(' · ') || undefined
+					}
+					renderOverride={(student, override) => (
+						<div className='space-y-2'>
+							<RankSelect
+								value={override?.targetRank ?? ''}
+								onValueChange={(v) =>
+									picker.setOverride(student.id, {
+										targetRank: v
+									})
+								}
+								placeholder={t('rank.rankOwn')}
+							/>
+							<ProposalDateField
+								value={override?.effectiveDate}
+								onChange={(v) =>
+									picker.setOverride(student.id, {
+										effectiveDate: v
+									})
+								}
+								placeholder={t('common.effectiveDateOwn')}
+							/>
+						</div>
+					)}
+				/>
+			}
+		/>
 	)
 }

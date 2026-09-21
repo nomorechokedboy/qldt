@@ -2,53 +2,28 @@ import type { ColumnDef } from '@tanstack/react-table'
 import type { TFunction } from 'i18next'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { activityStatusLabel } from '@/data/activity-statuses'
 import { formatDbTimestamp } from '@/lib/utils'
-import type { activity_status_proposals } from '@/api/client'
+import type { ProposalRow } from './proposal-adapter'
+import { STATUS_BADGE_VARIANT, statusLabel } from './status'
 
-export type ActivityStatusProposalRow =
-	activity_status_proposals.ActivityStatusProposalResp
-
-export const STATUS_VALUES = [
-	'pending',
-	'approved',
-	'rejected',
-	'cancelled'
-] as const
-
-export type ProposalStatus = (typeof STATUS_VALUES)[number]
-
-export function statusLabel(t: TFunction<'proposals'>, status: string): string {
-	return (STATUS_VALUES as readonly string[]).includes(status)
-		? t(`status.${status as ProposalStatus}`)
-		: status
-}
-
-export const STATUS_BADGE_VARIANT: Record<
-	string,
-	'default' | 'secondary' | 'destructive' | 'outline'
-> = {
-	pending: 'outline',
-	approved: 'default',
-	rejected: 'destructive',
-	cancelled: 'secondary'
-}
-
-type GetColumnsOptions = {
+type GetColumnsOptions<TRow extends ProposalRow> = {
 	t: TFunction<'proposals'>
+	// The one column that differs between kinds; it sits after the unit.
+	targetColumn: ColumnDef<TRow>
 	currentUserId?: number
 	canApprove: boolean
 	canReject: boolean
 	isApproving: boolean
 	isCancelling: boolean
-	onView: (row: ActivityStatusProposalRow) => void
+	onView: (row: TRow) => void
 	onApprove: (id: number) => void
 	onReject: (id: number) => void
 	onCancel: (id: number) => void
 }
 
-export function getActivityStatusProposalColumns({
+export function getProposalColumns<TRow extends ProposalRow>({
 	t,
+	targetColumn,
 	currentUserId,
 	canApprove,
 	canReject,
@@ -58,7 +33,7 @@ export function getActivityStatusProposalColumns({
 	onApprove,
 	onReject,
 	onCancel
-}: GetColumnsOptions): ColumnDef<ActivityStatusProposalRow>[] {
+}: GetColumnsOptions<TRow>): ColumnDef<TRow>[] {
 	return [
 		{
 			id: 'createdAt',
@@ -76,13 +51,7 @@ export function getActivityStatusProposalColumns({
 			header: t('common.unit'),
 			cell: ({ row }) => row.original.unit?.name ?? '—'
 		},
-		{
-			id: 'targetActivityStatus',
-			accessorKey: 'targetActivityStatus',
-			header: t('activity.targetStatus'),
-			cell: ({ row }) =>
-				activityStatusLabel(row.original.targetActivityStatus)
-		},
+		targetColumn,
 		{
 			id: 'troopers',
 			accessorFn: (row) => row.troopers?.length ?? 0,

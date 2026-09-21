@@ -24,17 +24,19 @@ export default function useTrooperPicker<TOverride extends object>(
 	const [selection, setSelection] =
 		useState<Selection<TOverride>>(emptySelection)
 	const [search, setSearch] = useState('')
+	const [onlySelected, setOnlySelected] = useState(false)
 
-	// The name search narrows what's rendered, not what's selectable - a
-	// trooper picked before a search (or under a different query) stays
-	// selected even while filtered out of view.
+	// The name search and the "only selected" toggle narrow what's rendered,
+	// not what's selectable - a trooper picked before a search (or under a
+	// different query) stays selected even while filtered out of view.
 	const visible = useMemo(() => {
 		const query = normalizeForSearch(search.trim())
-		if (!query) return candidates
-		return candidates.filter((s) =>
-			normalizeForSearch(s.fullName ?? '').includes(query)
+		return candidates.filter(
+			(s) =>
+				(!onlySelected || selection.ids.has(s.id)) &&
+				(!query || normalizeForSearch(s.fullName ?? '').includes(query))
 		)
-	}, [candidates, search])
+	}, [candidates, search, onlySelected, selection.ids])
 
 	const update = (
 		change: (ids: Set<number>, overrides: Map<number, TOverride>) => void
@@ -61,6 +63,8 @@ export default function useTrooperPicker<TOverride extends object>(
 		overrides: selection.overrides as ReadonlyMap<number, TOverride>,
 		search,
 		setSearch,
+		onlySelected,
+		setOnlySelected,
 		visible,
 		allVisibleSelected,
 		someVisibleSelected,
@@ -120,6 +124,7 @@ export default function useTrooperPicker<TOverride extends object>(
 		reset: () => {
 			setSelection(emptySelection())
 			setSearch('')
+			setOnlySelected(false)
 		}
 	}
 }

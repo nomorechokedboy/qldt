@@ -62,7 +62,7 @@ export function ApproverField({
 				onValueChange={onValueChange}
 				disabled={!hasUnit}
 			>
-				<SelectTrigger>
+				<SelectTrigger className='w-full'>
 					<SelectValue placeholder={t('common.pickApprover')} />
 				</SelectTrigger>
 				<SelectContent>
