@@ -163,6 +163,10 @@ export function GetUnitStatsMaterialStocks(id: number) {
 		.then((resp) => resp.data)
 }
 
+export function GetUnitStatsPeriod(id: number, from: string, to: string) {
+	return requestClient.units.GetUnitStatsPeriod(id, { from, to })
+}
+
 export function GetUnitStatsMaterialAssets(id: number) {
 	return requestClient.units
 		.GetUnitStatsMaterialAssets(id)

@@ -8,7 +8,11 @@ import { Student } from '../schema/student'
 import { Unit } from '../schema/units'
 import studentRepo from '../students/repo'
 import unitRepo from './repo'
-import unitStatsRepo, { UnitStatsSummary } from './stats-repo'
+import unitStatsRepo, {
+	PeriodStats,
+	UnitStatsSummary,
+	WeaponSummary
+} from './stats-repo'
 
 class controller {
 	private async getUnitOrThrow(id: number): Promise<Unit> {
@@ -40,7 +44,9 @@ class controller {
 	async getStats(
 		id: number,
 		validUnitIds: number[]
-	): Promise<{ unit: Unit } & UnitStatsSummary> {
+	): Promise<
+		{ unit: Unit; weaponSummary: WeaponSummary } & UnitStatsSummary
+	> {
 		log.trace('UnitStatsController.getStats', { id })
 
 		const unit = await this.getUnitOrThrow(id)
@@ -57,7 +63,8 @@ class controller {
 			unitCounts,
 			materialStockSummary,
 			materialAssetSummary,
-			troopSummary
+			troopSummary,
+			weaponSummary
 		] = await Promise.all([
 			unitStatsRepo.countStudents(descendantUnitIds),
 			unitStatsRepo.countBuildings(descendantUnitIds),
@@ -65,7 +72,8 @@ class controller {
 			unitStatsRepo.unitCountsByLevel(descendantUnitIds, unit.id),
 			unitStatsRepo.materialStockSummary(descendantUnitIds),
 			unitStatsRepo.materialAssetSummary(descendantUnitIds),
-			unitStatsRepo.troopSummary(descendantUnitIds)
+			unitStatsRepo.troopSummary(descendantUnitIds),
+			unitStatsRepo.weaponSummary(descendantUnitIds, unit.id)
 		])
 
 		return {
@@ -76,8 +84,45 @@ class controller {
 			unitCounts,
 			materialStockSummary,
 			materialAssetSummary,
-			troopSummary
+			troopSummary,
+			weaponSummary
 		}
+	}
+
+	// `from` and `to` are inclusive "YYYY-MM-DD" days.
+	async getPeriodStats(
+		id: number,
+		from: string,
+		to: string,
+		validUnitIds: number[]
+	): Promise<PeriodStats & { from: string; to: string }> {
+		log.trace('UnitStatsController.getPeriodStats', { id, from, to })
+
+		const isDay = (v: string) =>
+			/^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(Date.parse(v))
+		if (!isDay(from) || !isDay(to) || from > to) {
+			throw AppError.handleAppErr(
+				AppError.invalidArgument(
+					'from and to must be YYYY-MM-DD days, with from not after to'
+				)
+			)
+		}
+
+		const unit = await this.getUnitOrThrow(id)
+		await this.validateAccess(unit.id, validUnitIds)
+
+		const descendantUnitIds = await unitStatsRepo.findDescendantUnitIds(
+			unit.id
+		)
+		const dayAfterTo = new Date(Date.parse(to) + 24 * 60 * 60 * 1000)
+			.toISOString()
+			.slice(0, 10)
+
+		const stats = await unitStatsRepo
+			.periodStats(descendantUnitIds, from, dayAfterTo)
+			.catch(AppError.handleAppErr)
+
+		return { from, to, ...stats }
 	}
 
 	async getStudents(id: number, validUnitIds: number[]): Promise<Student[]> {

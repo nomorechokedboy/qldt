@@ -8,7 +8,7 @@ import {
 	UnitRelations,
 	UpdateUnitMap
 } from '../schema/units'
-import { UnitStatsSummary } from './stats-repo'
+import { PeriodStats, UnitStatsSummary, WeaponSummary } from './stats-repo'
 
 export interface Repository {
 	create(params: UnitParams[]): Promise<UnitDB[]>
@@ -45,4 +45,12 @@ export interface UnitStatsRepository {
 	): Promise<UnitStatsSummary['materialAssetSummary']>
 
 	troopSummary(unitIds: number[]): Promise<UnitStatsSummary['troopSummary']>
+
+	weaponSummary(unitIds: number[], rootId: number): Promise<WeaponSummary>
+
+	periodStats(
+		unitIds: number[],
+		from: string,
+		toExclusive: string
+	): Promise<PeriodStats>
 }

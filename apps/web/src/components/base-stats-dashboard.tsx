@@ -41,7 +41,8 @@ import {
 import { unitLevelLabels, unitLevelOrder } from '@/data/unit-levels'
 import UnitSelect from '@/components/unit/select'
 import useUnitOptions from '@/hooks/useUnitOptions'
-import { materialAssetStatusLabels } from '@/data/material-categories'
+import UnitPeriodStats from '@/components/unit-period-stats'
+import WeaponsOverview from '@/components/weapons-overview'
 import { GetPoliticsQualityReport } from '@/api'
 import { transformPoliticsQualityData } from '@/lib/utils'
 import type { units } from '@/api/client'
@@ -440,41 +441,14 @@ export default function BaseStatsDashboard() {
 						)}
 					</CardContent>
 				</Card>
-
-				<Card>
-					<CardHeader>
-						<CardTitle className='flex items-center gap-2'>
-							<Shield className='h-5 w-5' />
-							{t('dashboard.weapons')}
-						</CardTitle>
-					</CardHeader>
-					<CardContent>
-						{stats.materialAssetSummary.length === 0 ? (
-							<p className='text-muted-foreground'>
-								{t('dashboard.noWeapons')}
-							</p>
-						) : (
-							<ul className='space-y-2'>
-								{stats.materialAssetSummary.map((item) => (
-									<li
-										key={item.status}
-										className='flex items-center justify-between border-b pb-2 last:border-0'
-									>
-										<span>
-											{materialAssetStatusLabels[
-												item.status
-											] ?? item.status}
-										</span>
-										<span className='font-semibold'>
-											{item.count}
-										</span>
-									</li>
-								))}
-							</ul>
-						)}
-					</CardContent>
-				</Card>
 			</div>
+
+			<WeaponsOverview
+				summary={stats.weaponSummary}
+				unitId={stats.unit.id}
+			/>
+
+			<UnitPeriodStats unitId={stats.unit.id} />
 		</div>
 	)
 
