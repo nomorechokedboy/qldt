@@ -8,7 +8,7 @@ export const Route = createFileRoute('/chuc-vu')({
 
 function RouteComponent() {
 	return (
-		<ProtectedRoute>
+		<ProtectedRoute superAdminOnly>
 			<PositionCatalog />
 		</ProtectedRoute>
 	)
