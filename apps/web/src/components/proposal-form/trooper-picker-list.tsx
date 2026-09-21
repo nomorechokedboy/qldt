@@ -142,7 +142,10 @@ export default function TrooperPickerList<TOverride extends object>({
 							</button>
 						</output>
 					)}
-					<ScrollArea className='min-h-32 flex-1 rounded-md border p-2'>
+					{/* Radix wraps the content in a `display: table` div that grows to its
+					widest row; as a block it is bounded by the list, so long names
+					truncate instead of scrolling the list sideways. */}
+					<ScrollArea className='min-h-32 flex-1 rounded-md border p-2 [&_[data-radix-scroll-area-viewport]>div]:!block'>
 						{unitTroopers.length === 0 && (
 							<p className='p-2 text-sm text-muted-foreground'>
 								{t('common.noTroopersInUnit')}
