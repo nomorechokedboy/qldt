@@ -2,6 +2,7 @@ import { test as base, expect, type Page } from '@playwright/test'
 import { mkdirSync } from 'node:fs'
 import path from 'node:path'
 import { overlayScript } from './overlay'
+import { pacePage } from './pace'
 
 export const TMP_DIR = path.resolve(import.meta.dirname, '../.tmp')
 export const VIDEO_DIR = path.resolve(import.meta.dirname, '../videos')
@@ -63,6 +64,7 @@ const slug = (file: string) => path.basename(file).replace(/\.spec\.ts$/, '')
 export const test = base.extend<{ story: Story }>({
 	page: async ({ page }, use, testInfo) => {
 		await page.addInitScript({ content: overlayScript })
+		pacePage(page)
 		await use(page)
 
 		// Leave a beat on the final screen, then keep the recording under the
