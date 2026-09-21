@@ -14,6 +14,9 @@ export type PendingValue = string | Date | null
 
 // Base props that are common to all input types
 type BaseToggleInputProps = {
+	// Given to the text input while it is being edited, so a <label> can point
+	// at it. The resting text has nothing for a label to point at.
+	id?: string
 	placeholder?: ReactNode
 	className?: string
 	disabled?: boolean

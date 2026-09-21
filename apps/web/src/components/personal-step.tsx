@@ -76,7 +76,6 @@ export default function PersonalStep({ form }: { form: any }) {
 								values={EhtnicOptions}
 								label={t('fields.ethnic')}
 								placeholder={t('create.chooseEthnic')}
-								defaultValue={eduLevelOptions[0].value}
 								className=''
 							/>
 						)}

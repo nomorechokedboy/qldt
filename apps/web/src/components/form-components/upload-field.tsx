@@ -79,7 +79,7 @@ export function UploadField({
 	return (
 		<FieldFrame
 			label={label}
-			htmlFor={label}
+			htmlFor={field.name}
 			className={cn('space-y-4', className)}
 		>
 			{showBrowseButton && (
@@ -97,6 +97,7 @@ export function UploadField({
 
 			<Input
 				ref={fileInputRef}
+				id={field.name}
 				type='file'
 				className='hidden'
 				accept={accept}

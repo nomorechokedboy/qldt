@@ -43,6 +43,7 @@ export default function ToggleInput<T extends InputType>(
 ) {
 	const props = genericProps as ToggleInputProps
 	const {
+		id,
 		type,
 		initialValue,
 		placeholder: placeholderProp,
@@ -131,6 +132,7 @@ export default function ToggleInput<T extends InputType>(
 				return (
 					<TextEditor
 						{...shared}
+						id={id}
 						value={(tempValue as string) || ''}
 						onChange={handleChange}
 					/>

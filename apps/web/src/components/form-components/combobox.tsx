@@ -19,23 +19,26 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { useFieldContext } from '@/hooks/form-context'
 import { cn } from '@/lib/utils'
 import { FieldFrame } from './field-frame'
+import { useDefaultValue } from './use-default-value'
 
 export function Combobox({
 	label,
 	values,
 	placeholder = 'Select option...',
+	defaultValue,
 	onChange
 }: {
 	label: string
 	values: Array<{ label: string; value: string }>
 	placeholder?: string
-	// Accepted for compatibility; the field's own value drives the selection.
+	// Chosen when the field starts out empty.
 	defaultValue?: string
 	onChange?: (value: string) => void
 }) {
 	const { t } = useTranslation('common')
 	const [open, setOpen] = useState(false)
 	const field = useFieldContext<string>()
+	useDefaultValue(defaultValue)
 
 	const selectedValue = field.state.value
 	const selectedLabel = values.find(
@@ -51,10 +54,11 @@ export function Combobox({
 	}
 
 	return (
-		<FieldFrame label={label} htmlFor={label}>
+		<FieldFrame label={label} htmlFor={field.name}>
 			<Popover open={open} onOpenChange={setOpen} modal={true}>
 				<PopoverTrigger asChild>
 					<Button
+						id={field.name}
 						variant='outline'
 						role='combobox'
 						aria-expanded={open}
