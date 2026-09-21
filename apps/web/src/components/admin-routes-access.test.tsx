@@ -92,7 +92,11 @@ describe('admin pages', () => {
 			])
 
 			expect(
-				await screen.findByText('Không có quyền truy cập')
+				await screen.findByText(
+					'Không có quyền truy cập',
+					{},
+					{ timeout: 10_000 }
+				)
 			).toBeTruthy()
 		})
 

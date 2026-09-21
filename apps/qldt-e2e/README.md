@@ -52,6 +52,7 @@ later chapters start from.
 | `01-first-run` | Root unit, first administrator, password rules, login |
 | `02-units` | Building the unit tree, editing and deleting a unit, sidebar tree |
 | `03-users-roles` | Custom role and its permissions, two accounts, role assignment, wrong password, what a company commander can and cannot see, blocked admin pages |
+| `04-positions` | Position catalog per unit level: create, priority ordering, edit, delete, HSQ flag (the troopers chapter picks from these) |
 
 More chapters are added one at a time; this table is the source of truth for
 what is covered.
