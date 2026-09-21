@@ -1,7 +1,11 @@
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
-import { cloneElement, type ReactElement } from 'react'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { useAppForm } from '@/hooks/use-app-form'
+import { describe, expect, it, vi } from 'vitest'
+import {
+	Harness,
+	expectValue,
+	installBrowserStubs,
+	requiredWhenEmpty
+} from '@/test/field-harness'
 import {
 	AvatarField,
 	Combobox,
@@ -15,86 +19,7 @@ import {
 	UploadField
 } from './form-components'
 
-// Radix Select/Popover/Slider and cmdk lean on browser APIs jsdom does not have.
-beforeEach(() => {
-	Element.prototype.scrollIntoView = vi.fn()
-	Element.prototype.hasPointerCapture = vi.fn(() => false)
-	Element.prototype.releasePointerCapture = vi.fn()
-	vi.stubGlobal(
-		'ResizeObserver',
-		class {
-			observe() {}
-			unobserve() {}
-			disconnect() {}
-		}
-	)
-	// jsdom has no blob URLs; AvatarUpload previews the chosen file with one.
-	URL.createObjectURL = vi.fn(() => 'blob:preview')
-	URL.revokeObjectURL = vi.fn()
-})
-
-afterEach(() => {
-	vi.unstubAllGlobals()
-})
-
-function show(value: unknown) {
-	if (value instanceof File) return `file:${value.name}`
-	if (value === null) return 'null'
-	return JSON.stringify(value)
-}
-
-// The field's children are re-created on every render (as in the app's
-// `children={(field) => <field.X />}`); a static element would never re-render.
-// One real form with a single `value` field, rendered through the same
-// `useAppForm` the app uses. The `value` readout is the form's own state.
-function Harness({
-	initial,
-	validators,
-	onSubmit,
-	children
-}: {
-	initial: unknown
-	validators?: Record<string, unknown>
-	onSubmit?: () => Promise<void> | void
-	children: ReactElement
-}) {
-	const form = useAppForm({
-		defaultValues: { value: initial },
-		onSubmit: async () => {
-			await onSubmit?.()
-		}
-	})
-
-	return (
-		<form
-			onSubmit={(e) => {
-				e.preventDefault()
-				form.handleSubmit()
-			}}
-		>
-			<form.AppField name='value' validators={validators as never}>
-				{() => cloneElement(children)}
-			</form.AppField>
-			<form.Subscribe selector={(s) => s.values.value}>
-				{(v) => <output data-testid='value'>{show(v)}</output>}
-			</form.Subscribe>
-			<form.AppForm>
-				<form.SubscribeButton label='Save' />
-			</form.AppForm>
-		</form>
-	)
-}
-
-const formValue = () => screen.getByTestId('value').textContent
-// TanStack Form flushes store updates asynchronously.
-const expectValue = (expected: string) =>
-	waitFor(() => expect(formValue()).toBe(expected))
-
-const requiredWhenEmpty = {
-	onMount: () => 'Required',
-	onChange: ({ value }: { value: unknown }) =>
-		value ? undefined : 'Required'
-}
+installBrowserStubs()
 
 function fileOf(name: string, bytes: number) {
 	return new File([new Uint8Array(bytes)], name, { type: 'text/plain' })
@@ -802,5 +727,133 @@ describe('AvatarField', () => {
 		await waitFor(() => expect(screen.queryByText('Required')).toBeNull())
 		fireEvent.blur(fileInput(container))
 		expect(await screen.findByText('Required')).toBeTruthy()
+	})
+})
+
+describe('label association', () => {
+	it('points the Combobox label at its trigger', () => {
+		render(
+			<Harness initial=''>
+				<Combobox
+					label='Letter'
+					values={[{ label: 'Alpha', value: 'a' }]}
+				/>
+			</Harness>
+		)
+		expect(screen.getByLabelText('Letter')).toBe(
+			screen.getByRole('combobox')
+		)
+	})
+
+	it('points the EditableInput label at its input while editing', () => {
+		render(
+			<Harness initial='hello'>
+				<EditableInput label='Title' />
+			</Harness>
+		)
+		fireEvent.doubleClick(screen.getByText('hello'))
+		expect(screen.getByLabelText('Title')).toBe(screen.getByRole('textbox'))
+	})
+
+	it('points the UploadField label at its file input', () => {
+		const { container } = render(
+			<Harness initial={null}>
+				<UploadField label='CV' />
+			</Harness>
+		)
+		expect(screen.getByLabelText('CV')).toBe(fileInput(container))
+	})
+})
+
+describe('defaultValue', () => {
+	const values = [
+		{ label: 'Alpha', value: 'a' },
+		{ label: 'Beta', value: 'b' }
+	]
+
+	it('Select fills an empty field with its default', async () => {
+		render(
+			<Harness initial=''>
+				<Select label='Letter' values={values} defaultValue='b' />
+			</Harness>
+		)
+		await expectValue('"b"')
+		await waitFor(() =>
+			expect(screen.getByRole('combobox').textContent).toContain('Beta')
+		)
+	})
+
+	it('Combobox fills an empty field with its default', async () => {
+		render(
+			<Harness initial=''>
+				<Combobox label='Letter' values={values} defaultValue='b' />
+			</Harness>
+		)
+		await expectValue('"b"')
+		await waitFor(() =>
+			expect(screen.getByRole('combobox').textContent).toContain('Beta')
+		)
+	})
+
+	it('leaves a field that already has a value alone', async () => {
+		render(
+			<Harness initial='a'>
+				<Select label='Letter' values={values} defaultValue='b' />
+			</Harness>
+		)
+		await new Promise((r) => setTimeout(r, 20))
+		await expectValue('"a"')
+	})
+
+	it('ignores an empty default', async () => {
+		render(
+			<Harness initial=''>
+				<Combobox label='Letter' values={values} defaultValue='' />
+			</Harness>
+		)
+		await new Promise((r) => setTimeout(r, 20))
+		await expectValue('""')
+	})
+
+	it('does not count as the user touching the field', async () => {
+		render(
+			<Harness initial='' validators={{ onChange: () => 'Not that one' }}>
+				<Select label='Letter' values={values} defaultValue='b' />
+			</Harness>
+		)
+		await expectValue('"b"')
+		await new Promise((r) => setTimeout(r, 20))
+		expect(screen.queryByText('Not that one')).toBeNull()
+	})
+
+	it('is not reported to onChange, which is for the user’s choices', async () => {
+		const onChange = vi.fn()
+		render(
+			<Harness initial=''>
+				<Select
+					label='Letter'
+					values={values}
+					defaultValue='b'
+					onChange={onChange}
+				/>
+			</Harness>
+		)
+		await expectValue('"b"')
+		expect(onChange).not.toHaveBeenCalled()
+	})
+
+	it('is used again only if the user clears the field themselves', async () => {
+		render(
+			<Harness initial=''>
+				<Combobox label='Letter' values={values} defaultValue='b' />
+			</Harness>
+		)
+		await expectValue('"b"')
+
+		// picking the selected option again clears it; the default is a
+		// starting value, not something enforced afterwards
+		fireEvent.click(screen.getByRole('combobox'))
+		fireEvent.click(screen.getByRole('option', { name: 'Beta' }))
+		await expectValue('""')
 	})
 })

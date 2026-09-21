@@ -68,9 +68,10 @@ export function EditableInput({
 	const field = useFieldContext<string>()
 
 	return (
-		<FieldFrame label={label} htmlFor={label} className={className}>
+		<FieldFrame label={label} htmlFor={field.name} className={className}>
 			<ToggleInput
 				{...inputProps}
+				id={field.name}
 				type='text'
 				initialValue={field.state.value}
 				ellipsisMaxWidth={ellipsisMaxWidth}

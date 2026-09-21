@@ -57,11 +57,12 @@ interface PopoverEditorProps {
 }
 
 export function TextEditor({
+	id,
 	value,
 	onChange,
 	onKeyDown,
 	disabled
-}: Omit<EditorProps<string>, 'placeholder'>) {
+}: Omit<EditorProps<string>, 'placeholder'> & { id?: string }) {
 	const inputRef = useRef<HTMLInputElement>(null)
 
 	// Editing just started: put the caret to work.
@@ -73,6 +74,7 @@ export function TextEditor({
 	return (
 		<Input
 			ref={inputRef}
+			id={id}
 			value={value}
 			onChange={(e) => onChange(e.target.value)}
 			onKeyDown={onKeyDown}
