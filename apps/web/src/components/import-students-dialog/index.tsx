@@ -7,40 +7,25 @@ import {
 	DialogHeader,
 	DialogTitle
 } from '@/components/ui/dialog'
-import useCreateStudents from '@/hooks/useCreateStudents'
-import usePositionOptions from '@/hooks/usePositionOptions'
-import useProvinces from '@/hooks/useProvinces'
-import useUnitOptions from '@/hooks/useUnitOptions'
-import useWards from '@/hooks/useWards'
-import {
-	AlertCircle,
-	ArrowRight,
-	CheckCircle,
-	Loader2,
-	Upload
-} from 'lucide-react'
-import type React from 'react'
-import { useMemo, useRef, useState } from 'react'
+import { UploadMessage } from '@/components/material-import/import-feedback'
+import type { ImportResults } from '@/components/material-import/types'
+import { ArrowRight, Loader2, Upload } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { downloadImportTemplate } from './build-import-template'
-import { parseImportFile } from './parse-import-file'
+import { ImportResultsPanel } from './import-results-panel'
 import { reviewInputClass } from './review-input-class'
 import { ReviewStep } from './review-step'
 import { UploadStep } from './upload-step'
+import { useImportLookups } from './use-import-lookups'
 import { useReviewColumns } from './use-review-columns'
-import { useReviewTableState } from './use-review-table-state'
+import { useStudentImportFlow } from './use-student-import-flow'
 
 export { reviewInputClass }
 
 export interface ImportStudentsDialogProps {
 	isOpen: boolean
 	onClose: () => void
-	onSuccess?: (results: {
-		successCount: number
-		errorCount: number
-		totalCount: number
-		errors: { row: number; message: string }[]
-	}) => void
+	onSuccess?: (results: ImportResults) => void
 }
 
 export function ImportStudentsDialog({
@@ -49,338 +34,33 @@ export function ImportStudentsDialog({
 	onSuccess
 }: ImportStudentsDialogProps) {
 	const { t } = useTranslation('io')
-	const { options: unitOptions } = useUnitOptions({ enabled: isOpen })
-	const { data: provinces = [] } = useProvinces({ enabled: isOpen })
-	// Unfiltered - the whole ward list is needed up front to build the
-	// per-province cascading dropdown sheet and the name->code lookup used
-	// when parsing the uploaded file back.
-	const { data: wards = [] } = useWards(undefined, { enabled: isOpen })
-
-	// Grouped by unit level like every other position picker, so the review
-	// table's searchable combobox can group and filter instead of forcing a
-	// scroll through every position of every level.
-	const positionComboboxOptions = usePositionOptions({ enabled: isOpen })
-
-	// The dropdown in the downloaded template is a flat list, so the level is
-	// folded into each label.
-	const positionOptions = useMemo(
-		() =>
-			positionComboboxOptions.map((o) => ({
-				id: Number(o.value),
-				label: `${o.group} - ${o.label}`
-			})),
-		[positionComboboxOptions]
-	)
-
-	// label (lowercased, trimmed) -> id, used to resolve the dropdown's
-	// human-readable choice back to a numeric foreign key on import.
-	const unitLabelToId = useMemo(() => {
-		const map = new Map<string, number>()
-		unitOptions.forEach((o) => map.set(o.label.trim().toLowerCase(), o.id))
-		return map
-	}, [unitOptions])
-
-	const positionLabelToId = useMemo(() => {
-		const map = new Map<string, number>()
-		positionOptions.forEach((o) =>
-			map.set(o.label.trim().toLowerCase(), o.id)
-		)
-		return map
-	}, [positionOptions])
-
-	// wards grouped by provinceCode, in a stable order - used both to build
-	// the per-province ward columns/named ranges in the template and as the
-	// basis for wardNameToCode below.
-	const wardsByProvinceCode = useMemo(() => {
-		const map = new Map<string, typeof wards>()
-		wards.forEach((w) => {
-			const list = map.get(w.provinceCode) ?? []
-			list.push(w)
-			map.set(w.provinceCode, list)
-		})
-		return map
-	}, [wards])
-
-	// province display name (lowercased, trimmed) -> code, used to resolve
-	// the imported "...ProvinceName" column back to a code.
-	const provinceNameToCode = useMemo(() => {
-		const map = new Map<string, string>()
-		provinces.forEach((p) =>
-			map.set(p.nameWithType.trim().toLowerCase(), p.code)
-		)
-		return map
-	}, [provinces])
-
-	// provinceCode -> (ward display name, lowercased/trimmed -> code). Ward
-	// names aren't globally unique, so resolution must be scoped to the
-	// row's already-resolved province.
-	const wardNameToCodeByProvince = useMemo(() => {
-		const map = new Map<string, Map<string, string>>()
-		wardsByProvinceCode.forEach((provinceWards, provinceCode) => {
-			const inner = new Map<string, string>()
-			provinceWards.forEach((w) =>
-				inner.set(w.nameWithType.trim().toLowerCase(), w.code)
-			)
-			map.set(provinceCode, inner)
-		})
-		return map
-	}, [wardsByProvinceCode])
-
-	const createStudentsMutation = useCreateStudents()
-	const {
-		form,
-		rows,
-		validRowCount,
-		errorRowCount,
-		loadParsedFile,
-		resetReview,
-		clearFieldError,
-		collectErrors
-	} = useReviewTableState()
-	const [selectedFile, setSelectedFile] = useState<File | null>(null)
-	const [dragActive, setDragActive] = useState(false)
-	// idle -> ready (parsed, awaiting review confirmation) -> uploading ->
-	// success | error (error can also happen pre-parse, e.g. wrong file type)
-	const [uploadStatus, setUploadStatus] = useState<
-		'idle' | 'ready' | 'uploading' | 'success' | 'error'
-	>('idle')
-	const [uploadMessage, setUploadMessage] = useState('')
-	const [importResults, setImportResults] = useState<{
-		successCount: number
-		errorCount: number
-		totalCount: number
-		errors: { row: number; message: string }[]
-	} | null>(null)
-	const fileInputRef = useRef<HTMLInputElement>(null)
-
-	// Once a file has been parsed into `rows`, the dialog switches from the
-	// upload step to the review step until the user either confirms the
-	// import (-> success) or goes back to pick a different file.
-	const isReviewing = rows.length > 0 && uploadStatus !== 'success'
-
-	const downloadTemplate = () =>
-		downloadImportTemplate({
-			provinces,
-			wardsByProvinceCode,
-			unitOptions,
-			positionOptions
-		})
-
-	const handleDrag = (e: React.DragEvent<HTMLDivElement>) => {
-		e.preventDefault()
-		e.stopPropagation()
-		if (e.type === 'dragenter' || e.type === 'dragover') {
-			setDragActive(true)
-		} else if (e.type === 'dragleave') {
-			setDragActive(false)
-		}
-	}
-
-	const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-		e.preventDefault()
-		e.stopPropagation()
-		setDragActive(false)
-
-		if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-			handleFileSelect(e.dataTransfer.files[0])
-		}
-	}
-
-	const handleFileSelect = (file: File) => {
-		if (
-			file &&
-			(file.type === 'text/csv' ||
-				file.name.endsWith('.csv') ||
-				file.type === 'application/vnd.ms-excel' ||
-				file.type ===
-					'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
-				file.name.endsWith('.xlsx') ||
-				file.name.endsWith('.xls'))
-		) {
-			resetDialog()
-
-			const reader = new FileReader()
-
-			reader.onload = (e) => {
-				try {
-					const { students, rowErrors } = parseImportFile({
-						data: e.target?.result as ArrayBuffer,
-						unitLabelToId,
-						positionLabelToId,
-						provinceNameToCode,
-						wardNameToCodeByProvince
-					})
-
-					loadParsedFile(students, rowErrors)
-					setSelectedFile(file)
-					setUploadStatus('ready')
-					if (rowErrors.length > 0) {
-						setUploadMessage(
-							t('importDialog.messages.refErrors', {
-								count: rowErrors.length
-							})
-						)
-					}
-				} catch (error) {
-					console.error('Error parsing file:', error)
-					setUploadMessage(t('importDialog.messages.readFormat'))
-					setUploadStatus('error')
-				}
-			}
-
-			reader.onerror = (error) => {
-				console.error('FileReader error:', error)
-				setUploadMessage(t('importDialog.messages.readRetry'))
-				setUploadStatus('error')
-			}
-
-			reader.readAsArrayBuffer(file)
-		} else {
-			setUploadMessage(t('importDialog.messages.invalidType'))
-			setUploadStatus('error')
-		}
-	}
-
-	const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-		if (e.target.files && e.target.files[0]) {
-			handleFileSelect(e.target.files[0])
-		}
-	}
-
-	const handleImport = async () => {
-		if (!selectedFile) {
-			setUploadMessage(t('importDialog.messages.noFile'))
-			setUploadStatus('error')
-			return
-		}
-
-		if (errorRowCount > 0) {
-			setUploadMessage(t('importDialog.messages.fixRefErrors'))
-			setUploadStatus('error')
-			setImportResults({
-				successCount: 0,
-				errorCount: errorRowCount,
-				totalCount: rows.length,
-				errors: collectErrors()
-			})
-			return
-		}
-
-		setUploadStatus('uploading')
-		setUploadMessage(t('importDialog.messages.processing'))
-
-		try {
-			// Read the form's current values, not the frozen `rows` snapshot -
-			// `rows` only exists to give the table a stable row count/index.
-			const finalStudents = form.state.values.rows
-			await createStudentsMutation.mutateAsync(finalStudents)
-
-			const results = {
-				successCount: finalStudents.length,
-				errorCount: 0,
-				totalCount: finalStudents.length,
-				errors: []
-			}
-
-			setUploadStatus('success')
-			setImportResults(results)
-			setUploadMessage(
-				t('importDialog.messages.done', {
-					success: results.successCount,
-					total: results.totalCount
-				})
-			)
-			onSuccess?.(results)
-		} catch (error) {
-			console.error('Import error:', error)
-			setUploadStatus('error')
-			setUploadMessage(
-				t('importDialog.messages.failed', {
-					message: error?.message || String(error)
-				})
-			)
-
-			// Set error results
-			const errorResults = {
-				successCount: 0,
-				errorCount: rows.length,
-				totalCount: rows.length,
-				errors: [{ row: 1, message: error?.message || 'Unknown error' }]
-			}
-			setImportResults(errorResults)
-		}
-	}
-
-	const resetDialog = () => {
-		setSelectedFile(null)
-		resetReview()
-		setUploadStatus('idle')
-		setUploadMessage('')
-		setImportResults(null)
-		setDragActive(false)
-		if (fileInputRef.current) {
-			fileInputRef.current.value = ''
-		}
-	}
-
-	const handleClose = () => {
-		resetDialog()
-		onClose()
-	}
-
-	// Hoisted out of the column cells below: every ReviewSelectCell was
-	// re-mapping its `options` array (unitOptions/provinces/wards -> {value,
-	// label}) from scratch on EVERY row on EVERY render, since cell
-	// renderers run per-row per-render. With hundreds of units/rows that's
-	// hundreds of thousands of object allocations on every keystroke or
-	// selection, which is what made picking an option feel like it locked
-	// up the tab. Building each option list once here and reusing the same
-	// array reference also lets ReviewSelectCell's internal filteredOptions
-	// memo actually memoize instead of recomputing on every render.
-	const unitSelectOptions = useMemo(
-		() => unitOptions.map((o) => ({ value: String(o.id), label: o.label })),
-		[unitOptions]
-	)
-	const provinceSelectOptions = useMemo(
-		() => provinces.map((p) => ({ value: p.code, label: p.nameWithType })),
-		[provinces]
-	)
-	const wardSelectOptionsByProvinceCode = useMemo(() => {
-		const map = new Map<string, { value: string; label: string }[]>()
-		wardsByProvinceCode.forEach((wardsForProvince, code) => {
-			map.set(
-				code,
-				wardsForProvince.map((w) => ({
-					value: w.code,
-					label: w.nameWithType
-				}))
-			)
-		})
-		return map
-	}, [wardsByProvinceCode])
-
+	const lookups = useImportLookups(isOpen)
+	const flow = useStudentImportFlow({
+		parseLookups: lookups.parseLookups,
+		onClose,
+		onSuccess
+	})
 	const reviewColumns = useReviewColumns({
-		form,
-		clearFieldError,
-		unitSelectOptions,
-		positionComboboxOptions,
-		provinceSelectOptions,
-		wardSelectOptionsByProvinceCode
+		form: flow.form,
+		clearFieldError: flow.clearFieldError,
+		...lookups.selectOptions
 	})
 
 	if (!isOpen) return null
+
+	const isUploading = flow.uploadStatus === 'uploading'
 
 	return (
 		<Dialog
 			open={isOpen}
 			onOpenChange={(open) => {
-				if (!open) handleClose()
+				if (!open) flow.handleClose()
 			}}
 		>
 			<DialogContent className='max-w-9/10'>
 				<DialogHeader>
 					<DialogTitle>{t('importDialog.title')}</DialogTitle>
-					{!isReviewing && (
+					{!flow.isReviewing && (
 						<DialogDescription>
 							{t('importDialog.description')}
 						</DialogDescription>
@@ -388,140 +68,59 @@ export function ImportStudentsDialog({
 				</DialogHeader>
 
 				<div className='space-y-6'>
-					{!isReviewing && (
-						<UploadStep
-							downloadTemplate={downloadTemplate}
-							selectedFile={selectedFile}
-							dragActive={dragActive}
-							fileInputRef={fileInputRef}
-							onDrag={handleDrag}
-							onDrop={handleDrop}
-							onFileInputChange={handleFileInputChange}
-						/>
-					)}
-
-					{isReviewing && (
+					{flow.isReviewing ? (
 						<ReviewStep
-							rows={rows}
-							validRowCount={validRowCount}
-							errorRowCount={errorRowCount}
-							resetDialog={resetDialog}
-							isUploading={uploadStatus === 'uploading'}
+							rows={flow.rows}
+							validRowCount={flow.validRowCount}
+							errorRowCount={flow.errorRowCount}
+							resetDialog={flow.reset}
+							isUploading={isUploading}
 							reviewColumns={reviewColumns}
 						/>
+					) : (
+						<UploadStep
+							downloadTemplate={() =>
+								downloadImportTemplate(lookups.templateData)
+							}
+							selectedFile={flow.selectedFile}
+							dragActive={flow.dragActive}
+							fileInputRef={flow.fileInputRef}
+							onDrag={flow.handleDrag}
+							onDrop={flow.handleDrop}
+							onFileInputChange={flow.handleFileInputChange}
+						/>
 					)}
 
-					{/* Status message */}
-					{uploadMessage && (
-						<div className='flex items-center gap-2 rounded-lg border p-3 text-sm'>
-							{uploadStatus === 'success' && (
-								<CheckCircle className='h-5 w-5 flex-shrink-0 text-green-600 dark:text-green-400' />
-							)}
-							{uploadStatus === 'error' && (
-								<AlertCircle className='h-5 w-5 flex-shrink-0 text-destructive' />
-							)}
-							{uploadStatus === 'uploading' && (
-								<Loader2 className='h-5 w-5 flex-shrink-0 animate-spin text-primary' />
-							)}
-							<span
-								className={
-									uploadStatus === 'success'
-										? 'text-green-700 dark:text-green-400'
-										: uploadStatus === 'error'
-											? 'text-destructive'
-											: 'text-foreground'
-								}
-							>
-								{uploadMessage}
-							</span>
-						</div>
+					{flow.uploadMessage && (
+						<UploadMessage
+							status={flow.uploadStatus}
+							message={flow.uploadMessage}
+						/>
 					)}
 
-					{/* Import results */}
-					{importResults && (
-						<div className='space-y-3 rounded-lg border bg-muted/30 p-4'>
-							<h4 className='font-medium text-foreground'>
-								{t('importDialog.results.title')}
-							</h4>
-							<div className='grid grid-cols-3 gap-4 text-sm'>
-								<div className='text-center'>
-									<div className='text-2xl font-bold text-green-600 dark:text-green-400'>
-										{importResults.successCount}
-									</div>
-									<div className='text-muted-foreground'>
-										{t('importDialog.results.success')}
-									</div>
-								</div>
-								<div className='text-center'>
-									<div className='text-2xl font-bold text-destructive'>
-										{importResults.errorCount}
-									</div>
-									<div className='text-muted-foreground'>
-										{t('importDialog.results.errors')}
-									</div>
-								</div>
-								<div className='text-center'>
-									<div className='text-2xl font-bold text-foreground'>
-										{importResults.totalCount}
-									</div>
-									<div className='text-muted-foreground'>
-										{t('importDialog.results.total')}
-									</div>
-								</div>
-							</div>
-
-							{importResults.errors &&
-								importResults.errors.length > 0 && (
-									<div className='space-y-2 pt-1'>
-										<h5 className='font-medium text-destructive'>
-											{t('importDialog.results.details')}
-										</h5>
-										<div className='max-h-32 overflow-y-auto space-y-1'>
-											{importResults.errors.map(
-												(error, index) => (
-													<div
-														key={index}
-														className='rounded border bg-background p-2 text-sm text-destructive'
-													>
-														{t(
-															'importDialog.results.row',
-															{
-																row: error.row,
-																message:
-																	error.message
-															}
-														)}
-													</div>
-												)
-											)}
-										</div>
-									</div>
-								)}
-						</div>
+					{flow.importResults && (
+						<ImportResultsPanel results={flow.importResults} />
 					)}
 				</div>
 
 				<DialogFooter>
-					<Button variant='secondary' onClick={handleClose}>
-						{uploadStatus === 'success'
+					<Button variant='secondary' onClick={flow.handleClose}>
+						{flow.uploadStatus === 'success'
 							? t('importDialog.actions.close')
 							: t('importDialog.actions.cancel')}
 					</Button>
 
-					{isReviewing && (
+					{flow.isReviewing && (
 						<Button
-							onClick={handleImport}
-							disabled={
-								errorRowCount > 0 ||
-								uploadStatus === 'uploading'
-							}
+							onClick={flow.handleImport}
+							disabled={flow.errorRowCount > 0 || isUploading}
 							title={
-								errorRowCount > 0
+								flow.errorRowCount > 0
 									? t('importDialog.actions.fixErrorsTooltip')
 									: undefined
 							}
 						>
-							{uploadStatus === 'uploading' ? (
+							{isUploading ? (
 								<>
 									<Loader2 className='h-4 w-4 animate-spin' />
 									{t('importDialog.actions.importing')}
