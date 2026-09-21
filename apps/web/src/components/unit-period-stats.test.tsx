@@ -7,9 +7,14 @@ import {
 	within
 } from '@testing-library/react'
 import dayjs from 'dayjs'
+import { useState } from 'react'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { mockFetch } from '@/test/fetch-mock'
-import { currentPeriod, periodRange } from '@/lib/stats-period'
+import {
+	currentPeriod,
+	periodRange,
+	type StatsPeriod
+} from '@/lib/stats-period'
 import UnitPeriodStats from './unit-period-stats'
 
 afterEach(() => {
@@ -40,7 +45,37 @@ const report = (from: string, to: string, assigned: number) => ({
 	]
 })
 
-function renderStats(fail = false) {
+// The page keeps the period in the URL; here a bit of state stands in for it.
+function Harness({
+	initial,
+	onPeriodChange
+}: {
+	initial: StatsPeriod
+	onPeriodChange?: (period: StatsPeriod) => void
+}) {
+	const [period, setPeriod] = useState(initial)
+	return (
+		<UnitPeriodStats
+			unitId={7}
+			period={period}
+			onPeriodChange={(next) => {
+				setPeriod(next)
+				onPeriodChange?.(next)
+			}}
+		/>
+	)
+}
+
+function renderStats(
+	fail = false,
+	{
+		initial = currentPeriod('month'),
+		onPeriodChange
+	}: {
+		initial?: StatsPeriod
+		onPeriodChange?: (period: StatsPeriod) => void
+	} = {}
+) {
 	const requests = mockFetch((req) => {
 		if (fail) return { status: 500, body: { code: 'internal' } }
 		const from = req.url.searchParams.get('from') ?? ''
@@ -55,7 +90,7 @@ function renderStats(fail = false) {
 	})
 	render(
 		<QueryClientProvider client={client}>
-			<UnitPeriodStats unitId={7} />
+			<Harness initial={initial} onPeriodChange={onPeriodChange} />
 		</QueryClientProvider>
 	)
 
@@ -99,6 +134,47 @@ describe('UnitPeriodStats', () => {
 			).toBe(true)
 		)
 		expect(await screen.findByText('9')).toBeTruthy()
+	})
+
+	it('asks for the period it was given, not the current month', async () => {
+		const requests = renderStats(false, {
+			initial: { kind: 'quarter', year: 2024, index: 2 }
+		})
+
+		expect(await screen.findByText('Gạo')).toBeTruthy()
+		const asked = requests.requests.find((r) =>
+			r.path.endsWith('/units/7/stats/period')
+		)
+		expect(asked?.url.searchParams.get('from')).toBe('2024-04-01')
+		expect(asked?.url.searchParams.get('to')).toBe('2024-06-30')
+	})
+
+	it('reports the period the user picks so it can be kept in the URL', async () => {
+		const picked: StatsPeriod[] = []
+		renderStats(false, {
+			initial: { kind: 'quarter', year: 2024, index: 2 },
+			onPeriodChange: (p) => picked.push(p)
+		})
+		await screen.findByText('Gạo')
+
+		const yearTab = screen.getByRole('tab', { name: 'Năm' })
+		fireEvent.mouseDown(yearTab)
+		fireEvent.click(yearTab)
+
+		await waitFor(() =>
+			expect(picked).toEqual([{ kind: 'year', year: 2024, index: 1 }])
+		)
+	})
+
+	it('shows a linked year outside the usual window in the year select', async () => {
+		renderStats(false, { initial: { kind: 'year', year: 2010, index: 1 } })
+		await screen.findByText('Gạo')
+
+		expect(
+			within(screen.getByRole('combobox', { name: 'Năm' })).getByText(
+				'2010'
+			)
+		).toBeTruthy()
 	})
 
 	it('tells the user when the figures could not be loaded', async () => {

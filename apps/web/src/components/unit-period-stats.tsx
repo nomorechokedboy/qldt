@@ -1,9 +1,8 @@
-import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import StatsPeriodSelector from '@/components/stats-period-selector'
 import useUnitStatsPeriod from '@/hooks/useUnitStatsPeriod'
-import { currentPeriod, periodRange } from '@/lib/stats-period'
+import { periodRange, type StatsPeriod } from '@/lib/stats-period'
 
 function FigureList({
 	title,
@@ -36,9 +35,19 @@ function FigureList({
 	)
 }
 
-export default function UnitPeriodStats({ unitId }: { unitId: number }) {
+interface UnitPeriodStatsProps {
+	unitId: number
+	// Controlled by the caller so the choice can live in the URL.
+	period: StatsPeriod
+	onPeriodChange: (period: StatsPeriod) => void
+}
+
+export default function UnitPeriodStats({
+	unitId,
+	period,
+	onPeriodChange
+}: UnitPeriodStatsProps) {
 	const { t } = useTranslation('units')
-	const [period, setPeriod] = useState(() => currentPeriod('month'))
 	const range = periodRange(period)
 	const { data, isLoading, isError } = useUnitStatsPeriod(unitId, range)
 
@@ -54,7 +63,7 @@ export default function UnitPeriodStats({ unitId }: { unitId: number }) {
 						{t('dashboard.period.range', range)}
 					</p>
 				</div>
-				<StatsPeriodSelector value={period} onChange={setPeriod} />
+				<StatsPeriodSelector value={period} onChange={onPeriodChange} />
 			</div>
 
 			{isError ? (

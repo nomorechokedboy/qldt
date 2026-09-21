@@ -1,6 +1,12 @@
 import dayjs from 'dayjs'
 import { describe, expect, it } from 'vitest'
-import { changePeriodKind, currentPeriod, periodRange } from './stats-period'
+import {
+	changePeriodKind,
+	currentPeriod,
+	formatPeriod,
+	parsePeriod,
+	periodRange
+} from './stats-period'
 
 describe('periodRange', () => {
 	it('spans a whole month, including a leap February', () => {
@@ -61,5 +67,64 @@ describe('changePeriodKind', () => {
 			changePeriodKind({ kind: 'month', year: 2025, index: 2 }, 'year')
 				.year
 		).toBe(2025)
+	})
+})
+
+describe('formatPeriod / parsePeriod', () => {
+	const periods = [
+		{ kind: 'month', year: 2026, index: 9 },
+		{ kind: 'month', year: 2026, index: 12 },
+		{ kind: 'quarter', year: 2026, index: 3 },
+		{ kind: 'year', year: 2026, index: 1 }
+	] as const
+
+	it('writes a month, quarter and year the way a link carries them', () => {
+		expect(periods.map(formatPeriod)).toEqual([
+			'2026-09',
+			'2026-12',
+			'2026-Q3',
+			'2026-Y'
+		])
+	})
+
+	it('reads back exactly what was written', () => {
+		for (const period of periods) {
+			expect(parsePeriod(formatPeriod(period))).toEqual(period)
+		}
+	})
+
+	it('accepts a lowercase quarter marker typed by hand', () => {
+		expect(parsePeriod('2026-q2')).toEqual({
+			kind: 'quarter',
+			year: 2026,
+			index: 2
+		})
+	})
+
+	it('reads a bare year, which the router delivers as a number', () => {
+		const year = { kind: 'year', year: 2026, index: 1 }
+
+		expect(parsePeriod('2026')).toEqual(year)
+		expect(parsePeriod(2026)).toEqual(year)
+		expect(parsePeriod('2026-y')).toEqual(year)
+	})
+
+	it('rejects values that are not a real period', () => {
+		for (const raw of [
+			undefined,
+			'',
+			'abc',
+			'2026-13',
+			'2026-00',
+			'2026-Q5',
+			'2026-Q0',
+			'2026-9',
+			'26-09',
+			'2026-09-01',
+			'0000',
+			'3000'
+		]) {
+			expect(parsePeriod(raw)).toBeUndefined()
+		}
 	})
 })

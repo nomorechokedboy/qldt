@@ -42,17 +42,23 @@ import { unitLevelLabels, unitLevelOrder } from '@/data/unit-levels'
 import UnitSelect from '@/components/unit/select'
 import useUnitOptions from '@/hooks/useUnitOptions'
 import UnitPeriodStats from '@/components/unit-period-stats'
+import {
+	currentPeriod,
+	formatPeriod,
+	parsePeriod,
+	type StatsPeriod
+} from '@/lib/stats-period'
 import WeaponsOverview from '@/components/weapons-overview'
 import { GetPoliticsQualityReport } from '@/api'
 import { transformPoliticsQualityData } from '@/lib/utils'
-import type { units } from '@/api/client'
 
 const TROOP_CHART_COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042']
 
 export default function BaseStatsDashboard() {
 	const { t } = useTranslation('units')
 	const navigate = useNavigate({ from: Route.fullPath })
-	const { unit: unitIdParam } = Route.useSearch()
+	const { unit: unitIdParam, period: periodParam } = Route.useSearch()
+	const period = parsePeriod(periodParam) ?? currentPeriod('month')
 	const { user } = useAuth()
 	const {
 		units,
@@ -91,6 +97,15 @@ export default function BaseStatsDashboard() {
 
 	const handleUnitChange = (id: string) => {
 		navigate({ search: (prev) => ({ ...prev, unit: Number(id) }) })
+	}
+
+	// replace: every pick is written to the URL so the view can be shared, but
+	// stepping through months shouldn't leave a history entry per click.
+	const handlePeriodChange = (next: StatsPeriod) => {
+		navigate({
+			search: (prev) => ({ ...prev, period: formatPeriod(next) }),
+			replace: true
+		})
 	}
 
 	const kpiCards = [
@@ -448,7 +463,11 @@ export default function BaseStatsDashboard() {
 				unitId={stats.unit.id}
 			/>
 
-			<UnitPeriodStats unitId={stats.unit.id} />
+			<UnitPeriodStats
+				unitId={stats.unit.id}
+				period={period}
+				onPeriodChange={handlePeriodChange}
+			/>
 		</div>
 	)
 
