@@ -12,7 +12,7 @@ export const overlayScript = `
 		root.id = '__e2e_overlay'
 		root.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:2147483647;font-family:Inter,system-ui,sans-serif'
 		root.innerHTML = [
-			'<div id="__e2e_cursor" style="position:absolute;left:-40px;top:-40px;width:26px;height:26px;transition:transform .32s cubic-bezier(.22,.8,.3,1);will-change:transform">',
+			'<div id="__e2e_cursor" style="position:absolute;left:-40px;top:-40px;width:26px;height:26px;transition:transform .65s cubic-bezier(.4,.1,.25,1);will-change:transform">',
 			'<svg viewBox="0 0 24 24" width="26" height="26"><path d="M4 2l16 9-7 2-3 7z" fill="#fff" stroke="#111" stroke-width="1.6" stroke-linejoin="round"/></svg></div>',
 			'<div id="__e2e_caption" style="position:absolute;left:50%;bottom:28px;transform:translateX(-50%);max-width:70%;padding:12px 22px;border-radius:10px;background:rgba(17,24,39,.88);color:#fff;font-size:22px;line-height:1.35;text-align:center;opacity:0;transition:opacity .25s"></div>',
 			'<div id="__e2e_title" style="position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:linear-gradient(135deg,#14532d,#052e16);color:#fff;opacity:0;transition:opacity .4s"></div>'
