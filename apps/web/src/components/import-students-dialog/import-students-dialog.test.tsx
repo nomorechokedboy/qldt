@@ -306,7 +306,14 @@ describe('ImportStudentsDialog', () => {
 		vi.spyOn(console, 'error').mockImplementation(() => {})
 		vi.spyOn(console, 'log').mockImplementation(() => {})
 		const { requests, onSuccess } = setup({
-			bulk: { status: 500, body: { message: 'boom' } }
+			bulk: {
+				status: 400,
+				body: {
+					code: 'invalid_argument',
+					message: 'studentId already exists',
+					details: null
+				}
+			}
 		})
 		await waitForLookups(requests)
 		chooseFile(spreadsheet([validRow('Nguyen Van A')]))
@@ -314,9 +321,13 @@ describe('ImportStudentsDialog', () => {
 
 		fireEvent.click(confirmButton())
 
-		expect(await screen.findByText(/^Lỗi import:/)).toBeTruthy()
+		expect(
+			await screen.findByText('Lỗi import: studentId already exists')
+		).toBeTruthy()
 		expect(screen.getByText('Kết quả import:')).toBeTruthy()
-		expect(screen.getByText(/^Dòng 1:/)).toBeTruthy()
+		expect(
+			screen.getByText('Dòng 1: studentId already exists')
+		).toBeTruthy()
 		expect(onSuccess).not.toHaveBeenCalled()
 		expect(screen.getByText('Xem trước dữ liệu import')).toBeTruthy()
 		expect(confirmButton().hasAttribute('disabled')).toBe(false)
