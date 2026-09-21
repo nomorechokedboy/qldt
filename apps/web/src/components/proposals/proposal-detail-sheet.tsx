@@ -7,8 +7,9 @@ import {
 	SheetTitle
 } from '@/components/ui/sheet'
 import { formatDbTimestamp } from '@/lib/utils'
+import { DetailRow, ItemRow, ItemSection } from './detail-parts'
 import type { ProposalAdapter, ProposalRow } from './proposal-adapter'
-import { itemStatusLabel, STATUS_BADGE_VARIANT, statusLabel } from './status'
+import { STATUS_BADGE_VARIANT, statusLabel } from './status'
 
 export default function ProposalDetailSheet<TRow extends ProposalRow>({
 	adapter,
@@ -35,25 +36,19 @@ export default function ProposalDetailSheet<TRow extends ProposalRow>({
 				{proposal && (
 					<div className='space-y-4 px-4 pb-4'>
 						<div className='grid grid-cols-2 gap-2 text-sm'>
-							<span className='text-muted-foreground'>
-								{t('common.unit')}
-							</span>
-							<span>{proposal.unit?.name ?? '—'}</span>
-							{adapter.renderTarget(proposal, t)}
-							<span className='text-muted-foreground'>
-								{t('common.requestedBy')}
-							</span>
-							<span>
+							{adapter.renderLead(proposal, t)}
+							<DetailRow
+								label={t(
+									adapter.requestedByKey ??
+										'common.requestedBy'
+								)}
+							>
 								{proposal.requestedBy?.displayName ?? '—'}
-							</span>
-							<span className='text-muted-foreground'>
-								{t('common.approver')}
-							</span>
-							<span>{proposal.approver?.displayName ?? '—'}</span>
-							<span className='text-muted-foreground'>
-								{t('status.label')}
-							</span>
-							<span>
+							</DetailRow>
+							<DetailRow label={t('common.approver')}>
+								{proposal.approver?.displayName ?? '—'}
+							</DetailRow>
+							<DetailRow label={t('status.label')}>
 								<Badge
 									variant={
 										STATUS_BADGE_VARIANT[proposal.status] ??
@@ -62,90 +57,77 @@ export default function ProposalDetailSheet<TRow extends ProposalRow>({
 								>
 									{statusLabel(t, proposal.status)}
 								</Badge>
-							</span>
-							{adapter.renderDates(proposal, t)}
+							</DetailRow>
+							{adapter.renderDates?.(proposal, t)}
 							{proposal.note && (
-								<>
-									<span className='text-muted-foreground'>
-										{t('common.note')}
-									</span>
-									<span>{proposal.note}</span>
-								</>
+								<DetailRow label={t('common.note')}>
+									{proposal.note}
+								</DetailRow>
 							)}
 							{proposal.rejectionReason && (
-								<>
-									<span className='text-muted-foreground'>
-										{t('common.rejectionReason')}
-									</span>
-									<span>{proposal.rejectionReason}</span>
-								</>
+								<DetailRow label={t('common.rejectionReason')}>
+									{proposal.rejectionReason}
+								</DetailRow>
 							)}
 						</div>
 
 						{!!troopers?.length && (
-							<div>
-								<h4 className='mb-1 text-sm font-medium'>
-									{t('common.troopers')}
-								</h4>
-								<ul className='space-y-1 text-sm'>
-									{troopers.map((trooper) => (
-										<li
-											key={trooper.id}
-											className='flex flex-col gap-1 rounded-md border p-2'
-										>
-											<div className='flex items-center justify-between'>
-												<span>
-													{trooper.student
-														?.fullName ??
-														`#${trooper.id}`}
-												</span>
-												<span className='flex items-center gap-2'>
-													<Badge variant='outline'>
-														{itemStatusLabel(
-															t,
-															trooper.itemStatus
-														)}
-													</Badge>
-													{trooper.failureReason && (
-														<span className='text-xs text-destructive'>
-															{
-																trooper.failureReason
-															}
-														</span>
-													)}
-												</span>
-											</div>
-											<div className='flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground'>
-												{adapter.renderTrooperMeta(
-													proposal,
-													trooper,
-													t
-												)}
-												{trooper.appliedAt && (
-													<span>
-														{t(
-															'common.itemAppliedAt',
-															{
-																date: formatDbTimestamp(
-																	trooper.appliedAt
-																)
-															}
-														)}
-													</span>
-												)}
-												{adapter.renderTrooperEnd?.(
-													trooper,
-													t
-												)}
-											</div>
-										</li>
-									))}
-								</ul>
-							</div>
+							<ItemSection title={t('common.troopers')}>
+								{troopers.map((trooper) => (
+									<ItemRow
+										key={trooper.id}
+										label={
+											trooper.student?.fullName ??
+											`#${trooper.id}`
+										}
+										itemStatus={trooper.itemStatus}
+										failureReason={trooper.failureReason}
+									>
+										<TrooperDetails
+											adapter={adapter}
+											proposal={proposal}
+											trooper={trooper}
+										/>
+									</ItemRow>
+								))}
+							</ItemSection>
 						)}
+
+						{adapter.renderExtraSections?.(proposal, t)}
 					</div>
 				)}
 			</SheetContent>
 		</Sheet>
+	)
+}
+
+// The second line of a trooper: what the kind says about them, and when it
+// was applied. Nothing (not even an empty line) when there is nothing to say.
+function TrooperDetails<TRow extends ProposalRow>({
+	adapter,
+	proposal,
+	trooper
+}: {
+	adapter: ProposalAdapter<TRow>
+	proposal: TRow
+	trooper: NonNullable<TRow['troopers']>[number]
+}) {
+	const { t } = useTranslation('proposals')
+	const meta = adapter.renderTrooperMeta?.(proposal, trooper, t)
+	const end = adapter.renderTrooperEnd?.(trooper, t)
+	if (!meta && !trooper.appliedAt && !end) return null
+
+	return (
+		<div className='flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground'>
+			{meta}
+			{trooper.appliedAt && (
+				<span>
+					{t('common.itemAppliedAt', {
+						date: formatDbTimestamp(trooper.appliedAt)
+					})}
+				</span>
+			)}
+			{end}
+		</div>
 	)
 }

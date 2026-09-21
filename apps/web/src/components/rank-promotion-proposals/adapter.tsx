@@ -1,4 +1,6 @@
 import type { rank_promotion_proposals } from '@/api/client'
+import { unitTargetTrooperColumns } from '@/components/proposals/columns'
+import { DetailRow } from '@/components/proposals/detail-parts'
 import type { ProposalAdapter } from '@/components/proposals/proposal-adapter'
 import {
 	useApproveRankPromotionProposal,
@@ -37,27 +39,25 @@ export const rankPromotionAdapter: ProposalAdapter<RankPromotionProposalRow> = {
 	useCancel: useCancelRankPromotionProposal,
 	useReject: useRejectRankPromotionProposal,
 	CreateForm: CreateRankPromotionProposalForm,
-	targetColumn: (t) => ({
-		id: 'targetRank',
-		accessorKey: 'targetRank',
-		header: t('rank.targetRank'),
-		cell: ({ row }) => row.original.targetRank
-	}),
-	renderTarget: (row, t) => (
+	middleColumns: (t) =>
+		unitTargetTrooperColumns(t, {
+			id: 'targetRank',
+			accessorKey: 'targetRank',
+			header: t('rank.targetRank'),
+			cell: ({ row }) => row.original.targetRank
+		}),
+	renderLead: (row, t) => (
 		<>
-			<span className='text-muted-foreground'>
-				{t('rank.targetRank')}
-			</span>
-			<span>{row.targetRank}</span>
+			<DetailRow label={t('common.unit')}>
+				{row.unit?.name ?? '—'}
+			</DetailRow>
+			<DetailRow label={t('rank.targetRank')}>{row.targetRank}</DetailRow>
 		</>
 	),
 	renderDates: (row, t) => (
-		<>
-			<span className='text-muted-foreground'>
-				{t('common.effectiveDate')}
-			</span>
-			<span>{row.effectiveDate ?? '—'}</span>
-		</>
+		<DetailRow label={t('common.effectiveDate')}>
+			{row.effectiveDate ?? '—'}
+		</DetailRow>
 	),
 	renderTrooperMeta: (row, trooper, t) => (
 		<>

@@ -1,4 +1,6 @@
 import type { activity_status_proposals } from '@/api/client'
+import { unitTargetTrooperColumns } from '@/components/proposals/columns'
+import { DetailRow } from '@/components/proposals/detail-parts'
 import type { ProposalAdapter } from '@/components/proposals/proposal-adapter'
 import { activityStatusLabel } from '@/data/activity-statuses'
 import {
@@ -49,40 +51,38 @@ export const activityStatusAdapter: ProposalAdapter<ActivityStatusProposalRow> =
 		useCancel: useCancelActivityStatusProposal,
 		useReject: useRejectActivityStatusProposal,
 		CreateForm: CreateActivityStatusProposalForm,
-		targetColumn: (t) => ({
-			id: 'targetActivityStatus',
-			accessorKey: 'targetActivityStatus',
-			header: t('activity.targetStatus'),
-			cell: ({ row }) =>
-				activityStatusLabel(row.original.targetActivityStatus)
-		}),
-		renderTarget: (row, t) => (
+		middleColumns: (t) =>
+			unitTargetTrooperColumns(t, {
+				id: 'targetActivityStatus',
+				accessorKey: 'targetActivityStatus',
+				header: t('activity.targetStatus'),
+				cell: ({ row }) =>
+					activityStatusLabel(row.original.targetActivityStatus)
+			}),
+		renderLead: (row, t) => (
 			<>
-				<span className='text-muted-foreground'>
-					{t('activity.targetStatus')}
-				</span>
-				<span>{activityStatusLabel(row.targetActivityStatus)}</span>
+				<DetailRow label={t('common.unit')}>
+					{row.unit?.name ?? '—'}
+				</DetailRow>
+				<DetailRow label={t('activity.targetStatus')}>
+					{activityStatusLabel(row.targetActivityStatus)}
+				</DetailRow>
 			</>
 		),
 		renderDates: (row, t) =>
 			isRangedTarget(row.targetActivityStatus) ? (
 				<>
-					<span className='text-muted-foreground'>
-						{t('activity.startDate')}
-					</span>
-					<span>{row.startDate ?? '—'}</span>
-					<span className='text-muted-foreground'>
-						{t('activity.endDate')}
-					</span>
-					<span>{row.endDate ?? '—'}</span>
+					<DetailRow label={t('activity.startDate')}>
+						{row.startDate ?? '—'}
+					</DetailRow>
+					<DetailRow label={t('activity.endDate')}>
+						{row.endDate ?? '—'}
+					</DetailRow>
 				</>
 			) : (
-				<>
-					<span className='text-muted-foreground'>
-						{t('common.effectiveDate')}
-					</span>
-					<span>{row.effectiveDate ?? '—'}</span>
-				</>
+				<DetailRow label={t('common.effectiveDate')}>
+					{row.effectiveDate ?? '—'}
+				</DetailRow>
 			),
 		renderTrooperMeta: (row, trooper, t) => {
 			const dates = resolveDates(row.targetActivityStatus, row, trooper)

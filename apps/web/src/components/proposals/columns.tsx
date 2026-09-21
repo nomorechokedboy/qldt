@@ -3,13 +3,16 @@ import type { TFunction } from 'i18next'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { formatDbTimestamp } from '@/lib/utils'
-import type { ProposalRow } from './proposal-adapter'
+import type { ExtraRowAction, ProposalRow } from './proposal-adapter'
 import { STATUS_BADGE_VARIANT, statusLabel } from './status'
 
 type GetColumnsOptions<TRow extends ProposalRow> = {
 	t: TFunction<'proposals'>
-	// The one column that differs between kinds; it sits after the unit.
-	targetColumn: ColumnDef<TRow>
+	// What differs between kinds; sits between the creation date and the
+	// requester.
+	middleColumns: ColumnDef<TRow>[]
+	requestedByLabel: string
+	extraAction?: ExtraRowAction<TRow> | null
 	currentUserId?: number
 	canApprove: boolean
 	canReject: boolean
@@ -23,7 +26,9 @@ type GetColumnsOptions<TRow extends ProposalRow> = {
 
 export function getProposalColumns<TRow extends ProposalRow>({
 	t,
-	targetColumn,
+	middleColumns,
+	requestedByLabel,
+	extraAction,
 	currentUserId,
 	canApprove,
 	canReject,
@@ -45,27 +50,11 @@ export function getProposalColumns<TRow extends ProposalRow>({
 				</span>
 			)
 		},
-		{
-			id: 'unit.name',
-			accessorFn: (row) => row.unit?.name ?? '',
-			header: t('common.unit'),
-			cell: ({ row }) => row.original.unit?.name ?? '—'
-		},
-		targetColumn,
-		{
-			id: 'troopers',
-			accessorFn: (row) => row.troopers?.length ?? 0,
-			header: t('common.trooperCount'),
-			cell: ({ row }) => (
-				<span className='text-sm'>
-					{row.original.troopers?.length ?? 0}
-				</span>
-			)
-		},
+		...middleColumns,
 		{
 			id: 'requestedBy.displayName',
 			accessorFn: (row) => row.requestedBy?.displayName ?? '',
-			header: t('common.requestedBy'),
+			header: requestedByLabel,
 			cell: ({ row }) => row.original.requestedBy?.displayName ?? '—'
 		},
 		{
@@ -138,9 +127,46 @@ export function getProposalColumns<TRow extends ProposalRow>({
 								{t('common.cancel')}
 							</Button>
 						)}
+						{extraAction?.isVisible(proposal) && (
+							<Button
+								variant='ghost'
+								size='sm'
+								disabled={extraAction.isPending}
+								onClick={() => extraAction.run(proposal.id)}
+							>
+								{extraAction.label}
+							</Button>
+						)}
 					</div>
 				)
 			}
+		}
+	]
+}
+
+// The columns most kinds put in the middle: the unit, what is asked for, and
+// how many troopers it covers.
+export function unitTargetTrooperColumns<TRow extends ProposalRow>(
+	t: TFunction<'proposals'>,
+	targetColumn: ColumnDef<TRow>
+): ColumnDef<TRow>[] {
+	return [
+		{
+			id: 'unit.name',
+			accessorFn: (row) => row.unit?.name ?? '',
+			header: t('common.unit'),
+			cell: ({ row }) => row.original.unit?.name ?? '—'
+		},
+		targetColumn,
+		{
+			id: 'troopers',
+			accessorFn: (row) => row.troopers?.length ?? 0,
+			header: t('common.trooperCount'),
+			cell: ({ row }) => (
+				<span className='text-sm'>
+					{row.original.troopers?.length ?? 0}
+				</span>
+			)
 		}
 	]
 }
