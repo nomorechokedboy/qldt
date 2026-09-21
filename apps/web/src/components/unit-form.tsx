@@ -33,7 +33,6 @@ import {
 	unitLevelOrder
 } from '@/data/unit-levels'
 import type { UnitLevel } from '@/types'
-import { getErrorMessage } from '@/lib/utils'
 import UnitCommanderFields, {
 	emptyCommanderValues,
 	commanderValuesToPayload,
@@ -41,6 +40,7 @@ import UnitCommanderFields, {
 	type UnitCommanderValues,
 	type CommanderFieldKey
 } from '@/components/unit-commander-fields'
+import { toastApiError } from '@/lib/api-error'
 
 const NO_PARENT = 'none'
 
@@ -132,7 +132,7 @@ export default function UnitForm({ onSuccess }: UnitFormProps) {
 			setOpen(false)
 		} catch (err) {
 			console.error('Error creating unit:', err)
-			toast.error(getErrorMessage(err, t('form.createFailed')))
+			toastApiError(t('form.createFailed'), err)
 		}
 	}
 

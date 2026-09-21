@@ -19,7 +19,7 @@ import {
 import { Shield } from 'lucide-react'
 import { toast } from 'sonner'
 import { queryClient } from '@/integrations/tanstack-query/root-provider'
-import { getErrorMessage } from '@/lib/utils'
+import { toastApiError } from '@/lib/api-error'
 import { useTranslation } from 'react-i18next'
 
 interface PermissionsModalProps {
@@ -46,9 +46,7 @@ export default function PermissionsModal({ role }: PermissionsModalProps) {
 			queryClient.invalidateQueries({ queryKey: ['roles'] })
 		},
 		onError: (err) => {
-			toast.error(t('roles.update.failed'), {
-				description: getErrorMessage(err, t('common.retryLater'))
-			})
+			toastApiError(t('roles.update.failed'), err)
 		}
 	})
 

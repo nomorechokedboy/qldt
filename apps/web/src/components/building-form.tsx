@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/select'
 import { useCreateBuilding } from '@/hooks/useCreateBuilding'
 import type { Unit } from '@/types'
-import { getErrorMessage } from '@/lib/utils'
+import { toastApiError } from '@/lib/api-error'
 
 export interface BuildingFormProps {
 	unitOptions: Unit[]
@@ -67,9 +67,7 @@ export default function BuildingForm({
 			setOpen(false)
 		} catch (err) {
 			console.error('Error creating building:', err)
-			toast.error(
-				getErrorMessage(err, t('facilities.building.createFailed'))
-			)
+			toastApiError(t('facilities.building.createFailed'), err)
 		}
 	}
 

@@ -25,6 +25,7 @@ import type { MaterialAsset } from '@/types'
 import type { ReactNode } from 'react'
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { toastApiError } from '@/lib/api-error'
 
 const NO_TEMPLATE_VALUE = '__default__'
 
@@ -112,7 +113,7 @@ export function ExportMaterialAssetsDialog({
 				formApi.reset()
 			} catch (err) {
 				console.error('handleExport error', err)
-				toast.error(t('export.failed'))
+				toastApiError(t('export.failed'), err)
 			}
 		}
 	})

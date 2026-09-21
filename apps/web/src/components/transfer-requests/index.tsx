@@ -27,7 +27,6 @@ import {
 	useCancelTransferRequest,
 	useExportTransferRequestHandover
 } from '@/hooks/useTransferRequestActions'
-import { getErrorMessage } from '@/lib/utils'
 import type { transfer_requests } from '@/api/client'
 import {
 	getTransferRequestColumns,
@@ -38,6 +37,7 @@ import {
 } from './columns'
 import CreateTransferRequestForm from './create-transfer-request-form'
 import RejectDialog from './reject-dialog'
+import { toastApiError } from '@/lib/api-error'
 
 const ITEM_STATUSES = ['pending', 'approved', 'failed'] as const
 
@@ -73,7 +73,7 @@ export default function TransferRequestsTab() {
 			await approveMutation.mutateAsync(id)
 			toast.success(t('transfer.approved'))
 		} catch (err) {
-			toast.error(getErrorMessage(err, t('transfer.approveFailed')))
+			toastApiError(t('transfer.approveFailed'), err)
 		}
 	}
 
@@ -81,7 +81,7 @@ export default function TransferRequestsTab() {
 		try {
 			await exportHandoverMutation.mutateAsync(id)
 		} catch (err) {
-			toast.error(getErrorMessage(err, t('transfer.exportFailed')))
+			toastApiError(t('transfer.exportFailed'), err)
 		}
 	}
 
@@ -91,7 +91,7 @@ export default function TransferRequestsTab() {
 			await cancelMutation.mutateAsync(id)
 			toast.success(t('transfer.cancelled'))
 		} catch (err) {
-			toast.error(getErrorMessage(err, t('transfer.cancelFailed')))
+			toastApiError(t('transfer.cancelFailed'), err)
 		}
 	}
 

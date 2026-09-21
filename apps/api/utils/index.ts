@@ -10,6 +10,7 @@ export type SQLiteErrorCode =
 	| 'SQLITE_BUSY'
 	| 'SQLITE_CONSTRAINT'
 	| 'SQLITE_CONSTRAINT_NOTNULL'
+	| 'SQLITE_CONSTRAINT_FOREIGNKEY'
 	| 'SQLITE_READONLY'
 	| 'SQLITE_CANTOPEN'
 	| 'SQLITE_CORRUPT'
@@ -48,7 +49,11 @@ function handleLibsqlError(code: SQLiteErrorCode, message?: string): AppError {
 			)?.[1]
 			const label = field ? UNIQUE_FIELD_LABELS[field] : undefined
 			return AppError.alreadyExists(
-				`${label ?? 'Giá trị này'} đã được sử dụng, vui lòng chọn giá trị khác`
+				`${label ?? 'Giá trị này'} đã được sử dụng, vui lòng chọn giá trị khác`,
+				{
+					reason: 'unique_violation',
+					params: field ? { field } : undefined
+				}
 			)
 		}
 
@@ -56,10 +61,22 @@ function handleLibsqlError(code: SQLiteErrorCode, message?: string): AppError {
 			return AppError.internal('Internal err')
 
 		case 'SQLITE_CONSTRAINT_NOTNULL':
-			return AppError.invalidArgument('Thiếu thông tin bắt buộc')
+			return AppError.invalidArgument('Thiếu thông tin bắt buộc', {
+				reason: 'required_missing'
+			})
 
 		case 'SQLITE_BUSY':
-			return AppError.unavailable('Database is busy, try again')
+			return AppError.unavailable('Database is busy, try again', {
+				reason: 'busy'
+			})
+
+		// A row still referenced elsewhere cannot be removed, and a row
+		// pointing at something that no longer exists cannot be saved.
+		case 'SQLITE_CONSTRAINT_FOREIGNKEY':
+			return AppError.invalidArgument(
+				'The record is still in use or refers to a record that does not exist',
+				{ reason: 'in_use_or_missing_reference' }
+			)
 
 		case 'SQLITE_CANTOPEN':
 			return AppError.internal('Could not open database file')
@@ -86,14 +103,19 @@ function handleLibsqlError(code: SQLiteErrorCode, message?: string): AppError {
 			return AppError.invalidArgument('Parameter index out of range')
 
 		case 'SQLITE_CONSTRAINT':
-			return AppError.invalidArgument('Database constraint violated')
+			return AppError.invalidArgument(
+				'Database constraint violated',
+				/FOREIGN KEY/i.test(message ?? '')
+					? { reason: 'in_use_or_missing_reference' }
+					: undefined
+			)
 
 		default:
 			return AppError.internal(`Unhandled SQLite error: ${code}`)
 	}
 }
 
-export function mapAppErrorToAPIError(error: AppError): APIError {
+function apiErrorFor(error: AppError): APIError {
 	switch (error.type) {
 		case 'AlreadyExists':
 			return APIError.alreadyExists(error.message)
@@ -115,6 +137,16 @@ export function mapAppErrorToAPIError(error: AppError): APIError {
 		default:
 			return APIError.internal(error.message)
 	}
+}
+
+export function mapAppErrorToAPIError(error: AppError): APIError {
+	const apiError = apiErrorFor(error)
+	if (error.meta === undefined) return apiError
+
+	return apiError.withDetails({
+		reason: error.meta.reason,
+		...(error.meta.params !== undefined && { params: error.meta.params })
+	})
 }
 
 export function handleDatabaseErr(err: unknown): never {

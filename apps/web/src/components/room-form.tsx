@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useCreateRoom } from '@/hooks/useCreateRoom'
-import { getErrorMessage } from '@/lib/utils'
+import { toastApiError } from '@/lib/api-error'
 
 export interface RoomFormProps {
 	unitId: number
@@ -59,7 +59,7 @@ export default function RoomForm({
 			setOpen(false)
 		} catch (err) {
 			console.error('Error creating room:', err)
-			toast.error(getErrorMessage(err, t('facilities.room.createFailed')))
+			toastApiError(t('facilities.room.createFailed'), err)
 		}
 	}
 

@@ -1,6 +1,7 @@
 import { AssignRolesToUser } from '@/api'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { toastApiError } from '@/lib/api-error'
 import { AssignRoleRequest } from '@/types'
 import i18n from '@/i18n'
 
@@ -19,7 +20,7 @@ export default function useAssignRoles() {
 			})
 		},
 		onError: (error: Error) => {
-			toast.error(error.message || i18n.t('admin:assignRoles.failed'))
+			toastApiError(i18n.t('admin:assignRoles.failed'), error)
 		}
 	})
 }

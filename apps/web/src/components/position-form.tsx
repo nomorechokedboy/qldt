@@ -15,8 +15,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useCreatePosition } from '@/hooks/useCreatePosition'
-import { getErrorMessage } from '@/lib/utils'
 import { useTranslation } from 'react-i18next'
+import { toastApiError } from '@/lib/api-error'
 
 export interface PositionFormProps {
 	level: string
@@ -57,7 +57,7 @@ export default function PositionForm({ level, onSuccess }: PositionFormProps) {
 			setOpen(false)
 		} catch (err) {
 			console.error('Error creating position:', err)
-			toast.error(getErrorMessage(err, t('positions.create.failed')))
+			toastApiError(t('positions.create.failed'), err)
 		}
 	}
 

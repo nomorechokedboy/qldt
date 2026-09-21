@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import MaterialStockEditForm from '@/components/MaterialStockEditForm'
 import { useDeleteMaterialStocks } from '@/hooks/useDeleteMaterialStocks'
 import type { MaterialStock, Room } from '@/types'
+import { toastApiError } from '@/lib/api-error'
 
 interface MaterialStockRowActionsProps {
 	data: MaterialStock
@@ -46,7 +47,7 @@ export function MaterialStockRowActions({
 			toast.success(t('stockTable.deleted'))
 			onChanged?.()
 		} catch (err) {
-			toast.error(t('stockTable.deleteFailed'))
+			toastApiError(t('stockTable.deleteFailed'), err)
 			if (err instanceof AxiosError) {
 				console.error('Http error: ', err.response?.data)
 			}

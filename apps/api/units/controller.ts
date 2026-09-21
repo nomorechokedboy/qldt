@@ -34,7 +34,8 @@ class controller {
 			if (UnitLevel.isLargerThan(UnitLevel.COMPANY, rootLevel)) {
 				throw AppError.handleAppErr(
 					AppError.invalidArgument(
-						`Root unit must be Company level or larger. Got: ${level}`
+						`Root unit must be Company level or larger. Got: ${level}`,
+						{ reason: 'root_level_too_small', params: { level } }
 					)
 				)
 			}
@@ -43,14 +44,19 @@ class controller {
 
 		if (parentId === excludeId) {
 			throw AppError.handleAppErr(
-				AppError.invalidArgument('A unit cannot be its own parent')
+				AppError.invalidArgument('A unit cannot be its own parent', {
+					reason: 'own_parent'
+				})
 			)
 		}
 
 		const parent = await this.repo.findOne({ id: parentId })
 		if (parent === undefined) {
 			throw AppError.handleAppErr(
-				AppError.invalidArgument(`Parent unit not found: ${parentId}`)
+				AppError.invalidArgument(`Parent unit not found: ${parentId}`, {
+					reason: 'parent_not_found',
+					params: { id: parentId }
+				})
 			)
 		}
 
@@ -60,7 +66,8 @@ class controller {
 		if (UnitLevel.isEqual(parentLevel, childLevel)) {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(
-					`parent level and unit level can't be the same. Parent level:${parent.level} - Unit level: ${level}`
+					`parent level and unit level can't be the same. Parent level:${parent.level} - Unit level: ${level}`,
+					{ reason: 'level_same_as_parent' }
 				)
 			)
 		}
@@ -68,7 +75,8 @@ class controller {
 		if (UnitLevel.isLargerThan(childLevel, parentLevel)) {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(
-					`unit level can't be higher than parent. Parent level: ${parent.level} - Unit level: ${level}`
+					`unit level can't be higher than parent. Parent level: ${parent.level} - Unit level: ${level}`,
+					{ reason: 'level_above_parent' }
 				)
 			)
 		}
@@ -96,7 +104,11 @@ class controller {
 		if (missing.length > 0) {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(
-					`Commander/deputy user(s) not found: ${missing.join(', ')}`
+					`Commander/deputy user(s) not found: ${missing.join(', ')}`,
+					{
+						reason: 'commander_not_found',
+						params: { ids: missing.join(', ') }
+					}
 				)
 			)
 		}
@@ -229,7 +241,13 @@ class controller {
 		if (rootUnits.length > 0) {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(
-					`Root unit(s) can't be deleted: ${rootUnits.map((u) => u.name).join(', ')}`
+					`Root unit(s) can't be deleted: ${rootUnits.map((u) => u.name).join(', ')}`,
+					{
+						reason: 'root_unit_undeletable',
+						params: {
+							names: rootUnits.map((u) => u.name).join(', ')
+						}
+					}
 				)
 			)
 		}

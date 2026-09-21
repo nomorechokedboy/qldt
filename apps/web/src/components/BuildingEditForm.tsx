@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useUpdateBuilding } from '@/hooks/useUpdateBuilding'
 import type { Building } from '@/types'
-import { getErrorMessage } from '@/lib/utils'
+import { toastApiError } from '@/lib/api-error'
 
 interface BuildingEditFormProps {
 	data: Building
@@ -40,9 +40,7 @@ export default function BuildingEditForm({
 			onClose()
 		} catch (err) {
 			console.error('Error updating building:', err)
-			toast.error(
-				getErrorMessage(err, t('facilities.building.updateFailed'))
-			)
+			toastApiError(t('facilities.building.updateFailed'), err)
 		}
 	}
 

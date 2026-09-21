@@ -12,7 +12,7 @@ import type { ExportResourceType } from '@/types'
 import { Download } from 'lucide-react'
 import { useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
-import { toast } from 'sonner'
+import { toastApiError } from '@/lib/api-error'
 
 // `field` is the exact variable name used in a docx template, so it is never
 // translated; only its description (looked up by `key`) is.
@@ -101,7 +101,7 @@ export function ExportTemplateGuideline({
 			URL.revokeObjectURL(link.href)
 		} catch (err) {
 			console.error('handleDownloadExample error', err)
-			toast.error(t('guideline.example.failed'))
+			toastApiError(t('guideline.example.failed'), err)
 		} finally {
 			setIsDownloading(false)
 		}

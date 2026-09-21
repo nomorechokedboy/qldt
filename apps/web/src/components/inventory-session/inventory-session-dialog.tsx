@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { ScanLine } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+import { toastApiError } from '@/lib/api-error'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import type { inventory_sessions } from '@/api/client'
@@ -83,11 +84,7 @@ export default function InventorySessionDialog({
 			setChallenge(payload)
 			setStep('challenge')
 		} catch (err) {
-			toast.error(
-				err instanceof Error
-					? err.message
-					: t('inventory.dialog.createFailed')
-			)
+			toastApiError(t('inventory.dialog.createFailed'), err)
 		}
 	}
 
@@ -135,11 +132,7 @@ export default function InventorySessionDialog({
 			setReview(result)
 			toast.success(t('inventory.dialog.confirmed'))
 		} catch (err) {
-			toast.error(
-				err instanceof Error
-					? err.message
-					: t('inventory.dialog.confirmFailed')
-			)
+			toastApiError(t('inventory.dialog.confirmFailed'), err)
 		}
 	}
 

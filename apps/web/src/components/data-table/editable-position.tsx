@@ -8,6 +8,7 @@ import usePositionOptions from '@/hooks/usePositionOptions'
 import { queryClient } from '@/integrations/tanstack-query/root-provider'
 import { positionName } from '@/lib/position-name'
 import { toast } from 'sonner'
+import { toastApiError } from '@/lib/api-error'
 
 export type EditablePositionProps = CellContext<Student, unknown> & {
 	className?: string
@@ -36,7 +37,7 @@ export default function EditablePosition({
 			toast.success(t('cells.updateSuccess'))
 		} catch (err) {
 			console.error(err)
-			toast.error(t('cells.updateFailed'))
+			toastApiError(t('cells.updateFailed'), err)
 		}
 	}
 

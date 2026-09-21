@@ -14,7 +14,7 @@ import { useMutation } from '@tanstack/react-query'
 import { toast } from 'sonner'
 import { useEffect } from 'react'
 import useAuth from '@/hooks/useAuth'
-import { getErrorMessage } from '@/lib/utils'
+import { toastApiError } from '@/lib/api-error'
 import { useTranslation } from 'react-i18next'
 import i18n from '@/i18n'
 
@@ -63,11 +63,9 @@ export default function PasswordChangeForm({
 		},
 		onError: (error: any) => {
 			console.error('Failed to change password:', error)
-			toast.error(
-				error?.message === 'Incorrect password'
-					? t('profile.password.incorrect')
-					: getErrorMessage(error, t('profile.password.failed'))
-			)
+			if (error?.message === 'Incorrect password')
+				toast.error(t('profile.password.incorrect'))
+			else toastApiError(t('profile.password.failed'), error)
 		}
 	})
 

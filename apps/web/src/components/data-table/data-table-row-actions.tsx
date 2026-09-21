@@ -24,6 +24,7 @@ import useDeleteStudents from '@/hooks/useDeleteStudents'
 import { toast } from 'sonner'
 import { AxiosError } from 'axios'
 import { isSuperAdmin } from '@/lib/utils'
+import { toastApiError } from '@/lib/api-error'
 
 interface DataTableRowActionsProps<TData> {
 	row: Row<TData>
@@ -60,7 +61,7 @@ export function DataTableRowActions<TData>({
 			)
 			toast.success(t('rowActions.deleteSuccess'))
 		} catch (err) {
-			toast.error(t('rowActions.deleteFailed'))
+			toastApiError(t('rowActions.deleteFailed'), err)
 			if (err instanceof AxiosError) {
 				console.error('Http error: ', err.response?.data)
 			}

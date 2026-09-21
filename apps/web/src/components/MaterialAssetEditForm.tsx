@@ -14,12 +14,12 @@ import {
 	materialConditionOptions
 } from '@/data/material-categories'
 import { useUpdateMaterialAsset } from '@/hooks/useUpdateMaterialAsset'
-import { getErrorMessage } from '@/lib/utils'
 import type { MaterialAsset, MaterialAssetStatus, Room, Student } from '@/types'
 import { X } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
+import { toastApiError } from '@/lib/api-error'
 
 const NONE = 'none'
 
@@ -83,7 +83,7 @@ export default function MaterialAssetEditForm({
 			onClose()
 		} catch (err) {
 			console.error('Error updating material asset:', err)
-			toast.error(getErrorMessage(err, t('assetEdit.updateFailed')))
+			toastApiError(t('assetEdit.updateFailed'), err)
 		}
 	}
 

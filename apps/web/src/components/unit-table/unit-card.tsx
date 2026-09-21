@@ -22,6 +22,7 @@ import {
 	unitLevelLabels
 } from '@/data/unit-levels'
 import type { Unit } from '@/types'
+import { toastApiError } from '@/lib/api-error'
 
 function unitDetailLink(data: Unit) {
 	const to = getUnitDetailUrl(data.level, encodeURIComponent(data.alias))
@@ -59,7 +60,7 @@ export default function UnitCard({ data, onEdit, onDelete }: UnitCardProps) {
 			toast.success(t('card.deleteSuccess', { name: data.name }))
 			onDelete?.()
 		} catch (error) {
-			toast.error(t('card.deleteFailed'))
+			toastApiError(t('card.deleteFailed'), error)
 		} finally {
 			setOpenDelete(false)
 		}

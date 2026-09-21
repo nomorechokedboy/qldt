@@ -14,8 +14,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { InitAdmin } from '@/api'
 import { toast } from 'sonner'
 import { useNavigate } from '@tanstack/react-router'
-import { getErrorMessage } from '@/lib/utils'
 import i18n from '@/i18n'
+import { toastApiError } from '@/lib/api-error'
 
 // Zod calls `error` while parsing, so messages follow the language in use at
 // that moment instead of the one the module was loaded in.
@@ -74,7 +74,7 @@ export default function InitializeAdminForm({
 		},
 		onError: (err) => {
 			console.error('InitAdmin failed', err)
-			toast.error(getErrorMessage(err, t('initialize.admin.failed')))
+			toastApiError(t('initialize.admin.failed'), err)
 		}
 	})
 	const form = useAppForm({

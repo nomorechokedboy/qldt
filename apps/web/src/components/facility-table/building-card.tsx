@@ -27,6 +27,7 @@ import { useDeleteBuildings } from '@/hooks/useDeleteBuildings'
 import { useDeleteRooms } from '@/hooks/useDeleteRooms'
 import useRoomsData from '@/hooks/useRoomsData'
 import type { Building } from '@/types'
+import { toastApiError } from '@/lib/api-error'
 
 interface BuildingCardProps {
 	data: Building
@@ -46,7 +47,7 @@ export default function BuildingCard({ data, onChanged }: BuildingCardProps) {
 			toast.success(t('facilities.building.deleted', { name: data.name }))
 			onChanged?.()
 		} catch (error) {
-			toast.error(t('facilities.building.deleteFailed'))
+			toastApiError(t('facilities.building.deleteFailed'), error)
 		} finally {
 			setOpenDelete(false)
 		}
@@ -221,7 +222,7 @@ function RoomsPanel({
 			toast.success(t('facilities.room.deleted'))
 			handleChanged()
 		} catch (err) {
-			toast.error(t('facilities.room.deleteFailed'))
+			toastApiError(t('facilities.room.deleteFailed'), err)
 		}
 	}
 

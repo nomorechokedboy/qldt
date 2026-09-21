@@ -31,10 +31,10 @@ import useActivityStatusProposalEligibleApprovers from '@/hooks/useActivityStatu
 import useStudentData from '@/hooks/useStudents'
 import UnitSelect from '@/components/unit/select'
 import useUnitOptions from '@/hooks/useUnitOptions'
-import { getErrorMessage } from '@/lib/utils'
 import type { activity_status_proposals } from '@/api/client'
 import DateRangePicker from '@/components/date-range-picker'
 import ActivityStatusDateField from './date-field'
+import { toastApiError } from '@/lib/api-error'
 
 // The picker speaks Date/DateRange; proposal dates are stored and sent as
 // "YYYY-MM-DD" strings, so every read/write goes through these two helpers.
@@ -299,7 +299,7 @@ export default function CreateActivityStatusProposalForm({
 			resetForm()
 			setOpen(false)
 		} catch (err) {
-			toast.error(getErrorMessage(err, t('activity.createFailed')))
+			toastApiError(t('activity.createFailed'), err)
 		}
 	}
 

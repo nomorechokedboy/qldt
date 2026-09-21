@@ -23,7 +23,7 @@ import {
 import { useInitRootUnit } from '@/hooks/useInitRootUnit'
 import { rootUnitLevelOptions } from '@/data/unit-levels'
 import type { UnitLevel } from '@/types'
-import { getErrorMessage } from '@/lib/utils'
+import { toastApiError } from '@/lib/api-error'
 
 export default function InitializeRootUnitForm() {
 	const { t } = useTranslation('units')
@@ -46,7 +46,7 @@ export default function InitializeRootUnitForm() {
 			navigate({ to: '/khoi-tao-qtv', replace: true })
 		} catch (err) {
 			console.error('Failed to create root unit:', err)
-			toast.error(getErrorMessage(err, t('initialize.rootUnit.failed')))
+			toastApiError(t('initialize.rootUnit.failed'), err)
 		}
 	}
 

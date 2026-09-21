@@ -23,6 +23,7 @@ import type { ColumnDef } from '@tanstack/react-table'
 import { type ReactNode, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+import { toastApiError } from '@/lib/api-error'
 
 export interface ExportTemplateManagerProps {
 	children: ReactNode
@@ -113,7 +114,7 @@ export function ExportTemplateManager({
 			toast.success(t('templates.uploaded'))
 		} catch (err) {
 			console.error('handleUpload error', err)
-			toast.error(t('templates.uploadFailed'))
+			toastApiError(t('templates.uploadFailed'), err)
 		}
 	}
 

@@ -23,11 +23,11 @@ import {
 } from '@/components/ui/select'
 import { materialCategoryOptions } from '@/data/material-categories'
 import { useCreateMaterialType } from '@/hooks/useCreateMaterialType'
-import { getErrorMessage } from '@/lib/utils'
 import { Plus } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
+import { toastApiError } from '@/lib/api-error'
 
 export interface MaterialTypeFormProps {
 	onSuccess?: () => void
@@ -70,7 +70,7 @@ export default function MaterialTypeForm({ onSuccess }: MaterialTypeFormProps) {
 			setOpen(false)
 		} catch (err) {
 			console.error('Error creating material type:', err)
-			toast.error(getErrorMessage(err, t('typeForm.createFailed')))
+			toastApiError(t('typeForm.createFailed'), err)
 		}
 	}
 

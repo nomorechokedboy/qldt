@@ -11,10 +11,10 @@ import {
 	DialogDescription,
 	DialogFooter
 } from '@/components/ui/dialog'
-import { getErrorMessage } from '@/lib/utils'
 import useLockedUsers, { LOCKED_USERS_QUERY_KEY } from '@/hooks/useLockedUsers'
 import { useUnlockUser } from './useUnlockUser'
 import { Trans, useTranslation } from 'react-i18next'
+import { toastApiError } from '@/lib/api-error'
 
 interface UserLockIndicatorProps {
 	username: string
@@ -41,7 +41,7 @@ export default function UserLockIndicator({
 			queryClient.invalidateQueries({ queryKey: LOCKED_USERS_QUERY_KEY })
 			setConfirmOpen(false)
 		} catch (err) {
-			toast.error(getErrorMessage(err, t('users.unlock.failed')))
+			toastApiError(t('users.unlock.failed'), err)
 		}
 	}
 

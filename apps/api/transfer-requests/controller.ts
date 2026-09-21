@@ -41,7 +41,8 @@ class controller {
 		if (ids.size === 0) {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(
-					'Source and destination units have no common superior unit'
+					'Source and destination units have no common superior unit',
+					{ reason: 'no_common_superior' }
 				)
 			)
 		}
@@ -102,14 +103,21 @@ class controller {
 		const unit = await unitRepo.findOne({ id: unitId })
 		if (unit === undefined) {
 			throw AppError.handleAppErr(
-				AppError.invalidArgument(`${label} unit not found: ${unitId}`)
+				AppError.invalidArgument(`${label} unit not found: ${unitId}`, {
+					reason: 'unit_not_found',
+					params: { side: label.toLowerCase(), id: unitId }
+				})
 			)
 		}
 
 		if (!this.isCompanyOrAbove(unit.level)) {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(
-					`Transfer requests require ${label} unit to be Company level or larger. Got: ${unit.level}`
+					`Transfer requests require ${label} unit to be Company level or larger. Got: ${unit.level}`,
+					{
+						reason: 'transfer_unit_level_too_small',
+						params: { side: label.toLowerCase(), level: unit.level }
+					}
 				)
 			)
 		}
@@ -129,7 +137,10 @@ class controller {
 		const request = await this.repo.getOne(id)
 		if (request === undefined) {
 			throw AppError.handleAppErr(
-				AppError.invalidArgument(`Transfer request not found: ${id}`)
+				AppError.invalidArgument(`Transfer request not found: ${id}`, {
+					reason: 'request_not_found',
+					params: { id }
+				})
 			)
 		}
 		return request
@@ -155,7 +166,8 @@ class controller {
 		) {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(
-					'A transfer request must include at least one resource'
+					'A transfer request must include at least one resource',
+					{ reason: 'request_empty' }
 				)
 			)
 		}
@@ -163,7 +175,8 @@ class controller {
 		if (input.sourceUnitId === input.destinationUnitId) {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(
-					'Source and destination units must be different'
+					'Source and destination units must be different',
+					{ reason: 'same_unit' }
 				)
 			)
 		}
@@ -196,7 +209,8 @@ class controller {
 		if (!eligibleApproverIds.has(input.approverUserId)) {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(
-					'Selected approver is not a commander/deputy commander/political commander/deputy political commander of any unit superior to both source and destination units'
+					'Selected approver is not a commander/deputy commander/political commander/deputy political commander of any unit superior to both source and destination units',
+					{ reason: 'approver_not_eligible' }
 				)
 			)
 		}
@@ -215,7 +229,11 @@ class controller {
 			) {
 				throw AppError.handleAppErr(
 					AppError.invalidArgument(
-						`Trooper ${t.studentId} does not currently belong to the source unit or one of its subordinate units`
+						`Trooper ${t.studentId} does not currently belong to the source unit or one of its subordinate units`,
+						{
+							reason: 'trooper_not_in_source',
+							params: { id: t.studentId }
+						}
 					)
 				)
 			}
@@ -231,7 +249,11 @@ class controller {
 			) {
 				throw AppError.handleAppErr(
 					AppError.invalidArgument(
-						`Material asset ${m.materialAssetId} does not currently belong to the source unit or one of its subordinate units`
+						`Material asset ${m.materialAssetId} does not currently belong to the source unit or one of its subordinate units`,
+						{
+							reason: 'asset_not_in_source',
+							params: { id: m.materialAssetId }
+						}
 					)
 				)
 			}
@@ -246,7 +268,11 @@ class controller {
 			if (available < m.quantity) {
 				throw AppError.handleAppErr(
 					AppError.invalidArgument(
-						`Not enough stock for material type ${m.materialTypeId} (condition: ${m.condition}) at source unit: requested ${m.quantity}, available ${available}`
+						`Not enough stock for material type ${m.materialTypeId} (condition: ${m.condition}) at source unit: requested ${m.quantity}, available ${available}`,
+						{
+							reason: 'insufficient_stock',
+							params: { requested: m.quantity, available }
+						}
 					)
 				)
 			}
@@ -359,7 +385,9 @@ class controller {
 		const request = await this.getRequestOrThrow(id)
 		if (request.status !== 'pending') {
 			throw AppError.handleAppErr(
-				AppError.invalidArgument('Transfer request is not pending')
+				AppError.invalidArgument('Transfer request is not pending', {
+					reason: 'not_pending'
+				})
 			)
 		}
 		await this.assertActorIsApprover(request, actorUserId)
@@ -529,7 +557,9 @@ class controller {
 		const request = await this.getRequestOrThrow(id)
 		if (request.status !== 'pending') {
 			throw AppError.handleAppErr(
-				AppError.invalidArgument('Transfer request is not pending')
+				AppError.invalidArgument('Transfer request is not pending', {
+					reason: 'not_pending'
+				})
 			)
 		}
 		await this.assertActorIsApprover(request, actorUserId)
@@ -553,7 +583,9 @@ class controller {
 		const request = await this.getRequestOrThrow(id)
 		if (request.status !== 'pending') {
 			throw AppError.handleAppErr(
-				AppError.invalidArgument('Transfer request is not pending')
+				AppError.invalidArgument('Transfer request is not pending', {
+					reason: 'not_pending'
+				})
 			)
 		}
 		if (request.requestedBy!.id !== actorUserId) {

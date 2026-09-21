@@ -18,7 +18,8 @@ export function assertMaxLength(
 	if ([...value.normalize('NFC')].length > max) {
 		throw AppError.handleAppErr(
 			AppError.invalidArgument(
-				`${field} must be at most ${max} characters`
+				`${field} must be at most ${max} characters`,
+				{ reason: 'too_long', params: { field, max } }
 			)
 		)
 	}

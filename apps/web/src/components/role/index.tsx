@@ -41,9 +41,7 @@ export default function RolesTab() {
 			onError: (err) => {
 				console.error('DeleteRole error', err)
 
-				toast.error(t('roles.delete.failed'), {
-					description: err.message
-				})
+				toastApiError(t('roles.delete.failed'), err)
 			}
 		})
 

@@ -4,7 +4,7 @@ import { CreatePermission } from '@/api'
 import { toast } from 'sonner'
 import { queryClient } from '@/integrations/tanstack-query/root-provider'
 import { useAppForm } from '@/hooks/use-app-form'
-import { getErrorMessage } from '@/lib/utils'
+import { toastApiError } from '@/lib/api-error'
 import { useTranslation } from 'react-i18next'
 
 export default function PermissionForm() {
@@ -14,9 +14,7 @@ export default function PermissionForm() {
 		mutationFn: CreatePermission,
 		onError: (err) => {
 			console.error('CreatePermission error', err)
-			toast.error(t('permissions.create.failed'), {
-				description: getErrorMessage(err, t('common.retryLater'))
-			})
+			toastApiError(t('permissions.create.failed'), err)
 		},
 		onSuccess: () => {
 			toast.success(t('permissions.create.success'))

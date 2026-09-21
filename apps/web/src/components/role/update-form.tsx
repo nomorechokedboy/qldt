@@ -7,7 +7,7 @@ import { useState } from 'react'
 import { queryClient } from '@/integrations/tanstack-query/root-provider'
 import { Button } from '../ui/button'
 import { Edit2 } from 'lucide-react'
-import { getErrorMessage } from '@/lib/utils'
+import { toastApiError } from '@/lib/api-error'
 import { useTranslation } from 'react-i18next'
 
 interface UpdateRoleFormProps {
@@ -30,9 +30,7 @@ export default function UpdateRoleForm({
 			queryClient.invalidateQueries({ queryKey: ['roles'] })
 		},
 		onError: (err) => {
-			toast.error(t('roles.update.failed'), {
-				description: getErrorMessage(err, t('common.retryLater'))
-			})
+			toastApiError(t('roles.update.failed'), err)
 		}
 	})
 	const form = useAppForm({

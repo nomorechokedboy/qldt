@@ -1,9 +1,8 @@
 import i18n from '@/i18n'
-import { toast } from 'sonner'
 import { useAppForm } from '@/hooks/use-app-form'
 import usePatchStudentInfo from '@/hooks/usePatchStudentInfo'
 import useUploadFiles from '@/hooks/useUploadFiles'
-import { getErrorMessage } from '@/lib/utils'
+import { toastApiError } from '@/lib/api-error'
 import type { Student } from '@/types'
 import {
 	dateFormatError,
@@ -46,9 +45,7 @@ export default function useStudentEditForm(
 				onSaved?.()
 			} catch (err) {
 				console.error('UpdateStudentInfo err: ', err)
-				toast.error(
-					getErrorMessage(err, i18n.t('student:editForm.saveFailed'))
-				)
+				toastApiError(i18n.t('student:editForm.saveFailed'), err)
 			}
 		}
 	})

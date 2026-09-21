@@ -1,6 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { toastApiError } from '@/lib/api-error'
 import type { inventory_sessions } from '@/api/client'
 import { Button } from '@/components/ui/button'
 import { Checkbox } from '@/components/ui/checkbox'
@@ -110,9 +111,7 @@ export default function InventorySessionApplyPanel({
 				stockDiff
 			})
 		} catch (err) {
-			toast.error(
-				err instanceof Error ? err.message : t('inventory.apply.failed')
-			)
+			toastApiError(t('inventory.apply.failed'), err)
 		}
 	}
 

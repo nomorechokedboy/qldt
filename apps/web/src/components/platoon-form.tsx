@@ -15,11 +15,11 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useCreateUnit } from '@/hooks/useCreateUnit'
-import { getErrorMessage } from '@/lib/utils'
 import {
 	NO_COMMANDER,
 	SingleCommanderField
 } from '@/components/unit-commander-fields'
+import { toastApiError } from '@/lib/api-error'
 
 export interface PlatoonFormProps {
 	companyId: number
@@ -62,7 +62,7 @@ export default function PlatoonForm({
 			setOpen(false)
 		} catch (err) {
 			console.error('Error creating platoon:', err)
-			toast.error(getErrorMessage(err, t('platoonForm.createFailed')))
+			toastApiError(t('platoonForm.createFailed'), err)
 		}
 	}
 

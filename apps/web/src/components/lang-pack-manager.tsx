@@ -23,11 +23,12 @@ import {
 	LangPackFileError,
 	type LangPackAnalysis
 } from '@/i18n/lang-packs'
-import { cn, getErrorMessage } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import { Download, RotateCcw, Upload } from 'lucide-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+import { toastApiError } from '@/lib/api-error'
 
 type Language = (typeof LANGUAGES)[number]
 
@@ -126,11 +127,8 @@ function LanguagePackCard({
 			setResult(analysis)
 			toast.success(t('toast.uploaded', { language: language.label }))
 		} catch (err) {
-			toast.error(
-				err instanceof LangPackFileError
-					? err.message
-					: getErrorMessage(err, t('toast.uploadFailed'))
-			)
+			if (err instanceof LangPackFileError) toast.error(err.message)
+			else toastApiError(t('toast.uploadFailed'), err)
 		}
 	}
 
@@ -141,7 +139,7 @@ function LanguagePackCard({
 			await reset.mutateAsync(language.code)
 			toast.success(t('toast.resetDone', { language: language.label }))
 		} catch (err) {
-			toast.error(getErrorMessage(err, t('toast.resetFailed')))
+			toastApiError(t('toast.resetFailed'), err)
 		}
 	}
 

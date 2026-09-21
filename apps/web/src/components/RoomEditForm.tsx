@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useUpdateRoom } from '@/hooks/useUpdateRoom'
 import type { Room } from '@/types'
-import { getErrorMessage } from '@/lib/utils'
+import { toastApiError } from '@/lib/api-error'
 
 interface RoomEditFormProps {
 	data: Room
@@ -46,7 +46,7 @@ export default function RoomEditForm({
 			onClose()
 		} catch (err) {
 			console.error('Error updating room:', err)
-			toast.error(getErrorMessage(err, t('facilities.room.updateFailed')))
+			toastApiError(t('facilities.room.updateFailed'), err)
 		}
 	}
 

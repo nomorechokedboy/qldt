@@ -26,7 +26,7 @@ import {
 	useApproveRankPromotionProposal,
 	useCancelRankPromotionProposal
 } from '@/hooks/useRankPromotionProposalActions'
-import { formatDbTimestamp, getErrorMessage } from '@/lib/utils'
+import { formatDbTimestamp } from '@/lib/utils'
 import type { rank_promotion_proposals } from '@/api/client'
 import {
 	getRankPromotionProposalColumns,
@@ -37,6 +37,7 @@ import {
 } from './columns'
 import CreateRankPromotionProposalForm from './create-proposal-form'
 import RejectDialog from './reject-dialog'
+import { toastApiError } from '@/lib/api-error'
 
 const ITEM_STATUSES = ['pending', 'approved', 'failed'] as const
 
@@ -87,7 +88,7 @@ export default function RankPromotionProposalsTab() {
 			await approveMutation.mutateAsync(id)
 			toast.success(t('rank.approved'))
 		} catch (err) {
-			toast.error(getErrorMessage(err, t('rank.approveFailed')))
+			toastApiError(t('rank.approveFailed'), err)
 		}
 	}
 
@@ -97,7 +98,7 @@ export default function RankPromotionProposalsTab() {
 			await cancelMutation.mutateAsync(id)
 			toast.success(t('rank.cancelled'))
 		} catch (err) {
-			toast.error(getErrorMessage(err, t('rank.cancelFailed')))
+			toastApiError(t('rank.cancelFailed'), err)
 		}
 	}
 

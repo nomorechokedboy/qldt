@@ -26,7 +26,6 @@ import {
 	unitLevelLabels
 } from '@/data/unit-levels'
 import type { Unit, UnitLevel } from '@/types'
-import { getErrorMessage } from '@/lib/utils'
 import UnitCommanderFields, {
 	commanderValuesFromUnit,
 	commanderValuesToPayload,
@@ -34,6 +33,7 @@ import UnitCommanderFields, {
 	type CommanderFieldKey,
 	type UnitCommanderValues
 } from '@/components/unit-commander-fields'
+import { toastApiError } from '@/lib/api-error'
 
 const NO_PARENT = 'none'
 
@@ -149,7 +149,7 @@ function UnitEditFormBody({ unitData, onUpdate, onClose }: UnitEditFormProps) {
 			onClose()
 		} catch (err) {
 			console.error('Error updating unit:', err)
-			toast.error(getErrorMessage(err, t('form.updateFailed')))
+			toastApiError(t('form.updateFailed'), err)
 		}
 	}
 

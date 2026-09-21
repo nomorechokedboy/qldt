@@ -19,6 +19,7 @@ import {
 import UserInfoTabs from './user-info-tabs'
 import { useState, type MouseEvent } from 'react'
 import { toast } from 'sonner'
+import { toastApiError } from '@/lib/api-error'
 import { AxiosError } from 'axios'
 import { useDeleteUsers } from './useDeleteUsers'
 import { isSuperAdmin } from '@/lib/utils'
@@ -60,7 +61,7 @@ export function DataTableRowActions<TData>({
 			toast.success(t('users.delete.success'))
 			refetchStudents()
 		} catch (err) {
-			toast.error(err.message ?? t('users.delete.failed'))
+			toastApiError(t('users.delete.failed'), err)
 			if (err instanceof AxiosError) {
 				console.error('Http error: ', err.response?.data)
 			}
