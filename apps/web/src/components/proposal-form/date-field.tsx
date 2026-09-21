@@ -14,9 +14,9 @@ import { cn } from '@/lib/utils'
 // Small standalone date field (Calendar + Popover) that speaks the same
 // "YYYY-MM-DD" value convention as the backend directly, so callers don't
 // need the dd/mm/yyyy <-> ISO conversion the tanstack-react-form-bound
-// `DatePicker` field component requires. Kept local to this feature since
-// these forms use plain useState, not useAppForm.
-export default function ActivityStatusDateField({
+// `DatePicker` field component requires. Shared by the proposal forms, which
+// use plain useState, not useAppForm.
+export default function ProposalDateField({
 	value,
 	onChange,
 	placeholder
@@ -28,8 +28,7 @@ export default function ActivityStatusDateField({
 	const { t } = useTranslation('proposals')
 	const [open, setOpen] = React.useState(false)
 	const selected = value ? dayjs(value, 'YYYY-MM-DD') : undefined
-	const selectedDate =
-		selected && selected.isValid() ? selected.toDate() : undefined
+	const selectedDate = selected?.isValid() ? selected.toDate() : undefined
 
 	return (
 		<Popover open={open} onOpenChange={setOpen}>
