@@ -78,9 +78,11 @@ export function DataTableToolbar<TData>({
 	}
 
 	return (
-		<div className={`flex items-center justify-between ${className}`}>
+		<div
+			className={`flex flex-wrap items-center justify-between gap-2 ${className}`}
+		>
 			<div
-				className={`flex flex-1 items-center space-x-2 ${searchContainerClassName}`}
+				className={`flex flex-1 flex-wrap items-center gap-2 ${searchContainerClassName}`}
 			>
 				{LeftSection}
 				{/* Faceted filters */}
@@ -99,7 +101,7 @@ export function DataTableToolbar<TData>({
 				)}
 			</div>
 			<div
-				className={`flex items-center gap-2 ${rightContainerClassName}`}
+				className={`flex flex-wrap items-center gap-2 ${rightContainerClassName}`}
 			>
 				{showViewToggle && onViewModeChange && (
 					<div className='flex items-center rounded-md border'>

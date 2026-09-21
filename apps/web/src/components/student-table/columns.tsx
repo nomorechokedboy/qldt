@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react'
 import type { ColumnDef } from '@tanstack/react-table'
 import i18n from '@/i18n'
 import type { Student, Unit } from '@/types'
@@ -53,6 +54,25 @@ export const selectColumn: ColumnDef<Student> = {
 	enableHiding: false
 }
 
+// The unit badge sits in a table cell whose width comes from its content, so
+// the cell wrapper must be at least as wide as the badge. A fixed `w-20`
+// (80px) wrapper around a badge that may grow to 120px+ let the badge spill
+// over the next column. The wrapper now grows with the badge up to a cap;
+// the text inside is truncated (tooltip on hover) to fit within that cap
+// after the badge's own padding and border.
+function UnitBadge({ children }: { children: ReactNode }) {
+	return (
+		<div className='max-w-40'>
+			<Badge
+				className='max-w-full bg-green-400 text-white font-bold'
+				variant='secondary'
+			>
+				<EllipsisText maxWidth='8.5rem'>{children}</EllipsisText>
+			</Badge>
+		</div>
+	)
+}
+
 // battalionStudentColumnsWithoutAction's unit cell: shows the unit's full
 // ancestor breadcrumb (e.g. "Tiểu đội Trinh sát (Trung đội Chỉ huy, Đại
 // đội 2)") rather than the plain badge used elsewhere, since this table
@@ -69,21 +89,11 @@ export function buildBattalionUnitColumnWithParent(
 		accessorFn: (row) => row.unit?.name ?? '',
 		header: () => i18n.t('table:columns.unit'),
 		cell: ({ row }) => (
-			<div className='w-20'>
-				<Badge
-					className='bg-green-400 text-white font-bold'
-					variant='secondary'
-				>
-					<EllipsisText maxWidth='120px'>
-						{row.original.unit !== undefined
-							? unitLabelWithAncestry(
-									row.original.unit,
-									unitsById
-								)
-							: row.getValue('unit.name')}
-					</EllipsisText>
-				</Badge>
-			</div>
+			<UnitBadge>
+				{row.original.unit !== undefined
+					? unitLabelWithAncestry(row.original.unit, unitsById)
+					: row.getValue('unit.name')}
+			</UnitBadge>
 		),
 		filterFn: (row, id, value) => {
 			return value.includes(row.getValue(id))
@@ -772,18 +782,7 @@ export const baseStudentsColumns: ColumnDef<Student>[] = [
 		id: 'unit.name',
 		accessorFn: (row) => row.unit?.name,
 		header: () => i18n.t('table:columns.unit'),
-		cell: ({ row }) => (
-			<div className='w-20'>
-				<Badge
-					className='bg-green-400 text-white font-bold'
-					variant='secondary'
-				>
-					<EllipsisText maxWidth='120px'>
-						{row.getValue('unit.name')}
-					</EllipsisText>
-				</Badge>
-			</div>
-		),
+		cell: ({ row }) => <UnitBadge>{row.getValue('unit.name')}</UnitBadge>,
 		filterFn: (row, id, value) => {
 			return value.includes(row.getValue(id))
 		},

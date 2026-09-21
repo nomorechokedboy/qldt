@@ -170,7 +170,11 @@ function RootLayout() {
 			<SidebarProvider>
 				{isAuthenticated && <AppSidebar collapsible='icon' />}
 				<Toaster richColors position='top-center' />
-				<div className='flex flex-col w-full'>
+				{/* min-w-0: a flex item defaults to min-width:auto, so without it
+					    a wide child (e.g. a table with many columns toggled on)
+					    stretches this column past the viewport instead of
+					    letting the table's own overflow-x scroll take over. */}
+				<div className='flex flex-col w-full min-w-0'>
 					{isAuthenticated && <Header />}
 					<Outlet />
 				</div>
