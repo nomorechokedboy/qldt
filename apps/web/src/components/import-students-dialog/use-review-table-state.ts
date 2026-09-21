@@ -103,12 +103,16 @@ export function rowHasError(fieldMeta: FieldMetaMap, index: number): boolean {
 export type ReviewForm = ReturnType<typeof useForm<{ rows: StudentBody[] }>>
 
 // Owns the review table's data. TanStack Form already holds the real,
-// live-edited rows (`form.state.values.rows`) - mirroring a second copy of
-// that data here would be pure duplication. The only thing this hook keeps
-// of its own is `rowCount`: DataTable still needs an array reference for its
-// `data` prop, but every cell reads/writes through TanStack Form by
-// `row.index` (see use-review-columns.tsx), never `row.original` - so that
-// array only needs to exist and have the right length, not hold real values.
+// live-edited rows (`form.state.values.rows`); the only thing this hook keeps
+// of its own is `loadedRows`, the rows as they were parsed. They serve two
+// purposes: DataTable still needs an array reference for its `data` prop
+// (every cell reads/writes through TanStack Form by `row.index`, see
+// use-review-columns.tsx, never `row.original`, so that array only needs the
+// right length), and they are the form's `defaultValues`. The latter matters:
+// `useForm` re-syncs an untouched form to its `defaultValues` on every
+// render, and `form.reset(values)` makes `values` the new baseline. Passing a
+// fixed empty default would therefore wipe a freshly loaded file (one with no
+// parse errors, so no field is touched yet) on the very next render.
 // Feeding `form.state.values.rows` straight to DataTable would reintroduce
 // the original perf bug: TanStack Form's immutable updates give that array a
 // new reference on every keystroke, forcing TanStack Table to recompute its
@@ -116,9 +120,10 @@ export type ReviewForm = ReturnType<typeof useForm<{ rows: StudentBody[] }>>
 // by `rowCount` and re-created only when a file is loaded/reset, so it's
 // exactly as stable as the old frozen snapshot without duplicating any data.
 export function useReviewTableState() {
-	const [rowCount, setRowCount] = useState(0)
+	const [loadedRows, setLoadedRows] = useState<StudentBody[]>([])
+	const rowCount = loadedRows.length
 	const form = useForm({
-		defaultValues: { rows: [] as StudentBody[] }
+		defaultValues: { rows: loadedRows }
 	})
 
 	const tableRows = useMemo(
@@ -137,7 +142,7 @@ export function useReviewTableState() {
 
 	const loadParsedFile = useCallback(
 		(students: StudentBody[], parseErrors: ParseError[]) => {
-			setRowCount(students.length)
+			setLoadedRows(students)
 			form.reset({ rows: students })
 			for (const error of parseErrors) {
 				const index = error.row - 4
@@ -157,7 +162,7 @@ export function useReviewTableState() {
 	)
 
 	const resetReview = useCallback(() => {
-		setRowCount(0)
+		setLoadedRows([])
 		form.reset({ rows: [] })
 	}, [form])
 
