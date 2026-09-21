@@ -25,7 +25,14 @@ interface Props {
 export default function StatsPeriodSelector({ value, onChange }: Props) {
 	const { t } = useTranslation('units')
 	const thisYear = dayjs().year()
-	const years = Array.from({ length: YEARS_BACK + 1 }, (_, i) => thisYear - i)
+	// A shared link can point outside the usual window; keep that year in the
+	// list so the select shows it rather than an empty value.
+	const years = Array.from(
+		new Set([
+			...Array.from({ length: YEARS_BACK + 1 }, (_, i) => thisYear - i),
+			value.year
+		])
+	).sort((a, b) => b - a)
 	const indexes =
 		value.kind === 'month'
 			? Array.from({ length: 12 }, (_, i) => i + 1)

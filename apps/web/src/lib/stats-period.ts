@@ -60,3 +60,36 @@ export function changePeriodKind(
 
 	return { kind, year: period.year, index }
 }
+
+const MIN_YEAR = 1970
+const MAX_YEAR = 2100
+
+// The period as it travels in a URL: "2026-09" (month), "2026-Q3" (quarter)
+// or "2026-Y" (year). One value, so it can never describe a combination that
+// doesn't exist (a "year" with a month, a fifth quarter). The year carries a
+// suffix because the router runs URL values through JSON.parse: a bare
+// "2026" comes back as a number, and is written with quotes (%222026%22).
+export function formatPeriod({ kind, year, index }: StatsPeriod): string {
+	if (kind === 'month') return `${year}-${String(index).padStart(2, '0')}`
+	if (kind === 'quarter') return `${year}-Q${index}`
+	return `${year}-Y`
+}
+
+// Inverse of formatPeriod. Anything that isn't a real period (a typo in a
+// shared link, month 13, year 0) is undefined, so callers can fall back to
+// the current period rather than break. A bare year ("2026", which the
+// router hands over as a number) is read as a whole year too.
+export function parsePeriod(
+	raw: string | number | undefined
+): StatsPeriod | undefined {
+	const match = String(raw ?? '').match(
+		/^(\d{4})(?:-(?:(0[1-9]|1[0-2])|[Qq]([1-4])|[Yy]))?$/
+	)
+	if (!match) return undefined
+
+	const year = Number(match[1])
+	if (year < MIN_YEAR || year > MAX_YEAR) return undefined
+	if (match[2]) return { kind: 'month', year, index: Number(match[2]) }
+	if (match[3]) return { kind: 'quarter', year, index: Number(match[3]) }
+	return { kind: 'year', year, index: 1 }
+}
