@@ -109,6 +109,12 @@ importers:
                 specifier: ^4.13.0
                 version: 4.46.2
 
+    apps/qldt-e2e:
+        devDependencies:
+            '@playwright/test':
+                specifier: ^1.63.0
+                version: 1.63.0
+
     apps/scan-app:
         dependencies:
             '@fontsource/inter':
@@ -2302,6 +2308,14 @@ packages:
                 integrity: sha512-m7X9U6BG2+J+R1lSOdCiITLLrxm+cWlNI3HUFA92oLO77ObGNzaKdh8pMLqdZcshtkKuV84olNNXDfMc4FezBQ==
             }
         engines: { node: '>=10' }
+
+    '@playwright/test@1.63.0':
+        resolution:
+            {
+                integrity: sha512-oxMK4vllB9RK5NQ2l1pq1IfOf2AvnEuj/vYGDj0H2nMtmtZpKtCwt/l00GEO6xjGfpBNAvjovvYdCm50dRQkpQ==
+            }
+        engines: { node: '>=20' }
+        hasBin: true
 
     '@radix-ui/number@1.1.1':
         resolution:
@@ -8081,6 +8095,22 @@ packages:
                 integrity: sha512-/Jm5M4RvtBFVkKWRu2BLUTNP8/M2a+UwuAX+ae4770q1qVGtfjG+WTCupoZixokjmHiry8uI+dlY8KXYV5HVVQ==
             }
 
+    playwright-core@1.63.0:
+        resolution:
+            {
+                integrity: sha512-rYCsBF/M5HjUch52bbtVONEFjv6Xu8sm8h72dNlR5bzIE1fvC/bxgspzkjSfU+MweEMmPM8KJebG6nnyxo5mCg==
+            }
+        engines: { node: '>=20' }
+        hasBin: true
+
+    playwright@1.63.0:
+        resolution:
+            {
+                integrity: sha512-+7ziBLidS4NaNCdt57SUDT+wYmmd5fmiQejUic/kb+YsYSCPyOOE9sebzMjNmQrsnNpDJqd4WHvV/8lfKfUDUg==
+            }
+        engines: { node: '>=20' }
+        hasBin: true
+
     pngjs@5.0.0:
         resolution:
             {
@@ -10964,6 +10994,10 @@ snapshots:
     '@oxc-project/types@0.148.0': {}
 
     '@phc/format@1.0.0': {}
+
+    '@playwright/test@1.63.0':
+        dependencies:
+            playwright: 1.63.0
 
     '@radix-ui/number@1.1.1': {}
 
@@ -14548,6 +14582,12 @@ snapshots:
             confbox: 0.1.8
             mlly: 1.7.4
             pathe: 2.0.3
+
+    playwright-core@1.63.0: {}
+
+    playwright@1.63.0:
+        dependencies:
+            playwright-core: 1.63.0
 
     pngjs@5.0.0: {}
 
