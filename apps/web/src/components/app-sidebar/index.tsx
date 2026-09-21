@@ -14,10 +14,8 @@ import {
 	SidebarRail
 } from '@/components/ui/sidebar'
 import { useSidebar } from '@/components/ui/use-sidebar'
-import useAuth from '@/hooks/useAuth'
 import useUnitsData from '@/hooks/useUnitsData'
 import { isSuperAdmin } from '@/lib/utils'
-import type { GetUnitQuery } from '@/types'
 import { ChevronDown } from 'lucide-react'
 import type { ComponentProps } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -61,17 +59,8 @@ function SidebarBrand({ isCollapsed }: { isCollapsed: boolean }) {
 export function AppSidebar(props: ComponentProps<typeof Sidebar>) {
 	const { state } = useSidebar()
 	const isCollapsed = state === 'collapsed'
-	const { user } = useAuth()
 	const label = useNavLabel()
-
-	const getUnitsQuery: GetUnitQuery | undefined =
-		user?.isSuperUser === true
-			? {
-					id: user.userId
-				}
-			: undefined
-	const { data: units, isLoading: isLoadingUnits } =
-		useUnitsData(getUnitsQuery)
+	const { data: units, isLoading: isLoadingUnits } = useUnitsData()
 	if (isLoadingUnits) {
 		return <AppSidebarSkeleton />
 	}

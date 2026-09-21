@@ -196,12 +196,15 @@ describe('AppSidebar', () => {
 		)
 	})
 
-	it('lists units for a super user too', async () => {
-		setup({ user: { userId: 7, isSuperUser: true } })
+	it('lists units for a super user too, with the same plain request', async () => {
+		const { requests } = setup({ user: { userId: 7, isSuperUser: true } })
 
 		expect(
 			await screen.findByRole('button', { name: 'Tieu doan 1' })
 		).toBeTruthy()
+		const unitRequests = requests.filter((r) => r.path === '/units')
+		expect(unitRequests).toHaveLength(1)
+		expect(unitRequests[0].url.search).toBe('')
 	})
 
 	it('lists each unit as a collapsed entry that opens onto its overview and children', async () => {
