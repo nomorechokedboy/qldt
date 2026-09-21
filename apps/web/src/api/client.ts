@@ -3531,6 +3531,33 @@ export namespace units {
 		data: { [key: string]: any }[]
 	}
 
+	export interface GetUnitStatsPeriodResponse {
+		from: string
+		to: string
+		weaponActivity: {
+			assigned: number
+			unassigned: number
+			transferred: number
+			damaged: number
+			lost: number
+			retired: number
+		}
+		troopMovement: {
+			joined: number
+			transferredIn: number
+			transferredOut: number
+			promoted: number
+			discharged: number
+			cpvAdmitted: number
+		}
+		supplyMovement: {
+			materialTypeId: number
+			materialTypeName: string
+			received: number
+			sent: number
+		}[]
+	}
+
 	export interface GetUnitStatsResponse {
 		unit: Unit
 		totalStudents: number
@@ -3557,6 +3584,7 @@ export namespace units {
 			count: number
 		}[]
 		troopSummary: TroopSummary
+		weaponSummary: WeaponSummary
 	}
 
 	export interface GetUnitStatsStudentsResponse {
@@ -3656,6 +3684,43 @@ export namespace units {
 		deputyPoliticalCommanderId?: number | null
 	}
 
+	/**
+	 * Where the weapons are held: one row per direct sub-unit of the selected
+	 * unit, plus the selected unit itself for pieces it holds directly.
+	 */
+	export interface WeaponHolding {
+		unitId: number
+		unitName: string
+		total: number
+		inService: number
+		assigned: number
+		heldByUnit: number
+	}
+
+	export interface WeaponSummary {
+		byType: WeaponTypeSummary[]
+		byUnit: WeaponHolding[]
+	}
+
+	/**
+	 * Current state of the weapons (material types in the weapon category) in a
+	 * unit's subtree. Every piece is either handed to a trooper (`assigned`) or
+	 * held by the unit itself (`heldByUnit`, e.g. a crew-served weapon or one
+	 * kept in the armoury), whatever its status, so the two always add up to
+	 * `total`.
+	 */
+	export interface WeaponTypeSummary {
+		materialTypeId: number
+		materialTypeName: string
+		total: number
+		inService: number
+		damaged: number
+		lost: number
+		retired: number
+		assigned: number
+		heldByUnit: number
+	}
+
 	export interface unit {
 		alias: string
 		name: string
@@ -3682,6 +3747,7 @@ export namespace units {
 				this.GetUnitStatsMaterialAssets.bind(this)
 			this.GetUnitStatsMaterialStocks =
 				this.GetUnitStatsMaterialStocks.bind(this)
+			this.GetUnitStatsPeriod = this.GetUnitStatsPeriod.bind(this)
 			this.GetUnitStatsStudents = this.GetUnitStatsStudents.bind(this)
 			this.GetUnits = this.GetUnits.bind(this)
 			this.InitRootUnit = this.InitRootUnit.bind(this)
@@ -3757,6 +3823,33 @@ export namespace units {
 				`/units/${encodeURIComponent(id)}/stats/material-stocks`
 			)
 			return (await resp.json()) as GetUnitStatsMaterialStocksResponse
+		}
+
+		/**
+		 * Movement within [from, to] (inclusive "YYYY-MM-DD" days) for the unit and
+		 * its subordinates: weapon events, troop movement and stock transferred.
+		 */
+		public async GetUnitStatsPeriod(
+			id: number,
+			params: {
+				from: string
+				to: string
+			}
+		): Promise<GetUnitStatsPeriodResponse> {
+			// Convert our params into the objects we need for the request
+			const query = makeRecord<string, string | string[]>({
+				from: params.from,
+				to: params.to
+			})
+
+			// Now make the actual call to the API
+			const resp = await this.baseClient.callTypedAPI(
+				'GET',
+				`/units/${encodeURIComponent(id)}/stats/period`,
+				undefined,
+				{ query }
+			)
+			return (await resp.json()) as GetUnitStatsPeriodResponse
 		}
 
 		public async GetUnitStatsStudents(

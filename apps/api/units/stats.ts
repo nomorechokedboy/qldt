@@ -4,6 +4,7 @@ import { UnitLevelName } from '../schema/units'
 import { MaterialAssetStatus } from '../schema/material-assets'
 import unitStatsController from './stats-controller'
 import { Unit } from './units'
+import { PeriodStats, WeaponSummary } from './stats-repo'
 
 // Mirrors export/roster-utils.ts's RosterSummary shape, redeclared locally
 // instead of imported: Encore's client generator names an imported type's
@@ -30,6 +31,7 @@ interface GetUnitStatsResponse {
 	}[]
 	materialAssetSummary: { status: MaterialAssetStatus; count: number }[]
 	troopSummary: TroopSummary
+	weaponSummary: WeaponSummary
 }
 
 export const GetUnitStats = api(
@@ -118,5 +120,35 @@ export const GetUnitStatsMaterialAssets = api(
 		)
 
 		return { data: data.map((a) => ({ ...a })) }
+	}
+)
+
+interface GetUnitStatsPeriodResponse extends PeriodStats {
+	from: string
+	to: string
+}
+
+// Movement within [from, to] (inclusive "YYYY-MM-DD" days) for the unit and
+// its subordinates: weapon events, troop movement and stock transferred.
+export const GetUnitStatsPeriod = api(
+	{
+		auth: true,
+		expose: true,
+		method: 'GET',
+		path: '/units/:id/stats/period'
+	},
+	async ({
+		id,
+		from,
+		to
+	}: {
+		id: number
+		from: string
+		to: string
+	}): Promise<GetUnitStatsPeriodResponse> => {
+		const callMeta = currentRequest() as APICallMeta
+		const validUnitIds = callMeta.middlewareData?.validUnitIds || []
+
+		return unitStatsController.getPeriodStats(id, from, to, validUnitIds)
 	}
 )

@@ -2,6 +2,8 @@ import { inArray, eq, sql, and, ne, between, count } from 'drizzle-orm'
 import log from 'encore.dev/log'
 import orm, { DrizzleDatabase } from '../database'
 import { AppError } from '../errors/index'
+import { materialAssetEvents } from '../schema/material-asset-events'
+import { materialAssets } from '../schema/material-assets'
 import {
 	Month,
 	PoliticsQualityRow,
@@ -29,6 +31,37 @@ type UnitStudentSummaryParams = {
 	category: string
 	value: SQLiteColumn
 	groupBy?: SQLiteColumn[]
+}
+
+type Tx = Parameters<Parameters<DrizzleDatabase['transaction']>[0]>[0]
+
+// Clears the trooper off every asset assigned to them; the asset stays with
+// its unit. Each release is logged like a manual unassign, minus an actor.
+async function returnAssignedAssets(tx: Tx, trooperId: number) {
+	const held = await tx
+		.select({ id: materialAssets.id })
+		.from(materialAssets)
+		.where(eq(materialAssets.assignedTrooperId, trooperId))
+	if (held.length === 0) return
+
+	const [trooper] = await tx
+		.select({ fullName: students.fullName })
+		.from(students)
+		.where(eq(students.id, trooperId))
+
+	await tx
+		.update(materialAssets)
+		.set({ assignedTrooperId: null })
+		.where(eq(materialAssets.assignedTrooperId, trooperId))
+	await tx.insert(materialAssetEvents).values(
+		held.map((asset) => ({
+			assetId: asset.id,
+			eventType: 'unassigned' as const,
+			previousValue: { assignedTrooperName: trooper?.fullName },
+			newValue: {},
+			note: 'Trooper discharged'
+		}))
+	)
 }
 
 class StudentSqliteRepo implements Repository {
@@ -266,6 +299,13 @@ class StudentSqliteRepo implements Repository {
 
 					if (updated.length > 0) {
 						updatedRecords.push(updated[0])
+					}
+
+					// However a trooper ends up discharged (a user edit, an
+					// approved proposal or the scheduled sweep), what they were
+					// issued goes back to the unit in the same transaction.
+					if (updatePayload.activityStatus === 'discharged') {
+						await returnAssignedAssets(tx, id)
 					}
 				}
 
