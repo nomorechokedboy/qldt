@@ -17,6 +17,7 @@ import AssetQrDialog from './asset-qr-dialog'
 import MaterialAssetHistorySheet from './material-asset-history-sheet'
 import { useDeleteMaterialAssets } from '@/hooks/useDeleteMaterialAssets'
 import type { MaterialAsset, Room, Student } from '@/types'
+import { toastApiError } from '@/lib/api-error'
 
 interface MaterialAssetRowActionsProps {
 	data: MaterialAsset
@@ -50,7 +51,7 @@ export function MaterialAssetRowActions({
 			toast.success(t('assetTable.deleted'))
 			onChanged?.()
 		} catch (err) {
-			toast.error(t('assetTable.deleteFailed'))
+			toastApiError(t('assetTable.deleteFailed'), err)
 			if (err instanceof AxiosError) {
 				console.error('Http error: ', err.response?.data)
 			}

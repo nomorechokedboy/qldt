@@ -7,7 +7,7 @@ import { useState } from 'react'
 import { queryClient } from '@/integrations/tanstack-query/root-provider'
 import { Button } from '@/components/ui/button'
 import { Plus } from 'lucide-react'
-import { getErrorMessage } from '@/lib/utils'
+import { toastApiError } from '@/lib/api-error'
 import { useTranslation } from 'react-i18next'
 
 export default function CreateRoleForm() {
@@ -21,9 +21,7 @@ export default function CreateRoleForm() {
 		},
 		onError: (err) => {
 			console.error('CreateRole error', err)
-			toast.error(t('roles.create.failed'), {
-				description: getErrorMessage(err, t('common.retryLater'))
-			})
+			toastApiError(t('roles.create.failed'), err)
 		}
 	})
 	const form = useAppForm({

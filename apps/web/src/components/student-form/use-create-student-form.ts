@@ -4,7 +4,7 @@ import type { StudentFormSchemaType } from '@/components/student-form-schema'
 import { withIsoDates } from '@/components/student-form-dates'
 import { useAppForm } from '@/hooks/use-app-form'
 import useUploadFiles from '@/hooks/useUploadFiles'
-import { getErrorMessage } from '@/lib/utils'
+import { toastApiError } from '@/lib/api-error'
 import type { ContactPerson, Student, StudentBody } from '@/types'
 import { useMutation } from '@tanstack/react-query'
 import i18n from '@/i18n'
@@ -111,9 +111,7 @@ export default function useCreateStudentForm({
 				onCreated()
 			} catch (err) {
 				console.error(err)
-				toast.error(
-					getErrorMessage(err, i18n.t('student:wizard.createFailed'))
-				)
+				toastApiError(i18n.t('student:wizard.createFailed'), err)
 			}
 		},
 		validators: { onSubmit: StudentFormSchema }

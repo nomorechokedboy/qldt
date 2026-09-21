@@ -35,8 +35,8 @@ import useTransferEligibleApprovers from '@/hooks/useTransferEligibleApprovers'
 import UnitSelect from '@/components/unit/select'
 import { buildUnitOptions } from '@/lib/unit-options'
 import useUnitOptions from '@/hooks/useUnitOptions'
-import { getErrorMessage } from '@/lib/utils'
 import type { transfer_requests } from '@/api/client'
+import { toastApiError } from '@/lib/api-error'
 
 const NONE = 'none'
 
@@ -242,7 +242,7 @@ export default function CreateTransferRequestForm({
 			resetForm()
 			setOpen(false)
 		} catch (err) {
-			toast.error(getErrorMessage(err, t('transfer.createFailed')))
+			toastApiError(t('transfer.createFailed'), err)
 		}
 	}
 

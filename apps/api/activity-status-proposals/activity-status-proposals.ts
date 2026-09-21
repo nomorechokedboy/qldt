@@ -368,7 +368,9 @@ export const RejectActivityStatusProposal = api(
 		const actorUserId = requireActorUserId()
 		if (!reason || reason.trim().length === 0) {
 			throw AppError.handleAppErr(
-				AppError.invalidArgument('A rejection reason is required')
+				AppError.invalidArgument('A rejection reason is required', {
+					reason: 'rejection_reason_required'
+				})
 			)
 		}
 		const before = await activityStatusProposalController.findOne(id)

@@ -16,9 +16,9 @@ import { useEffect } from 'react'
 import { userRankOptions } from '@/data/ranks'
 import { userPositionOptions } from '@/data/positions'
 import type { User } from '@/types'
-import { getErrorMessage } from '@/lib/utils'
 import { useTranslation } from 'react-i18next'
 import i18n from '@/i18n'
+import { toastApiError } from '@/lib/api-error'
 
 // Zod calls `error` while parsing, so messages follow the language in use at
 // that moment instead of the one the module was loaded in.
@@ -59,7 +59,7 @@ export default function ProfileEditForm({
 		},
 		onError: (error) => {
 			console.error('Failed to update profile:', error)
-			toast.error(getErrorMessage(error, t('profile.edit.failed')))
+			toastApiError(t('profile.edit.failed'), error)
 		}
 	})
 

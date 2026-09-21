@@ -13,7 +13,7 @@ import {
 import { Label } from '@/components/ui/label'
 import { Textarea } from '@/components/ui/textarea'
 import { useRejectTransferRequest } from '@/hooks/useTransferRequestActions'
-import { getErrorMessage } from '@/lib/utils'
+import { toastApiError } from '@/lib/api-error'
 
 export default function RejectDialog({
 	id,
@@ -43,7 +43,7 @@ export default function RejectDialog({
 			onOpenChange(false)
 			onSuccess?.()
 		} catch (err) {
-			toast.error(getErrorMessage(err, t('transfer.rejectFailed')))
+			toastApiError(t('transfer.rejectFailed'), err)
 		}
 	}
 

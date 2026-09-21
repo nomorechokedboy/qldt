@@ -15,6 +15,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog'
 import MaterialTypeEditForm from '@/components/MaterialTypeEditForm'
 import { useDeleteMaterialTypes } from '@/hooks/useDeleteMaterialTypes'
 import type { MaterialType } from '@/types'
+import { toastApiError } from '@/lib/api-error'
 
 interface MaterialTypeRowActionsProps {
 	data: MaterialType
@@ -38,7 +39,7 @@ export function MaterialTypeRowActions({
 			toast.success(t('typeTable.deleted'))
 			onChanged?.()
 		} catch (err) {
-			toast.error(t('typeTable.deleteFailed'))
+			toastApiError(t('typeTable.deleteFailed'), err)
 			if (err instanceof AxiosError) {
 				console.error('Http error: ', err.response?.data)
 			}

@@ -1,7 +1,7 @@
 import { ExportTableData } from '@/api'
 import i18n from '@/i18n'
 import type { ExportData } from '@/types'
-import { toast } from 'sonner'
+import { toastApiError } from '@/lib/api-error'
 
 export type ExportConfig = {
 	filename?: string
@@ -75,7 +75,7 @@ export default function useExportButton({
 		} catch (err) {
 			console.error('handleExport error', err)
 
-			toast.error(i18n.t('io:export.failed'))
+			toastApiError(i18n.t('io:export.failed'), err)
 		}
 	}
 

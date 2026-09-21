@@ -144,14 +144,18 @@ export async function buildHandoverReport(
 	const tr = await transferRequestRepo.getOne(id)
 	if (tr === undefined) {
 		throw AppError.handleAppErr(
-			AppError.invalidArgument(`Transfer request not found: ${id}`)
+			AppError.invalidArgument(`Transfer request not found: ${id}`, {
+				reason: 'request_not_found',
+				params: { id }
+			})
 		)
 	}
 
 	if (tr.status !== 'approved') {
 		throw AppError.handleAppErr(
 			AppError.invalidArgument(
-				'A handover report can only be exported for an approved transfer request'
+				'A handover report can only be exported for an approved transfer request',
+				{ reason: 'handover_not_approved' }
 			)
 		)
 	}
@@ -160,7 +164,8 @@ export async function buildHandoverReport(
 	if (items.length === 0) {
 		throw AppError.handleAppErr(
 			AppError.invalidArgument(
-				'This transfer request has no approved material items to hand over'
+				'This transfer request has no approved material items to hand over',
+				{ reason: 'handover_no_items' }
 			)
 		)
 	}

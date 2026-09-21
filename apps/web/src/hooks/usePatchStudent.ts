@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import i18n from '@/i18n'
 import useUpdateStudent from './useUpdateStudent'
 import { queryClient } from '@/integrations/tanstack-query/root-provider'
+import { toastApiError } from '@/lib/api-error'
 
 export default function usePatchStudent(
 	row: Row<Student>,
@@ -28,7 +29,7 @@ export default function usePatchStudent(
 			toast.success(i18n.t('table:cells.updateSuccess'))
 		} catch (err) {
 			console.error(err)
-			toast.error(i18n.t('table:cells.updateFailed'))
+			toastApiError(i18n.t('table:cells.updateFailed'), err)
 		}
 	}
 

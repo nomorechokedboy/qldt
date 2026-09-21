@@ -43,7 +43,11 @@ class controller {
 		if (!this.isBattalionOrAbove(unit.level)) {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(
-					`Rank promotion proposals require a Battalion level or larger unit. Got: ${unit.level}`
+					`Rank promotion proposals require a Battalion level or larger unit. Got: ${unit.level}`,
+					{
+						reason: 'proposal_unit_level_too_small',
+						params: { level: unit.level }
+					}
 				)
 			)
 		}
@@ -89,7 +93,8 @@ class controller {
 		if (proposal === undefined) {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(
-					`Rank promotion proposal not found: ${id}`
+					`Rank promotion proposal not found: ${id}`,
+					{ reason: 'request_not_found', params: { id } }
 				)
 			)
 		}
@@ -118,14 +123,22 @@ class controller {
 		if (!resolved.effectiveDate) {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(
-					`Trooper ${studentId} is missing an effective date (either on the proposal or on the trooper itself)`
+					`Trooper ${studentId} is missing an effective date (either on the proposal or on the trooper itself)`,
+					{
+						reason: 'trooper_missing_effective_date',
+						params: { id: studentId }
+					}
 				)
 			)
 		}
 		if (!isKnownRank(resolved.targetRank)) {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(
-					`Trooper ${studentId}'s target rank "${resolved.targetRank}" is not a recognized rank`
+					`Trooper ${studentId}'s target rank "${resolved.targetRank}" is not a recognized rank`,
+					{
+						reason: 'rank_unrecognized',
+						params: { id: studentId, rank: resolved.targetRank }
+					}
 				)
 			)
 		}
@@ -135,7 +148,15 @@ class controller {
 		) {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(
-					`Trooper ${studentId}'s target rank "${resolved.targetRank}" is not the next rank up from its current rank "${currentRank ?? ''}"`
+					`Trooper ${studentId}'s target rank "${resolved.targetRank}" is not the next rank up from its current rank "${currentRank ?? ''}"`,
+					{
+						reason: 'rank_not_next',
+						params: {
+							id: studentId,
+							rank: resolved.targetRank,
+							current: currentRank ?? ''
+						}
+					}
 				)
 			)
 		}
@@ -163,7 +184,8 @@ class controller {
 		if (input.troopers.length === 0) {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(
-					'A rank promotion proposal must include at least one trooper'
+					'A rank promotion proposal must include at least one trooper',
+					{ reason: 'request_empty' }
 				)
 			)
 		}
@@ -186,7 +208,8 @@ class controller {
 		if (!eligibleApproverIds.has(input.approverUserId)) {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(
-					'Selected approver is not a commander/deputy commander/political commander/deputy political commander of this unit or one of its ancestors'
+					'Selected approver is not a commander/deputy commander/political commander/deputy political commander of this unit or one of its ancestors',
+					{ reason: 'approver_not_eligible' }
 				)
 			)
 		}
@@ -204,7 +227,11 @@ class controller {
 			) {
 				throw AppError.handleAppErr(
 					AppError.invalidArgument(
-						`Trooper ${t.studentId} does not currently belong to this unit`
+						`Trooper ${t.studentId} does not currently belong to this unit`,
+						{
+							reason: 'trooper_not_in_unit',
+							params: { id: t.studentId }
+						}
 					)
 				)
 			}
@@ -212,7 +239,11 @@ class controller {
 			if (lockedStudentIds.has(t.studentId)) {
 				throw AppError.handleAppErr(
 					AppError.invalidArgument(
-						`Trooper ${t.studentId} is already part of another pending or unapplied rank promotion proposal`
+						`Trooper ${t.studentId} is already part of another pending or unapplied rank promotion proposal`,
+						{
+							reason: 'trooper_in_other_proposal',
+							params: { id: t.studentId }
+						}
 					)
 				)
 			}
@@ -283,7 +314,8 @@ class controller {
 		if (proposal.status !== 'pending') {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(
-					'Rank promotion proposal is not pending'
+					'Rank promotion proposal is not pending',
+					{ reason: 'not_pending' }
 				)
 			)
 		}
@@ -394,7 +426,8 @@ class controller {
 		if (proposal.status !== 'pending') {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(
-					'Rank promotion proposal is not pending'
+					'Rank promotion proposal is not pending',
+					{ reason: 'not_pending' }
 				)
 			)
 		}
@@ -436,7 +469,8 @@ class controller {
 		if (proposal.status !== 'pending') {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(
-					'Rank promotion proposal is not pending'
+					'Rank promotion proposal is not pending',
+					{ reason: 'not_pending' }
 				)
 			)
 		}

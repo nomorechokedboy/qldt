@@ -31,9 +31,9 @@ import useRankPromotionProposals from '@/hooks/useRankPromotionProposals'
 import useStudentData from '@/hooks/useStudents'
 import UnitSelect from '@/components/unit/select'
 import useUnitOptions from '@/hooks/useUnitOptions'
-import { getErrorMessage } from '@/lib/utils'
 import type { rank_promotion_proposals } from '@/api/client'
 import RankPromotionDateField from './date-field'
+import { toastApiError } from '@/lib/api-error'
 
 const [, ...rankOptionsWithoutPrivate] = rankOptions
 
@@ -284,7 +284,7 @@ export default function CreateRankPromotionProposalForm({
 			resetForm()
 			setOpen(false)
 		} catch (err) {
-			toast.error(getErrorMessage(err, t('rank.createFailed')))
+			toastApiError(t('rank.createFailed'), err)
 		}
 	}
 

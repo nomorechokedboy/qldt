@@ -122,7 +122,8 @@ export class InventorySessionController {
 		if (assets.length === 0 && stocks.length === 0) {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(
-					'Room has no serialized material assets or bulk stock to reconcile'
+					'Room has no serialized material assets or bulk stock to reconcile',
+					{ reason: 'room_nothing_to_reconcile' }
 				)
 			)
 		}
@@ -283,14 +284,16 @@ export class InventorySessionController {
 		) {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(
-					'Results payload is from an incompatible app version - please update the scanning app and start a new session'
+					'Results payload is from an incompatible app version - please update the scanning app and start a new session',
+					{ reason: 'scan_app_outdated' }
 				)
 			)
 		}
 		if (!verifyResultsPayload(payload)) {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(
-					'Results payload signature is invalid - it does not match an open session'
+					'Results payload signature is invalid - it does not match an open session',
+					{ reason: 'scan_payload_invalid' }
 				)
 			)
 		}
@@ -304,7 +307,11 @@ export class InventorySessionController {
 		if (session.status !== 'in_progress') {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(
-					`Session is already ${session.status}, results cannot be submitted again`
+					`Session is already ${session.status}, results cannot be submitted again`,
+					{
+						reason: 'session_already_submitted',
+						params: { status: session.status }
+					}
 				)
 			)
 		}
@@ -316,7 +323,8 @@ export class InventorySessionController {
 			await this.repo.markExpired(session.id)
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(
-					'Session has expired, please start a new inventory session'
+					'Session has expired, please start a new inventory session',
+					{ reason: 'session_expired' }
 				)
 			)
 		}
@@ -388,7 +396,11 @@ export class InventorySessionController {
 		if (session.status !== 'completed') {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(
-					`Session must be completed before it can be reviewed (current status: ${session.status})`
+					`Session must be completed before it can be reviewed (current status: ${session.status})`,
+					{
+						reason: 'session_not_completed',
+						params: { status: session.status }
+					}
 				)
 			)
 		}
@@ -436,14 +448,19 @@ export class InventorySessionController {
 		if (session.status !== 'reviewed') {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(
-					`Session must be reviewed before it can be applied to inventory (current status: ${session.status})`
+					`Session must be reviewed before it can be applied to inventory (current status: ${session.status})`,
+					{
+						reason: 'session_not_reviewed',
+						params: { status: session.status }
+					}
 				)
 			)
 		}
 		if (session.appliedAt !== null) {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(
-					'This inventory session has already been applied to inventory'
+					'This inventory session has already been applied to inventory',
+					{ reason: 'session_already_applied' }
 				)
 			)
 		}

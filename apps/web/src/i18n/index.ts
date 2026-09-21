@@ -12,6 +12,7 @@ import viProposals from './locales/vi/proposals'
 import viAdmin from './locales/vi/admin'
 import viStats from './locales/vi/stats'
 import viIo from './locales/vi/io'
+import viErrors from './locales/vi/errors'
 import enAuth from './locales/en/auth'
 import enCommon from './locales/en/common'
 import enLangPacks from './locales/en/langPacks'
@@ -24,6 +25,7 @@ import enProposals from './locales/en/proposals'
 import enAdmin from './locales/en/admin'
 import enStats from './locales/en/stats'
 import enIo from './locales/en/io'
+import enErrors from './locales/en/errors'
 
 export const LANGUAGES = [
 	{ code: 'vi', label: 'Tiếng Việt', short: 'VI' },
@@ -47,6 +49,7 @@ export const resources = {
 		admin: viAdmin,
 		stats: viStats,
 		io: viIo,
+		errors: viErrors,
 		table: viTable,
 		student: viStudent
 	},
@@ -61,6 +64,7 @@ export const resources = {
 		admin: enAdmin,
 		stats: enStats,
 		io: enIo,
+		errors: enErrors,
 		table: enTable,
 		student: enStudent
 	}

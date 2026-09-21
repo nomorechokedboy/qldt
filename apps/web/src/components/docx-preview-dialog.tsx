@@ -11,6 +11,7 @@ import '@docx-editor.dev/core/styles/editor.css'
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+import { toastApiError } from '@/lib/api-error'
 
 export interface DocxPreviewDialogProps {
 	open: boolean
@@ -52,7 +53,7 @@ export function DocxPreviewDialog({
 			window.URL.revokeObjectURL(link.href)
 		} catch (err) {
 			console.error('handleDownload error', err)
-			toast.error(t('preview.failed'))
+			toastApiError(t('preview.failed'), err)
 		} finally {
 			setIsDownloading(false)
 		}

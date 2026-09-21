@@ -27,7 +27,7 @@ import {
 	useApproveActivityStatusProposal,
 	useCancelActivityStatusProposal
 } from '@/hooks/useActivityStatusProposalActions'
-import { formatDbTimestamp, getErrorMessage } from '@/lib/utils'
+import { formatDbTimestamp } from '@/lib/utils'
 import type { activity_status_proposals } from '@/api/client'
 import {
 	getActivityStatusProposalColumns,
@@ -38,6 +38,7 @@ import {
 } from './columns'
 import CreateActivityStatusProposalForm from './create-proposal-form'
 import RejectDialog from './reject-dialog'
+import { toastApiError } from '@/lib/api-error'
 
 const ITEM_STATUSES = ['pending', 'approved', 'failed'] as const
 
@@ -111,7 +112,7 @@ export default function ActivityStatusProposalsTab() {
 			await approveMutation.mutateAsync(id)
 			toast.success(t('activity.approved'))
 		} catch (err) {
-			toast.error(getErrorMessage(err, t('activity.approveFailed')))
+			toastApiError(t('activity.approveFailed'), err)
 		}
 	}
 
@@ -121,7 +122,7 @@ export default function ActivityStatusProposalsTab() {
 			await cancelMutation.mutateAsync(id)
 			toast.success(t('activity.cancelled'))
 		} catch (err) {
-			toast.error(getErrorMessage(err, t('activity.cancelFailed')))
+			toastApiError(t('activity.cancelFailed'), err)
 		}
 	}
 

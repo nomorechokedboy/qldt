@@ -23,6 +23,7 @@ import type { Student } from '@/types'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { toast } from 'sonner'
+import { toastApiError } from '@/lib/api-error'
 
 const NO_TEMPLATE_VALUE = '__default__'
 
@@ -112,7 +113,7 @@ export function ExportStudentDataDynamicDialog({
 				formApi.reset()
 			} catch (err) {
 				console.error('handleExport error', err)
-				toast.error(t('export.failed'))
+				toastApiError(t('export.failed'), err)
 			}
 		}
 	})

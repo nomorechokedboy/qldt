@@ -14,11 +14,11 @@ import {
 import { materialCategoryOptions } from '@/data/material-categories'
 import { useUpdateMaterialType } from '@/hooks/useUpdateMaterialType'
 import { MAX_MATERIAL_TYPE_NAME_LENGTH } from '@/lib/material-limits'
-import { getErrorMessage } from '@/lib/utils'
 import type { MaterialType } from '@/types'
 import { X } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { toastApiError } from '@/lib/api-error'
 
 interface MaterialTypeEditFormProps {
 	data: MaterialType
@@ -61,7 +61,7 @@ export default function MaterialTypeEditForm({
 			onClose()
 		} catch (err) {
 			console.error('Error updating material type:', err)
-			toast.error(getErrorMessage(err, t('typeEdit.updateFailed')))
+			toastApiError(t('typeEdit.updateFailed'), err)
 		}
 	}
 

@@ -19,13 +19,13 @@ import {
 	SelectValue
 } from '@/components/ui/select'
 import { useCreateMaterialAsset } from '@/hooks/useCreateMaterialAsset'
-import { getErrorMessage } from '@/lib/utils'
 import { MAX_MATERIAL_ASSET_SERIAL_LENGTH } from '@/lib/material-limits'
 import type { MaterialType, Room, Student, Unit } from '@/types'
 import { Plus } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { useTranslation } from 'react-i18next'
+import { toastApiError } from '@/lib/api-error'
 
 const NONE = 'none'
 
@@ -91,7 +91,7 @@ export default function MaterialAssetForm({
 			setOpen(false)
 		} catch (err) {
 			console.error('Error creating material asset:', err)
-			toast.error(getErrorMessage(err, t('assetForm.createFailed')))
+			toastApiError(t('assetForm.createFailed'), err)
 		}
 	}
 

@@ -14,7 +14,7 @@ import { useAppForm } from '@/hooks/use-app-form'
 import useAuth from '@/hooks/useAuth'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { toast } from 'sonner'
+import { toastApiError } from '@/lib/api-error'
 
 export interface ExportUnitRosterExtractDialogProps {
 	open: boolean
@@ -74,7 +74,7 @@ export function ExportUnitRosterExtractDialog({
 				formApi.reset()
 			} catch (err) {
 				console.error('handleExportUnitRosterExtract error', err)
-				toast.error(t('export.failed'))
+				toastApiError(t('export.failed'), err)
 			}
 		}
 	})

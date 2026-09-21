@@ -22,12 +22,12 @@ import {
 	SelectValue
 } from '@/components/ui/select'
 import { useCreateUnit } from '@/hooks/useCreateUnit'
-import { getErrorMessage } from '@/lib/utils'
 import type { Unit } from '@/types'
 import {
 	NO_COMMANDER,
 	SingleCommanderField
 } from '@/components/unit-commander-fields'
+import { toastApiError } from '@/lib/api-error'
 
 export interface SquadFormProps {
 	platoonOptions: Unit[]
@@ -83,7 +83,7 @@ export default function SquadForm({
 			setOpen(false)
 		} catch (err) {
 			console.error('Error creating squad:', err)
-			toast.error(getErrorMessage(err, t('squadForm.createFailed')))
+			toastApiError(t('squadForm.createFailed'), err)
 		}
 	}
 

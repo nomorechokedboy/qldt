@@ -15,6 +15,7 @@ import PositionEditForm from '@/components/PositionEditForm'
 import { useDeletePositions } from '@/hooks/useDeletePositions'
 import type { Position } from '@/types'
 import { useTranslation } from 'react-i18next'
+import { toastApiError } from '@/lib/api-error'
 
 interface PositionRowActionsProps {
 	data: Position
@@ -38,7 +39,7 @@ export function PositionRowActions({
 			toast.success(t('positions.delete.success'))
 			onChanged?.()
 		} catch (err) {
-			toast.error(t('positions.delete.failed'))
+			toastApiError(t('positions.delete.failed'), err)
 			if (err instanceof AxiosError) {
 				console.error('Http error: ', err.response?.data)
 			}

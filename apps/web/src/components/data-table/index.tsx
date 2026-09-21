@@ -38,6 +38,7 @@ import {
 	type DataTableToolbarProps
 } from './data-table-toolbar'
 import { BaseSchema } from './data/schema'
+import { toastApiError } from '@/lib/api-error'
 
 type ToolbarProps<TData> = Omit<DataTableToolbarProps<TData>, 'table'>
 
@@ -188,7 +189,7 @@ export function DataTable<TData, TValue>({
 				handleReset()
 			}
 		} catch (err) {
-			toast.error(t('selection.deleteFailed'))
+			toastApiError(t('selection.deleteFailed'), err)
 			if (err instanceof AxiosError) {
 				console.error('Http error: ', err.response?.data)
 			}
@@ -216,7 +217,7 @@ export function DataTable<TData, TValue>({
 				handleReset()
 			}
 		} catch (err) {
-			toast.error(t('selection.confirmFailed'))
+			toastApiError(t('selection.confirmFailed'), err)
 			if (err instanceof AxiosError) {
 				console.error('Http error: ', err.response?.data)
 			}

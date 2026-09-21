@@ -14,8 +14,8 @@ import {
 import { useUpdateMaterialStock } from '@/hooks/useUpdateMaterialStock'
 import { materialConditionOptions } from '@/data/material-categories'
 import type { MaterialStock, Room } from '@/types'
-import { getErrorMessage } from '@/lib/utils'
 import { useTranslation } from 'react-i18next'
+import { toastApiError } from '@/lib/api-error'
 
 const NONE = 'none'
 
@@ -62,7 +62,7 @@ export default function MaterialStockEditForm({
 			onClose()
 		} catch (err) {
 			console.error('Error updating material stock:', err)
-			toast.error(getErrorMessage(err, t('stockEdit.updateFailed')))
+			toastApiError(t('stockEdit.updateFailed'), err)
 		}
 	}
 

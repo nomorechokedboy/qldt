@@ -18,6 +18,7 @@ import { useState } from 'react'
 import { toast } from 'sonner'
 import { ExportStudentDataDialog } from '../export-student-data-dialog'
 import StudentEditForm from '../student-edit-form'
+import { toastApiError } from '@/lib/api-error'
 
 export default function StudentActions({
 	student,
@@ -60,7 +61,7 @@ export default function StudentActions({
 				type: 'all'
 			})
 		} catch (error) {
-			toast.error(t('actions.confirmFailed'))
+			toastApiError(t('actions.confirmFailed'), error)
 			console.error(error)
 		}
 	}

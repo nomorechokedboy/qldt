@@ -23,8 +23,8 @@ import {
 import { useAddMaterialStock } from '@/hooks/useAddMaterialStock'
 import { materialConditionOptions } from '@/data/material-categories'
 import type { MaterialType, Room, Unit } from '@/types'
-import { getErrorMessage } from '@/lib/utils'
 import { useTranslation } from 'react-i18next'
+import { toastApiError } from '@/lib/api-error'
 
 const NONE = 'none'
 
@@ -82,7 +82,7 @@ export default function MaterialStockForm({
 			setOpen(false)
 		} catch (err) {
 			console.error('Error adding material stock:', err)
-			toast.error(getErrorMessage(err, t('stockForm.createFailed')))
+			toastApiError(t('stockForm.createFailed'), err)
 		}
 	}
 

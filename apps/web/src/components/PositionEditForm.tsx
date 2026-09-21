@@ -7,8 +7,8 @@ import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { useUpdatePosition } from '@/hooks/useUpdatePosition'
 import type { Position } from '@/types'
-import { getErrorMessage } from '@/lib/utils'
 import { useTranslation } from 'react-i18next'
+import { toastApiError } from '@/lib/api-error'
 
 interface PositionEditFormProps {
 	data: Position
@@ -49,7 +49,7 @@ export default function PositionEditForm({
 			onClose()
 		} catch (err) {
 			console.error('Error updating position:', err)
-			toast.error(getErrorMessage(err, t('positions.update.failed')))
+			toastApiError(t('positions.update.failed'), err)
 		}
 	}
 

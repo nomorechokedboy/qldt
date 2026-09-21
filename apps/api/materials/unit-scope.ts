@@ -36,7 +36,9 @@ export async function assertRefsInUnitScope(
 			const roomUnitId = roomUnitById.get(row.roomId)
 			if (roomUnitId === undefined) {
 				throw AppError.handleAppErr(
-					AppError.invalidArgument('Room does not exist')
+					AppError.invalidArgument('Room does not exist', {
+						reason: 'room_not_found'
+					})
 				)
 			}
 			if (roomUnitId !== row.unitId) {
@@ -65,7 +67,10 @@ export async function assertRefsInUnitScope(
 
 			if (!trooperUnitById.has(row.assignedTrooperId)) {
 				throw AppError.handleAppErr(
-					AppError.invalidArgument('Assigned trooper does not exist')
+					AppError.invalidArgument(
+						'Assigned trooper does not exist',
+						{ reason: 'trooper_not_found' }
+					)
 				)
 			}
 			if (trooperUnitById.get(row.assignedTrooperId) !== row.unitId) {

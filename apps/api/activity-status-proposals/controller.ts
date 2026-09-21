@@ -37,14 +37,21 @@ class controller {
 		const unit = await unitRepo.findOne({ id: unitId })
 		if (unit === undefined) {
 			throw AppError.handleAppErr(
-				AppError.invalidArgument(`Unit not found: ${unitId}`)
+				AppError.invalidArgument(`Unit not found: ${unitId}`, {
+					reason: 'unit_not_found',
+					params: { id: unitId }
+				})
 			)
 		}
 
 		if (!this.isBattalionOrAbove(unit.level)) {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(
-					`Activity status proposals require a Battalion level or larger unit. Got: ${unit.level}`
+					`Activity status proposals require a Battalion level or larger unit. Got: ${unit.level}`,
+					{
+						reason: 'proposal_unit_level_too_small',
+						params: { level: unit.level }
+					}
 				)
 			)
 		}
@@ -82,7 +89,8 @@ class controller {
 		if (proposal === undefined) {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(
-					`Activity status proposal not found: ${id}`
+					`Activity status proposal not found: ${id}`,
+					{ reason: 'request_not_found', params: { id } }
 				)
 			)
 		}
@@ -134,7 +142,11 @@ class controller {
 			if (!dates.effectiveDate) {
 				throw AppError.handleAppErr(
 					AppError.invalidArgument(
-						`Trooper ${studentId} is missing an effective date (either on the proposal or on the trooper itself)`
+						`Trooper ${studentId} is missing an effective date (either on the proposal or on the trooper itself)`,
+						{
+							reason: 'trooper_missing_effective_date',
+							params: { id: studentId }
+						}
 					)
 				)
 			}
@@ -144,14 +156,22 @@ class controller {
 		if (!dates.startDate || !dates.endDate) {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(
-					`Trooper ${studentId} is missing a start/end date (either on the proposal or on the trooper itself)`
+					`Trooper ${studentId} is missing a start/end date (either on the proposal or on the trooper itself)`,
+					{
+						reason: 'trooper_missing_date_range',
+						params: { id: studentId }
+					}
 				)
 			)
 		}
 		if (dates.startDate > dates.endDate) {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(
-					`Trooper ${studentId}'s start date must not be after its end date`
+					`Trooper ${studentId}'s start date must not be after its end date`,
+					{
+						reason: 'trooper_start_after_end',
+						params: { id: studentId }
+					}
 				)
 			)
 		}
@@ -179,7 +199,8 @@ class controller {
 		if (input.troopers.length === 0) {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(
-					'An activity status proposal must include at least one trooper'
+					'An activity status proposal must include at least one trooper',
+					{ reason: 'request_empty' }
 				)
 			)
 		}
@@ -202,7 +223,8 @@ class controller {
 		if (!eligibleApproverIds.has(input.approverUserId)) {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(
-					'Selected approver is not a commander/deputy commander/political commander/deputy political commander of this unit or one of its ancestors'
+					'Selected approver is not a commander/deputy commander/political commander/deputy political commander of this unit or one of its ancestors',
+					{ reason: 'approver_not_eligible' }
 				)
 			)
 		}
@@ -219,7 +241,11 @@ class controller {
 			) {
 				throw AppError.handleAppErr(
 					AppError.invalidArgument(
-						`Trooper ${t.studentId} does not currently belong to this unit`
+						`Trooper ${t.studentId} does not currently belong to this unit`,
+						{
+							reason: 'trooper_not_in_unit',
+							params: { id: t.studentId }
+						}
 					)
 				)
 			}
@@ -302,7 +328,8 @@ class controller {
 		if (proposal.status !== 'pending') {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(
-					'Activity status proposal is not pending'
+					'Activity status proposal is not pending',
+					{ reason: 'not_pending' }
 				)
 			)
 		}
@@ -411,7 +438,8 @@ class controller {
 		if (proposal.status !== 'pending') {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(
-					'Activity status proposal is not pending'
+					'Activity status proposal is not pending',
+					{ reason: 'not_pending' }
 				)
 			)
 		}
@@ -453,7 +481,8 @@ class controller {
 		if (proposal.status !== 'pending') {
 			throw AppError.handleAppErr(
 				AppError.invalidArgument(
-					'Activity status proposal is not pending'
+					'Activity status proposal is not pending',
+					{ reason: 'not_pending' }
 				)
 			)
 		}
