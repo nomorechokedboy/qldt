@@ -91,6 +91,11 @@ test('users and roles: roles, accounts, and what each account can see', async ({
 			await dialog
 				.getByRole('button', { name: t('admin:common.save') })
 				.click()
+			// Saving leaves the dialog open on purpose; close it once saved.
+			await expect(
+				page.getByText(t('admin:roles.update.success'))
+			).toBeVisible()
+			await dialog.getByRole('button', { name: 'Close' }).click()
 			await dialog.waitFor({ state: 'hidden' })
 			await expect(
 				card.getByText(t('admin:roles.permissionCount', { count: 3 }))
@@ -153,7 +158,7 @@ test('users and roles: roles, accounts, and what each account can see', async ({
 		async () => {
 			await login(page, loginLabels(), COMMANDER)
 			await expect(page).not.toHaveURL(/login/)
-			const sidebar = page.getByRole('complementary')
+			const sidebar = page.locator('[data-slot=sidebar]')
 			await expect(sidebar.getByText('Đại đội 1').first()).toBeVisible()
 			await expect(sidebar.getByText('Đại đội 2 Hỏa lực')).toHaveCount(0)
 			await expect(
