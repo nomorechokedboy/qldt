@@ -48,7 +48,7 @@ function errorFieldForMessage(message: string): TrackedErrorField | undefined {
 
 type FieldMetaMap = Record<string, { errors?: unknown[] } | undefined>
 
-// Same convention as ErrorMessages in FormComponents.tsx: a manually-set
+// Same convention as ErrorMessages in form-components/error-messages.tsx: a manually-set
 // `errorMap` entry (via `setFieldMeta`, same as student-form.tsx's
 // validateAndSetErrors) carries `{ message }` objects, not bare strings -
 // filtering for `typeof m === "string"` alone silently drops every one of

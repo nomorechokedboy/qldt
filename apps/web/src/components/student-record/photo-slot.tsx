@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { ErrorMessages } from '@/components/FormComponents'
+import { ErrorMessages } from '@/components/form-components'
 import { cn } from '@/lib/utils'
 import { Camera } from 'lucide-react'
 import { useEffect, useRef, useState } from 'react'
