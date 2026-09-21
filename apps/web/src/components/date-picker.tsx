@@ -13,7 +13,7 @@ import { useFieldContext } from '@/hooks/form-context'
 import i18n from '@/i18n'
 import { useTranslation } from 'react-i18next'
 import { useStore } from '@tanstack/react-form'
-import { ErrorMessages } from './FormComponents'
+import { ErrorMessages } from './form-components'
 import dayjs from 'dayjs'
 
 function formatDate(date: Date | undefined) {
