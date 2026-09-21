@@ -6,7 +6,7 @@
 	"license": "MPL-2.0",
 	"type": "module",
 	"scripts": {
-		"test": "vitest",
+		"test": "encore exec -- pnpm vitest",
 		"generate": "drizzle-kit generate",
 		"migrate": "drizzle-kit migrate",
 		"push": "drizzle-kit push",
