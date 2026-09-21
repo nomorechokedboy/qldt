@@ -8,7 +8,7 @@ export const Route = createFileRoute('/vai-tro')({
 
 function RouteComponent() {
 	return (
-		<ProtectedRoute>
+		<ProtectedRoute superAdminOnly>
 			<RolesTab />
 		</ProtectedRoute>
 	)

@@ -8,7 +8,7 @@ export const Route = createFileRoute('/cac-quyen')({
 
 function RouteComponent() {
 	return (
-		<ProtectedRoute>
+		<ProtectedRoute superAdminOnly>
 			<PermissionsTab />
 		</ProtectedRoute>
 	)

@@ -4,6 +4,7 @@ const mod = await import(process.argv[2])
 const b = await chromium.launch()
 const ctx = await b.newContext({ viewport: { width: 1600, height: 900 }, storageState: '.tmp/admin-state.json', locale: 'vi-VN' })
 const page = await ctx.newPage()
+page.setDefaultTimeout(8000)
 page.on('pageerror', (e) => console.log('PAGEERROR', e.message))
 let n = 0
 const shot = async (label = '') => { const f = `${process.env.OUT}/s${++n}.png`; await page.screenshot({ path: f }); console.log('shot', f, label) }
