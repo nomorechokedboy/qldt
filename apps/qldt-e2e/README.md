@@ -51,6 +51,7 @@ later chapters start from.
 | --- | --- |
 | `01-first-run` | Root unit, first administrator, password rules, login |
 | `02-units` | Building the unit tree, editing and deleting a unit, sidebar tree |
+| `03-users-roles` | Custom role and its permissions, two accounts, role assignment, wrong password, what a company commander can and cannot see, blocked admin pages |
 
 More chapters are added one at a time; this table is the source of truth for
 what is covered.
@@ -75,7 +76,7 @@ Environment switches:
 | Variable | Effect |
 | --- | --- |
 | `E2E_SNAPSHOT=<name>` | Start the API from a saved database instead of an empty one |
-| `E2E_SKIP_BUILD=1` | Reuse the previous web build in `.tmp/web-dist` (faster; only valid while `apps/web` is unchanged) |
+| `E2E_SKIP_BUILD=1` | Reuse the previous web build in `.tmp/web-dist` (faster; only valid while `apps/web` is unchanged; rebuild after any web source change) |
 
 ## Writing a chapter
 
@@ -104,8 +105,8 @@ test('what this chapter shows', async ({ page, story }) => {
   `apps/web/src/i18n/locales/vi`, so labels are never copied into the tests.
   If the app rewords a label, the tests follow; if a key is removed, `t`
   throws with its name.
-- The recording is named after the file (`03-users.spec.ts` →
-  `videos/03-users.webm`). Number the files in the order they should run.
+- The recording is named after the file (`03-users-roles.spec.ts` →
+  `videos/03-users-roles.webm`). Number the files in the order they should run.
 - Playwright's own video does not show the mouse, so `support/overlay.ts`
   injects a cursor, a click ripple and the caption bar into every page.
 - Prefer roles and labels (`getByRole`, `getByLabel`) over CSS; the app has a
