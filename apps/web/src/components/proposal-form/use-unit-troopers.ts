@@ -31,6 +31,20 @@ export function collectUnitScope(
 	return scope
 }
 
+// A student is either attached directly to a unit (unitId) or is a squad
+// member reached only through their class (class.unit.id).
+export function studentsInScope<
+	S extends {
+		unitId?: number
+		class?: { unit?: { id: number } | null } | null
+	}
+>(students: S[] | undefined, scope: ReadonlySet<number>): S[] {
+	return (students ?? []).filter((s) => {
+		const id = s.unitId ?? s.class?.unit?.id
+		return id !== undefined && scope.has(id)
+	})
+}
+
 // What a proposal form needs to pick a unit and then its troopers. Nothing is
 // fetched until the form's sheet is open, and troopers only once a unit is
 // chosen.
@@ -59,14 +73,8 @@ export default function useUnitTroopers({
 		[units, unitId]
 	)
 
-	// A student is either attached directly to a unit (unitId) or is a squad
-	// member reached only through their class (class.unit.id).
 	const unitStudents = useMemo(
-		() =>
-			(students ?? []).filter((s) => {
-				const id = s.unitId ?? s.class?.unit?.id
-				return id !== undefined && unitScopeIds.has(id)
-			}),
+		() => studentsInScope(students, unitScopeIds),
 		[students, unitScopeIds]
 	)
 
