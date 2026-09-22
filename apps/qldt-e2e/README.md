@@ -55,6 +55,7 @@ later chapters start from.
 | `04-positions` | Position catalog per unit level: create, priority ordering, edit, delete, HSQ flag (the troopers chapter picks from these) |
 | `05-troopers` | Adding troopers through the wizard, validation, per-unit lists, details panel, editing a phone number |
 | `06-troopers-bulk` | Excel import (template download, a bad file rejected, a good one accepted), choosing table columns, editing a rank in place, deleting a trooper |
+| `07-rank-promotion` | Two battalion accounts (proposer, approver) named as commanders, promotion proposals: one-rank-step eligibility, approve, reject with a reason, cancel, rank applied to the trooper |
 
 More chapters are added one at a time; this table is the source of truth for
 what is covered.
