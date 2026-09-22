@@ -140,6 +140,24 @@ describe('StudentEditForm', () => {
 		})
 	})
 
+	// The API refuses `avatar: null` ("expected a string"), yet it returns null
+	// for a trooper who never had a picture: sending the record back as it came
+	// would make every edit of such a trooper fail.
+	it('does not send an empty avatar back to the API', async () => {
+		const { requests, onClose } = setup({
+			...student,
+			avatar: null
+		} as unknown as Student)
+
+		fireEvent.click(screen.getByRole('button', { name: /Lưu thay đổi/ }))
+
+		await waitFor(() => expect(onClose).toHaveBeenCalled())
+		const patch = requests.find((r) => r.method === 'PATCH')
+		const saved = (patch?.body as { data: Record<string, unknown>[] })
+			.data[0]
+		expect(saved.avatar).not.toBeNull()
+	})
+
 	it('keeps the children dates day/month/year', async () => {
 		const { requests, onClose } = setup()
 		openTab(/Gia đình/)
