@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import {
 	ApplyInventorySessionResults,
 	CreateInventorySession,
@@ -63,8 +63,13 @@ export function useMarkInventorySessionReviewed() {
 // The reviewer's explicit follow-up step after markReviewed - syncs the
 // diff into material_assets/material_stocks (missing -> lost and condition
 // changes apply automatically server-side; extra assets/stock lines only for
-// whatever resolutions the caller passes).
+// whatever resolutions the caller passes). Invalidates the stocks/assets
+// lists on success: nothing else notifies an already-mounted view (e.g. a
+// company's facilities tab open behind this dialog) that quantities or
+// asset statuses just changed underneath it.
 export function useApplyInventorySessionResults() {
+	const queryClient = useQueryClient()
+
 	return useMutation({
 		mutationFn: ({
 			id,
@@ -72,7 +77,11 @@ export function useApplyInventorySessionResults() {
 		}: {
 			id: number
 		} & inventory_sessions.ApplyInventorySessionResultsParams) =>
-			ApplyInventorySessionResults(id, params)
+			ApplyInventorySessionResults(id, params),
+		onSuccess: () => {
+			queryClient.invalidateQueries({ queryKey: ['material-stocks'] })
+			queryClient.invalidateQueries({ queryKey: ['material-assets'] })
+		}
 	})
 }
 
