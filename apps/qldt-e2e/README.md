@@ -57,6 +57,7 @@ later chapters start from.
 | `06-troopers-bulk` | Excel import (template download, a bad file rejected, a good one accepted), choosing table columns, editing a rank in place, deleting a trooper |
 | `07-rank-promotion` | Two battalion accounts (proposer, approver) named as commanders, promotion proposals: one-rank-step eligibility, approve, reject with a reason, cancel, rank applied to the trooper |
 | `08-activity-status` | Status-change proposals (annual leave, weekly leave, drill, discharge): the four proposable statuses, date range vs single date, approve, reject with a reason, cancel, status filter, status shown on the trooper's edit form |
+| `09-transfer-requests` | Moving troopers between companies: approver limited to the shared superior unit's command, one request cancelled, one rejected with a reason, one approved and the trooper appearing in the new unit |
 
 More chapters are added one at a time; this table is the source of truth for
 what is covered.
