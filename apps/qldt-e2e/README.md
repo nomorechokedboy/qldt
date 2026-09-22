@@ -61,6 +61,7 @@ later chapters start from.
 | `10-materials` | Material catalog (by serial number vs by quantity, duplicate name rejected, category filter, edit, delete), a company's building and rooms, supplies (stock adds up per condition, edit), weapons (assign to a trooper, status change with a note, history, QR code) |
 | `11-inventory-sessions` | QR-code inventory reconciliation for a room (assets and stock counts, diff review, confirm, apply - missing/condition-changed auto-applied, short/over/extra stock lines applied on request), inventory history, transfer of a supply between companies and its handover export |
 | `12-stats-and-reports` | Unit dashboard stats (before/after a bulk import, unit details tabs), birthday lists by week/month/quarter filtered by unit, political quality report (KPIs, detail table, charts, Excel export, disabled PDF export) |
+| `13-audit-and-lang-packs` | Audit log (resource/action filters, viewing a bulk-import's detail sheet, pagination), language packs (default status, downloading a template, uploading a custom override, live language switch, resetting to default, rejecting a non-JSON file) |
 
 More chapters are added one at a time; this table is the source of truth for
 what is covered.
