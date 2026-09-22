@@ -76,6 +76,8 @@ export function toPatchPayload(
 		unitId: toNumber(values.unitId),
 		positionId: toNumber(values.positionId),
 		familySize: toNumber(values.familySize),
-		...(avatar ? { avatar } : {})
+		// The API returns null for no picture but refuses null on the way back,
+		// so an absent picture is left out of the request.
+		avatar: avatar ?? values.avatar ?? undefined
 	} as Student
 }

@@ -1,5 +1,6 @@
 import type { Locator, Page } from '@playwright/test'
 import { ADMIN_STATE, expect, test } from '../support/story'
+import { rest } from '../support/pace'
 import { t } from '../support/text'
 
 test.use({ storageState: ADMIN_STATE })
@@ -12,13 +13,14 @@ const rowFor = (page: Page, name: string) =>
 // Dates are typed digit by digit: the field masks its own slashes and only
 // keeps a whole date when it arrives as keystrokes or a paste.
 async function typeDate(field: Locator, date: string) {
-	await field.pressSequentially(date, { delay: 90 })
+	await field.pressSequentially(date, { delay: 30 })
 }
 
 // Combobox with a search list: open it and take an option.
 async function pick(page: Page, trigger: Locator, option: string | RegExp) {
 	await trigger.click()
 	await page.getByRole('option', { name: option }).first().click()
+	await rest(page)
 }
 
 type Trooper = {
@@ -132,6 +134,15 @@ async function openUnit(page: Page, tab: string, unitName: string) {
 	const card = page.locator('[data-slot=card]').filter({ hasText: unitName })
 	await card.hover()
 	await card.getByTitle(t('units:card.manage')).click()
+}
+
+async function openDetails(page: Page, name: string) {
+	await rowFor(page, name)
+		.getByRole('button', { name: t('table:rowActions.openMenu') })
+		.click()
+	await page
+		.getByRole('menuitem', { name: t('table:rowActions.details') })
+		.click()
 }
 
 const AN: Trooper = {
@@ -314,12 +325,7 @@ test('troopers: add through the record wizard, then view and edit', async ({
 	})
 
 	await story.step('Mở hồ sơ chi tiết của một quân nhân', async () => {
-		await rowFor(page, AN.name)
-			.getByRole('button', { name: t('table:rowActions.openMenu') })
-			.click()
-		await page
-			.getByRole('menuitem', { name: t('table:rowActions.details') })
-			.click()
+		await openDetails(page, AN.name)
 		const d = dialog(page)
 		await expect(d.getByText(AN.name).first()).toBeVisible()
 		await expect(d.getByText(AN.studentId).first()).toBeVisible()
@@ -340,5 +346,10 @@ test('troopers: add through the record wizard, then view and edit', async ({
 		await expect(
 			page.getByText(t('table:cells.updateSuccess')).first()
 		).toBeVisible()
+		// The record closes on save; opening it again shows what was stored.
+		await page.keyboard.press('Escape')
+		await expect(page.getByRole('dialog')).toHaveCount(0)
+		await openDetails(page, AN.name)
+		await expect(dialog(page).getByText('0987654321')).toBeVisible()
 	})
 })
