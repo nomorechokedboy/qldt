@@ -59,6 +59,7 @@ later chapters start from.
 | `08-activity-status` | Status-change proposals (annual leave, weekly leave, drill, discharge): the four proposable statuses, date range vs single date, approve, reject with a reason, cancel, status filter, status shown on the trooper's edit form |
 | `09-transfer-requests` | Moving troopers between companies: approver limited to the shared superior unit's command, one request cancelled, one rejected with a reason, one approved and the trooper appearing in the new unit |
 | `10-materials` | Material catalog (by serial number vs by quantity, duplicate name rejected, category filter, edit, delete), a company's building and rooms, supplies (stock adds up per condition, edit), weapons (assign to a trooper, status change with a note, history, QR code) |
+| `11-inventory-sessions` | QR-code inventory reconciliation for a room (assets and stock counts, diff review, confirm, apply - missing/condition-changed auto-applied, short/over/extra stock lines applied on request), inventory history, transfer of a supply between companies and its handover export |
 
 More chapters are added one at a time; this table is the source of truth for
 what is covered.
