@@ -1,8 +1,8 @@
 import { test as base, expect, type Page } from '@playwright/test'
-import { mkdirSync } from 'node:fs'
+import { appendFileSync, mkdirSync } from 'node:fs'
 import path from 'node:path'
 import { overlayScript } from './overlay'
-import { pacePage } from './pace'
+import { PACED, pacePage } from './pace'
 
 export const TMP_DIR = path.resolve(import.meta.dirname, '../.tmp')
 export const VIDEO_DIR = path.resolve(import.meta.dirname, '../videos')
@@ -17,7 +17,8 @@ export const ADMIN = {
 }
 
 // How long a caption stays readable before the flow moves on.
-const readingTime = (text: string) => Math.min(3200, 700 + text.length * 32)
+const readingTime = (text: string) =>
+	PACED ? Math.min(3200, 700 + text.length * 32) : 0
 
 export class Story {
 	constructor(private readonly page: Page) {}
@@ -28,19 +29,26 @@ export class Story {
 			title,
 			subtitle
 		] as const)
-		await this.page.waitForTimeout(2600)
+		await this.page.waitForTimeout(PACED ? 2600 : 0)
 		await this.page.evaluate(() => window.__e2e?.title(''))
-		await this.page.waitForTimeout(500)
+		await this.page.waitForTimeout(PACED ? 500 : 0)
 	}
 
 	// Caption for what is about to happen, then time to read it. Also a named
 	// step in the test report.
 	async step<T>(text: string, body: () => Promise<T>): Promise<T> {
 		return base.step(text, async () => {
+			const started = Date.now()
 			await this.page.evaluate((c) => window.__e2e?.caption(c), text)
 			await this.page.waitForTimeout(readingTime(text))
 			const result = await body()
-			await this.page.waitForTimeout(700)
+			await this.page.waitForTimeout(PACED ? 700 : 0)
+			// How long each step takes on the recording, for tuning the pace.
+			mkdirSync(TMP_DIR, { recursive: true })
+			appendFileSync(
+				path.join(TMP_DIR, 'step-times.log'),
+				`${((Date.now() - started) / 1000).toFixed(1)}s\t${text}\n`
+			)
 			return result
 		})
 	}
@@ -69,7 +77,7 @@ export const test = base.extend<{ story: Story }>({
 
 		// Leave a beat on the final screen, then keep the recording under the
 		// chapter's own name.
-		await page.waitForTimeout(1500)
+		await page.waitForTimeout(PACED ? 1500 : 0)
 		await page.close()
 		mkdirSync(VIDEO_DIR, { recursive: true })
 		await page

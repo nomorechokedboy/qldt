@@ -22,8 +22,8 @@ pnpm e2e                     # run the whole story, chapter by chapter
 ```
 
 The first run builds the web app (about a minute); the whole story then plays
-back at a human pace, so expect it to take 10+ minutes for the first four chapters (about 3 minutes per chapter, and growing). Watching is
-optional — it runs headless.
+back at full speed. Add `E2E_PACE=1` for the recording pace (see below).
+Watching is optional — it runs headless.
 
 Videos are written to `apps/qldt-e2e/videos/`, one file per chapter
 (`01-first-run.webm`, `02-units.webm`, …). A failed run also leaves a
@@ -113,8 +113,9 @@ test('what this chapter shows', async ({ page, story }) => {
 - Prefer roles and labels (`getByRole`, `getByLabel`) over CSS; the app has a
   few hover-only controls (e.g. the unit card actions) — `hover()` the card
   first, which also reads well on video.
-- Actions are paced for the viewer by `support/pace.ts`: the pointer glides to
-  each target, rests, then clicks, and text fields are typed key by key. Use
-  `locator.fill()` / `click()` as usual; tune the constants at the top of that
-  file if the recording feels too slow or too fast.
+- Chapters run at full speed while they are being written. With `E2E_PACE=1`
+  (the recording run) every input field — typed text, a select, a checkbox — is
+  followed by a 3 s rest (`AFTER_INPUT_MS` in `support/pace.ts`), captions stay
+  up long enough to read and slowMo is on. After picking from a custom list call
+  `rest(page)`; it does nothing unless pacing is on.
 - Every action times out after 20 s; a chapter fails fast instead of hanging.
