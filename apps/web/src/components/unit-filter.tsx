@@ -87,11 +87,12 @@ export default function UnitFacetedFilter({
 	)
 }
 
-function collectSquadUnitIds(unit: Unit): number[] {
-	if (unit.level === 'squad') {
-		return [unit.id]
-	}
-	return (unit.children ?? []).flatMap(collectSquadUnitIds)
+// A unit's own id, plus every descendant's id that was fetched under it.
+// Troopers are commonly assigned directly to a company (there is no squad
+// under it at all), not only to a squad - so a selected unit has to match
+// students posted to itself, not just to a squad somewhere below it.
+export function collectDescendantUnitIds(unit: Unit): number[] {
+	return [unit.id, ...(unit.children ?? []).flatMap(collectDescendantUnitIds)]
 }
 
 // Export the helper function as a custom hook for getting filtered squad unit IDs
@@ -104,6 +105,6 @@ export function useFilteredClassIds(
 	return units?.flatMap((unit) =>
 		(unit.children ?? [])
 			.filter((child) => selectedUnits.includes(child.id))
-			.flatMap(collectSquadUnitIds)
+			.flatMap(collectDescendantUnitIds)
 	)
 }
