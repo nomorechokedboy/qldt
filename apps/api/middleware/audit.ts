@@ -15,6 +15,7 @@ interface AuditRouteConfig {
 // whenever a new resource needs to be audited.
 const AUDIT_MAP: Record<string, AuditRouteConfig> = {
 	'POST:/students': { resource: 'students', action: 'create' },
+	'POST:/students/bulk': { resource: 'students', action: 'create' },
 	'PATCH:/students': { resource: 'students', action: 'update' },
 	'DELETE:/students': { resource: 'students', action: 'delete' },
 

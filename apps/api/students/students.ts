@@ -163,6 +163,11 @@ export const CreateStudents = api(
 
 		const resp = createdStudent.map((s) => ({ ...s }) as StudentDBResponse)
 
+		setAuditContext({
+			resourceIds: resp.map((s) => s.id),
+			newValue: resp
+		})
+
 		return { data: resp }
 	}
 )

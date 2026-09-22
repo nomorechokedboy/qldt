@@ -7,6 +7,7 @@ import auth from '../../web/src/i18n/locales/vi/auth'
 import common from '../../web/src/i18n/locales/vi/common'
 import errors from '../../web/src/i18n/locales/vi/errors'
 import io from '../../web/src/i18n/locales/vi/io'
+import langPacks from '../../web/src/i18n/locales/vi/langPacks'
 import materials from '../../web/src/i18n/locales/vi/materials'
 import nav from '../../web/src/i18n/locales/vi/nav'
 import proposals from '../../web/src/i18n/locales/vi/proposals'
@@ -21,6 +22,7 @@ const namespaces: Record<string, unknown> = {
 	common,
 	errors,
 	io,
+	langPacks,
 	materials,
 	nav,
 	proposals,
