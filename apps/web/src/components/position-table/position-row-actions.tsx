@@ -60,7 +60,15 @@ export function PositionRowActions({
 					</Button>
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align='end' className='w-[160px]'>
-					<DropdownMenuItem onClick={() => setOpenEdit(true)}>
+					{/* Deferred: opening the Dialog synchronously while the
+					DropdownMenu is still closing can leave Radix's shared
+					body scroll-lock counter stuck (data-scroll-locked never
+					reaches 0), freezing all clicks on the page. */}
+					<DropdownMenuItem
+						onSelect={() => {
+							setTimeout(() => setOpenEdit(true), 0)
+						}}
+					>
 						{t('common.edit')}
 					</DropdownMenuItem>
 					<DropdownMenuSeparator />
