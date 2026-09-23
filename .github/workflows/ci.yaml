@@ -96,6 +96,10 @@ jobs:
         permissions:
             contents: read
             packages: write
+        env:
+            # Keep in step with the encore.dev version in pnpm-lock.yaml. A
+            # newer CLI tries to re-run `pnpm install` to sync it and fails.
+            ENCORE_VERSION: 1.58.4
         steps:
             - name: Checkout repository
               uses: actions/checkout@v4
