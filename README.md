@@ -148,6 +148,16 @@ Both products ship as Helm charts under `deploy/charts/` (`qlhv`, `sms`), plus r
 
 `pnpm changeset` and everything above only ever offers `api`, `web`, and `scan-app` — every other workspace member is listed in `.changeset/config.json`'s `ignore` array and never appears in the prompt.
 
+### Enabling this for the first time
+
+`tag-and-release.mjs` treats "no matching `<pkg>@*` tag exists yet" the same as "version just changed" — so the very first push to `main` after this workflow is enabled will tag and release **all three** apps at their current versions (`api@0.0.1`, `web@0.1.0`, `scan-app@0.1.0`) and dispatch their builds, including pushing `:latest` Docker images for `api`/`web`. To roll out gradually instead (recommended — start with `scan-app`, the lowest-stakes app), seed the other two tags first so only your first real changeset triggers a release:
+
+```sh
+git tag api@0.0.1 && git tag web@0.1.0 && git push origin api@0.0.1 web@0.1.0
+```
+
+Also note: `apps/scan-app`'s version lives in three files (`package.json`, `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml`). Changesets only bumps `package.json` — the Tauri config and `Cargo.toml` versions are not kept in sync automatically. Update them by hand alongside a scan-app changeset until this is automated.
+
 ## Conventions
 
 - **Commits**: Conventional Commits, enforced by commitlint (`.commitlintrc.json`) via a Husky hook.
