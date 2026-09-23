@@ -3,13 +3,15 @@ import type { Locator, Page } from '@playwright/test'
 // Playwright fills a field in an instant and moves on, which is too fast to
 // follow on a recording. On a paced page, every input field is followed by a
 // short rest so the viewer can read what was entered before the next one.
-
-export const AFTER_INPUT_MS = 3000
-
+//
 // Pacing is for the final recording. While a chapter is being written it runs
-// at full speed; `E2E_PACE=1` switches the rests, the caption reading time and
-// slowMo on.
-export const PACED = process.env.E2E_PACE === '1'
+// at full speed; `E2E_PACE_SECONDS=<n>` turns pacing on and sets that rest to
+// `n` seconds (e.g. `E2E_PACE_SECONDS=2`). It also switches on the caption
+// reading time and the chapter/step beats in support/story.ts.
+const paceSeconds = Number(process.env.E2E_PACE_SECONDS)
+
+export const PACED = Number.isFinite(paceSeconds) && paceSeconds > 0
+export const AFTER_INPUT_MS = PACED ? paceSeconds * 1000 : 0
 
 // A pause after an input, for the viewer. Specs call it after picking from a
 // custom list, which is an input the wrapped actions cannot recognise.
