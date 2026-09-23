@@ -1,4 +1,4 @@
 <resources>
-    <string name="app_name">"scan-app"</string>
-    <string name="main_activity_title">"scan-app"</string>
+    <string name="app_name">"Qldt QR Scan"</string>
+    <string name="main_activity_title">"Qldt QR Scan"</string>
 </resources>
