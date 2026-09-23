@@ -42,17 +42,10 @@ export default defineConfig({
 		actionTimeout: 20_000,
 		locale: 'vi-VN',
 		timezoneId: 'Asia/Ho_Chi_Minh',
-		// Encoding 1080p video lags a full-speed run and closing the page waits
-		// for it to catch up, so video is only recorded on the paced run.
-		video:
-			process.env.E2E_PACE === '1'
-				? { mode: 'on', size: VIEWPORT }
-				: 'off',
+		// The recording is the deliverable — always on, at 1080p.
+		video: { mode: 'on', size: VIEWPORT },
 		trace: 'retain-on-failure',
-		screenshot: 'only-on-failure',
-		// Slow enough that a viewer can follow the pointer; the rest after each
-		// input field lives in support/pace.ts.
-		launchOptions: { slowMo: process.env.E2E_PACE === '1' ? 180 : 0 }
+		screenshot: 'only-on-failure'
 	},
 	projects: [{ name: 'story', use: { browserName: 'chromium' } }],
 	webServer: [
