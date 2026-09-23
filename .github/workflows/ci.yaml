@@ -11,6 +11,10 @@ on:
                     - web
                     - cron
                 default: all
+            version:
+                description: 'Version to tag the built image with (set by the release workflow; leave blank for a manual run)'
+                type: string
+                default: ''
 env:
     REGISTRY: ghcr.io
     IMAGE_PREFIX: ${{ github.repository_owner }}
@@ -133,6 +137,7 @@ jobs:
                   tags: |
                       type=raw,value=latest
                       type=sha,prefix={{branch}}-
+                      type=raw,value=${{ inputs.version }},enable=${{ inputs.version != '' }}
             - name: Install API Dependencies
               working-directory: apps/api
               run: pnpm install --frozen-lockfile
@@ -179,6 +184,7 @@ jobs:
                   tags: |
                       type=raw,value=latest
                       type=sha,prefix={{branch}}-
+                      type=raw,value=${{ inputs.version }},enable=${{ inputs.version != '' }}
             - name: Build and push Web image
               uses: docker/build-push-action@v6
               with:

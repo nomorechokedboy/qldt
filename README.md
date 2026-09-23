@@ -137,6 +137,27 @@ Both products ship as Helm charts under `deploy/charts/` (`qlhv`, `sms`), plus r
 
 `.github/workflows/ci.yaml` runs on push to `main`. It uses `dorny/paths-filter` to detect which of `api` / `web` / `sms-api` / `sms-web` changed, then builds and pushes only the affected image(s) to `ghcr.io/<owner>/<image>:latest` and `:<branch>-<sha>`. `sms-web` builds twice (`wan`/`lan` matrix) against different GitHub Environments, since it needs different `VITE_*` build args per network.
 
+## Releasing
+
+`apps/api`, `apps/web`, and `apps/scan-app` version independently via [Changesets](https://github.com/changesets/changesets) — `cron`, `sms-api`, `sms-web` aren't covered yet.
+
+1. In a PR that changes one or more of those apps, run `pnpm changeset` once and answer its prompts (which package(s) changed, what kind of bump, a one-line summary). Commit the generated `.changeset/*.md` file with the PR.
+2. Merge the PR to `main` as normal.
+3. `.github/workflows/release.yaml` keeps a standing **"Version Packages"** PR up to date on every push to `main` whenever changesets are pending — it batches them into a `package.json` version bump and a `CHANGELOG.md` entry per affected app.
+4. Merging the Version Packages PR *is* the release: it tags the changed app(s) (`api@x.y.z` / `web@x.y.z` / `scan-app@x.y.z`), creates a GitHub Release with the new changelog section, and dispatches that app's build with the version attached (a versioned Docker tag in GHCR for `api`/`web`, a versioned mobile build upload for `scan-app`).
+
+`pnpm changeset` and everything above only ever offers `api`, `web`, and `scan-app` — every other workspace member is listed in `.changeset/config.json`'s `ignore` array and never appears in the prompt.
+
+### Enabling this for the first time
+
+`tag-and-release.mjs` treats "no matching `<pkg>@*` tag exists yet" the same as "version just changed" — so the very first push to `main` after this workflow is enabled will tag and release **all three** apps at their current versions (`api@0.0.1`, `web@0.1.0`, `scan-app@0.1.0`) and dispatch their builds, including pushing `:latest` Docker images for `api`/`web`. To roll out gradually instead (recommended — start with `scan-app`, the lowest-stakes app), seed the other two tags first so only your first real changeset triggers a release:
+
+```sh
+git tag api@0.0.1 && git tag web@0.1.0 && git push origin api@0.0.1 web@0.1.0
+```
+
+Also note: `apps/scan-app`'s version lives in three files (`package.json`, `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml`). Changesets only bumps `package.json` — the Tauri config and `Cargo.toml` versions are not kept in sync automatically. Update them by hand alongside a scan-app changeset until this is automated.
+
 ## Conventions
 
 - **Commits**: Conventional Commits, enforced by commitlint (`.commitlintrc.json`) via a Husky hook.

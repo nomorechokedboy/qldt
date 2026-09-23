@@ -10,12 +10,18 @@ on:
                     - android
                     - ios
                 default: all
+            release_tag:
+                description: 'GitHub Release tag to upload the build to (set by the release workflow; leave blank for a manual run)'
+                type: string
+                default: ''
 env:
     APP_DIR: apps/scan-app
 jobs:
     build-android:
         if: inputs.platform == 'all' || inputs.platform == 'android'
         runs-on: ubuntu-latest
+        permissions:
+            contents: write
         env:
             ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
         steps:
@@ -97,9 +103,23 @@ jobs:
                   args: --debug --apk
                   uploadWorkflowArtifacts: true
                   workflowArtifactNamePattern: scan-app-android-debug
+            - name: Upload build to release
+              if: inputs.release_tag != ''
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  shopt -s globstar nullglob
+                  files=(apps/scan-app/src-tauri/gen/android/app/build/outputs/apk/**/*.apk apps/scan-app/src-tauri/gen/android/app/build/outputs/bundle/**/*.aab)
+                  if [ ${#files[@]} -eq 0 ]; then
+                      echo "::error::No Android build output found to upload"
+                      exit 1
+                  fi
+                  gh release upload "${{ inputs.release_tag }}" "${files[@]}" --clobber
     build-ios:
         if: inputs.platform == 'all' || inputs.platform == 'ios'
         runs-on: macos-latest
+        permissions:
+            contents: write
         env:
             APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
             APPLE_DEVELOPMENT_TEAM: ${{ secrets.APPLE_DEVELOPMENT_TEAM }}
@@ -177,3 +197,15 @@ jobs:
                   args: --export-method ${{ vars.APPLE_EXPORT_METHOD || 'release-testing' }}
                   uploadWorkflowArtifacts: true
                   workflowArtifactNamePattern: scan-app-ios-[bundle]
+            - name: Upload build to release
+              if: inputs.release_tag != ''
+              env:
+                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              run: |
+                  shopt -s globstar nullglob
+                  files=(apps/scan-app/src-tauri/gen/apple/build/**/*.ipa)
+                  if [ ${#files[@]} -eq 0 ]; then
+                      echo "::error::No iOS build output found to upload"
+                      exit 1
+                  fi
+                  gh release upload "${{ inputs.release_tag }}" "${files[@]}" --clobber
