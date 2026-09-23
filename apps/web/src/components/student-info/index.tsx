@@ -15,10 +15,11 @@ import {
 import { getMediaUri } from '@/lib/utils'
 import type { Student } from '@/types'
 import { CheckCircle } from 'lucide-react'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type KeyboardEvent } from 'react'
 import { positionName } from '@/lib/position-name'
 import StudentActions from './actions'
 import { PANELS } from './panels'
+import StudentEditForm from '../student-edit-form'
 
 interface StudentInfoProps {
 	student: Student
@@ -34,6 +35,7 @@ export default function StudentInfo({
 }: StudentInfoProps) {
 	const { t } = useTranslation('student')
 	const [sectionId, setSectionId] = useState<SectionId>(RECORD_SECTIONS[0].id)
+	const [isEditing, setIsEditing] = useState(false)
 	const scrollRef = useRef<HTMLDivElement>(null)
 	const section =
 		RECORD_SECTIONS.find((s) => s.id === sectionId) ?? RECORD_SECTIONS[0]
@@ -51,8 +53,38 @@ export default function StudentInfo({
 		unit: student.unit?.name
 	}
 
+	// The edit form used to open in its own nested Dialog here. Two Radix
+	// Dialog Roots open at once can strand their shared body scroll-lock
+	// counter above 0 when both close in quick succession (e.g. Escape,
+	// Escape), freezing every click on the page — so editing now swaps
+	// content inside this same Dialog instead. The first Escape while
+	// editing only needs to return to the view, not close the surrounding
+	// Dialog; stopping it here, before it bubbles to Radix's own
+	// document-level listener, keeps that Escape from closing the Dialog
+	// outright.
+	function handleKeyDown(event: KeyboardEvent) {
+		if (isEditing && event.key === 'Escape') {
+			event.stopPropagation()
+			setIsEditing(false)
+		}
+	}
+
+	if (isEditing) {
+		return (
+			<div className='contents' onKeyDown={handleKeyDown}>
+				<StudentEditForm
+					student={student}
+					onClose={() => setIsEditing(false)}
+				/>
+			</div>
+		)
+	}
+
 	return (
-		<div className='grid h-full min-h-0 grid-cols-1 grid-rows-[minmax(0,1fr)] lg:grid-cols-[18rem_minmax(0,1fr)]'>
+		<div
+			className='grid h-full min-h-0 grid-cols-1 grid-rows-[minmax(0,1fr)] lg:grid-cols-[18rem_minmax(0,1fr)]'
+			onKeyDown={handleKeyDown}
+		>
 			<CoverFrame
 				summary={summary}
 				photo={<Portrait src={photoSrc} className='w-36' />}
@@ -105,7 +137,11 @@ export default function StudentInfo({
 				</div>
 
 				<footer className='flex flex-wrap items-center justify-end gap-2 border-t px-4 py-3 lg:px-8'>
-					<StudentActions student={student} readOnly={readOnly} />
+					<StudentActions
+						student={student}
+						readOnly={readOnly}
+						onEdit={() => setIsEditing(true)}
+					/>
 				</footer>
 			</div>
 		</div>

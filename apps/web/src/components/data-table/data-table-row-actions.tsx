@@ -48,7 +48,14 @@ export function DataTableRowActions<TData>({
 		!readOnly && (isSuperAdmin() || student.status !== 'confirmed')
 
 	function handleOpenDialog() {
-		setDialogOpen(true)
+		// Defer past the closing DropdownMenu's own unmount so its scroll
+		// lock releases before the Dialog's takes it — opening a modal from
+		// a menu item's onClick in the same tick can leave Radix's shared
+		// body lock counter stuck (see position-row-actions.tsx). Do NOT
+		// call event.preventDefault() here: Radix's MenuItem treats that as
+		// "don't close the menu" (it skips rootContext.onClose()), which
+		// strands the DropdownMenu open — and its scroll lock — forever.
+		setTimeout(() => setDialogOpen(true), 0)
 	}
 
 	async function handleDeleteRow(_: MouseEvent<HTMLDivElement>) {
@@ -84,7 +91,7 @@ export function DataTableRowActions<TData>({
 					</Button>
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align='end' className='w-[160px]'>
-					<DropdownMenuItem onClick={handleOpenDialog}>
+					<DropdownMenuItem onSelect={handleOpenDialog}>
 						{t('rowActions.details')}
 					</DropdownMenuItem>
 					{canDelete && (

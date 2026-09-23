@@ -68,7 +68,14 @@ export function MaterialStockRowActions({
 					</Button>
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align='end' className='w-[180px]'>
-					<DropdownMenuItem onClick={() => setOpenEdit(true)}>
+					{/* Deferred: opening the Dialog synchronously while the
+					DropdownMenu is still closing can leave Radix's shared
+					body scroll-lock counter stuck, freezing all clicks. */}
+					<DropdownMenuItem
+						onSelect={() => {
+							setTimeout(() => setOpenEdit(true), 0)
+						}}
+					>
 						{t('actions.update')}
 					</DropdownMenuItem>
 					<DropdownMenuSeparator />

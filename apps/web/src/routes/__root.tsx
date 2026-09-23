@@ -25,6 +25,7 @@ import useIsInitRootUnit from '@/hooks/useIsInitRootUnit'
 import useUnitsData from '@/hooks/useUnitsData'
 import { useLangPacks } from '@/hooks/useLangPacks'
 import { useLocation } from '@tanstack/react-router'
+import { useRadixLockWatchdog } from '@/hooks/useRadixLockWatchdog'
 
 interface MyRouterContext {
 	queryClient: QueryClient
@@ -41,6 +42,7 @@ function RootLayout() {
 	const location = useLocation()
 
 	useLangPacks()
+	useRadixLockWatchdog()
 
 	const { data: units, isLoading: isUnitsLoading } = useUnitsData(undefined, {
 		enabled: isAuthenticated && isInitAdmin === true

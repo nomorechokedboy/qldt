@@ -72,13 +72,32 @@ export function MaterialAssetRowActions({
 					</Button>
 				</DropdownMenuTrigger>
 				<DropdownMenuContent align='end' className='w-[180px]'>
-					<DropdownMenuItem onClick={() => setOpenEdit(true)}>
+					{/* Deferred: opening a Dialog/Sheet synchronously while the
+					DropdownMenu is still closing can leave Radix's shared
+					body scroll-lock counter stuck, freezing all clicks. Do
+					NOT call event.preventDefault() in onSelect to "help" —
+					Radix's MenuItem treats that as "don't close the menu"
+					and skips its own onClose(), which strands the menu
+					(and its lock) open forever instead. */}
+					<DropdownMenuItem
+						onSelect={() => {
+							setTimeout(() => setOpenEdit(true), 0)
+						}}
+					>
 						{t('assetTable.allocate')}
 					</DropdownMenuItem>
-					<DropdownMenuItem onClick={() => setOpenHistory(true)}>
+					<DropdownMenuItem
+						onSelect={() => {
+							setTimeout(() => setOpenHistory(true), 0)
+						}}
+					>
 						{t('assetTable.history')}
 					</DropdownMenuItem>
-					<DropdownMenuItem onClick={() => setOpenQr(true)}>
+					<DropdownMenuItem
+						onSelect={() => {
+							setTimeout(() => setOpenQr(true), 0)
+						}}
+					>
 						{t('assetTable.downloadQr')}
 					</DropdownMenuItem>
 					<DropdownMenuSeparator />

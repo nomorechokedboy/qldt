@@ -1,34 +1,31 @@
 import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
-import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger
-} from '@/components/ui/dialog'
 import useAuth from '@/hooks/useAuth'
 import useUpdateStudent from '@/hooks/useUpdateStudent'
 import { isSuperAdmin } from '@/lib/utils'
 import type { Student } from '@/types'
 import { useQueryClient } from '@tanstack/react-query'
 import { CheckCircle, FileDown, UserPen } from 'lucide-react'
-import { useState } from 'react'
 import { toast } from 'sonner'
 import { ExportStudentDataDialog } from '../export-student-data-dialog'
-import StudentEditForm from '../student-edit-form'
 import { toastApiError } from '@/lib/api-error'
 
 export default function StudentActions({
 	student,
-	readOnly = false
+	readOnly = false,
+	onEdit
 }: {
 	student: Student
 	readOnly?: boolean
+	// Switches the parent StudentInfo into its edit view. The edit form
+	// used to live in its own nested Dialog here, but two Radix Dialog
+	// Roots open at once can strand their shared body scroll-lock counter
+	// above 0 when both close in quick succession (e.g. Escape, Escape),
+	// freezing every click on the page. StudentInfo now swaps content
+	// inside the single outer Dialog instead.
+	onEdit: () => void
 }) {
 	const { t } = useTranslation('student')
-	const [open, setOpen] = useState(false)
 	const queryClient = useQueryClient()
 	const { mutateAsync: updateStudent, isPending: isUpdating } =
 		useUpdateStudent()
@@ -96,28 +93,10 @@ export default function StudentActions({
 			)}
 
 			{canEdit && (
-				<Dialog open={open} onOpenChange={setOpen}>
-					<DialogTrigger asChild>
-						<Button>
-							<UserPen className='mr-2 h-4 w-4' />
-							{t('actions.edit')}
-						</Button>
-					</DialogTrigger>
-					<DialogContent className='grid-cols-1 grid-rows-[minmax(0,1fr)] gap-0 overflow-hidden p-0 lg:h-[85vh] lg:max-w-5xl'>
-						<DialogHeader className='sr-only'>
-							<DialogTitle>{t('actions.editTitle')}</DialogTitle>
-							<DialogDescription>
-								{t('actions.editDescription', {
-									name: student.fullName
-								})}
-							</DialogDescription>
-						</DialogHeader>
-						<StudentEditForm
-							student={student}
-							onClose={() => setOpen(false)}
-						/>
-					</DialogContent>
-				</Dialog>
+				<Button onClick={onEdit}>
+					<UserPen className='mr-2 h-4 w-4' />
+					{t('actions.edit')}
+				</Button>
 			)}
 		</>
 	)
