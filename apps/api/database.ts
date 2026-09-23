@@ -1,5 +1,5 @@
 import { drizzle } from 'drizzle-orm/libsql/node'
-import { createClient } from '@libsql/client'
+import { createClient } from '@libsql/client/node'
 import * as schema from './schema'
 import { Logger } from 'drizzle-orm'
 import log from 'encore.dev/log'

@@ -1,4 +1,4 @@
-import { createClient } from '@libsql/client'
+import { createClient } from '@libsql/client/node'
 import { drizzle } from 'drizzle-orm/libsql'
 import { migrate } from 'drizzle-orm/libsql/migrator'
 import { mkdtempSync, rmSync } from 'node:fs'
