@@ -222,7 +222,16 @@ version's real build output during implementation; best current guess:
 - iOS IPA: `apps/scan-app/src-tauri/gen/apple/build/**/*.ipa`
 
 `tag-and-release.mjs` dispatches this with:
-`gh workflow run scan-app-mobile.yaml --ref main -f platform=all -f release_tag=scan-app@0.2.0`.
+`gh workflow run scan-app-mobile.yaml --ref main -f platform=android -f release_tag=scan-app@0.2.0`.
+
+`platform=android`, not `all`: the iOS job hard-fails
+("Require Apple credentials") whenever the four `APPLE_*` secrets
+aren't set, which they currently aren't (see the earlier scan-app
+secrets discussion). Dispatching `all` would make every scan-app
+release fail on its iOS leg until those are configured. Android always
+succeeds (falls back to an unsigned debug build without a keystore
+secret), so it's the safe default; switch the hardcoded `'android'` in
+`tag-and-release.mjs` to `'all'` once Apple signing is set up.
 
 ### 8. Docs (modified)
 
