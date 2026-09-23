@@ -1,0 +1,3 @@
+[submodule "packages/customgradeexport/vendor/laminas/laminas-escaper"]
+	path = packages/customgradeexport/vendor/laminas/laminas-escaper
+	url = https://github.com/laminas/laminas-escaper.git
