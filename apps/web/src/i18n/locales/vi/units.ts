@@ -82,8 +82,8 @@ const units = {
 	commanders: {
 		commander: 'Chỉ huy trưởng',
 		deputyCommander: 'Phó chỉ huy trưởng',
-		politicalCommander: 'Chính ủy',
-		deputyPoliticalCommander: 'Phó chính ủy',
+		politicalCommander: 'Chính ủy/CTV',
+		deputyPoliticalCommander: 'Phó chính ủy/CTV phó',
 		platoonCommander: 'Trung đội trưởng',
 		squadCommander: 'Tiểu đội trưởng',
 		choose: 'Chọn {{label}}',
