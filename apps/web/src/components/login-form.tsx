@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import Monument from '@/assets/lu75.jpg'
+import MilitaryEmblem from '@/assets/quan-hieu-quan-doi.png'
 import { ArtilleryEmblem } from '@/components/artillery-emblem'
 import { LanguageSwitcher } from '@/components/language-switcher'
 import PasswordInput from '@/components/password-input'
@@ -42,9 +42,9 @@ export function LoginForm() {
 		<main className='grid min-h-svh grid-cols-[minmax(0,1fr)] bg-background lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]'>
 			<aside className="relative isolate flex min-h-64 flex-col justify-end overflow-hidden bg-sidebar text-sidebar-foreground after:absolute after:inset-x-0 after:bottom-0 after:h-[3px] after:bg-[image:var(--gradient-header)] after:content-[''] lg:min-h-svh lg:after:inset-x-auto lg:after:inset-y-0 lg:after:right-0 lg:after:h-auto lg:after:w-[3px]">
 				<img
-					src={Monument}
+					src={MilitaryEmblem}
 					alt=''
-					className='absolute inset-0 -z-30 size-full object-cover object-[50%_18%] grayscale contrast-125'
+					className='absolute inset-0 -z-30 size-full object-cover object-center grayscale contrast-125'
 				/>
 				<div className='absolute inset-0 -z-20 bg-primary/60 mix-blend-multiply' />
 				<div className='absolute inset-0 -z-10 bg-[linear-gradient(to_top,oklch(0.14_0.012_40)_6%,oklch(0.14_0.012_40/0.72)_38%,oklch(0.14_0.012_40/0.1)_75%)]' />
