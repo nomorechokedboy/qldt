@@ -1,5 +1,10 @@
 name: Continuous Integration
 on:
+    # Pre-merge gate: every job below that runs on a PR only tests — it
+    # never builds/pushes an image, so a PR (including from a fork) never
+    # touches the registry or needs its secrets.
+    pull_request:
+        branches: [main]
     workflow_dispatch:
         inputs:
             component:
@@ -9,6 +14,7 @@ on:
                     - all
                     - api
                     - web
+                    - e2e
                     - cron
                 default: all
             version:
@@ -20,7 +26,7 @@ env:
     IMAGE_PREFIX: ${{ github.repository_owner }}
 jobs:
     test-api:
-        if: inputs.component == 'all' || inputs.component == 'api'
+        if: github.event_name == 'pull_request' || (inputs.component == 'all' || inputs.component == 'api')
         runs-on: ubuntu-latest
         env:
             CI: 'true'
@@ -63,7 +69,7 @@ jobs:
               working-directory: apps/api
               run: encore test --run
     test-web:
-        if: inputs.component == 'all' || inputs.component == 'web'
+        if: github.event_name == 'pull_request' || (inputs.component == 'all' || inputs.component == 'web')
         runs-on: ubuntu-latest
         steps:
             - name: Checkout repository
@@ -89,9 +95,65 @@ jobs:
             - name: Run Web tests
               working-directory: apps/web
               run: pnpm test
+    test-e2e:
+        if: github.event_name == 'pull_request' || (inputs.component == 'all' || inputs.component == 'e2e')
+        runs-on: ubuntu-latest
+        env:
+            CI: 'true'
+            # Keep in step with the encore.dev version in pnpm-lock.yaml. A
+            # newer CLI tries to re-run `pnpm install` to sync it and fails.
+            ENCORE_VERSION: 1.58.4
+            # The API refuses to start without these; the suite only needs
+            # some value, it never reaches a real service.
+            HASH_SECRET: ci-hash-secret
+            JWT_PRIVATE_KEY: ci-jwt-secret
+            S3_ACCESS_KEY: ci-access-key
+            S3_SECRET_KEY: ci-secret-key
+        steps:
+            - name: Checkout repository
+              uses: actions/checkout@v4
+            - name: Install Encore
+              run: |
+                  curl -L https://encore.dev/install.sh | bash -s -- "$ENCORE_VERSION"
+                  echo "$HOME/.encore/bin" >> $GITHUB_PATH
+            - name: Setup Node.js
+              uses: actions/setup-node@v4
+              with:
+                  node-version: 24
+            - name: Install pnpm
+              uses: pnpm/action-setup@v4
+            - name: Setup pnpm store path
+              id: pnpm-store
+              run: echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+            - name: Cache pnpm store
+              uses: actions/cache@v4
+              with:
+                  path: ${{ steps.pnpm-store.outputs.STORE_PATH }}
+                  key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+                  restore-keys: |
+                      ${{ runner.os }}-pnpm-store-
+            # Root-level install: the suite drives both the built web app and
+            # a live API, so both workspaces (plus qldt-e2e itself) need to
+            # be present, not just one filtered package.
+            - name: Install dependencies
+              run: pnpm install --frozen-lockfile
+            - name: Install Playwright browser
+              working-directory: apps/qldt-e2e
+              run: pnpm exec playwright install --with-deps chromium
+            - name: Run e2e suite
+              run: pnpm e2e
+            - name: Upload e2e artifacts on failure
+              if: failure()
+              uses: actions/upload-artifact@v4
+              with:
+                  name: qldt-e2e-results
+                  path: |
+                      apps/qldt-e2e/test-results
+                      apps/qldt-e2e/playwright-report
+                  retention-days: 7
     build-api:
         needs: test-api
-        if: inputs.component == 'all' || inputs.component == 'api'
+        if: github.event_name == 'workflow_dispatch' && (inputs.component == 'all' || inputs.component == 'api')
         runs-on: ubuntu-latest
         permissions:
             contents: read
@@ -164,7 +226,7 @@ jobs:
               run: echo "API image pushed successfully"
     build-web:
         needs: test-web
-        if: inputs.component == 'all' || inputs.component == 'web'
+        if: github.event_name == 'workflow_dispatch' && (inputs.component == 'all' || inputs.component == 'web')
         runs-on: ubuntu-latest
         permissions:
             contents: read
@@ -202,7 +264,7 @@ jobs:
                   build-args: |
                       VITE_API_URL=${{ vars.WEB_VITE_API_URL }}
     build-cron:
-        if: inputs.component == 'all' || inputs.component == 'cron'
+        if: github.event_name == 'workflow_dispatch' && (inputs.component == 'all' || inputs.component == 'cron')
         runs-on: ubuntu-latest
         permissions:
             contents: read
