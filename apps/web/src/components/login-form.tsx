@@ -44,7 +44,7 @@ export function LoginForm() {
 				<img
 					src={MilitaryEmblem}
 					alt=''
-					className='absolute inset-0 -z-30 size-full object-cover object-center grayscale contrast-125'
+					className='absolute inset-0 -z-30 size-full object-contain object-center grayscale contrast-125'
 				/>
 				<div className='absolute inset-0 -z-20 bg-primary/60 mix-blend-multiply' />
 				<div className='absolute inset-0 -z-10 bg-[linear-gradient(to_top,oklch(0.14_0.012_40)_6%,oklch(0.14_0.012_40/0.72)_38%,oklch(0.14_0.012_40/0.1)_75%)]' />
