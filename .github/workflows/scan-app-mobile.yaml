@@ -53,6 +53,8 @@ jobs:
             - name: Resolve Android SDK path
               id: android-home
               run: echo "path=$ANDROID_HOME" >> $GITHUB_OUTPUT
+            - name: Take ownership of Android SDK directory
+              run: sudo chown -R "$(id -u):$(id -g)" "${{ steps.android-home.outputs.path }}"
             - name: Cache Android SDK platform, build-tools and NDK
               id: android-sdk-cache
               uses: actions/cache@v4
