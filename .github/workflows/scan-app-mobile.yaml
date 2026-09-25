@@ -76,9 +76,10 @@ jobs:
                   ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
               run: |
                   echo "$ANDROID_KEYSTORE_BASE64" | base64 --decode > release.keystore
-                  cat > key.properties <<PROPS
+                  cat > keystore.properties <<PROPS
+                  storePassword=$ANDROID_KEY_PASSWORD
+                  keyPassword=$ANDROID_KEY_PASSWORD
                   keyAlias=$ANDROID_KEY_ALIAS
-                  password=$ANDROID_KEY_PASSWORD
                   storeFile=$GITHUB_WORKSPACE/$APP_DIR/src-tauri/gen/android/release.keystore
                   PROPS
             - name: Build signed release (APK and AAB)
@@ -89,15 +90,8 @@ jobs:
                   tauriScript: pnpm tauri
                   mobile: android
                   args: --apk --aab
-                  uploadWorkflowArtifacts: false
+                  uploadWorkflowArtifacts: true
                   workflowArtifactNamePattern: scan-app-android-[bundle]
-            - name: Upload Android APKs
-              if: env.ANDROID_KEYSTORE_BASE64 != ''
-              uses: actions/upload-artifact@v4
-              with:
-                  name: scan-app-android
-                  path: |
-                      apps/scan-app/src-tauri/gen/android/app/build/outputs/apk/**/*-release.apk
             # An unsigned release APK cannot be installed, so without a
             # keystore secret fall back to an installable debug build.
             - name: Build debug APK (no keystore configured)
