@@ -202,6 +202,22 @@ const admin: Messages<typeof vi> = {
 		next: 'Next',
 		pagination: 'Page {{page}} / {{totalPages}} ({{total}} records)',
 		detailTitle: 'Log details',
+		diff: {
+			title: 'Configuration diff',
+			onlyChanged: 'Only changed fields are shown.',
+			changedFields: '{{count}} changed field(s)',
+			changed: 'Changed',
+			added: 'Added',
+			removed: 'Removed',
+			previous: 'Previous',
+			current: 'Current',
+			addedField: 'Added {{label}}',
+			removedField: 'Removed {{label}}',
+			changedField: '{{label}} changed',
+			array: 'Array',
+			arrayItem: '{{label}} item {{index}}',
+			legend: 'Red values are previous data. Green values are the new data. Amber marks a field whose value changed.'
+		},
 		columns: {
 			time: 'Time',
 			actor: 'Performed by',

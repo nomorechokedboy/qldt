@@ -1,15 +1,9 @@
-'use client'
-
-import { useMemo, useState } from 'react'
-import {
-	Check,
-	ChevronRight,
-	CircleAlert,
-	FileJson,
-	Minus,
-	Plus
-} from 'lucide-react'
+import { useMemo } from 'react'
+import { CircleAlert, Minus, Plus } from 'lucide-react'
+import type { TFunction } from 'i18next'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
+import { EllipsisText } from '../data-table/ellipsis-text'
 
 type JsonValue =
 	| string
@@ -22,7 +16,6 @@ type ChangeType = 'added' | 'removed' | 'changed'
 
 type DiffEntry = {
 	path: string
-	label: string
 	type: ChangeType
 	before?: JsonValue
 	after?: JsonValue
@@ -82,14 +75,20 @@ function formatValue(value: JsonValue | undefined) {
 	return JSON.stringify(value)
 }
 
-function humanizePath(path: string) {
+// Labels are derived from the data keys (which are not translated); only the
+// "array item" wording is localized. Computed at render time so it follows the
+// active language.
+function humanizePath(path: string, t: TFunction<'admin'>) {
 	const segment = path.split('.').pop() ?? path
 	const arrayItem = segment.match(/^(.*)\[(\d+)\]$/)
 	const label = (arrayItem?.[1] ?? segment)
 		.replace(/([A-Z])/g, ' $1')
 		.replace(/^./, (letter) => letter.toUpperCase())
 	return arrayItem
-		? `${label || 'Array'} item ${Number(arrayItem[2]) + 1}`
+		? t('audit.diff.arrayItem', {
+				label: label || t('audit.diff.array'),
+				index: Number(arrayItem[2]) + 1
+			})
 		: label
 }
 
@@ -113,7 +112,6 @@ function collectDiffs(
 				return [
 					{
 						path: nextPath,
-						label: humanizePath(nextPath),
 						type: 'added' as const,
 						after: after[key],
 						depth
@@ -123,7 +121,6 @@ function collectDiffs(
 				return [
 					{
 						path: nextPath,
-						label: humanizePath(nextPath),
 						type: 'removed' as const,
 						before: before[key],
 						depth
@@ -141,7 +138,6 @@ function collectDiffs(
 				return [
 					{
 						path: nextPath,
-						label: humanizePath(nextPath),
 						type: 'added' as const,
 						after: after[index],
 						depth
@@ -152,7 +148,6 @@ function collectDiffs(
 				return [
 					{
 						path: nextPath,
-						label: humanizePath(nextPath),
 						type: 'removed' as const,
 						before: before[index],
 						depth
@@ -171,7 +166,6 @@ function collectDiffs(
 	return [
 		{
 			path,
-			label: humanizePath(path),
 			type: 'changed',
 			before,
 			after,
@@ -195,6 +189,7 @@ export function AuditLogDiff({
 	before?: JsonValue
 	after?: JsonValue
 }) {
+	const { t } = useTranslation('admin')
 	const diffs = useMemo(() => collectDiffs(before, after), [before, after])
 	const changedCount = diffs.filter(
 		(entry) => entry.type === 'changed'
@@ -209,17 +204,17 @@ export function AuditLogDiff({
 			<div className='mx-auto flex max-w-5xl flex-col gap-6'>
 				<div className='grid gap-3 sm:grid-cols-3'>
 					<SummaryCard
-						label='Changed'
+						label={t('audit.diff.changed')}
 						count={changedCount}
 						tone='changed'
 					/>
 					<SummaryCard
-						label='Added'
+						label={t('audit.diff.added')}
 						count={addedCount}
 						tone='added'
 					/>
 					<SummaryCard
-						label='Removed'
+						label={t('audit.diff.removed')}
 						count={removedCount}
 						tone='removed'
 					/>
@@ -228,17 +223,22 @@ export function AuditLogDiff({
 				<div className='overflow-hidden rounded-xl border border-border bg-background shadow-sm'>
 					<div className='flex flex-col gap-3 border-b border-border px-4 py-4 sm:flex-row sm:items-center sm:justify-between sm:px-6'>
 						<div>
-							<h2 className='font-medium'>Configuration diff</h2>
+							<h2 className='font-medium'>
+								{t('audit.diff.title')}
+							</h2>
 							<p className='mt-1 text-xs text-muted-foreground'>
-								Only changed fields are shown.
+								{t('audit.diff.onlyChanged')}
 							</p>
 						</div>
 						<span className='text-xs text-muted-foreground'>
-							{diffs.length} changed fields
+							{t('audit.diff.changedFields', {
+								count: diffs.length
+							})}
 						</span>
 					</div>
 					<div className='divide-y divide-border'>
 						{diffs.map((entry) => {
+							const label = humanizePath(entry.path, t)
 							return (
 								<div
 									key={entry.path}
@@ -265,7 +265,7 @@ export function AuditLogDiff({
 										</span>
 										<div className='min-w-0'>
 											<p className='truncate text-sm font-medium'>
-												{entry.label}
+												{label}
 											</p>
 											<p className='truncate font-mono text-xs text-muted-foreground'>
 												{entry.path}
@@ -275,21 +275,29 @@ export function AuditLogDiff({
 									<div className='min-w-0 rounded-lg border border-border bg-muted/30 p-3'>
 										<p className='mb-2 text-xs font-medium text-muted-foreground'>
 											{entry.type === 'added'
-												? `Added ${entry.label}`
+												? t('audit.diff.addedField', {
+														label
+													})
 												: entry.type === 'removed'
-													? `Removed ${entry.label}`
-													: `${entry.label} changed`}
+													? t(
+															'audit.diff.removedField',
+															{ label }
+														)
+													: t(
+															'audit.diff.changedField',
+															{ label }
+														)}
 										</p>
 										<div className='grid gap-2 text-xs sm:grid-cols-2'>
 											<ValueBlock
-												label='Previous'
+												label={t('audit.diff.previous')}
 												value={formatValue(
 													entry.before
 												)}
 												tone='removed'
 											/>
 											<ValueBlock
-												label='Current'
+												label={t('audit.diff.current')}
 												value={formatValue(entry.after)}
 												tone='added'
 											/>
@@ -302,8 +310,7 @@ export function AuditLogDiff({
 				</div>
 
 				<p className='text-center text-xs text-muted-foreground'>
-					Red values are previous data. Green values are the new data.
-					Amber marks a field whose value changed.
+					{t('audit.diff.legend')}
 				</p>
 			</div>
 		</section>
@@ -331,7 +338,9 @@ function ValueBlock({
 			<p className='mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground'>
 				{label}
 			</p>
-			<code className='block truncate font-mono text-xs'>{value}</code>
+			<code className='block font-mono text-xs'>
+				<EllipsisText maxWidth='90px'>{value}</EllipsisText>
+			</code>
 		</div>
 	)
 }

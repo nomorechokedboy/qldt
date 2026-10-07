@@ -198,6 +198,22 @@ const admin = {
 		next: 'Sau',
 		pagination: 'Trang {{page}} / {{totalPages}} ({{total}} bản ghi)',
 		detailTitle: 'Chi tiết nhật ký',
+		diff: {
+			title: 'So sánh cấu hình',
+			onlyChanged: 'Chỉ hiển thị các trường có thay đổi.',
+			changedFields: '{{count}} trường thay đổi',
+			changed: 'Thay đổi',
+			added: 'Thêm mới',
+			removed: 'Đã xóa',
+			previous: 'Trước',
+			current: 'Hiện tại',
+			addedField: 'Đã thêm {{label}}',
+			removedField: 'Đã xóa {{label}}',
+			changedField: '{{label}} đã thay đổi',
+			array: 'Mảng',
+			arrayItem: '{{label}} mục {{index}}',
+			legend: 'Giá trị màu đỏ là dữ liệu cũ. Giá trị màu xanh lá là dữ liệu mới. Màu hổ phách đánh dấu trường có giá trị thay đổi.'
+		},
 		columns: {
 			time: 'Thời gian',
 			actor: 'Người thực hiện',
