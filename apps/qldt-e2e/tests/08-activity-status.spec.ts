@@ -40,8 +40,10 @@ async function pickRangeFromToday(page: Page) {
 		.getByRole('button', { name: t('proposals:activity.pickDateRange') })
 		.click()
 	const today = page.locator('td[data-today=true]')
-	await today.locator('button').click()
-	await today.locator('xpath=following::td[1]//button').click()
+	const elements = await today.locator('button').all()
+	const todayLocator = elements[0]
+	await todayLocator.click()
+	await todayLocator.locator('xpath=following::td[1]//button').click()
 	await page.keyboard.press('Escape')
 	await rest(page)
 }
