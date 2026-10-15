@@ -336,7 +336,7 @@ export const ApproveActivityStatusProposal = api(
 // reached) for already-approved troopers. Not gated by a shared secret,
 // same as the other cron endpoints.
 export const ActivityStatusProposalCron = api(
-	{ expose: false, method: 'GET', path: '/activity-status-proposals/cron' },
+	{ expose: true, method: 'GET', path: '/activity-status-proposals/cron' },
 	async (): Promise<{ ok: true }> => {
 		log.info('ActivityStatusProposalCron triggered')
 		await activityStatusProposalController.runScheduledTransitions()

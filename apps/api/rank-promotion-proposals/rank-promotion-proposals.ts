@@ -325,7 +325,7 @@ export const ApproveRankPromotionProposal = api(
 // activity-status-proposals there is no revert sweep — a promotion is
 // permanent.
 export const RankPromotionProposalCron = api(
-	{ expose: false, method: 'GET', path: '/rank-promotion-proposals/cron' },
+	{ expose: true, method: 'GET', path: '/rank-promotion-proposals/cron' },
 	async (): Promise<{ ok: true }> => {
 		log.info('RankPromotionProposalCron triggered')
 		await rankPromotionProposalController.runScheduledTransitions()
